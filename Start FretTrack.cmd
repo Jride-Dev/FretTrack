@@ -2,7 +2,7 @@
 setlocal
 
 set "SCRIPT_DIR=%~dp0"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%Start Guitar App.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%Start FretTrack.ps1"
 
 if errorlevel 1 (
   echo.

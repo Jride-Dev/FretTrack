@@ -22,7 +22,7 @@ Current version: `0.2.5`
 Use the desktop shortcut:
 
 ```text
-Guitar Check-in App.lnk
+FretTrack.lnk
 ```
 
 If the Desktop shortcut ever says it cannot find the file specified, double-click this file from the app folder to recreate it:

@@ -4,14 +4,14 @@ $appDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $appUrl = 'http://127.0.0.1:5173/'
 $port = 5173
 
-Write-Host 'Guitar Check-in App'
+Write-Host 'FretTrack'
 Write-Host
 Write-Host "App folder: $appDir"
 Write-Host "App URL:    $appUrl"
 Write-Host
 
 if (-not (Test-Path -LiteralPath (Join-Path $appDir 'package.json'))) {
-  throw "Cannot find package.json in $appDir. Put this launcher back in the Guitar Check-in App folder."
+  throw "Cannot find package.json in $appDir. Put this launcher back in the FretTrack folder."
 }
 
 $npmCommand = Get-Command npm.cmd -ErrorAction SilentlyContinue

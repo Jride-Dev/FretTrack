@@ -1,9 +1,10 @@
 $ErrorActionPreference = 'Stop'
 
 $appDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$launcherPath = Join-Path $appDir 'Start Guitar App.cmd'
-$iconPath = Join-Path $appDir 'Guitar Check-in App.ico'
-$shortcutPath = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Guitar Check-in App.lnk'
+$launcherPath = Join-Path $appDir 'Start FretTrack.cmd'
+$iconPath = Join-Path $appDir 'FretTrack.ico'
+$desktopPath = [Environment]::GetFolderPath('Desktop')
+$shortcutPath = Join-Path $desktopPath 'FretTrack.lnk'
 
 if (-not (Test-Path -LiteralPath $launcherPath)) {
   throw "Cannot find launcher: $launcherPath"
@@ -17,7 +18,7 @@ $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $launcherPath
 $shortcut.WorkingDirectory = $appDir
 $shortcut.IconLocation = $iconPath
-$shortcut.Description = 'Start the Guitar Check-in App'
+$shortcut.Description = 'Start FretTrack'
 $shortcut.Save()
 
 Write-Host "Desktop shortcut created:"

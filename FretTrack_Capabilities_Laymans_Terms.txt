@@ -9,7 +9,7 @@ How to Open FretTrack
 
 The easiest way to open the app is with the desktop shortcut named:
 
-Guitar Check-in App.lnk
+FretTrack.lnk
 
 If the shortcut breaks, open the app folder and double-click:
 
