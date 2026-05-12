@@ -1,0 +1,86 @@
+# Roadmap
+
+This file tracks where FretTrack is headed after the current `0.2.5` trial-readiness baseline.
+
+## Current Release Position
+
+- First public trial-ready release.
+- Email notifications active.
+- SMS planned/optional.
+- Dark theme default.
+- Work order system stable enough for real shop testing.
+- v0.2.4 adds module stabilization, photos-module ownership, shop config foundations, and non-blocking job event logging for the future activity timeline.
+- v0.2.5 adds a visible activity timeline, basic shop settings, trial-readiness documentation, data integrity checks, and job JSON export for debugging.
+
+## Near Term
+
+- Continue real shop testing against the `0.2.x` baseline.
+- Apply and verify the `job_events` migration alongside the multi-shop job-number migration before relying on timeline data in live shops.
+- Walk through `docs/TRIAL_READINESS.md` before the first live trial-shop session.
+- Keep email-only trial messaging active while SMS remains disabled.
+- Use the themed UI, subcontractor/job-source intake, damage-map persistence fixes, manual save feedback, and editable work logs as the current stable baseline.
+- Keep `bench-dark` as the default theme for first-time users unless trial feedback says otherwise.
+
+## Packaging and Installation
+
+- Create shop-specific installer packages so trial users can install FretTrack without manually running project files or touching Supabase/Resend.
+- Treat each shop as a separate Supabase project/database under the FretTrack operator account.
+- Keep Resend ownership under the FretTrack operator account, with shop-specific sender/domain configuration handled during provisioning.
+- Generate a per-shop config containing the shop Supabase URL, anon key, FretTrack function key, SMS setting, and later shop branding/display values.
+- Support a first packaging target of a customer-specific `.zip`, then graduate to a signed `.exe` installer when the onboarding flow is stable.
+- Keep `.msi` as a later option for managed Windows/IT deployment.
+- Include desktop shortcut creation, app launch scripts, required runtime checks, and clear setup prompts in the installer flow.
+- Document installer build steps, shop provisioning steps, and release checklist before broader trial distribution.
+- Keep the existing manual launch scripts available as a fallback while installer packaging is tested.
+
+## Messaging
+
+- Add SMS after carrier registration is ready.
+- Keep SMS buttons visible but disabled in trial builds so the workflow remains discoverable.
+- Keep the existing `send-sms` Edge Function code available for later Twilio/carrier registration work.
+- Continue using Supabase Edge Functions as the only message-sending path.
+
+## Security and Accounts
+
+- Replace the temporary shop-level public-trial gate with proper user authentication.
+- Connect `job_events.created_by` to authenticated users once auth exists.
+- Keep the shared function key setup only as temporary public-trial protection.
+- Add organization membership roles so monetary controls can be restricted by role.
+- Allow regular employees to add payments without allowing them to edit discounts, taxes, labor totals, parts totals, or other monetary adjustments.
+
+## Accounting and Totals
+
+- Modularize the accounting/totals code so discounts, taxes, payments, balances, and till reporting have clearer ownership.
+- Change discount handling so applying a discount commits it into the saved work order totals instead of leaving it as an always-editable field.
+- Lock monetary totals after they are saved/applied to protect tax and audit accuracy.
+- Show an `Edit Totals` action only when reopening an existing work order or intentionally entering a totals-editing mode.
+- Tie `Edit Totals` access to future organization member roles; regular employees should be able to add payments only.
+- Preserve payment entry as an operational action that does not require full monetary edit permissions.
+
+## Parts and Inventory
+
+- Add a dedicated parts/inventory module after the first trial baseline is stable.
+- Track common repair parts such as strings, pots, jacks, switches, pickups, tuners, nuts, saddles, screws, batteries, strap buttons, and shop consumables.
+- Support part name, SKU/part number, category, vendor, cost, retail price, quantity on hand, reorder level, storage location, and active/inactive status.
+- Allow work orders to add parts from inventory while preserving free-typed one-off parts for unusual repairs.
+- Decrement inventory when parts are committed to a work order, with clear handling for returns, deleted parts, and corrected quantities.
+- Surface low-stock and out-of-stock states without blocking urgent repair intake.
+- Keep inventory cost/retail changes from rewriting historical work order totals.
+- Add basic vendor and purchase/restock history after the first inventory version is usable.
+- Tie inventory price editing, stock adjustments, and cost visibility to future organization member roles.
+- Keep inventory reporting focused on practical shop needs first: low stock, parts used by date range, value on hand, and job-linked parts usage.
+
+## Product Direction
+
+- Continue improving the work order flow for real shop use.
+- Expand Activity Timeline filtering and detail views after initial trial feedback.
+- Expand customer communication around check-in, estimate approval, repair status, pickup reminders, payment reminders, and photo updates.
+- Keep customer history lookup, quick-fill, and repeat-customer workflows central to intake.
+- Keep supporting unusual instruments by allowing free-typed brand/model values even when suggestions exist.
+- Keep print/export views readable regardless of active app theme.
+
+## Future Polish Candidates
+
+- Tighten trial feedback around the Acoustic / Electric / Bass instrument flow.
+- Review damage-map usability after real repair intake sessions.
+- Consider expanding theme presets only after the current preset system has settled.

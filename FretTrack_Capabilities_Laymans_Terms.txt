@@ -1,0 +1,189 @@
+FretTrack Capabilities in Plain English
+Version covered: 0.2.3
+
+FretTrack is a guitar and bass repair shop check-in and work order app. It helps a shop create repair jobs, track customer and instrument details, document damage, manage parts and services, send customer emails, track payments, and print useful paperwork.
+
+
+How to Open FretTrack
+---------------------
+
+The easiest way to open the app is with the desktop shortcut named:
+
+Guitar Check-in App.lnk
+
+If the shortcut breaks, open the app folder and double-click:
+
+Create Desktop Shortcut.cmd
+
+The app can also be started by running:
+
+npm run dev
+
+Then open this address in a browser:
+
+http://127.0.0.1:5173/
+
+Important note: the 5432 number in the settings is for the database, not the website address.
+
+
+Main Things FretTrack Can Do
+----------------------------
+
+Create repair jobs
+- Start a new work order for a customer.
+- Enter customer information.
+- Enter instrument information.
+- Track each job with a job number.
+- Handle more than one job on the same day by adding extra numbers like -01, -02, and so on.
+
+Track guitars and basses
+- Mark the instrument type as Acoustic, Electric, or Bass.
+- Store the brand and model.
+- Use built-in brand and model suggestions.
+- Still type in unusual brands or models manually.
+- Show the right number of string gauge spaces for guitars and basses.
+
+Look up customers and past jobs
+- Search for customers by name, phone, or email.
+- Pull customer information from previous jobs.
+- See current jobs during intake.
+- Hide picked-up jobs by default so active work is easier to see.
+- Search using first name, last name, or full name.
+
+Track job status
+- Keep jobs organized while they move through the shop.
+- Mark jobs as picked up.
+- Use Finish / Picked Up actions.
+- Keep current jobs separate from completed pickup history.
+
+Record services and parts
+- Add common repair services from preset options.
+- Add parts used on a job.
+- Mark parts as billable or included in the service.
+- Keep parts records without always charging the customer extra.
+- Track discounts by percentage or dollar amount.
+- Show billable parts, included parts, subtotal, discount, and total due.
+
+Track work logs
+- Add notes about work performed.
+- Edit work log entries.
+- Delete work log entries.
+- Keep a history of what happened on the job.
+
+Track technical repair details
+- Record setup and repair details like string gauges, action, neck relief, and neck inspection notes.
+- Enter initial and final neck inspection information.
+- See measured changes between before and after details.
+- Save technical details without the app slowing down while typing.
+
+Upload and manage photos
+- Add job photos.
+- Import multiple photos from a device.
+- Upload HEIC and HEIF images, such as many iPhone photos.
+- Automatically convert and compress photos before upload.
+- Resize large images so storage is not wasted.
+- Store image details like original filename, upload time, category, and storage path.
+- View full-picture thumbnails.
+- Click thumbnails to open larger images.
+- Delete images when needed.
+
+Document damage
+- Use a damage map for Acoustic, Electric, and Bass instruments.
+- View the front and back of the instrument diagram.
+- Add clickable damage markers.
+- Mark damage as cosmetic, structural, or critical.
+- Add notes about damage.
+- Add recommended repairs.
+- Attach photos to damage markers.
+- See damage marker photos as thumbnails right in the damage list.
+- Show imported damage-map pictures immediately, even when the job is still being created or the upload needs to fall back to a local preview.
+- Record customer acknowledgment and authorization notes.
+- Print a customer damage acknowledgment report that can be saved as a PDF.
+
+Create and print paperwork
+- Print work order/job sheets.
+- Include instrument type and brand/model on printed paperwork.
+- Print or export views with a clean, readable light background, even if the app is using a dark theme.
+- Print damage acknowledgment reports for customers.
+
+Send customer emails
+- Send email notifications to customers.
+- Use plain-text templates for common messages, including:
+  - Check-in
+  - Estimate ready
+  - Approval needed
+  - Work started
+  - Repair complete
+  - Pickup reminder
+  - Payment reminder
+  - Update with photos
+- Automatically fill templates with customer name, instrument, and job number.
+- Edit the email subject and message before sending.
+- Send exactly what appears in the editable preview.
+- Save the last selected message template for each job.
+- Keep message history so the shop can see what was sent.
+
+SMS text messaging status
+- SMS buttons can appear in the app, but SMS is disabled in the trial build.
+- Email is active for the trial build.
+- SMS support is planned for later after carrier registration is ready.
+- The app already has some SMS-related code prepared for future use.
+
+Track payments and money
+- Track sales tax settings.
+- Track payments made by the customer.
+- Show paid totals.
+- Show balance due.
+- Track open balances.
+- View a Till Summary that rolls up:
+  - Paid-in totals
+  - Sales tax collected or accrued
+  - Open balances
+  - Payment methods
+
+Track where jobs came from
+- Mark the job source, such as:
+  - Walk-In
+  - Telephone Appointment
+  - Sub-Contract
+  - Referral
+- Track subcontractor business and name when the job comes from subcontract work.
+
+Use shop-friendly themes
+- Dark theme is the default for new users.
+- Choose from multiple theme presets:
+  - Bench Dark
+  - Shop Light
+  - Amber Tube
+  - Seafoam
+  - Blackguard
+  - Burgundy Burst
+  - Blue Steel
+  - High Contrast
+- Save the selected theme.
+- Use smaller, more professional button styling throughout the app.
+
+Store data in Supabase
+- Save jobs and related records to Supabase.
+- Store job photos in a Supabase storage bucket.
+- Keep older records searchable after newer customer name fields were added.
+- Use database indexes so name searches are faster.
+
+
+Trial Release Notes
+-------------------
+
+This version is considered the first public trial-ready release.
+
+That means:
+- The work order system is stable enough for real shop testing.
+- Email notifications are active.
+- SMS is planned but not active in the trial build.
+- Dark theme is the default.
+- Some setup protection is used until proper user accounts and login are added.
+
+
+Short Version
+-------------
+
+FretTrack can check in guitars and basses, create work orders, track customer history, document damage, upload photos, manage parts and services, calculate totals, track payments, send customer emails, print shop paperwork, and help a repair shop keep jobs organized from drop-off to pickup.

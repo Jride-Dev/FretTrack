@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="180" viewBox="0 0 640 180" role="img" aria-labelledby="title">
+  <title id="title">JR's Custom Shop Guitars</title>
+  <rect width="640" height="180" fill="#ffffff"/>
+  <text x="32" y="78" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700">JR's Custom Shop</text>
+  <text x="34" y="126" fill="#333333" font-family="Arial, Helvetica, sans-serif" font-size="32" letter-spacing="3">GUITARS</text>
+  <line x1="34" y1="146" x2="520" y2="146" stroke="#111111" stroke-width="4"/>
+</svg>

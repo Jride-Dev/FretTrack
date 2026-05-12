@@ -1,0 +1,89 @@
+# FretTrack v0.2.5 Trial Readiness Checklist
+
+Use this checklist before handing a build to a real trial shop.
+
+## Required Env Vars
+
+Frontend `.env`:
+
+```text
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_FRETTRACK_SHOP_ID=default-shop
+VITE_FRETTRACK_SHOP_NAME=FretTrack Trial Shop
+VITE_FRETTRACK_FUNCTION_KEY=
+VITE_SMS_ENABLED=false
+```
+
+Supabase Edge Function secrets:
+
+```text
+FRETTRACK_FUNCTION_KEY=
+RESEND_API_KEY=
+SHOP_EMAIL_FROM=
+```
+
+## Supabase Setup
+
+1. Create or select the shop Supabase project.
+2. Apply the schema and migrations listed below.
+3. Confirm the `job-images` storage bucket exists and is public for trial image display.
+4. Deploy `send-email`.
+5. Keep `send-sms` deployed only as dormant scaffolding while SMS is disabled.
+6. Set Edge Function secrets.
+7. Send a test email through the app.
+
+## Migrations Required
+
+Apply all current schema changes, including:
+
+- `supabase-schema.sql`
+- `supabase/migrations/20260511124500_add_shop_scoped_job_numbers.sql`
+- `supabase/migrations/20260511133000_add_job_events.sql`
+
+## Test Job Creation Flow
+
+1. Start the app with `npm run dev`.
+2. Confirm the header shows the correct trial shop name.
+3. Create a job with first name, last name, instrument type, brand/model, and reason for visit.
+4. Confirm the job number uses `YYDDD-SEQ`.
+5. Open the saved job.
+6. Change status to `On Bench`, save, and confirm no error appears.
+7. Add a work log entry and save.
+8. Add a payment and save.
+9. Confirm Activity Timeline shows creation/update/status/payment/work-log events after the migration is applied.
+
+## Image Upload Test
+
+1. Open a saved job.
+2. Upload one normal image.
+3. Confirm the image appears in the job.
+4. Mark it for the work order.
+5. Delete the image.
+6. Confirm Activity Timeline shows upload/delete events after the migration is applied.
+
+## Print Test
+
+1. Open Shop Settings.
+2. Enter shop name, phone, email, address, and print footer text.
+3. Save settings.
+4. Open a job and print the Job Sheet.
+5. Print the Customer Damage Acknowledgment.
+6. Confirm no hardcoded business name appears and footer text prints.
+
+## Backup / Export Warning
+
+FretTrack trial builds do not yet include automated backup/export tooling. Before real shop testing, confirm the Supabase project has a backup plan and that the operator can export data if a trial shop needs support.
+
+For single-job debugging, use `Export Job JSON` from Job Detail.
+
+## Known Limitations
+
+- Authentication is not implemented yet.
+- SMS is not enabled yet.
+- Activity timeline requires the `job_events` migration.
+- Shop settings are local trial settings, not authenticated organization settings.
+- Logo upload is a placeholder.
+- Monetary controls are not permission-gated yet.
+- Negative parts/services prices are blocked unless explicitly allowed in job data.
+- Supabase migrations must be applied manually in the current workspace because the CLI/database credentials are not available here.

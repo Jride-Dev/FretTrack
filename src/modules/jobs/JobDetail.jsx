@@ -1,0 +1,759 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import PartsList from '../../components/PartsList';
+import ServicesList from '../../components/ServicesList';
+import DamageMapSection from './DamageMapSection';
+import ImagesSection from '../images/ImagesSection';
+import JobInfoSection from './JobInfoSection';
+import JobPrintSheet from './JobPrintSheet';
+import JobStatusSelect from './JobStatusSelect';
+import PrintActions from './PrintActions';
+import JobDetailTabs from './components/JobDetailTabs.jsx';
+import TechDetailsSection from './TechDetailsSection';
+import TotalsSection from './TotalsSection';
+import WorkLogSection from './WorkLogSection';
+import CustomerDamageReport from './CustomerDamageReport';
+import ActivityTimeline from './ActivityTimeline.jsx';
+import { calculateJobTotals } from '../billing/accounting';
+import MessagesPanel from '../messaging/MessagesPanel';
+import { combineCustomerName } from '../customers/customerService';
+import { normalizeInstrumentType, stringCountForInstrument } from '../instruments/instrumentService';
+import { generateJobNumber } from './jobNumber';
+import { getJobEvents } from './jobEventsService';
+import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
+
+const intakeTypes = ['Walk-In', 'Telephone Appt.', 'Referral', 'Sub-Contract'];
+
+function markerColorForReport(severity) {
+  if (severity === 'Critical') return '#b3261e';
+  if (severity === 'Structural') return '#a15c00';
+  return '#255f85';
+}
+
+export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onImageDelete, onRefresh, onClose }) {
+  const [draftJob, setDraftJob] = useState(job);
+  const [isDirty, setIsDirty] = useState(false);
+  const [workLogText, setWorkLogText] = useState('');
+  const [part, setPart] = useState({ name: '', quantity: '1', cost: '', retail: '' });
+  const [service, setService] = useState({ description: '', quantity: '1', cost: '', retail: '' });
+  const [payment, setPayment] = useState({ amount: '', method: 'Cash', note: '', date: new Date().toISOString().slice(0, 10) });
+  const [imageImportErrors, setImageImportErrors] = useState([]);
+  const [isImportingImages, setIsImportingImages] = useState(false);
+  const [timelineEvents, setTimelineEvents] = useState(job.events || []);
+  const imageImportInputRef = useRef(null);
+
+  useEffect(() => {
+    setDraftJob(job);
+    setTimelineEvents(job.events || []);
+    setIsDirty(false);
+  }, [job]);
+
+  useEffect(() => {
+    refreshTimelineEvents();
+  }, [job.id]);
+
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove('customer-report-printing');
+    };
+  }, []);
+
+  useEffect(() => {
+    function cleanupPrintMode() {
+      document.body.classList.remove('customer-report-printing');
+    }
+    window.addEventListener('afterprint', cleanupPrintMode);
+    return () => window.removeEventListener('afterprint', cleanupPrintMode);
+  }, []);
+
+  const parts = draftJob.parts || [];
+  const services = draftJob.services || draftJob.labor || [];
+  const images = draftJob.images || [];
+  const workOrderImageIds = draftJob.techDetails.workOrderImageIds || [];
+  const workOrderImages = images.filter((image) => workOrderImageIds.includes(image.id));
+  const taxSettings = draftJob.techDetails.tax || {};
+  const payments = draftJob.techDetails.payments || [];
+
+  const totals = useMemo(() => calculateJobTotals(draftJob), [draftJob]);
+
+  function patchJob(patch, saveImmediately = false) {
+    setDraftJob((current) => {
+      const nextJob = { ...current, ...patch };
+      setIsDirty(true);
+      if (saveImmediately) {
+        onUpdate(nextJob);
+      }
+      return nextJob;
+    });
+  }
+
+  function updateField(event) {
+    const { name, value } = event.target;
+    if (name === 'customerFirstName' || name === 'customerLastName') {
+      patchJob({
+        [name]: value,
+        customerName: combineCustomerName(
+          name === 'customerFirstName' ? value : draftJob.customerFirstName,
+          name === 'customerLastName' ? value : draftJob.customerLastName
+        )
+      });
+      return;
+    }
+    if (name === 'dateReceived') {
+      patchJob({ dateReceived: value, jobNumber: generateJobNumber(value, jobs, draftJob.id, draftJob.shopId) });
+      return;
+    }
+    if (name === 'instrumentType') {
+      const normalizedInstrumentType = normalizeInstrumentType(value);
+      const stringCount = stringCountForInstrument(normalizedInstrumentType);
+      const stringGauges = [...(draftJob.techDetails.stringGauges || [])].slice(0, stringCount);
+      while (stringGauges.length < stringCount) {
+        stringGauges.push('');
+      }
+      patchJob({
+        instrumentType: normalizedInstrumentType,
+        techDetails: {
+          ...draftJob.techDetails,
+          instrumentType: normalizedInstrumentType,
+          stringGauges
+        }
+      });
+      return;
+    }
+    patchJob({ [name]: value });
+  }
+
+  function updateDiscountField(event) {
+    const { name, value } = event.target;
+    patchJob({
+      [name]: value,
+      techDetails: {
+        ...draftJob.techDetails,
+        [name]: value
+      }
+    });
+  }
+
+  function updateTaxField(event) {
+    const { name, value, checked, type } = event.target;
+    patchJob({
+      techDetails: {
+        ...draftJob.techDetails,
+        tax: {
+          ...(draftJob.techDetails.tax || {}),
+          [name]: type === 'checkbox' ? checked : value
+        }
+      }
+    });
+  }
+
+  function setInstrumentType(instrumentType) {
+    const normalizedInstrumentType = normalizeInstrumentType(instrumentType);
+    const stringCount = stringCountForInstrument(normalizedInstrumentType);
+    const stringGauges = [...(draftJob.techDetails.stringGauges || [])].slice(0, stringCount);
+    while (stringGauges.length < stringCount) {
+      stringGauges.push('');
+    }
+    patchJob({
+      instrumentType: normalizedInstrumentType,
+      techDetails: {
+        ...draftJob.techDetails,
+        instrumentType: normalizedInstrumentType,
+        stringGauges
+      }
+    });
+  }
+
+  function updateTechField(event) {
+    const { name, value } = event.target;
+    setIsDirty(true);
+    setDraftJob((current) => ({
+      ...current,
+      techDetails: {
+        ...current.techDetails,
+        [name]: value
+      }
+    }));
+  }
+
+  function updateWorkLogEntry(entryId, text) {
+    patchJob({
+      workLog: draftJob.workLog.map((entry) => (
+        entry.id === entryId ? { ...entry, text, entry: text } : entry
+      ))
+    });
+  }
+
+  async function saveWorkLogChanges() {
+    await saveDraftNow().catch(() => {});
+  }
+
+  async function removeWorkLogEntry(entryId) {
+    const confirmed = window.confirm('Delete this work log entry?');
+    if (!confirmed) {
+      return;
+    }
+
+    const nextJob = {
+      ...draftJob,
+      workLog: draftJob.workLog.filter((entry) => entry.id !== entryId)
+    };
+
+    setDraftJob(nextJob);
+    await saveDraftNow(nextJob).catch(() => {});
+  }
+
+  async function saveDraftNow(jobToSave = draftJob) {
+    try {
+      const savedJob = await onUpdate(jobToSave);
+      setDraftJob(savedJob || jobToSave);
+      setIsDirty(false);
+      refreshTimelineEvents();
+      return savedJob;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  function updateNeckInspection(stage, field, value) {
+    patchJob({
+      techDetails: {
+        ...draftJob.techDetails,
+        neckInspection: {
+          ...(draftJob.techDetails.neckInspection || {}),
+          [stage]: {
+            ...(draftJob.techDetails.neckInspection?.[stage] || {}),
+            [field]: value
+          }
+        }
+      }
+    });
+  }
+
+  function addPayment(event) {
+    event.preventDefault();
+    if (!Number(payment.amount)) {
+      return;
+    }
+
+    patchJob({
+      techDetails: {
+        ...draftJob.techDetails,
+        payments: [
+          ...(draftJob.techDetails.payments || []),
+          {
+            id: crypto.randomUUID(),
+            ...payment
+          }
+        ]
+      }
+    });
+    setPayment({ amount: '', method: 'Cash', note: '', date: new Date().toISOString().slice(0, 10) });
+  }
+
+  function updatePayment(paymentId, field, value) {
+    patchJob({
+      techDetails: {
+        ...draftJob.techDetails,
+        payments: (draftJob.techDetails.payments || []).map((row) => (
+          row.id === paymentId ? { ...row, [field]: value } : row
+        ))
+      }
+    });
+  }
+
+  function removePayment(paymentId) {
+    patchJob({
+      techDetails: {
+        ...draftJob.techDetails,
+        payments: (draftJob.techDetails.payments || []).filter((row) => row.id !== paymentId)
+      }
+    });
+  }
+
+  function exportJobJson() {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      job: draftJob,
+      timelineEvents
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `frettrack-job-${draftJob.jobNumber || draftJob.id || 'export'}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function updateDamageMap(damageMap) {
+    setIsDirty(true);
+    setDraftJob((current) => {
+      return {
+        ...current,
+        techDetails: {
+          ...current.techDetails,
+          damageMap
+        }
+      };
+    });
+  }
+
+  function updateStringGauge(index, value) {
+    setIsDirty(true);
+    setDraftJob((current) => {
+      const stringGauges = [...current.techDetails.stringGauges];
+      stringGauges[index] = value;
+      return {
+        ...current,
+        techDetails: {
+          ...current.techDetails,
+          stringGauges
+        }
+      };
+    });
+  }
+
+  function handleSaveRequest(event) {
+    saveDraftNow()
+      .then((savedJob) => event.detail?.resolve?.(savedJob))
+      .catch((error) => event.detail?.reject?.(error));
+  }
+
+  useEffect(() => {
+    window.addEventListener('guitar-app-save-current-job', handleSaveRequest);
+    return () => {
+      window.removeEventListener('guitar-app-save-current-job', handleSaveRequest);
+    };
+  });
+
+  async function appendWorkLog(event) {
+    event.preventDefault();
+    const text = workLogText.trim();
+    if (!text) {
+      return;
+    }
+    const nextJob = {
+      ...draftJob,
+      workLog: [
+        ...draftJob.workLog,
+        {
+          id: crypto.randomUUID(),
+          text,
+          entry: text,
+          createdAt: new Date().toISOString(),
+          timestamp: new Date().toISOString()
+        }
+      ]
+    };
+
+    setDraftJob(nextJob);
+    setIsDirty(true);
+    setWorkLogText('');
+    await saveDraftNow(nextJob).catch(() => {});
+  }
+
+  function addPart(event) {
+    event.preventDefault();
+    if (!part.name.trim()) {
+      return;
+    }
+    const nextJob = {
+      parts: [...parts, { id: crypto.randomUUID(), name: part.name, quantity: part.quantity || '1', cost: part.cost, retail: part.retail }]
+    };
+    patchJob(nextJob);
+    setPart({ name: '', quantity: '1', cost: '', retail: '' });
+  }
+
+  function updatePart(partId, field, value) {
+    const nextParts = parts.map((row) => (row.id === partId ? { ...row, [field]: value } : row));
+    patchJob({
+      parts: nextParts,
+      techDetails: {
+        ...draftJob.techDetails,
+        includedPartIds: nextParts.filter((row) => row.includedInService).map((row) => row.id)
+      }
+    });
+  }
+
+  function addService(event) {
+    event.preventDefault();
+    if (!service.description.trim()) {
+      return;
+    }
+    patchJob({
+      services: [...services, { id: crypto.randomUUID(), description: service.description, quantity: service.quantity || '1', cost: service.cost, retail: service.retail }]
+    });
+    setService({ description: '', quantity: '1', cost: '', retail: '' });
+  }
+
+  function updateService(serviceId, field, value) {
+    patchJob({
+      services: services.map((row) => (row.id === serviceId ? { ...row, [field]: value } : row))
+    });
+  }
+
+  async function handleImageChange(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+
+    if (!files.length) {
+      return;
+    }
+
+    const previews = files
+      .filter((file) => file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name))
+      .map((file) => ({
+        id: `preview-${crypto.randomUUID()}`,
+        jobId: draftJob.id,
+        url: URL.createObjectURL(file),
+        fileName: file.name,
+        name: file.name,
+        originalFileName: file.name,
+        category: 'job',
+        uploadedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      }));
+
+    if (previews.length) {
+      setIsDirty(true);
+      setDraftJob((current) => ({
+        ...current,
+        images: [...(current.images || []), ...previews]
+      }));
+    }
+
+    setImageImportErrors([]);
+    setIsImportingImages(true);
+    const result = await onImageUpload(draftJob, files);
+    if (result?.job) {
+      setDraftJob(result.job);
+      setIsDirty(false);
+    }
+    setImageImportErrors(result?.errors || []);
+    setIsImportingImages(false);
+  }
+
+  async function handleDamageViewImageUpload(viewName, file, uploadOptions = {}) {
+    const category = uploadOptions.category || `damage-map-${viewName}`;
+    const existingImageIds = new Set((draftJob.images || []).map((image) => image.id));
+    const result = await onImageUpload(draftJob, [file], { category, skipRefresh: true });
+    if (result?.job) {
+      setDraftJob(result.job);
+      setIsDirty(false);
+      const uploadedImages = result.job.images || [];
+      return uploadedImages.find((image) => !existingImageIds.has(image.id) && image.category === category && image.originalFileName === file.name)
+        || uploadedImages.find((image) => !existingImageIds.has(image.id) && image.category === category)
+        || null;
+    }
+    return null;
+  }
+
+  function handleImageDelete(image) {
+    const confirmed = window.confirm('Delete this image from the job?');
+    if (!confirmed) {
+      return;
+    }
+
+    setDraftJob((current) => ({
+      ...current,
+      images: (current.images || []).filter((item) => item.id !== image.id)
+    }));
+    setIsDirty(true);
+    onImageDelete(draftJob, image);
+  }
+
+  function updateWorkOrderImage(imageId, checked) {
+    const nextImageIds = checked
+      ? [...new Set([...workOrderImageIds, imageId])]
+      : workOrderImageIds.filter((id) => id !== imageId);
+
+    patchJob({
+      techDetails: {
+        ...draftJob.techDetails,
+        workOrderImageIds: nextImageIds
+      }
+    });
+  }
+
+  function closeDetail() {
+    onClose();
+  }
+
+  function printJobSheet() {
+    document.body.classList.remove('customer-report-printing');
+    window.print();
+  }
+
+  function printCustomerReport() {
+    document.body.classList.add('customer-report-printing');
+    window.print();
+  }
+
+  function formatMeasurementDelta(initialValue, finalValue) {
+    if (!initialValue && !finalValue) {
+      return '';
+    }
+    const initialNumber = Number(initialValue);
+    const finalNumber = Number(finalValue);
+    if (initialValue !== '' && finalValue !== '' && Number.isFinite(initialNumber) && Number.isFinite(finalNumber)) {
+      const delta = finalNumber - initialNumber;
+      const sign = delta > 0 ? '+' : '';
+      return `${initialValue} -> ${finalValue} (${sign}${delta.toFixed(3)})`;
+    }
+    return `${initialValue || '-'} -> ${finalValue || '-'}`;
+  }
+
+  async function finishJob() {
+    const nextJob = {
+      ...draftJob,
+      status: 'Picked Up',
+      pickedUpAt: new Date().toISOString()
+    };
+
+    setDraftJob(nextJob);
+    setIsDirty(true);
+    await saveDraftNow(nextJob).catch(() => {});
+  }
+
+  function reportDamageView(viewName) {
+    const damageMap = draftJob.techDetails.damageMap || {};
+    const view = damageMap.views?.[viewName] || { marks: [] };
+    const imageUrl = view.imageUrl || '';
+    const marks = view.marks || [];
+
+    return (
+      <div className="report-damage-view">
+        <h3>{viewName === 'front' ? 'Front Damage Map' : 'Back Damage Map'}</h3>
+        <div className="report-damage-canvas">
+          {imageUrl ? (
+            <img src={imageUrl} alt={`${viewName} damage map`} />
+          ) : (
+            <div className="report-damage-placeholder">No damage map image imported.</div>
+          )}
+          {marks.map((mark, index) => (
+            <span
+              key={mark.id}
+              className="damage-marker"
+              style={{ left: `${mark.x}%`, top: `${mark.y}%`, backgroundColor: markerColorForReport(mark.severity) }}
+            >
+              {index + 1}
+            </span>
+          ))}
+        </div>
+        {marks.length > 0 && (
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Area</th>
+                <th>Severity</th>
+                <th>Note</th>
+                <th>Recommended Repair</th>
+              </tr>
+            </thead>
+            <tbody>
+              {marks.map((mark, index) => (
+                <tr key={mark.id}>
+                  <td>{index + 1}</td>
+                  <td>{mark.area}</td>
+                  <td>{mark.severity}</td>
+                  <td>{mark.note}</td>
+                  <td>{mark.recommendedRepair}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    );
+  }
+
+  function updateContactPreference(field, value) {
+    patchJob({ [field]: value });
+  }
+
+  function updateMessageTemplate(templateKey) {
+    patchJob({
+      techDetails: {
+        ...draftJob.techDetails,
+        lastMessageTemplate: templateKey
+      }
+    });
+  }
+
+  async function handleSendCustomerMessage(message) {
+    const result = await sendCustomerMessage(draftJob, message);
+    if (result.message) {
+      setDraftJob((current) => ({
+        ...current,
+        messages: [
+          result.message,
+          ...(current.messages || []).filter((item) => item.id !== result.message.id)
+        ]
+        }));
+      }
+    if (result.ok && onRefresh) {
+      await onRefresh();
+    }
+    return result;
+  }
+
+  async function refreshTimelineEvents() {
+    const events = await getJobEvents(job.id);
+    if (events.length) {
+      setTimelineEvents(events);
+    }
+  }
+
+  const printActions = (
+    <PrintActions
+      closeDetail={closeDetail}
+      exportJobJson={exportJobJson}
+      finishJob={finishJob}
+      printCustomerReport={printCustomerReport}
+      printJobSheet={printJobSheet}
+    />
+  );
+
+  const printSections = (
+    <>
+      <JobPrintSheet
+        draftJob={draftJob}
+        normalizeInstrumentType={normalizeInstrumentType}
+        parts={parts}
+        services={services}
+        totals={totals}
+      />
+      <CustomerDamageReport
+        draftJob={draftJob}
+        formatMeasurementDelta={formatMeasurementDelta}
+        normalizeInstrumentType={normalizeInstrumentType}
+        reportDamageView={reportDamageView}
+        services={services}
+        workOrderImages={workOrderImages}
+      />
+    </>
+  );
+
+  const intakeSection = (
+    <JobInfoSection
+      draftJob={draftJob}
+      intakeTypes={intakeTypes}
+      normalizeInstrumentType={normalizeInstrumentType}
+      setInstrumentType={setInstrumentType}
+      updateContactPreference={updateContactPreference}
+      updateField={updateField}
+      updateTechField={updateTechField}
+    />
+  );
+
+  const inspectionSections = (
+    <>
+      <TechDetailsSection
+        draftJob={draftJob}
+        formatMeasurementDelta={formatMeasurementDelta}
+        updateNeckInspection={updateNeckInspection}
+        updateStringGauge={updateStringGauge}
+        updateTechField={updateTechField}
+      />
+      <DamageMapSection
+        instrumentType={normalizeInstrumentType(draftJob.instrumentType)}
+        damageMap={draftJob.techDetails.damageMap}
+        onChange={updateDamageMap}
+        onViewImageUpload={handleDamageViewImageUpload}
+      />
+    </>
+  );
+
+  const workSections = (
+    <>
+      <WorkLogSection
+        appendWorkLog={appendWorkLog}
+        draftJob={draftJob}
+        removeWorkLogEntry={removeWorkLogEntry}
+        saveWorkLogChanges={saveWorkLogChanges}
+        setWorkLogText={setWorkLogText}
+        updateWorkLogEntry={updateWorkLogEntry}
+        workLogText={workLogText}
+      />
+      <ServicesList services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} />
+    </>
+  );
+
+  const billingSections = (
+    <>
+      <PartsList parts={parts} part={part} setPart={setPart} onAddPart={addPart} onUpdatePart={updatePart} />
+      <ServicesList services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} />
+      <TotalsSection
+        addPayment={addPayment}
+        draftJob={draftJob}
+        payment={payment}
+        payments={payments}
+        removePayment={removePayment}
+        setPayment={setPayment}
+        taxSettings={taxSettings}
+        totals={totals}
+        updateDiscountField={updateDiscountField}
+        updatePayment={updatePayment}
+        updateTaxField={updateTaxField}
+      />
+    </>
+  );
+
+  const imagesSection = (
+    <ImagesSection
+      handleImageChange={handleImageChange}
+      handleImageDelete={handleImageDelete}
+      imageImportErrors={imageImportErrors}
+      imageImportInputRef={imageImportInputRef}
+      images={images}
+      isImportingImages={isImportingImages}
+      updateWorkOrderImage={updateWorkOrderImage}
+      workOrderImageIds={workOrderImageIds}
+    />
+  );
+
+  const messagesPanel = (
+    <MessagesPanel
+      job={draftJob}
+      onPreferenceChange={updateContactPreference}
+      onTemplateChange={updateMessageTemplate}
+      onSendMessage={handleSendCustomerMessage}
+      onGetSmsMode={getSmsMode}
+    />
+  );
+
+  const activityTimeline = <ActivityTimeline events={timelineEvents} />;
+
+  return (
+    <section className="panel detail job-detail">
+      <div className="detail-header">
+        <div>
+          <h2>{draftJob.customerName}</h2>
+          <p>
+            {draftJob.guitarBrand} {draftJob.model} {draftJob.jobNumber ? `- Job ${draftJob.jobNumber}` : ''}
+          </p>
+        </div>
+        <JobStatusSelect value={draftJob.status} onChange={updateField} />
+      </div>
+
+      {isDirty && <p className="dirty-state no-print">Unsaved changes</p>}
+      <JobDetailTabs
+        activityTimeline={activityTimeline}
+        billingSections={billingSections}
+        draftJob={draftJob}
+        imagesSection={imagesSection}
+        intakeSection={intakeSection}
+        inspectionSections={inspectionSections}
+        isDirty={isDirty}
+        messagesPanel={messagesPanel}
+        printActions={printActions}
+        printSections={printSections}
+        updateField={updateField}
+        workSections={workSections}
+      />
+    </section>
+  );
+}
