@@ -148,6 +148,12 @@ npm audit --audit-level=moderate
 npm run build
 ```
 
+## Support FretTrack
+
+FretTrack is being built independently for guitar and bass repair shops. If the project helps you, or you want to support continued development, donations help cover development time, hosting, testing, and release packaging.
+
+[Support FretTrack on PayPal](https://paypal.me/JeffRussell76)
+
 ## License
 
 FretTrack is proprietary software. See [LICENSE](LICENSE).
