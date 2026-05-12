@@ -13,6 +13,7 @@ coverage
 # Local logs and generated diagnostics
 *.log
 FretTrack_Docker_INFO.txt
+/Screenshots/
 
 # Local archives and packaged builds
 *.zip
