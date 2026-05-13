@@ -205,7 +205,7 @@ export async function addJob(job) {
 
   if (error) {
     console.warn('Supabase numbered job function failed. Retrying with legacy jobs insert.', error);
-    const { error: legacyInsertError } = await supabase.from('jobs').insert(toLegacyDbJob(newJob));
+    const { error: legacyInsertError } = await supabase.from('jobs').insert(toFallbackDbJob(newJob, error));
 
     if (legacyInsertError) {
       console.error('Supabase addJob failed. Local copy saved only.', legacyInsertError);
@@ -338,10 +338,10 @@ async function updateSupabaseJob(job) {
     return { error };
   }
 
-  console.warn('Retrying job update with legacy Supabase payload.', error);
+  console.warn('Retrying job update with compatible Supabase payload.', error);
   ({ error } = await supabase
     .from('jobs')
-    .update(toLegacyDbJob(job))
+    .update(toFallbackDbJob(job, error))
     .eq('id', job.id));
 
   return { error };
@@ -681,11 +681,23 @@ function parseDailySequence(sequenceValue, jobNumber = '') {
   return match ? Number(match[1]) : null;
 }
 
+function getJobDbDate(job) {
+  return job.jobDate || job.job_date || job.dateReceived || job.date_received || new Date().toISOString().slice(0, 10);
+}
+
+function getJobDbDayCode(job) {
+  return job.jobDayCode || job.job_day_code || getJobDayCode(getJobDbDate(job));
+}
+
 function toDbJob(job) {
+  const jobDate = getJobDbDate(job);
+  const jobDayCode = getJobDbDayCode(job);
+
   return {
     ...toLegacyDbJob(job),
-    job_date: job.jobDate || job.dateReceived || null,
-    job_day_code: job.jobDayCode || getJobDayCode(job.jobDate || job.dateReceived),
+    date_received: job.dateReceived || job.date_received || jobDate,
+    job_date: jobDate,
+    job_day_code: jobDayCode,
     daily_sequence: job.dailySequence || null,
     shop_id: job.shopId || defaultShopId,
     status: job.status || 'Checked In'
@@ -713,7 +725,7 @@ function toLegacyDbJob(job) {
     serial: job.serial || '',
     color: job.color || '',
     reason_for_visit: job.reasonForVisit || '',
-    date_received: job.dateReceived || null,
+    date_received: job.dateReceived || job.date_received || getJobDbDate(job),
     job_number: job.jobNumber || '',
     status: toLegacyJobStatus(job.status),
     tech_details: {
@@ -725,6 +737,17 @@ function toLegacyDbJob(job) {
     },
     created_at: job.createdAt,
     updated_at: job.updatedAt
+  };
+}
+
+function toFallbackDbJob(job, error) {
+  if (hasModernJobColumnError(error)) {
+    return toLegacyDbJob(job);
+  }
+
+  return {
+    ...toDbJob(job),
+    status: toLegacyJobStatus(job.status)
   };
 }
 
@@ -987,6 +1010,16 @@ function shouldRetryWithLegacyJobPayload(error) {
     || message.includes('violates check constraint')
     || message.includes('schema cache')
   );
+}
+
+function hasModernJobColumnError(error) {
+  if (!error) {
+    return false;
+  }
+
+  const message = String(error.message || error.details || '');
+  return ['job_date', 'job_day_code', 'daily_sequence', 'shop_id'].some((columnName) => isMissingColumnError(error, columnName))
+    || message.includes('schema cache');
 }
 
 function logJobCreated(job) {
