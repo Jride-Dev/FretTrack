@@ -130,12 +130,22 @@ export const saveJobs = saveLocalJobs;
 
 function mergeJobsByUpdatedAt(remoteJobs, localJobs) {
   const merged = new Map();
+  const remoteKeys = new Set();
 
   remoteJobs.forEach((job) => {
     merged.set(job.id, job);
+    const key = getJobIdentityKey(job);
+    if (key) {
+      remoteKeys.add(key);
+    }
   });
 
   localJobs.forEach((localJob) => {
+    const localKey = getJobIdentityKey(localJob);
+    if (localKey && remoteKeys.has(localKey) && !merged.has(localJob.id)) {
+      return;
+    }
+
     const remoteJob = merged.get(localJob.id);
     if (!remoteJob || isNewerJob(localJob, remoteJob)) {
       merged.set(localJob.id, localJob);
@@ -145,6 +155,12 @@ function mergeJobsByUpdatedAt(remoteJobs, localJobs) {
   return Array.from(merged.values())
     .map((job) => normalizeJob(job))
     .sort((a, b) => new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt));
+}
+
+function getJobIdentityKey(job) {
+  const shopId = job.shopId || job.shop_id || defaultShopId;
+  const jobNumber = job.jobNumber || job.job_number || '';
+  return shopId && jobNumber ? `${shopId}:${jobNumber}` : '';
 }
 
 function isNewerJob(candidate, baseline) {
@@ -326,13 +342,21 @@ export async function updateJob(updatedJob) {
 }
 
 async function updateSupabaseJob(job) {
-  let { error } = await supabase
+  let { data, error } = await supabase
     .from('jobs')
     .update(toDbJob(job))
-    .eq('id', job.id);
+    .eq('id', job.id)
+    .select('id')
+    .maybeSingle();
 
-  if (!error) {
+  if (!error && data?.id) {
     return { error: null };
+  }
+
+  if (!error && !data) {
+    return {
+      error: new Error(`Remote job ${job.jobNumber || job.id} was not found. Refresh Current Jobs and reopen the remote copy before saving.`)
+    };
   }
 
   if (!shouldRetryWithLegacyJobPayload(error)) {
@@ -340,10 +364,18 @@ async function updateSupabaseJob(job) {
   }
 
   console.warn('Retrying job update with legacy Supabase payload.', error);
-  ({ error } = await supabase
+  ({ data, error } = await supabase
     .from('jobs')
     .update(toLegacyDbJob(job))
-    .eq('id', job.id));
+    .eq('id', job.id)
+    .select('id')
+    .maybeSingle());
+
+  if (!error && !data) {
+    return {
+      error: new Error(`Remote job ${job.jobNumber || job.id} was not found. Refresh Current Jobs and reopen the remote copy before saving.`)
+    };
+  }
 
   return { error };
 }
