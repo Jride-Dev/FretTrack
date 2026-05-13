@@ -23,11 +23,12 @@ This file tracks known bugs, setup traps, trial limitations, and historical brea
 - Current setting: `VITE_SMS_ENABLED=false`.
 - Related changes: `v0.1.10-beta` added Twilio SMS plumbing; `v0.1.11` removed Twilio from required trial setup and disabled SMS for trial builds.
 
-### Public trial protection is temporary
+### Auth member management is incomplete
 
 - Status: Known limitation.
-- Current behavior: Trial builds use a shop-level function key gate.
-- Future fix: Add proper user authentication.
+- Current behavior: Supabase-configured builds require sign-in and shop membership, and the first signed-in user can bootstrap the first shop owner when a shop has no members.
+- Limitation: There is not yet a member invitation or member-management screen.
+- Future fix: Add shop member administration, invitations, role editing, and `job_events.created_by` wiring.
 - Related setup values:
 
 ```text

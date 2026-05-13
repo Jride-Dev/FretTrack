@@ -28,10 +28,12 @@ SHOP_EMAIL_FROM=
 1. Create or select the shop Supabase project.
 2. Apply the schema and migrations listed below.
 3. Confirm the `job-images` storage bucket exists and is public for trial image display.
-4. Deploy `send-email`.
-5. Keep `send-sms` deployed only as dormant scaffolding while SMS is disabled.
-6. Set Edge Function secrets.
-7. Send a test email through the app.
+4. Enable Supabase Auth email/password sign-in for trial users.
+5. Deploy `send-email`.
+6. Keep `send-sms` deployed only as dormant scaffolding while SMS is disabled.
+7. Set Edge Function secrets.
+8. Sign in through FretTrack and create the first shop owner if the shop has no members yet.
+9. Send a test email through the app.
 
 ## Migrations Required
 
@@ -40,18 +42,27 @@ Apply all current schema changes, including:
 - `supabase-schema.sql`
 - `supabase/migrations/20260511124500_add_shop_scoped_job_numbers.sql`
 - `supabase/migrations/20260511133000_add_job_events.sql`
+- `supabase/migrations/20260513043535_add_auth_shop_memberships.sql`
+
+## Auth / Shop Access Test
+
+1. Start the app with `npm run dev`.
+2. Confirm the app shows the sign-in screen when Supabase is configured.
+3. Create or sign into a Supabase Auth user.
+4. If this is the first user for the configured shop, click `Create First Shop Owner`.
+5. Confirm the app loads jobs only after shop membership is available.
+6. Sign out and confirm the app returns to the sign-in screen.
 
 ## Test Job Creation Flow
 
-1. Start the app with `npm run dev`.
-2. Confirm the header shows the correct trial shop name.
-3. Create a job with first name, last name, instrument type, brand/model, and reason for visit.
-4. Confirm the job number uses `YYDDD-SEQ`.
-5. Open the saved job.
-6. Change status to `On Bench`, save, and confirm no error appears.
-7. Add a work log entry and save.
-8. Add a payment and save.
-9. Confirm Activity Timeline shows creation/update/status/payment/work-log events after the migration is applied.
+1. Confirm the header shows the correct trial shop name.
+2. Create a job with first name, last name, instrument type, brand/model, and reason for visit.
+3. Confirm the job number uses `YYDDD-SEQ`.
+4. Open the saved job.
+5. Change status to `On Bench`, save, and confirm no error appears.
+6. Add a work log entry and save.
+7. Add a payment and save.
+8. Confirm Activity Timeline shows creation/update/status/payment/work-log events after the migration is applied.
 
 ## Image Upload Test
 
@@ -79,7 +90,7 @@ For single-job debugging, use `Export Job JSON` from Job Detail.
 
 ## Known Limitations
 
-- Authentication is not implemented yet.
+- Authentication now gates Supabase-configured builds, but user invitation/admin screens are not implemented yet.
 - SMS is not enabled yet.
 - Activity timeline requires the `job_events` migration.
 - Shop settings are local trial settings, not authenticated organization settings.

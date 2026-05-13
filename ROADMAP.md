@@ -11,6 +11,7 @@ This file tracks where FretTrack is headed after the current `0.2.5` trial-readi
 - Work order system stable enough for real shop testing.
 - v0.2.4 adds module stabilization, photos-module ownership, shop config foundations, and non-blocking job event logging for the future activity timeline.
 - v0.2.5 adds a visible activity timeline, basic shop settings, trial-readiness documentation, data integrity checks, and job JSON export for debugging.
+- Auth/shop membership work is now underway after the `0.2.5` trial-readiness baseline.
 
 ## Near Term
 
@@ -43,6 +44,8 @@ This file tracks where FretTrack is headed after the current `0.2.5` trial-readi
 ## Security and Accounts
 
 - Replace the temporary shop-level public-trial gate with proper user authentication.
+- Add the first Supabase Auth sign-in gate and shop membership table.
+- Add member invitation and member-management screens after the first auth gate is verified.
 - Connect `job_events.created_by` to authenticated users once auth exists.
 - Keep the shared function key setup only as temporary public-trial protection.
 - Add organization membership roles so monetary controls can be restricted by role.

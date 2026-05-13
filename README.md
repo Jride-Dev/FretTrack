@@ -31,7 +31,7 @@ The current `0.2.x` line is a public trial baseline. It is intended for controll
 - SMS plumbing exists, but SMS is disabled in trial builds until carrier registration is ready.
 - Dark theme is the default for new users.
 - Work orders, damage maps, customer lookup, photo handling, payments, print sheets, and activity timeline basics are available.
-- Authentication and organization roles are planned but not complete.
+- Supabase Auth and shop membership foundations are underway; member-management screens and full role-based permissions are still planned.
 
 ## Features
 
@@ -48,6 +48,8 @@ The current `0.2.x` line is a public trial baseline. It is intended for controll
 - Activity timeline for job creation, updates, status changes, image changes, payments, and work logs.
 - Shop settings for local trial branding and print footer text.
 - Export Job JSON for trial-shop debugging.
+- Supabase Auth sign-in gate for configured trial builds.
+- Shop membership foundation for owner/admin/tech/viewer roles.
 
 ## Open FretTrack
 

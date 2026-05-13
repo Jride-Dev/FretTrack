@@ -1069,6 +1069,7 @@ form.panel button {
 }
 
 .connection-status.not-configured,
+.connection-status.auth-required,
 .connection-status.error {
   background: color-mix(in srgb, var(--surface-2) 82%, var(--danger) 18%);
   border-color: var(--danger);
@@ -1161,8 +1162,45 @@ form.panel button {
 }
 
 .connection-status.not-configured .plug-head,
+.connection-status.auth-required .plug-head,
 .connection-status.error .plug-head {
   left: 3px;
+}
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+.auth-panel {
+  width: min(460px, 100%);
+}
+
+.auth-panel form {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0 16px;
+}
+
+.auth-panel label {
+  display: grid;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.auth-panel .primary-action,
+.auth-panel .button-tertiary {
+  width: 100%;
+}
+
+.auth-mode-toggle {
+  margin-top: 8px;
+}
+
+.muted-text {
+  color: var(--muted);
 }
 
 @keyframes plug-connect {

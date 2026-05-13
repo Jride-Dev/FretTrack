@@ -168,6 +168,7 @@ export async function getJobs() {
       job_images (*),
       customer_messages (*)
     `)
+    .eq('shop_id', defaultShopId)
     .order('created_at', { ascending: false });
 
   if (error) {

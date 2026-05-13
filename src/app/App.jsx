@@ -1,14 +1,17 @@
 import { Fragment, useEffect, useState } from 'react';
 import AppNotice from '../shared/components/AppNotice.jsx';
+import AuthGate from '../modules/auth/AuthGate.jsx';
 import JobDetail from '../modules/jobs/JobDetail.jsx';
 import JobForm from '../modules/jobs/JobForm.jsx';
 import JobList from '../modules/jobs/JobList.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import { checkSupabaseJobsConnection, hasSupabaseConfig } from '../shared/lib/supabaseClient';
+import { getCurrentSession, onAuthSessionChange, signOut } from '../modules/auth/authService';
 import { getJobs, updateJob } from '../modules/jobs/jobService';
 import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService';
 import { calculateTillSummary, sortNewestFirst } from '../modules/jobs/jobSelectors';
 import { getCurrentShopName } from '../modules/shops/shopConfig';
+import { bootstrapCurrentUserAsOwner, getCurrentShopMembership } from '../modules/shops/shopMembershipService';
 import { money } from '../shared/utils/money';
 import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes';
 
@@ -21,6 +24,10 @@ export default function App() {
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [mode, setMode] = useState('new');
   const [supabaseStatus, setSupabaseStatus] = useState(hasSupabaseConfig ? 'checking' : 'not-configured');
+  const [session, setSession] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(hasSupabaseConfig);
+  const [membership, setMembership] = useState(null);
+  const [isMembershipLoading, setIsMembershipLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState(null);
   const [theme, setTheme] = useState(() => {
@@ -37,9 +44,49 @@ export default function App() {
   }
 
   useEffect(() => {
-    refreshJobs();
-    checkSupabaseConnection();
+    if (!hasSupabaseConfig) {
+      refreshJobs();
+      checkSupabaseConnection();
+      return undefined;
+    }
+
+    let isMounted = true;
+    getCurrentSession()
+      .then((currentSession) => {
+        if (isMounted) {
+          setSession(currentSession);
+          setIsAuthLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Session load failed.', error);
+        if (isMounted) {
+          setIsAuthLoading(false);
+          setNotice({ type: 'error', message: 'Unable to load sign-in session.' });
+        }
+      });
+
+    const unsubscribe = onAuthSessionChange((nextSession) => {
+      setSession(nextSession);
+      setMembership(null);
+      setJobs([]);
+      setSelectedJobId(null);
+      setMode('new');
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
+
+  useEffect(() => {
+    if (!hasSupabaseConfig || !session) {
+      return;
+    }
+
+    loadMembershipAndJobs();
+  }, [session]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -66,6 +113,61 @@ export default function App() {
     setSupabaseStatus(result.status);
     if (!result.ok) {
       return;
+    }
+  }
+
+  async function loadMembershipAndJobs() {
+    setIsMembershipLoading(true);
+    try {
+      const currentMembership = await getCurrentShopMembership();
+      setMembership(currentMembership);
+      if (!currentMembership) {
+        setSupabaseStatus('auth-required');
+        return;
+      }
+
+      await refreshJobs();
+      await checkSupabaseConnection();
+    } catch (error) {
+      console.error('Shop membership load failed.', error);
+      setSupabaseStatus('error');
+      setNotice({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Unable to load shop membership.'
+      });
+    } finally {
+      setIsMembershipLoading(false);
+    }
+  }
+
+  async function handleBootstrapOwner() {
+    setIsMembershipLoading(true);
+    setNotice(null);
+    try {
+      const ownerMembership = await bootstrapCurrentUserAsOwner();
+      setMembership(ownerMembership);
+      await refreshJobs();
+      await checkSupabaseConnection();
+      setNotice({ type: 'success', message: 'Shop owner access created.' });
+    } catch (error) {
+      setNotice({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Unable to create shop owner access.'
+      });
+    } finally {
+      setIsMembershipLoading(false);
+    }
+  }
+
+  async function handleSignOut() {
+    try {
+      await signOut();
+      setNotice(null);
+    } catch (error) {
+      setNotice({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Sign out failed.'
+      });
     }
   }
 
@@ -150,8 +252,48 @@ export default function App() {
     checking: 'Supabase Checking',
     connected: 'Supabase Connected',
     'not-configured': 'Supabase Not Configured',
+    'auth-required': 'Supabase Auth Required',
     error: 'Supabase Error'
   }[supabaseStatus];
+
+  if (hasSupabaseConfig && isAuthLoading) {
+    return (
+      <main className="app auth-shell">
+        <section className="panel auth-panel">Loading FretTrack...</section>
+      </main>
+    );
+  }
+
+  if (hasSupabaseConfig && !session) {
+    return (
+      <>
+        <AuthGate onNotice={setNotice} />
+        <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+      </>
+    );
+  }
+
+  if (hasSupabaseConfig && session && !membership) {
+    return (
+      <main className="app auth-shell">
+        <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+        <section className="panel auth-panel">
+          <h1>Shop Access Required</h1>
+          <p>{isMembershipLoading ? 'Checking shop membership...' : 'Your account is signed in, but it is not connected to this FretTrack shop yet.'}</p>
+          <p className="muted-text">{session.user?.email}</p>
+          <button type="button" className="primary-action" onClick={handleBootstrapOwner} disabled={isMembershipLoading}>
+            {isMembershipLoading ? 'Working...' : 'Create First Shop Owner'}
+          </button>
+          <button type="button" className="button-tertiary" onClick={loadMembershipAndJobs} disabled={isMembershipLoading}>
+            Retry Access Check
+          </button>
+          <button type="button" className="button-tertiary" onClick={handleSignOut}>
+            Sign Out
+          </button>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="app app-shell">
@@ -190,6 +332,9 @@ export default function App() {
           <button type="button" onClick={showNewJob}>New Job</button>
           <button type="button" onClick={() => setMode('list')}>Current Jobs</button>
           <button type="button" onClick={() => setMode('settings')}>Shop Settings</button>
+          {session && (
+            <button type="button" onClick={handleSignOut}>Sign Out</button>
+          )}
         </div>
       </header>
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
