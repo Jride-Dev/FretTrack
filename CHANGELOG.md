@@ -13,6 +13,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Scoped remote job loading to the configured shop.
 - Applied the live auth/shop membership migration for the current trial Supabase project.
 - Improved auth and Supabase error messages so failures surface the provider message.
+- Fixed child-record RLS access checks so authenticated shop members can save work logs, parts, services, images, messages, and activity events for jobs in their shop.
 - Added PayPal funding metadata and README support links in the public repo workflow.
 - Fixed remote save fallback payloads so required `job_date` values are preserved.
 
