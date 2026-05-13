@@ -99,6 +99,18 @@ Checklist:
 
 ## Historical Break/Fix Notes
 
+### Auth/RLS rollout blocked saves inside local-only jobs
+
+- Fixed in: `v0.2.6`.
+- Problem: Some work orders existed only in browser local storage after the auth/shop-membership rollout. Child records such as work logs, images, messages, parts, services, and activity events could then fail RLS because Supabase had no parent `jobs` row to authorize against.
+- Fix: Job save, photo upload, and customer messaging now verify or create the remote parent work order before syncing child records. Child-table RLS now consistently checks shop membership through the parent job.
+
+### Duplicate work orders could be created by repeated submits
+
+- Fixed in: `v0.2.6`.
+- Problem: Slow network saves or repeated clicks could attempt to create multiple work orders for the same shop/job number.
+- Fix: The app now blocks repeat submit attempts, checks local and remote duplicates before creating a job, and surfaces `MULTIPLE WORK ORDERS CANNOT BE CREATED FOR [JobID, WORKORDER NUMBER]`. The remote numbered-job function is also idempotent by shop/job number.
+
 ### Appended work order history disappeared after closing a job
 
 - Fixed in: `v0.2.3`.

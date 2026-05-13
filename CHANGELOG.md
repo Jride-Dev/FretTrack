@@ -14,7 +14,11 @@ This file tracks what changed in each release, including fixes that were added b
 - Applied the live auth/shop membership migration for the current trial Supabase project.
 - Improved auth and Supabase error messages so failures surface the provider message.
 - Fixed child-record RLS access checks so authenticated shop members can save work logs, parts, services, images, messages, and activity events for jobs in their shop.
+- Fixed local-only work orders created during auth/RLS rollout so saving a job can create the missing remote parent record before syncing child records.
+- Fixed photo uploads that succeeded in Supabase Storage but failed to create `job_images` records because the remote job did not exist yet.
+- Fixed customer message sends for repaired/local-only jobs by verifying the remote work order before invoking email/SMS Edge Functions.
 - Added duplicate work order guards for slow/double-submitted job creation and a clear `MULTIPLE WORK ORDERS CANNOT BE CREATED` warning.
+- Cleaned up duplicate/empty test work orders created during slow or repeated save attempts.
 - Added PayPal funding metadata and README support links in the public repo workflow.
 - Fixed remote save fallback payloads so required `job_date` values are preserved.
 
