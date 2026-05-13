@@ -1,8 +1,20 @@
 # Changelog
 
-Current version: `0.2.5`
+Current version: `0.2.6`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
+
+## v0.2.6
+
+- Added the Supabase Auth sign-in/sign-up gate for configured builds.
+- Added `shop_members` with owner, admin, tech, and viewer roles.
+- Added first-shop owner bootstrap for the configured shop ID.
+- Added member-scoped RLS policies for jobs, job child records, messages, and activity events.
+- Scoped remote job loading to the configured shop.
+- Applied the live auth/shop membership migration for the current trial Supabase project.
+- Improved auth and Supabase error messages so failures surface the provider message.
+- Added PayPal funding metadata and README support links in the public repo workflow.
+- Fixed remote save fallback payloads so required `job_date` values are preserved.
 
 ## v0.2.5
 
