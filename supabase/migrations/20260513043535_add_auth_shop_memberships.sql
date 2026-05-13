@@ -78,9 +78,11 @@ set search_path = public
 as $$
   select exists (
     select 1
-    from jobs
-    where id = target_job_id
-      and private.is_shop_member(shop_id)
+    from public.jobs
+    join public.shop_members
+      on shop_members.shop_id = jobs.shop_id
+     and shop_members.user_id = auth.uid()
+    where jobs.id = target_job_id
   );
 $$;
 

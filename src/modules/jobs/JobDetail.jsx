@@ -340,6 +340,7 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
         ...draftJob.workLog,
         {
           id: crypto.randomUUID(),
+          jobId: draftJob.id,
           text,
           entry: text,
           createdAt: new Date().toISOString(),
@@ -360,7 +361,7 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
       return;
     }
     const nextJob = {
-      parts: [...parts, { id: crypto.randomUUID(), name: part.name, quantity: part.quantity || '1', cost: part.cost, retail: part.retail }]
+      parts: [...parts, { id: crypto.randomUUID(), jobId: draftJob.id, name: part.name, quantity: part.quantity || '1', cost: part.cost, retail: part.retail }]
     };
     patchJob(nextJob);
     setPart({ name: '', quantity: '1', cost: '', retail: '' });
@@ -383,7 +384,7 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
       return;
     }
     patchJob({
-      services: [...services, { id: crypto.randomUUID(), description: service.description, quantity: service.quantity || '1', cost: service.cost, retail: service.retail }]
+      services: [...services, { id: crypto.randomUUID(), jobId: draftJob.id, description: service.description, quantity: service.quantity || '1', cost: service.cost, retail: service.retail }]
     });
     setService({ description: '', quantity: '1', cost: '', retail: '' });
   }

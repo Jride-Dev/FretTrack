@@ -936,7 +936,7 @@ async function syncJobChildren(job) {
 
   const workLogs = job.workLog.map((log) => ({
     id: log.id,
-    job_id: job.id,
+    job_id: log.jobId || log.job_id || job.id,
     entry: log.entry || log.text,
     text: log.text || log.entry,
     created_at: log.createdAt || log.timestamp
