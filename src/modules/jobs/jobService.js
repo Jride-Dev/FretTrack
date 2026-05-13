@@ -267,6 +267,16 @@ export async function sendCustomerMessage(job, message) {
     return { ok: false, error: 'Supabase is not configured. Messaging requires Edge Functions.' };
   }
 
+  try {
+    await ensureRemoteJob(normalizedJob);
+  } catch (error) {
+    console.error('Remote job repair before customer message failed.', error);
+    return {
+      ok: false,
+      error: `Remote job save failed: ${error.message || 'Unable to create remote work order before sending.'}`
+    };
+  }
+
   const functionName = channel === 'sms' ? 'send-sms' : 'send-email';
   const { data, error } = await supabase.functions.invoke(functionName, {
     headers: functionHeaders(),
