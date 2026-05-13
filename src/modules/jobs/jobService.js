@@ -10,6 +10,7 @@ const STORAGE_KEY = 'guitar_checkin_jobs';
 const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
 const fretTrackFunctionKey = import.meta.env.VITE_FRETTRACK_FUNCTION_KEY || '';
 const defaultShopId = getCurrentShopId();
+const duplicateWorkOrderPrefix = 'MULTIPLE WORK ORDERS CANNOT BE CREATED';
 export const smsEnabled = import.meta.env.VITE_SMS_ENABLED === 'true';
 const STRING_COUNTS = {
   Acoustic: 6,
@@ -217,11 +218,17 @@ export async function addJob(job) {
   }, localJobs);
   validateJobForSave(newJob);
 
-  saveLocalJobs([newJob, ...localJobs]);
+  assertNoDuplicateLocalWorkOrder(newJob, localJobs);
 
   if (!hasSupabaseConfig || !supabase) {
+    saveLocalJobs([newJob, ...localJobs]);
     logJobCreated(newJob);
     return newJob;
+  }
+
+  const duplicateRemoteJob = await findRemoteDuplicateWorkOrder(newJob);
+  if (duplicateRemoteJob) {
+    throw new Error(getDuplicateWorkOrderMessage(duplicateRemoteJob.id, duplicateRemoteJob.job_number || newJob.jobNumber));
   }
 
   const { data, error } = await supabase.rpc('create_job_with_number', {
@@ -386,6 +393,39 @@ async function updateSupabaseJob(job) {
   }
 
   return { error };
+}
+
+async function findRemoteDuplicateWorkOrder(job) {
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('id, job_number')
+    .eq('shop_id', job.shopId || defaultShopId)
+    .eq('job_number', job.jobNumber)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('Duplicate work order preflight failed.', error);
+    return null;
+  }
+
+  return data || null;
+}
+
+function assertNoDuplicateLocalWorkOrder(job, localJobs) {
+  const duplicateLocalJob = localJobs.find((item) => (
+    (item.shopId || defaultShopId) === (job.shopId || defaultShopId)
+    && item.jobNumber === job.jobNumber
+    && item.id !== job.id
+  ));
+
+  if (duplicateLocalJob) {
+    throw new Error(getDuplicateWorkOrderMessage(duplicateLocalJob.id, duplicateLocalJob.jobNumber || job.jobNumber));
+  }
+}
+
+function getDuplicateWorkOrderMessage(jobId, jobNumber) {
+  return `${duplicateWorkOrderPrefix} FOR [${jobId || 'UNKNOWN JOB ID'}, ${jobNumber || 'UNKNOWN WORK ORDER NUMBER'}]`;
 }
 
 export async function addWorkLog(jobId, entry) {

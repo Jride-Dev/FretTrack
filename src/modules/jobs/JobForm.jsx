@@ -84,6 +84,10 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (isSaving) {
+      return;
+    }
+
     const customerName = combineCustomerName(form.customerFirstName, form.customerLastName);
     if (!customerName || !form.guitarBrand.trim()) {
       return;
@@ -173,7 +177,7 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
     } catch (error) {
       onNotice?.({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Job save failed.'
+        message: getErrorMessage(error, 'Job save failed.')
       });
     } finally {
       setIsSaving(false);
@@ -333,4 +337,16 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
       <button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Job'}</button>
     </form>
   );
+}
+
+function getErrorMessage(error, fallback) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message || fallback);
+  }
+
+  return fallback;
 }
