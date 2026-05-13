@@ -369,9 +369,7 @@ async function updateSupabaseJob(job) {
   }
 
   if (!error && !data) {
-    return {
-      error: new Error(`Remote job ${job.jobNumber || job.id} was not found. Refresh Current Jobs and reopen the remote copy before saving.`)
-    };
+    return createMissingRemoteJob(job);
   }
 
   if (!shouldRetryWithLegacyJobPayload(error)) {
@@ -387,12 +385,36 @@ async function updateSupabaseJob(job) {
     .maybeSingle());
 
   if (!error && !data) {
-    return {
-      error: new Error(`Remote job ${job.jobNumber || job.id} was not found. Refresh Current Jobs and reopen the remote copy before saving.`)
-    };
+    return createMissingRemoteJob(job);
   }
 
   return { error };
+}
+
+async function createMissingRemoteJob(job) {
+  const duplicateRemoteJob = await findRemoteDuplicateWorkOrder(job);
+  if (duplicateRemoteJob && duplicateRemoteJob.id !== job.id) {
+    return {
+      error: new Error(getDuplicateWorkOrderMessage(duplicateRemoteJob.id, duplicateRemoteJob.job_number || job.jobNumber))
+    };
+  }
+
+  const { data, error } = await supabase.rpc('create_job_with_number', {
+    job_payload: toDbJob(job)
+  });
+
+  if (error) {
+    return { error };
+  }
+
+  const savedJob = Array.isArray(data) ? data[0] : data;
+  if (savedJob?.id && savedJob.id !== job.id) {
+    return {
+      error: new Error(getDuplicateWorkOrderMessage(savedJob.id, savedJob.job_number || job.jobNumber))
+    };
+  }
+
+  return { error: null };
 }
 
 async function findRemoteDuplicateWorkOrder(job) {
