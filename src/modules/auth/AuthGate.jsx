@@ -26,7 +26,7 @@ export default function AuthGate({ onNotice }) {
     } catch (error) {
       onNotice?.({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Authentication failed.'
+        message: getErrorMessage(error, 'Authentication failed.')
       });
     } finally {
       setIsSubmitting(false);
@@ -78,4 +78,16 @@ export default function AuthGate({ onNotice }) {
       </section>
     </main>
   );
+}
+
+function getErrorMessage(error, fallback) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message || fallback);
+  }
+
+  return fallback;
 }

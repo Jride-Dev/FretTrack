@@ -61,8 +61,8 @@ export default function App() {
       .catch((error) => {
         console.error('Session load failed.', error);
         if (isMounted) {
-          setIsAuthLoading(false);
-          setNotice({ type: 'error', message: 'Unable to load sign-in session.' });
+        setIsAuthLoading(false);
+        setNotice({ type: 'error', message: 'Unable to load sign-in session.' });
         }
       });
 
@@ -133,7 +133,7 @@ export default function App() {
       setSupabaseStatus('error');
       setNotice({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Unable to load shop membership.'
+        message: getErrorMessage(error, 'Unable to load shop membership.')
       });
     } finally {
       setIsMembershipLoading(false);
@@ -152,7 +152,7 @@ export default function App() {
     } catch (error) {
       setNotice({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Unable to create shop owner access.'
+        message: getErrorMessage(error, 'Unable to create shop owner access.')
       });
     } finally {
       setIsMembershipLoading(false);
@@ -166,7 +166,7 @@ export default function App() {
     } catch (error) {
       setNotice({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Sign out failed.'
+        message: getErrorMessage(error, 'Sign out failed.')
       });
     }
   }
@@ -188,7 +188,7 @@ export default function App() {
       } catch (error) {
         setNotice({
           type: 'error',
-          message: error instanceof Error ? error.message : 'Job save failed.'
+          message: getErrorMessage(error, 'Job save failed.')
         });
       } finally {
         setIsSaving(false);
@@ -397,4 +397,16 @@ export default function App() {
       </div>
     </main>
   );
+}
+
+function getErrorMessage(error, fallback) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message || fallback);
+  }
+
+  return fallback;
 }
