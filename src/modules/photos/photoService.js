@@ -1,6 +1,6 @@
 import { prepareImageForStorage, readFileAsDataUrl } from '../../services/imageProcessing';
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
-import { getLocalJobs, saveLocalJobs, updateJob } from '../jobs/jobService';
+import { ensureRemoteJob, getLocalJobs, saveLocalJobs, updateJob } from '../jobs/jobService';
 import { logJobEventSafe } from '../jobs/jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
 
@@ -37,8 +37,8 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
   }
 
   const job = typeof jobOrId === 'string' ? null : jobOrId;
-  const jobId = typeof jobOrId === 'string' ? jobOrId : jobOrId.id;
-  const normalizedJob = job ? normalizePhotoJob(job) : null;
+  let jobId = typeof jobOrId === 'string' ? jobOrId : jobOrId.id;
+  let normalizedJob = job ? normalizePhotoJob(job) : null;
   const originalFileName = file.name || 'imported-image';
   const uploadFile = await prepareImageForStorage(file, originalFileName);
   const uploadedAt = new Date().toISOString();
@@ -62,6 +62,11 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
     const savedJob = await updateJob({ ...normalizedJob, images: [...(normalizedJob.images || []), image] });
     logImageUploaded(savedJob || normalizedJob, image);
     return savedJob;
+  }
+
+  if (normalizedJob) {
+    normalizedJob = normalizePhotoJob(await ensureRemoteJob(normalizedJob));
+    jobId = normalizedJob.id;
   }
 
   const filePath = `${jobId}/${makeJobImageFileName(normalizedJob, options.index || 1)}`;

@@ -356,6 +356,52 @@ export async function updateJob(updatedJob) {
   return job;
 }
 
+export async function ensureRemoteJob(job) {
+  const normalizedJob = normalizeJob({
+    ...job,
+    shopId: job.shopId || defaultShopId,
+    updatedAt: job.updatedAt || new Date().toISOString()
+  });
+
+  if (!hasSupabaseConfig || !supabase) {
+    return normalizedJob;
+  }
+
+  const { data: existingJob, error: existingJobError } = await supabase
+    .from('jobs')
+    .select('id')
+    .eq('id', normalizedJob.id)
+    .maybeSingle();
+
+  if (existingJobError) {
+    throw existingJobError;
+  }
+
+  if (existingJob?.id) {
+    return normalizedJob;
+  }
+
+  const duplicateRemoteJob = await findRemoteDuplicateWorkOrder(normalizedJob);
+  if (duplicateRemoteJob && duplicateRemoteJob.id !== normalizedJob.id) {
+    throw new Error(getDuplicateWorkOrderMessage(duplicateRemoteJob.id, duplicateRemoteJob.job_number || normalizedJob.jobNumber));
+  }
+
+  const { data, error } = await supabase.rpc('create_job_with_number', {
+    job_payload: toDbJob(normalizedJob)
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const savedJob = Array.isArray(data) ? data[0] : data;
+  if (savedJob?.id && savedJob.id !== normalizedJob.id) {
+    throw new Error(getDuplicateWorkOrderMessage(savedJob.id, savedJob.job_number || normalizedJob.jobNumber));
+  }
+
+  return normalizedJob;
+}
+
 async function updateSupabaseJob(job) {
   let { data, error } = await supabase
     .from('jobs')
@@ -392,29 +438,12 @@ async function updateSupabaseJob(job) {
 }
 
 async function createMissingRemoteJob(job) {
-  const duplicateRemoteJob = await findRemoteDuplicateWorkOrder(job);
-  if (duplicateRemoteJob && duplicateRemoteJob.id !== job.id) {
-    return {
-      error: new Error(getDuplicateWorkOrderMessage(duplicateRemoteJob.id, duplicateRemoteJob.job_number || job.jobNumber))
-    };
-  }
-
-  const { data, error } = await supabase.rpc('create_job_with_number', {
-    job_payload: toDbJob(job)
-  });
-
-  if (error) {
+  try {
+    await ensureRemoteJob(job);
+    return { error: null };
+  } catch (error) {
     return { error };
   }
-
-  const savedJob = Array.isArray(data) ? data[0] : data;
-  if (savedJob?.id && savedJob.id !== job.id) {
-    return {
-      error: new Error(getDuplicateWorkOrderMessage(savedJob.id, savedJob.job_number || job.jobNumber))
-    };
-  }
-
-  return { error: null };
 }
 
 async function findRemoteDuplicateWorkOrder(job) {
