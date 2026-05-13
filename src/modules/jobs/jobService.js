@@ -141,6 +141,10 @@ function mergeJobsByUpdatedAt(remoteJobs, localJobs) {
   });
 
   localJobs.forEach((localJob) => {
+    if (!remoteJobs.length && looksLikeRemoteJob(localJob)) {
+      return;
+    }
+
     const localKey = getJobIdentityKey(localJob);
     if (localKey && remoteKeys.has(localKey) && !merged.has(localJob.id)) {
       return;
@@ -161,6 +165,10 @@ function getJobIdentityKey(job) {
   const shopId = job.shopId || job.shop_id || defaultShopId;
   const jobNumber = job.jobNumber || job.job_number || '';
   return shopId && jobNumber ? `${shopId}:${jobNumber}` : '';
+}
+
+function looksLikeRemoteJob(job) {
+  return Boolean(job.jobNumber || job.job_number || job.dailySequence || job.daily_sequence);
 }
 
 function isNewerJob(candidate, baseline) {
