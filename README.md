@@ -1,6 +1,6 @@
 # FretTrack
 
-Current version: `0.2.6`
+Current version: `0.2.61`
 
 FretTrack is a guitar and bass repair shop check-in and work order app. It helps a shop track customer intake, instrument details, inspection notes, damage photos, parts, services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
@@ -30,13 +30,14 @@ The current `0.2.x` line is a public trial baseline. It is intended for controll
 - Email notifications are active through Supabase Edge Functions and Resend.
 - SMS plumbing exists, but SMS is disabled in trial builds until carrier registration is ready.
 - Dark theme is the default for new users.
-- Work orders, damage maps, customer lookup, photo handling, payments, print sheets, and activity timeline basics are available.
+- Work orders, standalone customer records, damage maps, customer lookup, photo handling, payments, print sheets, and activity timeline basics are available.
 - Supabase Auth and shop membership foundations are underway; member-management screens and full role-based permissions are still planned.
 
 ## Features
 
 - Job intake for acoustic, electric, and bass work.
-- Customer lookup and repeat-customer quick fill.
+- Standalone customer add/list/search and repeat-customer quick fill.
+- Import-ready customer fields for flexible display names, person/company records, normalized contact matching, structured address, source, external reference, import source, import batch ID, and notes.
 - Structured first and last name fields while preserving full-name display.
 - Inspection fields for string gauges, neck relief, action, fret condition, neck condition, and notes.
 - Damage map with view/area/severity markers and photo attachment support.
@@ -134,6 +135,7 @@ Short version:
 - [Known Issues](KNOWN_ISSUES.md) tracks trial limitations, setup traps, and historical fixes.
 - [Trial Readiness Checklist](docs/TRIAL_READINESS.md) covers first-shop testing.
 - [Architecture Overview](ARCHITECTURE_OVERVIEW.md) explains the main modules and data flow.
+- [Supabase Migration Workflow](docs/supabase-migrations.md) explains the migration-history preflight and recovery rules.
 - [Docs Home](docs/README.md) links deeper setup and deployment notes.
 
 ## Security Automation
@@ -147,8 +149,17 @@ Run this locally before publishing or cutting a release:
 
 ```powershell
 npm audit --audit-level=moderate
+npm run check:migrations
 npm run build
 ```
+
+Before creating or applying Supabase migrations, run:
+
+```powershell
+npm run check:migrations
+```
+
+This fails when the remote database has migration versions missing from `supabase/migrations`, which means local history needs to be recovered before any new migration is pushed.
 
 ## License
 

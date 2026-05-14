@@ -160,7 +160,8 @@ export async function deleteJobImage(job, image) {
   const { error: dbError } = await supabase
     .from('job_images')
     .delete()
-    .eq('id', image.id);
+    .eq('id', image.id)
+    .eq('job_id', nextJob.id);
 
   if (dbError) {
     console.error('Image database delete failed.', dbError);

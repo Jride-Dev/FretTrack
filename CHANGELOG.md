@@ -1,8 +1,22 @@
 # Changelog
 
-Current version: `0.2.6`
+Current version: `0.2.61`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
+
+## v0.2.61
+
+- Added a first-class Customers module so customer records can be created without creating a work order.
+- Added import-ready customer fields for flexible display name, company/person names, normalized email/phone, secondary phone, structured address, source, external reference, import source, import batch ID, and notes.
+- Refactored customer helpers behind a module API and added reusable import-row preparation logic without exposing a full import UI yet.
+- Added a secured Supabase `customers` table with shop-member RLS policies and backfilled customer records from existing jobs.
+- Added `customer_id` links from jobs to customers while keeping existing job customer fields for compatibility and display.
+- Updated new job customer lookup to use standalone customer records when available.
+- Added duplicate customer warnings by phone, email, or name.
+- Audited shop scoping across jobs, customers, job children, events, photos, messaging, commerce tables, and local state merging.
+- Added pending RLS hardening so `viewer` is read-only and owner/admin/tech write permissions are explicit.
+- Added Edge Function role checks before customer email/SMS messages can be sent or logged.
+- Added a Supabase migration drift check script and migration repair documentation.
 
 ## v0.2.6
 

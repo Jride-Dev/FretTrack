@@ -1,4 +1,5 @@
 import { hasSupabaseConfig, supabase } from '../shared/lib/supabaseClient';
+import { getCurrentShopId } from '../modules/shops/shopConfig';
 import { getDefaultCurrency } from '../shared/utils/money';
 
 const COMMERCE_NOT_CONFIGURED = 'Supabase is not configured for commerce events.';
@@ -25,9 +26,7 @@ export async function getTransactionHistory(filters = {}) {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (filters.shopId) {
-    query = query.eq('shop_id', filters.shopId);
-  }
+  query = query.eq('shop_id', filters.shopId || getCurrentShopId());
 
   if (filters.locationId) {
     query = query.eq('location_id', filters.locationId);
@@ -82,7 +81,7 @@ export async function reverseTransaction(transaction, options = {}) {
 
 function normalizeTransactionPayload(payload) {
   return {
-    shop_id: payload.shop_id || payload.shopId || 'default-shop',
+    shop_id: payload.shop_id || payload.shopId || getCurrentShopId(),
     location_id: payload.location_id || payload.locationId || null,
     event_type: payload.event_type || payload.eventType || 'generic',
     source_type: payload.source_type || payload.sourceType || 'manual',

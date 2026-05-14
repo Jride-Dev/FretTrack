@@ -1,6 +1,6 @@
 # Roadmap
 
-This file tracks where FretTrack is headed after the current `0.2.6` auth and trial-readiness baseline.
+This file tracks where FretTrack is headed after the current `0.2.61` customer-module baseline.
 
 ## Current Release Position
 

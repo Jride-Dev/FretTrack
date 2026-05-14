@@ -31,6 +31,11 @@ Deno.serve(async (request) => {
     return json({ success: false, error: `Missing required field(s): ${missing.join(', ')}` });
   }
 
+  const accessError = await validateJobWriteAccess(request, jobId);
+  if (accessError) {
+    return accessError;
+  }
+
   const resendApiKey = Deno.env.get('RESEND_API_KEY');
   const fromEmail = Deno.env.get('SHOP_EMAIL_FROM');
 
@@ -194,6 +199,47 @@ async function logMessage(message: {
   }
 
   return data;
+}
+
+async function validateJobWriteAccess(request: Request, jobId: string) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const authorization = request.headers.get('Authorization') || '';
+  const token = authorization.replace(/^Bearer\s+/i, '').trim();
+
+  if (!supabaseUrl || !serviceRoleKey || !token) {
+    return json({ success: false, error: 'Authenticated shop access is required.' }, 401);
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const { data: userData, error: userError } = await supabase.auth.getUser(token);
+  const user = userData?.user;
+  if (userError || !user) {
+    return json({ success: false, error: 'Authenticated shop access is required.' }, 401);
+  }
+
+  const { data: job, error: jobError } = await supabase
+    .from('jobs')
+    .select('id, shop_id')
+    .eq('id', jobId)
+    .single();
+
+  if (jobError || !job) {
+    return json({ success: false, error: 'Work order was not found.' }, 404);
+  }
+
+  const { data: membership, error: membershipError } = await supabase
+    .from('shop_members')
+    .select('role')
+    .eq('shop_id', job.shop_id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (membershipError || !['owner', 'admin', 'tech'].includes(membership?.role || '')) {
+    return json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403);
+  }
+
+  return null;
 }
 
 async function checkRateLimit(channel: 'email', maxPerHour: number) {

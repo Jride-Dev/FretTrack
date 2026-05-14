@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { addJob } from './jobService';
 import { generateJobNumber } from './jobNumber';
-import { combineCustomerName, findCustomerMatches } from '../customers/customerService';
+import { combineCustomerName, findCustomerMatches } from '../customers';
 import { instrumentCatalog } from '../instruments/instrumentService';
 
 function todayValue() {
@@ -13,6 +13,7 @@ function getInitialFormState(jobs = []) {
   return {
     customerFirstName: '',
     customerLastName: '',
+    customerId: '',
     customerName: '',
     intakeType: 'Walk-In',
     subcontractorName: '',
@@ -29,7 +30,7 @@ function getInitialFormState(jobs = []) {
   };
 }
 
-export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
+export default function JobForm({ jobs = [], customers = [], canWrite = true, onCreate, onJobSaved, onNotice }) {
   const [form, setForm] = useState(() => getInitialFormState(jobs));
   const [isSaving, setIsSaving] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
@@ -44,18 +45,24 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
   }, [jobs]);
 
   useEffect(() => {
-    setCustomerMatches(findCustomerMatches(jobs, customerSearch));
-  }, [jobs, customerSearch]);
+    setCustomerMatches(findCustomerMatches(customers.length ? customers : jobs, customerSearch));
+  }, [customers, jobs, customerSearch]);
 
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((current) => {
       const nextForm = { ...current, [name]: value };
       if (name === 'customerFirstName' || name === 'customerLastName') {
+        nextForm.customerId = '';
+        setSelectedCustomer(null);
         nextForm.customerName = combineCustomerName(
           name === 'customerFirstName' ? value : current.customerFirstName,
           name === 'customerLastName' ? value : current.customerLastName
         );
+      }
+      if (name === 'phone' || name === 'email') {
+        nextForm.customerId = '';
+        setSelectedCustomer(null);
       }
       if (name === 'dateReceived') {
         const dateReceived = value || todayValue();
@@ -72,18 +79,24 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
   function useCustomer(customer) {
     setForm((current) => ({
       ...current,
-      customerFirstName: customer.customerFirstName || '',
-      customerLastName: customer.customerLastName || '',
-      customerName: customer.customerName,
+      customerId: customer.id || '',
+      customerFirstName: customer.customerFirstName || customer.firstName || '',
+      customerLastName: customer.customerLastName || customer.lastName || '',
+      customerName: customer.customerName || customer.displayName,
       phone: customer.phone,
       email: customer.email
     }));
     setSelectedCustomer(customer);
-    setCustomerSearch(customer.customerName || customer.phone || customer.email);
+    setCustomerSearch(customer.displayName || customer.customerName || customer.phone || customer.email);
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (!canWrite) {
+      onNotice?.({ type: 'error', message: 'Your shop role is read-only.' });
+      return;
+    }
+
     if (isSaving) {
       return;
     }
@@ -101,6 +114,7 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
     const newJob = {
       id: crypto.randomUUID(),
       ...form,
+      customerId: form.customerId || selectedCustomer?.id || '',
       customerName,
       dateReceived,
       jobNumber: generateJobNumber(dateReceived, jobs),
@@ -187,6 +201,7 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
   return (
     <form className="panel" onSubmit={handleSubmit}>
       <h2>New Job</h2>
+      {!canWrite && <p className="muted-text">Your shop role can view work orders but cannot create new ones.</p>}
       <datalist id="new-job-brand-options">
         {(instrumentCatalog[form.instrumentType]?.brands || []).map((brand) => (
           <option key={brand} value={brand} />
@@ -204,6 +219,7 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
             type="search"
             placeholder="Search previous customers by name, phone, or email..."
             value={customerSearch}
+            disabled={!canWrite}
             onChange={(event) => {
               setCustomerSearch(event.target.value);
               setSelectedCustomer(null);
@@ -213,11 +229,11 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
             <div className="customer-results">
               {customerMatches.map((customer) => {
                 const latestJob = customer.jobs[0] || {};
-                const key = customer.phone || customer.email || customer.customerName;
+                const key = customer.id || customer.phone || customer.email || customer.displayName || customer.customerName;
                 return (
                   <div className="customer-match" key={key}>
                     <div>
-                      <strong>{customer.customerName || 'Unnamed Customer'}</strong>
+                      <strong>{customer.displayName || customer.customerName || 'Unnamed Customer'}</strong>
                       <span>{customer.phone || 'No phone'} | {customer.email || 'No email'}</span>
                       <span>
                         {customer.jobs.length} previous job{customer.jobs.length === 1 ? '' : 's'}
@@ -225,7 +241,7 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
                         {latestJob.dateReceived ? ` | ${latestJob.dateReceived}` : ''}
                       </span>
                     </div>
-                    <button type="button" onClick={() => useCustomer(customer)}>Use Customer</button>
+                    <button type="button" onClick={() => useCustomer(customer)} disabled={!canWrite}>Use Customer</button>
                   </div>
                 );
               })}
@@ -246,15 +262,15 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
         </section>
         <label>
           First Name
-          <input name="customerFirstName" value={form.customerFirstName} onChange={handleChange} required />
+          <input name="customerFirstName" value={form.customerFirstName} onChange={handleChange} disabled={!canWrite} required />
         </label>
         <label>
           Last Name
-          <input name="customerLastName" value={form.customerLastName} onChange={handleChange} />
+          <input name="customerLastName" value={form.customerLastName} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
           Job Source
-          <select name="intakeType" value={form.intakeType} onChange={handleChange}>
+          <select name="intakeType" value={form.intakeType} onChange={handleChange} disabled={!canWrite}>
             <option value="Walk-In">Walk-In</option>
             <option value="Telephone Appt.">Telephone Appt.</option>
             <option value="Referral">Referral</option>
@@ -268,7 +284,7 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
             value={form.subcontractorName}
             onChange={handleChange}
             placeholder="Palos Verdes Music House"
-            disabled={form.intakeType !== 'Sub-Contract'}
+            disabled={!canWrite || form.intakeType !== 'Sub-Contract'}
           />
         </label>
         <div className="instrument-selector" role="group" aria-label="Instrument Type">
@@ -278,6 +294,7 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
               type="button"
               className={form.instrumentType === 'Acoustic' ? 'active' : ''}
               onClick={() => setInstrumentType('Acoustic')}
+              disabled={!canWrite}
             >
               Acoustic
             </button>
@@ -285,6 +302,7 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
               type="button"
               className={form.instrumentType === 'Electric' ? 'active' : ''}
               onClick={() => setInstrumentType('Electric')}
+              disabled={!canWrite}
             >
               Electric
             </button>
@@ -292,6 +310,7 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
               type="button"
               className={form.instrumentType === 'Bass' ? 'active' : ''}
               onClick={() => setInstrumentType('Bass')}
+              disabled={!canWrite}
             >
               Bass
             </button>
@@ -299,31 +318,31 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
         </div>
         <label>
           Phone
-          <input name="phone" value={form.phone} onChange={handleChange} />
+          <input name="phone" value={form.phone} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
           Email
-          <input type="email" name="email" value={form.email} onChange={handleChange} />
+          <input type="email" name="email" value={form.email} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
           Brand
-          <input name="guitarBrand" list="new-job-brand-options" value={form.guitarBrand} onChange={handleChange} required />
+          <input name="guitarBrand" list="new-job-brand-options" value={form.guitarBrand} onChange={handleChange} disabled={!canWrite} required />
         </label>
         <label>
           Model
-          <input name="model" list="new-job-model-options" value={form.model} onChange={handleChange} />
+          <input name="model" list="new-job-model-options" value={form.model} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
           Serial
-          <input name="serial" value={form.serial} onChange={handleChange} />
+          <input name="serial" value={form.serial} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
           Color
-          <input name="color" value={form.color} onChange={handleChange} />
+          <input name="color" value={form.color} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
           Date Received
-          <input type="date" name="dateReceived" value={form.dateReceived} onChange={handleChange} />
+          <input type="date" name="dateReceived" value={form.dateReceived} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
           Job Number
@@ -331,10 +350,10 @@ export default function JobForm({ jobs = [], onCreate, onJobSaved, onNotice }) {
         </label>
         <label className="wide">
           Reason For Visit
-          <textarea name="reasonForVisit" value={form.reasonForVisit} onChange={handleChange} rows="3" />
+          <textarea name="reasonForVisit" value={form.reasonForVisit} onChange={handleChange} rows="3" disabled={!canWrite} />
         </label>
       </div>
-      <button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Job'}</button>
+      <button type="submit" disabled={isSaving || !canWrite}>{isSaving ? 'Saving...' : 'Save Job'}</button>
     </form>
   );
 }

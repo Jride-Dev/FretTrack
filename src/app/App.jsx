@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import AppNotice from '../shared/components/AppNotice.jsx';
 import AuthGate from '../modules/auth/AuthGate.jsx';
+import { CustomerManager, getCustomers } from '../modules/customers';
 import JobDetail from '../modules/jobs/JobDetail.jsx';
 import JobForm from '../modules/jobs/JobForm.jsx';
 import JobList from '../modules/jobs/JobList.jsx';
@@ -15,12 +16,13 @@ import { bootstrapCurrentUserAsOwner, getCurrentShopMembership } from '../module
 import { money } from '../shared/utils/money';
 import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes';
 
-const APP_VERSION = '0.2.6';
+const APP_VERSION = '0.2.61';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 
 export default function App() {
   const [jobs, setJobs] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [mode, setMode] = useState('new');
   const [supabaseStatus, setSupabaseStatus] = useState(hasSupabaseConfig ? 'checking' : 'not-configured');
@@ -43,9 +45,15 @@ export default function App() {
     return sortedJobs;
   }
 
+  async function refreshCustomers(sourceJobs = jobs) {
+    const loadedCustomers = await getCustomers(sourceJobs);
+    setCustomers(loadedCustomers);
+    return loadedCustomers;
+  }
+
   useEffect(() => {
     if (!hasSupabaseConfig) {
-      refreshJobs();
+      refreshJobs().then((loadedJobs) => refreshCustomers(loadedJobs));
       checkSupabaseConnection();
       return undefined;
     }
@@ -70,6 +78,7 @@ export default function App() {
       setSession(nextSession);
       setMembership(null);
       setJobs([]);
+      setCustomers([]);
       setSelectedJobId(null);
       setMode('new');
     });
@@ -126,7 +135,8 @@ export default function App() {
         return;
       }
 
-      await refreshJobs();
+      const loadedJobs = await refreshJobs();
+      await refreshCustomers(loadedJobs);
       await checkSupabaseConnection();
     } catch (error) {
       console.error('Shop membership load failed.', error);
@@ -146,7 +156,8 @@ export default function App() {
     try {
       const ownerMembership = await bootstrapCurrentUserAsOwner();
       setMembership(ownerMembership);
-      await refreshJobs();
+      const loadedJobs = await refreshJobs();
+      await refreshCustomers(loadedJobs);
       await checkSupabaseConnection();
       setNotice({ type: 'success', message: 'Shop owner access created.' });
     } catch (error) {
@@ -160,6 +171,11 @@ export default function App() {
   }
 
   async function handleSignOut() {
+    setJobs([]);
+    setCustomers([]);
+    setSelectedJobId(null);
+    setMembership(null);
+    setMode('new');
     try {
       await signOut();
       setNotice(null);
@@ -172,6 +188,11 @@ export default function App() {
   }
 
   async function saveCurrentJob() {
+    if (!canWrite) {
+      setNotice({ type: 'error', message: 'Your shop role is read-only.' });
+      return;
+    }
+
     if (selectedJob && mode === 'detail') {
       setIsSaving(true);
       setNotice(null);
@@ -200,7 +221,13 @@ export default function App() {
   }
 
   async function handleJobSaved(savedJob) {
-    await refreshJobs();
+    if (!canWrite) {
+      setNotice({ type: 'error', message: 'Your shop role is read-only.' });
+      return;
+    }
+
+    const loadedJobs = await refreshJobs();
+    await refreshCustomers(loadedJobs);
     setSelectedJobId(savedJob.id);
     setMode('new');
     setNotice({
@@ -215,14 +242,25 @@ export default function App() {
   }
 
   async function handleUpdate(job) {
+    if (!canWrite) {
+      setNotice({ type: 'error', message: 'Your shop role is read-only.' });
+      return job;
+    }
+
     setJobs((current) => current.map((item) => (item.id === job.id ? job : item)));
     const savedJob = await updateJob(job);
-    setJobs((current) => current.map((item) => (item.id === savedJob.id ? savedJob : item)));
+    const loadedJobs = await refreshJobs();
+    await refreshCustomers(loadedJobs);
     setSelectedJobId(savedJob.id);
     return savedJob;
   }
 
   async function handleImageUpload(job, files, options = {}) {
+    if (!canWrite) {
+      setNotice({ type: 'error', message: 'Your shop role is read-only.' });
+      return { job, errors: [{ fileName: 'Upload', message: 'Your shop role is read-only.' }] };
+    }
+
     const { skipRefresh = false, ...uploadOptions } = options;
     const result = await uploadJobImages(job, files, { category: 'job', ...uploadOptions });
     if (result.job && !skipRefresh) {
@@ -234,6 +272,11 @@ export default function App() {
   }
 
   async function handleImageDelete(job, image) {
+    if (!canWrite) {
+      setNotice({ type: 'error', message: 'Your shop role is read-only.' });
+      return;
+    }
+
     const savedJob = await deleteJobImage(job, image);
     if (savedJob) {
       await refreshJobs();
@@ -246,7 +289,14 @@ export default function App() {
     setMode('new');
   }
 
+  async function handleCustomerSaved() {
+    await refreshCustomers(jobs);
+    setMode('customers');
+  }
+
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
+  const canWrite = !hasSupabaseConfig || ['owner', 'admin', 'tech'].includes(membership?.role);
+  const canManageShop = !hasSupabaseConfig || ['owner', 'admin'].includes(membership?.role);
   const tillSummary = calculateTillSummary(jobs);
   const statusText = {
     checking: 'Supabase Checking',
@@ -326,11 +376,12 @@ export default function App() {
               </select>
             </label>
           </div>
-          <button type="button" className="primary-action" onClick={saveCurrentJob} disabled={isSaving}>
+          <button type="button" className="primary-action" onClick={saveCurrentJob} disabled={isSaving || !canWrite}>
             {isSaving ? 'Saving...' : 'Save Job'}
           </button>
           <button type="button" onClick={showNewJob}>New Job</button>
           <button type="button" onClick={() => setMode('list')}>Current Jobs</button>
+          <button type="button" onClick={() => setMode('customers')}>Customers</button>
           <button type="button" onClick={() => setMode('settings')}>Shop Settings</button>
           {session && (
             <button type="button" onClick={handleSignOut}>Sign Out</button>
@@ -340,7 +391,7 @@ export default function App() {
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       <div className="layout app-layout">
         <aside className="no-print">
-          <JobForm jobs={jobs} onJobSaved={handleJobSaved} onNotice={setNotice} />
+          <JobForm jobs={jobs} customers={customers} canWrite={canWrite} onJobSaved={handleJobSaved} onNotice={setNotice} />
           <JobList jobs={jobs} selectedJobId={selectedJobId} onSelectJob={handleSelectJob} />
           <section className="panel till-summary">
             <h2>Till Summary</h2>
@@ -375,7 +426,17 @@ export default function App() {
           )}
 
           {mode === 'settings' && (
-            <ShopSettings onSave={(settings) => setShopName(settings.shopName)} onNotice={setNotice} />
+            <ShopSettings canManageShop={canManageShop} onSave={(settings) => setShopName(settings.shopName)} onNotice={setNotice} />
+          )}
+
+          {mode === 'customers' && (
+            <CustomerManager
+              customers={customers}
+              jobs={jobs}
+              canWrite={canWrite}
+              onCustomerSaved={handleCustomerSaved}
+              onNotice={setNotice}
+            />
           )}
 
           {mode === 'detail' && selectedJob && (
@@ -387,6 +448,7 @@ export default function App() {
               onImageDelete={handleImageDelete}
               onRefresh={refreshJobs}
               onClose={showNewJob}
+              canWrite={canWrite}
             />
           )}
 

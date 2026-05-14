@@ -1,1 +1,1 @@
-export * from '../modules/customers/customerService';
+export * from '../modules/customers';

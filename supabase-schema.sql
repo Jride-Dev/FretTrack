@@ -1,5 +1,34 @@
+create table if not exists customers (
+  id uuid primary key default gen_random_uuid(),
+  shop_id text not null,
+  display_name text not null,
+  first_name text,
+  last_name text,
+  company_name text,
+  customer_type text not null default 'individual' check (customer_type in ('individual', 'company')),
+  email text,
+  email_normalized text,
+  phone text,
+  phone_normalized text,
+  secondary_phone text,
+  address_line1 text,
+  address_line2 text,
+  city text,
+  region text,
+  postal_code text,
+  country text,
+  notes text,
+  source text,
+  external_ref text,
+  import_source text,
+  import_batch_id uuid,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists jobs (
   id uuid primary key,
+  customer_id uuid references customers(id) on delete restrict,
   shop_id text not null default 'default-shop',
   customer_name text not null default '',
   customer_first_name text not null default '',
@@ -62,6 +91,7 @@ begin
 
   insert into jobs (
     id,
+    customer_id,
     customer_name,
     customer_first_name,
     customer_last_name,
@@ -88,6 +118,7 @@ begin
   )
   values (
     coalesce(nullif(job_payload->>'id', '')::uuid, gen_random_uuid()),
+    nullif(job_payload->>'customer_id', '')::uuid,
     coalesce(job_payload->>'customer_name', ''),
     coalesce(job_payload->>'customer_first_name', ''),
     coalesce(job_payload->>'customer_last_name', ''),
@@ -187,6 +218,16 @@ create table if not exists customer_messages (
 create index if not exists customer_messages_job_id_created_at_idx on customer_messages (job_id, created_at desc);
 create index if not exists customer_messages_job_id_sent_at_idx on customer_messages (job_id, sent_at desc);
 create index if not exists customer_messages_customer_id_idx on customer_messages (customer_id);
+create index if not exists customers_shop_updated_idx on customers (shop_id, updated_at desc);
+create index if not exists customers_display_name_idx on customers (shop_id, lower(display_name));
+create index if not exists customers_first_last_name_idx on customers (shop_id, lower(last_name), lower(first_name));
+create index if not exists customers_phone_normalized_idx on customers (shop_id, phone_normalized) where phone_normalized is not null and phone_normalized <> '';
+create index if not exists customers_email_normalized_idx on customers (shop_id, email_normalized) where email_normalized is not null and email_normalized <> '';
+create index if not exists customers_company_email_idx on customers (shop_id, lower(company_name), email_normalized) where company_name is not null and email_normalized is not null;
+create index if not exists customers_display_phone_idx on customers (shop_id, lower(display_name), phone_normalized) where phone_normalized is not null and phone_normalized <> '';
+create index if not exists customers_external_ref_idx on customers (shop_id, external_ref) where external_ref is not null and external_ref <> '';
+create index if not exists customers_import_batch_idx on customers (shop_id, import_batch_id) where import_batch_id is not null;
+create index if not exists jobs_customer_id_idx on jobs (customer_id);
 
 create table if not exists job_events (
   id uuid primary key default gen_random_uuid(),
@@ -209,6 +250,7 @@ create index if not exists jobs_customer_last_first_name_idx on jobs (lower(cust
 create index if not exists jobs_customer_full_name_idx on jobs (lower(customer_name));
 
 alter table customer_messages enable row level security;
+alter table customers enable row level security;
 alter table job_events enable row level security;
 
 create policy "customer_messages_select_public"

@@ -1,18 +1,45 @@
 # Known Issues
 
-Current version: `0.2.6`
+Current version: `0.2.61`
 
 This file tracks known bugs, setup traps, trial limitations, and historical break/fix notes that are useful when debugging regressions.
 
 ## Active Trial Limitations
 
+### Customer import workflow is not built yet
+
+- Status: Future release change.
+- Current behavior: Customers can now be created without a work order and records include import-ready fields.
+- Limitation: Bulk Excel/CSV import, import review, duplicate merge, and rollback are not implemented yet.
+- Planned fix: Add a customer import screen that stages spreadsheet rows, flags likely duplicates, then creates/updates customer records in a reviewed batch.
+
 ### Accounting totals are not permission-gated yet
 
 - Status: Future release change.
-- Current behavior: Discount and monetary controls are editable directly in the work order UI.
+- Current behavior: Role-level write protection is in place, but discount and monetary controls are still editable directly by users with write access to the work order UI.
 - Problem: Once a discount is applied, it should become part of the saved work order totals and should not remain casually editable. Reopening an existing work order should expose an intentional `Edit Totals` action only when monetary edits are needed.
 - Tax concern: Discounts, taxes, labor totals, parts totals, and balance-affecting edits need stronger audit behavior before broader shop/member use.
-- Planned fix: Modularize accounting, lock applied totals, add role-aware member permissions, and allow regular employees to add payments without giving them access to edit monetary portions.
+- Planned fix: Modularize accounting, lock applied totals, and allow regular employees to add payments without giving them access to edit already-applied monetary portions.
+
+### Shop settings are local trial settings
+
+- Status: Known trial limitation.
+- Current behavior: Shop settings are stored in browser local storage with environment fallbacks. The UI only allows owner/admin roles to edit settings in authenticated builds, but the settings are not database-backed.
+- Future fix: Move shop settings into authenticated organization/shop records with `shop_id`, RLS, and owner/admin-only write policies.
+
+### Job image delivery still uses public URLs
+
+- Status: Known trial limitation.
+- Current behavior: `job_images` metadata and Storage object mutations are shop-role protected, but the `job-images` bucket still uses public URLs for display and print workflows.
+- Risk: Anyone with a public image URL can view that image.
+- Planned fix: Move job images to a private bucket or signed URL delivery before broader production use.
+
+### Instruments are not a standalone customer asset table yet
+
+- Status: Future release change.
+- Current behavior: Instrument details live on work orders, and the instrument catalog is local code.
+- Limitation: Customer-owned instruments/assets do not yet have their own `shop_id`-scoped table or RLS policies.
+- Planned fix: Add a customer instruments/assets module linked by `customer_id` and `shop_id`.
 
 ### SMS is disabled in trial builds
 
@@ -48,12 +75,6 @@ openssl rand -hex 32
 - Current behavior: Existing jobs have a backfilled `Job created` event, and new activity is logged going forward.
 - Limitation: Detailed historical events before the timeline migration, such as older status changes or photo uploads, are not reconstructed.
 - Planned fix: Add deeper historical backfill only if trial shops need it.
-
-### Shop settings are local trial settings
-
-- Status: Known trial limitation.
-- Current behavior: Shop settings are stored in browser local storage with environment fallbacks.
-- Future fix: Move shop settings into authenticated organization/shop records.
 
 ### Supabase/Postgres port is not the app URL
 

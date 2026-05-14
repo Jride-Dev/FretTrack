@@ -1,11 +1,14 @@
 {
   "name": "frettrack",
-  "version": "0.2.6",
+  "version": "0.2.61",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "check:migrations": "node scripts/check-supabase-migrations.mjs",
+    "migration:check": "node scripts/check-supabase-migrations.mjs",
+    "migration:check:strict": "node scripts/check-supabase-migrations.mjs --strict",
     "preview": "vite preview"
   },
   "dependencies": {

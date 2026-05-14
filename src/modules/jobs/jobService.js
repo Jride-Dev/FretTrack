@@ -1,4 +1,4 @@
-import { combineCustomerName, splitCustomerName } from '../customers/customerService';
+import { combineCustomerName, ensureCustomerForJob, splitCustomerName } from '../customers';
 import { normalizeInstrumentType } from '../instruments/instrumentService';
 import { supabase, hasSupabaseConfig } from '../../shared/lib/supabaseClient';
 import { formatJobNumber, generateJobNumber, getJobDayCode } from './jobNumber';
@@ -103,12 +103,12 @@ export function getLocalJobs() {
   try {
     const storedJobs = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (storedJobs) {
-      return storedJobs.map(normalizeJob);
+      return storedJobs.map(normalizeJob).filter((job) => job.shopId === defaultShopId);
     }
 
     const oldStoredJobs = JSON.parse(localStorage.getItem(OLD_STORAGE_KEY));
     if (oldStoredJobs) {
-      const migratedJobs = oldStoredJobs.map(normalizeJob);
+      const migratedJobs = oldStoredJobs.map(normalizeJob).filter((job) => job.shopId === defaultShopId);
       saveLocalJobs(migratedJobs);
       return migratedJobs;
     }
@@ -142,6 +142,10 @@ function mergeJobsByUpdatedAt(remoteJobs, localJobs) {
   });
 
   localJobs.forEach((localJob) => {
+    if ((localJob.shopId || defaultShopId) !== defaultShopId) {
+      return;
+    }
+
     if (!remoteJobs.length && looksLikeRemoteJob(localJob)) {
       return;
     }
@@ -219,6 +223,11 @@ export async function addJob(job) {
   validateJobForSave(newJob);
 
   assertNoDuplicateLocalWorkOrder(newJob, localJobs);
+
+  const savedCustomer = await ensureCustomerForJob(newJob);
+  if (savedCustomer?.id) {
+    newJob.customerId = savedCustomer.id;
+  }
 
   if (!hasSupabaseConfig || !supabase) {
     saveLocalJobs([newJob, ...localJobs]);
@@ -347,6 +356,10 @@ export async function updateJob(updatedJob) {
   validateJobForSave(job);
 
   const localJobs = getLocalJobs();
+  const savedCustomer = await ensureCustomerForJob(job);
+  if (savedCustomer?.id) {
+    job.customerId = savedCustomer.id;
+  }
   saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
 
   if (!hasSupabaseConfig || !supabase) {
@@ -381,6 +394,7 @@ export async function ensureRemoteJob(job) {
     .from('jobs')
     .select('id')
     .eq('id', normalizedJob.id)
+    .eq('shop_id', normalizedJob.shopId || defaultShopId)
     .maybeSingle();
 
   if (existingJobError) {
@@ -417,6 +431,7 @@ async function updateSupabaseJob(job) {
     .from('jobs')
     .update(toDbJob(job))
     .eq('id', job.id)
+    .eq('shop_id', job.shopId || defaultShopId)
     .select('id')
     .maybeSingle();
 
@@ -437,6 +452,7 @@ async function updateSupabaseJob(job) {
     .from('jobs')
     .update(toLegacyDbJob(job))
     .eq('id', job.id)
+    .eq('shop_id', job.shopId || defaultShopId)
     .select('id')
     .maybeSingle());
 
@@ -604,6 +620,7 @@ function normalizeJob(job, jobs = []) {
 
   return {
     id: job.id || crypto.randomUUID(),
+    customerId: job.customerId || job.customer_id || '',
     instrumentType,
     customerName,
     customerFirstName,
@@ -826,6 +843,7 @@ function parseDailySequence(sequenceValue, jobNumber = '') {
 function toDbJob(job) {
   return {
     ...toLegacyDbJob(job),
+    customer_id: job.customerId || null,
     job_date: job.jobDate || job.dateReceived || null,
     job_day_code: job.jobDayCode || getJobDayCode(job.jobDate || job.dateReceived),
     daily_sequence: job.dailySequence || null,
@@ -886,6 +904,7 @@ function toLegacyJobStatus(status) {
 function fromDbJob(job) {
   return normalizeJob({
     id: job.id,
+    customerId: job.customer_id || '',
     customerName: job.customer_name || '',
     customerFirstName: job.customer_first_name || '',
     customerLastName: job.customer_last_name || '',
@@ -1125,7 +1144,7 @@ function shouldRetryWithLegacyJobPayload(error) {
 
   const message = String(error.message || error.details || '');
   return (
-    ['job_date', 'job_day_code', 'daily_sequence', 'shop_id'].some((columnName) => isMissingColumnError(error, columnName))
+    ['customer_id', 'job_date', 'job_day_code', 'daily_sequence', 'shop_id'].some((columnName) => isMissingColumnError(error, columnName))
     || message.includes('violates check constraint')
     || message.includes('schema cache')
   );

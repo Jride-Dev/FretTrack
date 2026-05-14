@@ -808,6 +808,66 @@ label {
   font-size: 12px;
 }
 
+.customer-module {
+  display: grid;
+  gap: 14px;
+}
+
+.customer-add-form,
+.customer-list-panel {
+  max-width: 980px;
+}
+
+.panel-heading {
+  align-items: start;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+}
+
+.panel-heading h2 {
+  margin-bottom: 2px;
+}
+
+.customer-search {
+  width: 100%;
+}
+
+.form-warning {
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warning) 55%, var(--border));
+  color: var(--text);
+  font-size: 13px;
+  margin: 12px 0 0;
+  padding: 10px;
+}
+
+.customer-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.customer-card {
+  align-items: center;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, auto);
+  padding: 10px;
+}
+
+.customer-card div {
+  display: grid;
+  gap: 4px;
+}
+
+.customer-card span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 .service-preset {
   margin-bottom: 10px;
   max-width: 360px;

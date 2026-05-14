@@ -36,6 +36,11 @@ Deno.serve(async (request) => {
     return json({ success: false, mode, error: `Missing required field(s): ${missing.join(', ')}` }, 400);
   }
 
+  const accessError = await validateJobWriteAccess(request, jobId, mode);
+  if (accessError) {
+    return accessError;
+  }
+
   const normalizedTo = normalizePhone(to);
   const optIn = await hasSmsOptIn(jobId);
 
@@ -178,6 +183,47 @@ async function hasSmsOptIn(jobId: string) {
   }
 
   return Boolean(data?.sms_opt_in);
+}
+
+async function validateJobWriteAccess(request: Request, jobId: string, mode: string) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const authorization = request.headers.get('Authorization') || '';
+  const token = authorization.replace(/^Bearer\s+/i, '').trim();
+
+  if (!supabaseUrl || !serviceRoleKey || !token) {
+    return json({ success: false, mode, error: 'Authenticated shop access is required.' }, 401);
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const { data: userData, error: userError } = await supabase.auth.getUser(token);
+  const user = userData?.user;
+  if (userError || !user) {
+    return json({ success: false, mode, error: 'Authenticated shop access is required.' }, 401);
+  }
+
+  const { data: job, error: jobError } = await supabase
+    .from('jobs')
+    .select('id, shop_id')
+    .eq('id', jobId)
+    .single();
+
+  if (jobError || !job) {
+    return json({ success: false, mode, error: 'Work order was not found.' }, 404);
+  }
+
+  const { data: membership, error: membershipError } = await supabase
+    .from('shop_members')
+    .select('role')
+    .eq('shop_id', job.shop_id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (membershipError || !['owner', 'admin', 'tech'].includes(membership?.role || '')) {
+    return json({ success: false, mode, error: 'Your shop role cannot send customer messages.' }, 403);
+  }
+
+  return null;
 }
 
 async function logMessage(message: {

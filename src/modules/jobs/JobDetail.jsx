@@ -15,7 +15,7 @@ import CustomerDamageReport from './CustomerDamageReport';
 import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
 import MessagesPanel from '../messaging/MessagesPanel';
-import { combineCustomerName } from '../customers/customerService';
+import { combineCustomerName } from '../customers';
 import { normalizeInstrumentType, stringCountForInstrument } from '../instruments/instrumentService';
 import { generateJobNumber } from './jobNumber';
 import { getJobEvents } from './jobEventsService';
@@ -29,7 +29,7 @@ function markerColorForReport(severity) {
   return '#255f85';
 }
 
-export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onImageDelete, onRefresh, onClose }) {
+export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onImageDelete, onRefresh, onClose, canWrite = true }) {
   const [draftJob, setDraftJob] = useState(job);
   const [isDirty, setIsDirty] = useState(false);
   const [workLogText, setWorkLogText] = useState('');
@@ -585,6 +585,10 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
   }
 
   async function handleSendCustomerMessage(message) {
+    if (!canWrite) {
+      return { ok: false, error: 'Your shop role is read-only.' };
+    }
+
     const result = await sendCustomerMessage(draftJob, message);
     if (result.message) {
       setDraftJob((current) => ({

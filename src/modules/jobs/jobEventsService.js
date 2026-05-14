@@ -48,6 +48,7 @@ export async function getJobEvents(jobId) {
     .from('job_events')
     .select('*')
     .eq('job_id', jobId)
+    .eq('shop_id', getCurrentShopId())
     .order('created_at', { ascending: false });
 
   if (error) {
