@@ -8,3 +8,10 @@
 - Commerce RPC advisor warning accepted after isolation abuse test passed
 - Not tax/accounting software
 - Backups/export warning still applies
+- Known issue: older Supabase schema drift remains under review, but current beta-blocking privacy checks passed.
+
+## v0.2.6-beta.2
+
+- Added first-run shop onboarding/profile setup.
+- Added private shop logo storage.
+- Print sheets can now use uploaded shop logos.
