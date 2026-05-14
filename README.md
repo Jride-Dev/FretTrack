@@ -98,6 +98,20 @@ Build the production bundle:
 npm run build
 ```
 
+Apply pending migrations to the local safe database:
+
+```powershell
+npm run db:local:apply
+```
+
+Seed five local-only test shops with fake customers, tickets, instruments, damage-map data, work logs, and report output:
+
+```powershell
+npm run seed:local-test-shops
+```
+
+The seed script refuses non-local database URLs unless explicitly overridden.
+
 The `:5432` address in `.env` is the Supabase Postgres database port. It is not the browser URL for FretTrack.
 
 If `npm run dev` says port `5173` is already in use, close the old dev server first and run it again. The app is configured with `strictPort: true` so Vite will fail clearly instead of silently moving to another port.

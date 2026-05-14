@@ -9,6 +9,8 @@
     "check:migrations": "node scripts/check-supabase-migrations.mjs",
     "migration:check": "node scripts/check-supabase-migrations.mjs",
     "migration:check:strict": "node scripts/check-supabase-migrations.mjs --strict",
+    "db:local:apply": "node scripts/apply-local-migrations.mjs",
+    "seed:local-test-shops": "node scripts/seed-local-test-shops.mjs --reset",
     "preview": "vite preview"
   },
   "dependencies": {

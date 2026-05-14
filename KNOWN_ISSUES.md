@@ -29,6 +29,14 @@ This file tracks known bugs, setup traps, trial limitations, and historical brea
 - Risk: No current functional failure, but this should be cleaned up before relying on the script in CI.
 - Planned fix: Update `scripts/check-supabase-migrations.mjs` to call the CLI without `shell: true` or escape arguments explicitly.
 
+### Local safe database may have stale schema despite recorded migrations
+
+- Status: Local setup trap found during five-shop seed testing.
+- Current behavior: The local safe database had migration history entries for older work-log changes, but the physical `work_logs.text` column was missing.
+- Error found: `column "text" of relation "work_logs" does not exist`
+- Mitigation: `npm run seed:local-test-shops` now runs `alter table work_logs add column if not exists text text not null default ''` before seeding local test data.
+- Planned fix: Prefer rebuilding or reapplying local migrations from a clean local database when schema history and actual columns disagree.
+
 ### Accounting totals are not permission-gated yet
 
 - Status: Future release change.
