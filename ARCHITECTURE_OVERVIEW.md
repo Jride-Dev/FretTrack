@@ -85,6 +85,7 @@ Role intent:
 ## 5. Known Issues
 
 - Applied accounting totals are not locked behind an intentional edit workflow yet.
+- Customer import has mapper/normalization/validation/duplicate-prep helpers, but no import preview or bulk insert/update UI yet.
 - SMS is disabled for trial builds and requires carrier registration.
 - Edge Functions now verify signed-in shop role, but still carry the temporary shared shop function key as an extra trial gate.
 - Supabase/Postgres `:5432` is a common setup trap and is not the app URL.
@@ -156,6 +157,7 @@ Role intent:
 ## 11. Current Blockers
 
 - Supabase CLI remote pushes are currently blocked by the Supabase pooler auth circuit breaker until credentials/lockout clear.
+- Pending local migrations remain unapplied remotely until `db push` can run again.
 - Monetary controls need applied-total locking before broader multi-user rollout.
 - Shop settings are not database-backed yet.
 - The public `job-images` bucket needs private/signed delivery before broader production use.

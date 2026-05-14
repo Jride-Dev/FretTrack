@@ -11,7 +11,7 @@ This file tracks where FretTrack is headed after the current `0.2.61` customer-m
 - Work order system stable enough for real shop testing.
 - v0.2.4 adds module stabilization, photos-module ownership, shop config foundations, and non-blocking job event logging for the future activity timeline.
 - v0.2.5 adds a visible activity timeline, basic shop settings, trial-readiness documentation, data integrity checks, and job JSON export for debugging.
-- Auth/shop membership work is now underway after the `0.2.5` trial-readiness baseline.
+- v0.2.61 adds auth/shop membership foundations, shop-scoped RLS audit work, a standalone customer module, customer import-prep fields, and migration drift guard tooling.
 
 ## Near Term
 
@@ -21,6 +21,15 @@ This file tracks where FretTrack is headed after the current `0.2.61` customer-m
 - Keep email-only trial messaging active while SMS remains disabled.
 - Use the themed UI, subcontractor/job-source intake, damage-map persistence fixes, manual save feedback, and editable work logs as the current stable baseline.
 - Keep `bench-dark` as the default theme for first-time users unless trial feedback says otherwise.
+- Keep `npm run check:migrations` quiet before every Supabase push.
+
+## Customer Management And Import
+
+- Build the customer import workflow in this order: raw spreadsheet row, `customerImportMapper`, normalization, validation, duplicate detection, preview, then bulk insert/update.
+- Add an import preview screen that stages rows, shows validation warnings, and flags same-shop duplicate candidates before writing anything.
+- Add bulk customer insert/update through `customerService` only after rows have already been mapped, normalized, validated, and reviewed.
+- Add duplicate merge/reconciliation behavior before allowing large real-shop imports.
+- Keep customer import UI separate from normal Customer Add so day-to-day customer creation stays simple.
 
 ## Packaging and Installation
 

@@ -10,8 +10,24 @@ This file tracks known bugs, setup traps, trial limitations, and historical brea
 
 - Status: Future release change.
 - Current behavior: Customers can now be created without a work order and records include import-ready fields.
-- Limitation: Bulk Excel/CSV import, import review, duplicate merge, and rollback are not implemented yet.
+- Current prep: `customerImportMapper` can map future spreadsheet rows into customer drafts, normalization and validation are split out, and duplicate detection is separated from persistence.
+- Limitation: Bulk Excel/CSV import, import preview, duplicate merge, bulk insert/update, and rollback are not implemented yet.
 - Planned fix: Add a customer import screen that stages spreadsheet rows, flags likely duplicates, then creates/updates customer records in a reviewed batch.
+
+### Supabase db push is blocked by pooler auth lockout
+
+- Status: External tooling/setup blocker.
+- Current behavior: `npm run check:migrations` reports no remote-only drift, but Supabase `db push`/dry-run was blocked by the pooler circuit breaker.
+- Error: `FATAL: Circuit breaker open: Too many authentication errors`
+- Pending local migrations: `20260512083351`, `20260514032803`, and `20260514035528`.
+- Next step: Refresh/verify database credentials or wait for the Supabase pooler lockout to clear, then rerun `npm run check:migrations` and `npx supabase db push --dry-run`.
+
+### Migration drift check emits a Node deprecation warning
+
+- Status: Tooling cleanup.
+- Current behavior: `npm run check:migrations` passes, but Node emits `[DEP0190]` because the script invokes the Supabase CLI with `shell: true`.
+- Risk: No current functional failure, but this should be cleaned up before relying on the script in CI.
+- Planned fix: Update `scripts/check-supabase-migrations.mjs` to call the CLI without `shell: true` or escape arguments explicitly.
 
 ### Accounting totals are not permission-gated yet
 

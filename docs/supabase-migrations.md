@@ -119,6 +119,23 @@ Expected remaining pending local migrations after the pooler issue clears:
 ```text
 20260512083351 commerce_backbone
 20260514032803 customer_module_option_b
+20260514035528 shop_scope_rls_audit
+```
+
+Latest check:
+
+```powershell
+npm run check:migrations
+```
+
+Result:
+
+```text
+Supabase migration history has no remote-only drift.
+Pending local migrations:
+- 20260512083351
+- 20260514032803
+- 20260514035528
 ```
 
 ### Drift guard added
