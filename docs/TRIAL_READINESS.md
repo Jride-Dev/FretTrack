@@ -88,7 +88,9 @@ Apply all current schema changes, including:
 
 ## Backup / Export Warning
 
-FretTrack trial builds do not yet include automated backup/export tooling. Before real shop testing, confirm the Supabase project has a backup plan and that the operator can export data if a trial shop needs support.
+Before real shop testing, confirm the Supabase project has a backup plan and that the operator can export data if a trial shop needs support.
+
+See [Beta Operations](BETA_OPERATIONS.md) for backup awareness, export paths, recovery notes, and current beta limitations.
 
 For single-job debugging, use `Export Job JSON` from Job Detail.
 
