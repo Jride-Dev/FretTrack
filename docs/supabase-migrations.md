@@ -28,7 +28,7 @@ The auth/shop-membership work was applied remotely as three migrations:
 
 The repo briefly had those changes represented as one later edited local migration. That caused remote-only migration drift. The local migration folder now mirrors the remote history again.
 
-## Migration Repair Report - v0.2.61
+## Migration Repair Report - v0.2.6-beta.1
 
 Date: 2026-05-14
 

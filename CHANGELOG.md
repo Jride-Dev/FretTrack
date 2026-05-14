@@ -1,10 +1,10 @@
 # Changelog
 
-Current version: `0.2.61`
+Current version: `0.2.6-beta.1`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.61
+## v0.2.6-beta.1
 
 - Added a first-class Customers module so customer records can be created without creating a work order.
 - Added import-ready customer fields for flexible display name, company/person names, normalized email/phone, secondary phone, structured address, source, external reference, import source, import batch ID, and notes.

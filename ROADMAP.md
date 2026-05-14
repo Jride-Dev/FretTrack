@@ -1,6 +1,6 @@
 # Roadmap
 
-This file tracks where FretTrack is headed after the current `0.2.61` customer-module baseline.
+This file tracks where FretTrack is headed after the current `0.2.6-beta.1` customer-module baseline.
 
 ## Current Release Position
 
@@ -11,7 +11,7 @@ This file tracks where FretTrack is headed after the current `0.2.61` customer-m
 - Work order system stable enough for real shop testing.
 - v0.2.4 adds module stabilization, photos-module ownership, shop config foundations, and non-blocking job event logging for the future activity timeline.
 - v0.2.5 adds a visible activity timeline, basic shop settings, trial-readiness documentation, data integrity checks, and job JSON export for debugging.
-- v0.2.61 adds auth/shop membership foundations, shop-scoped RLS audit work, a standalone customer module, customer import-prep fields, and migration drift guard tooling.
+- v0.2.6-beta.1 adds auth/shop membership foundations, shop-scoped RLS audit work, a standalone customer module, customer import-prep fields, and migration drift guard tooling.
 
 ## Near Term
 

@@ -16,7 +16,7 @@ import { bootstrapCurrentUserAsOwner, getCurrentShopMembership } from '../module
 import { money } from '../shared/utils/money';
 import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes';
 
-const APP_VERSION = '0.2.61';
+const APP_VERSION = '0.2.6-beta.1';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 

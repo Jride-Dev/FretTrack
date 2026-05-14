@@ -1,6 +1,6 @@
 # FretTrack
 
-Current version: `0.2.61`
+Current version: `0.2.6-beta.1`
 
 FretTrack is a guitar and bass repair shop check-in and work order app. It helps a shop track customer intake, instrument details, inspection notes, damage photos, parts, services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 

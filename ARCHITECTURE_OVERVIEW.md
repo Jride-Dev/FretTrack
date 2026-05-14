@@ -60,7 +60,7 @@ Key constraints/functions:
 
 ## 4. Shop Scope And RLS Audit
 
-The v0.2.61 membership/RLS audit treats shop scope as a system boundary:
+The v0.2.6-beta.1 membership/RLS audit treats shop scope as a system boundary:
 
 | Module/table | Scope status | Write/delete behavior |
 | --- | --- | --- |
