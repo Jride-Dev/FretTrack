@@ -3,6 +3,7 @@ import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { ensureRemoteJob, getLocalJobs, saveLocalJobs, updateJob } from '../jobs/jobService';
 import { logJobEventSafe } from '../jobs/jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
+import { createJobImageSignedUrl } from './photoUrls';
 
 export async function uploadJobImages(job, files, options = {}) {
   const fileList = Array.from(files || []);
@@ -83,14 +84,12 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
     return null;
   }
 
-  const { data } = supabase.storage
-    .from('job-images')
-    .getPublicUrl(filePath);
+  const signedUrl = await createJobImageSignedUrl(filePath);
 
   const image = {
     id: crypto.randomUUID(),
     jobId,
-    url: data.publicUrl,
+    url: signedUrl,
     fileName: uploadFile.name,
     name: uploadFile.name,
     storagePath: filePath,
@@ -104,7 +103,7 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
     id: image.id,
     job_id: jobId,
     url: image.url,
-    public_url: image.url,
+    public_url: '',
     storage_path: image.storagePath,
     file_name: image.fileName,
     original_filename: image.originalFileName,
@@ -227,7 +226,9 @@ function getStoragePathFromPublicUrl(url) {
 
   try {
     const parsedUrl = new URL(url);
-    const marker = '/storage/v1/object/public/job-images/';
+    const publicMarker = '/storage/v1/object/public/job-images/';
+    const signedMarker = '/storage/v1/object/sign/job-images/';
+    const marker = parsedUrl.pathname.includes(publicMarker) ? publicMarker : signedMarker;
     const markerIndex = parsedUrl.pathname.indexOf(marker);
     if (markerIndex === -1) {
       return '';

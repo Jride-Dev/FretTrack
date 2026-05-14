@@ -5,6 +5,7 @@ import { formatJobNumber, generateJobNumber, getJobDayCode } from './jobNumber';
 import { logJobEventSafe } from './jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
 import { validateJobForSave } from './jobValidation';
+import { resolveJobImageUrls } from '../photos/photoUrls';
 
 const STORAGE_KEY = 'guitar_checkin_jobs';
 const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
@@ -205,7 +206,8 @@ export async function getJobs() {
     return getLocalJobs();
   }
 
-  const jobs = mergeJobsByUpdatedAt(data.map(fromDbJob), getLocalJobs());
+  const remoteJobs = await Promise.all(data.map(async (job) => hydrateJobImageUrls(fromDbJob(job))));
+  const jobs = mergeJobsByUpdatedAt(remoteJobs, getLocalJobs());
   saveLocalJobs(jobs);
   return jobs;
 }
@@ -972,6 +974,17 @@ function fromDbJob(job) {
     createdAt: job.created_at,
     updatedAt: job.updated_at
   });
+}
+
+async function hydrateJobImageUrls(job) {
+  if (!job.images?.length) {
+    return job;
+  }
+
+  return {
+    ...job,
+    images: await resolveJobImageUrls(job.images)
+  };
 }
 
 function fromDbJobEvent(event) {
