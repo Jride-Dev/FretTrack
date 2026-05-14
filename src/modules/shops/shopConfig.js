@@ -9,7 +9,12 @@ export const defaultShopSettings = {
   email: '',
   address: '',
   logoUrl: '',
-  printFooterText: ''
+  logoStoragePath: '',
+  printFooterText: '',
+  taxState: '',
+  salesTaxRate: '',
+  taxablePartsDefault: true,
+  taxableServicesDefault: false
 };
 
 export function getShopSettings() {
@@ -28,7 +33,12 @@ export function getShopSettings() {
     email: savedSettings.email || '',
     address: savedSettings.address || '',
     logoUrl: savedSettings.logoUrl || '',
-    printFooterText: savedSettings.printFooterText || ''
+    logoStoragePath: savedSettings.logoStoragePath || '',
+    printFooterText: savedSettings.printFooterText || '',
+    taxState: savedSettings.taxState || '',
+    salesTaxRate: savedSettings.salesTaxRate || '',
+    taxablePartsDefault: savedSettings.taxablePartsDefault !== false,
+    taxableServicesDefault: Boolean(savedSettings.taxableServicesDefault)
   };
 }
 

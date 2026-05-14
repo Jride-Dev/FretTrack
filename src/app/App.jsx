@@ -13,6 +13,7 @@ import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService'
 import { calculateTillSummary, sortNewestFirst } from '../modules/jobs/jobSelectors';
 import { getCurrentShopName } from '../modules/shops/shopConfig';
 import { bootstrapCurrentUserAsOwner, getCurrentShopMembership } from '../modules/shops/shopMembershipService';
+import { getCurrentShopProfile } from '../modules/shops/shopProfileService';
 import { money } from '../shared/utils/money';
 import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes';
 
@@ -30,6 +31,8 @@ export default function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(hasSupabaseConfig);
   const [membership, setMembership] = useState(null);
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
+  const [shopProfile, setShopProfile] = useState(null);
+  const [isShopProfileLoading, setIsShopProfileLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState(null);
   const [theme, setTheme] = useState(() => {
@@ -77,6 +80,7 @@ export default function App() {
     const unsubscribe = onAuthSessionChange((nextSession) => {
       setSession(nextSession);
       setMembership(null);
+      setShopProfile(null);
       setJobs([]);
       setCustomers([]);
       setSelectedJobId(null);
@@ -135,6 +139,18 @@ export default function App() {
         return;
       }
 
+      setIsShopProfileLoading(true);
+      const currentShopProfile = await getCurrentShopProfile(currentMembership.shopId);
+      setShopProfile(currentShopProfile);
+      if (currentShopProfile?.shopName) {
+        setShopName(currentShopProfile.shopName);
+      }
+      setIsShopProfileLoading(false);
+      if (!currentShopProfile) {
+        setSupabaseStatus('connected');
+        return;
+      }
+
       const loadedJobs = await refreshJobs();
       await refreshCustomers(loadedJobs);
       await checkSupabaseConnection();
@@ -146,6 +162,7 @@ export default function App() {
         message: getErrorMessage(error, 'Unable to load shop membership.')
       });
     } finally {
+      setIsShopProfileLoading(false);
       setIsMembershipLoading(false);
     }
   }
@@ -156,8 +173,6 @@ export default function App() {
     try {
       const ownerMembership = await bootstrapCurrentUserAsOwner();
       setMembership(ownerMembership);
-      const loadedJobs = await refreshJobs();
-      await refreshCustomers(loadedJobs);
       await checkSupabaseConnection();
       setNotice({ type: 'success', message: 'Shop owner access created.' });
     } catch (error) {
@@ -175,6 +190,7 @@ export default function App() {
     setCustomers([]);
     setSelectedJobId(null);
     setMembership(null);
+    setShopProfile(null);
     setMode('new');
     try {
       await signOut();
@@ -294,6 +310,15 @@ export default function App() {
     setMode('customers');
   }
 
+  async function handleShopProfileSaved(savedProfile) {
+    setShopProfile(savedProfile);
+    setShopName(savedProfile.shopName);
+    const loadedJobs = await refreshJobs();
+    await refreshCustomers(loadedJobs);
+    await checkSupabaseConnection();
+    setMode('new');
+  }
+
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
   const canWrite = !hasSupabaseConfig || ['owner', 'admin', 'tech'].includes(membership?.role);
   const canManageShop = !hasSupabaseConfig || ['owner', 'admin'].includes(membership?.role);
@@ -337,6 +362,30 @@ export default function App() {
           <button type="button" className="button-tertiary" onClick={loadMembershipAndJobs} disabled={isMembershipLoading}>
             Retry Access Check
           </button>
+          <button type="button" className="button-tertiary" onClick={handleSignOut}>
+            Sign Out
+          </button>
+        </section>
+      </main>
+    );
+  }
+
+  if (hasSupabaseConfig && session && membership && !shopProfile) {
+    return (
+      <main className="app auth-shell">
+        <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+        <section className="panel auth-panel onboarding-panel">
+          {isShopProfileLoading ? (
+            <p>Loading shop setup...</p>
+          ) : (
+            <ShopSettings
+              canManageShop={canManageShop}
+              initialSettings={{ ...getCurrentShopProfileFallback(), shopId: membership.shopId }}
+              requireCompletion
+              onSave={handleShopProfileSaved}
+              onNotice={setNotice}
+            />
+          )}
           <button type="button" className="button-tertiary" onClick={handleSignOut}>
             Sign Out
           </button>
@@ -391,7 +440,7 @@ export default function App() {
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       <div className="layout app-layout">
         <aside className="no-print">
-          <JobForm jobs={jobs} customers={customers} canWrite={canWrite} onJobSaved={handleJobSaved} onNotice={setNotice} />
+          <JobForm jobs={jobs} customers={customers} canWrite={canWrite} shopProfile={shopProfile} onJobSaved={handleJobSaved} onNotice={setNotice} />
           <JobList jobs={jobs} selectedJobId={selectedJobId} onSelectJob={handleSelectJob} />
           <section className="panel till-summary">
             <h2>Till Summary</h2>
@@ -426,7 +475,15 @@ export default function App() {
           )}
 
           {mode === 'settings' && (
-            <ShopSettings canManageShop={canManageShop} onSave={(settings) => setShopName(settings.shopName)} onNotice={setNotice} />
+            <ShopSettings
+              canManageShop={canManageShop}
+              initialSettings={shopProfile}
+              onSave={(settings) => {
+                setShopProfile(settings);
+                setShopName(settings.shopName);
+              }}
+              onNotice={setNotice}
+            />
           )}
 
           {mode === 'customers' && (
@@ -459,6 +516,23 @@ export default function App() {
       </div>
     </main>
   );
+}
+
+function getCurrentShopProfileFallback() {
+  return {
+    shopId: '',
+    shopName: getCurrentShopName(),
+    phone: '',
+    email: '',
+    address: '',
+    logoUrl: '',
+    logoStoragePath: '',
+    printFooterText: '',
+    taxState: '',
+    salesTaxRate: '',
+    taxablePartsDefault: true,
+    taxableServicesDefault: false
+  };
 }
 
 function getErrorMessage(error, fallback) {

@@ -27,7 +27,7 @@ SHOP_EMAIL_FROM=
 
 1. Create or select the shop Supabase project.
 2. Apply the schema and migrations listed below.
-3. Confirm the `job-images` storage bucket exists and is public for trial image display.
+3. Confirm the `job-images` and `shop-assets` storage buckets exist and are private.
 4. Enable Supabase Auth email/password sign-in for trial users.
 5. Deploy `send-email`.
 6. Keep `send-sms` deployed only as dormant scaffolding while SMS is disabled.
@@ -42,7 +42,10 @@ Apply all current schema changes, including:
 - `supabase-schema.sql`
 - `supabase/migrations/20260511124500_add_shop_scoped_job_numbers.sql`
 - `supabase/migrations/20260511133000_add_job_events.sql`
-- `supabase/migrations/20260513043535_add_auth_shop_memberships.sql`
+- `supabase/migrations/20260513055709_add_auth_shop_memberships.sql`
+- `supabase/migrations/20260514035528_shop_scope_rls_audit.sql`
+- `supabase/migrations/20260514215512_add_shop_profile_onboarding.sql`
+- `supabase/migrations/20260514220946_drop_legacy_public_job_image_storage_policies.sql`
 
 ## Auth / Shop Access Test
 
@@ -50,12 +53,13 @@ Apply all current schema changes, including:
 2. Confirm the app shows the sign-in screen when Supabase is configured.
 3. Create or sign into a Supabase Auth user.
 4. If this is the first user for the configured shop, click `Create First Shop Owner`.
-5. Confirm the app loads jobs only after shop membership is available.
-6. Sign out and confirm the app returns to the sign-in screen.
+5. Complete the first-run shop onboarding profile.
+6. Confirm the app loads jobs only after shop membership and shop onboarding are available.
+7. Sign out and confirm the app returns to the sign-in screen.
 
 ## Test Job Creation Flow
 
-1. Confirm the header shows the correct trial shop name.
+1. Confirm the header shows the onboarded shop name.
 2. Create a job with first name, last name, instrument type, brand/model, and reason for visit.
 3. Confirm the job number uses `YYDDD-SEQ`.
 4. Open the saved job.
@@ -76,7 +80,7 @@ Apply all current schema changes, including:
 ## Print Test
 
 1. Open Shop Settings.
-2. Enter shop name, phone, email, address, and print footer text.
+2. Enter shop name, phone, email, address, tax defaults, logo, and print footer text.
 3. Save settings.
 4. Open a job and print the Job Sheet.
 5. Print the Customer Damage Acknowledgment.
@@ -93,8 +97,7 @@ For single-job debugging, use `Export Job JSON` from Job Detail.
 - Authentication now gates Supabase-configured builds, but user invitation/admin screens are not implemented yet.
 - SMS is not enabled yet.
 - Activity timeline requires the `job_events` migration.
-- Shop settings are local trial settings, not authenticated organization settings.
-- Logo upload is a placeholder.
+- Shop profile onboarding now persists remote shop settings and logo storage.
 - Monetary controls are not permission-gated yet.
 - Negative parts/services prices are blocked unless explicitly allowed in job data.
 - Supabase migrations must be applied manually in the current workspace because the CLI/database credentials are not available here.

@@ -1,58 +1,137 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getShopSettings, saveShopSettings } from './shopConfig';
+import { saveShopProfile, uploadShopLogo } from './shopProfileService';
 
-export default function ShopSettings({ canManageShop = true, onSave, onNotice }) {
-  const [settings, setSettings] = useState(() => getShopSettings());
+export default function ShopSettings({
+  canManageShop = true,
+  initialSettings = null,
+  requireCompletion = false,
+  onSave,
+  onNotice
+}) {
+  const [settings, setSettings] = useState(() => initialSettings || getShopSettings());
+  const [logoFile, setLogoFile] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (initialSettings) {
+      setSettings(initialSettings);
+    }
+  }, [initialSettings?.shopId, initialSettings?.updatedAt]);
 
   function updateField(event) {
-    const { name, value } = event.target;
-    setSettings((current) => ({ ...current, [name]: value }));
+    const { name, type, checked, value } = event.target;
+    setSettings((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     if (!canManageShop) {
       onNotice?.({ type: 'error', message: 'Only shop owners and admins can change shop settings.' });
       return;
     }
 
-    const savedSettings = saveShopSettings(settings);
-    setSettings(savedSettings);
-    onNotice?.({ type: 'success', message: 'Shop settings saved.' });
-    onSave?.(savedSettings);
+    if (!settings.shopName.trim()) {
+      onNotice?.({ type: 'error', message: 'Shop name is required.' });
+      return;
+    }
+
+    if (requireCompletion && !settings.taxState.trim()) {
+      onNotice?.({ type: 'error', message: 'State is required before beta use.' });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      let nextSettings = { ...settings };
+      if (logoFile) {
+        const logo = await uploadShopLogo(logoFile, nextSettings.shopId);
+        nextSettings = {
+          ...nextSettings,
+          logoStoragePath: logo?.logoStoragePath || nextSettings.logoStoragePath || '',
+          logoUrl: logo?.logoUrl || nextSettings.logoUrl || ''
+        };
+      }
+
+      const savedSettings = await saveShopProfile(nextSettings);
+      saveShopSettings(savedSettings);
+      setSettings(savedSettings);
+      setLogoFile(null);
+      onNotice?.({ type: 'success', message: requireCompletion ? 'Shop onboarding complete.' : 'Shop settings saved.' });
+      onSave?.(savedSettings);
+    } catch (error) {
+      console.error('Shop settings save failed.', error);
+      onNotice?.({
+        type: 'error',
+        message: error instanceof Error && error.message ? error.message : 'Shop settings save failed.'
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
     <section className="panel shop-settings">
-      <h2>Shop Settings</h2>
+      <h2>{requireCompletion ? 'Set Up Your Shop' : 'Shop Settings'}</h2>
+      {requireCompletion && (
+        <p className="muted-text">
+          Complete this before creating work orders so printed sheets, defaults, and shop access are scoped correctly.
+        </p>
+      )}
       {!canManageShop && <p className="muted-text">Only shop owners and admins can change shop settings.</p>}
       <form className="form-grid" onSubmit={handleSubmit}>
         <label>
           Shop Name
-          <input name="shopName" value={settings.shopName} onChange={updateField} disabled={!canManageShop} />
+          <input name="shopName" value={settings.shopName} onChange={updateField} disabled={!canManageShop || isSaving} required />
         </label>
         <label>
           Phone
-          <input name="phone" value={settings.phone} onChange={updateField} disabled={!canManageShop} />
+          <input name="phone" value={settings.phone} onChange={updateField} disabled={!canManageShop || isSaving} />
         </label>
         <label>
           Email
-          <input type="email" name="email" value={settings.email} onChange={updateField} disabled={!canManageShop} />
+          <input type="email" name="email" value={settings.email} onChange={updateField} disabled={!canManageShop || isSaving} />
         </label>
         <label className="wide">
           Address
-          <textarea name="address" value={settings.address} onChange={updateField} rows="2" disabled={!canManageShop} />
+          <textarea name="address" value={settings.address} onChange={updateField} rows="2" disabled={!canManageShop || isSaving} />
         </label>
         <label className="wide">
           Logo Upload
-          <input type="file" accept="image/*" disabled />
-          <small>Logo upload is a placeholder for the trial build.</small>
+          <input
+            type="file"
+            accept="image/*"
+            disabled={!canManageShop || isSaving}
+            onChange={(event) => setLogoFile(event.target.files?.[0] || null)}
+          />
+          <small>{settings.logoStoragePath ? 'Current logo is saved for this shop.' : 'Optional. Used for shop branding where available.'}</small>
+        </label>
+        {settings.logoUrl && (
+          <div className="wide shop-logo-preview">
+            <img src={settings.logoUrl} alt={`${settings.shopName || 'Shop'} logo preview`} />
+          </div>
+        )}
+        <label>
+          State
+          <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving} required={requireCompletion} maxLength="2" />
+        </label>
+        <label>
+          Default Sales Tax %
+          <input type="number" min="0" step="0.001" name="salesTaxRate" value={settings.salesTaxRate || ''} onChange={updateField} disabled={!canManageShop || isSaving} />
+        </label>
+        <label className="checkline">
+          <input type="checkbox" name="taxablePartsDefault" checked={settings.taxablePartsDefault !== false} onChange={updateField} disabled={!canManageShop || isSaving} />
+          Parts taxable by default
+        </label>
+        <label className="checkline">
+          <input type="checkbox" name="taxableServicesDefault" checked={Boolean(settings.taxableServicesDefault)} onChange={updateField} disabled={!canManageShop || isSaving} />
+          Services taxable by default
         </label>
         <label className="wide">
           Print Footer Text
-          <textarea name="printFooterText" value={settings.printFooterText} onChange={updateField} rows="3" disabled={!canManageShop} />
+          <textarea name="printFooterText" value={settings.printFooterText} onChange={updateField} rows="3" disabled={!canManageShop || isSaving} />
         </label>
-        <button type="submit" disabled={!canManageShop}>Save Shop Settings</button>
+        <button type="submit" disabled={!canManageShop || isSaving}>{isSaving ? 'Saving...' : requireCompletion ? 'Finish Shop Setup' : 'Save Shop Settings'}</button>
       </form>
     </section>
   );

@@ -30,7 +30,7 @@ function getInitialFormState(jobs = []) {
   };
 }
 
-export default function JobForm({ jobs = [], customers = [], canWrite = true, onCreate, onJobSaved, onNotice }) {
+export default function JobForm({ jobs = [], customers = [], canWrite = true, shopProfile = null, onCreate, onJobSaved, onNotice }) {
   const [form, setForm] = useState(() => getInitialFormState(jobs));
   const [isSaving, setIsSaving] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
@@ -146,10 +146,7 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, on
           }
         },
         tax: {
-          state: '',
-          salesTaxRate: '',
-          taxableParts: true,
-          taxableServices: false
+          ...getDefaultTaxSettings(shopProfile)
         },
         payments: [],
         actionHighE3rd: '',
@@ -356,6 +353,15 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, on
       <button type="submit" disabled={isSaving || !canWrite}>{isSaving ? 'Saving...' : 'Save Job'}</button>
     </form>
   );
+}
+
+function getDefaultTaxSettings(shopProfile = {}) {
+  return {
+    state: shopProfile?.taxState || '',
+    salesTaxRate: shopProfile?.salesTaxRate || '',
+    taxableParts: shopProfile?.taxablePartsDefault !== false,
+    taxableServices: Boolean(shopProfile?.taxableServicesDefault)
+  };
 }
 
 function getErrorMessage(error, fallback) {

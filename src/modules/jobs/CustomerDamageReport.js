@@ -14,7 +14,7 @@ export default function CustomerDamageReport({
   return (
     <section className="customer-report">
       <div className="print-invoice-header">
-        <img src="/frettrack-wordmark.jpg" alt="FretTrack Systems" />
+        <img src={shopSettings.logoUrl || '/frettrack-wordmark.jpg'} alt={shopSettings.shopName || 'FretTrack Systems'} />
         <div>
           <h2>Customer Damage Acknowledgment</h2>
           <p>{shopSettings.shopName} | Job {draftJob.jobNumber}</p>

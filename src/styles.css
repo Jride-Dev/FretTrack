@@ -1046,6 +1046,25 @@ form.panel button {
   color: var(--text-muted);
 }
 
+.shop-logo-preview {
+  align-items: center;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-soft);
+  display: flex;
+  min-height: 86px;
+  padding: 10px;
+}
+
+.shop-logo-preview img {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: block;
+  max-height: 66px;
+  max-width: 260px;
+  object-fit: contain;
+  padding: 6px;
+}
+
 .print-footer-text {
   margin-top: 1rem;
   padding-top: 0.75rem;
@@ -1236,6 +1255,15 @@ form.panel button {
 
 .auth-panel {
   width: min(460px, 100%);
+}
+
+.onboarding-panel {
+  width: min(760px, 100%);
+}
+
+.onboarding-panel .shop-settings {
+  border: 0;
+  padding: 0;
 }
 
 .auth-panel form {
