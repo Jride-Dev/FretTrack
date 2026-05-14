@@ -3,7 +3,7 @@ import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { ensureRemoteJob, getLocalJobs, saveLocalJobs, updateJob } from '../jobs/jobService';
 import { logJobEventSafe } from '../jobs/jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
-import { createJobImageSignedUrl } from './photoUrls';
+import { createJobImageObjectUrl } from './photoUrls';
 
 export async function uploadJobImages(job, files, options = {}) {
   const fileList = Array.from(files || []);
@@ -84,12 +84,12 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
     return null;
   }
 
-  const signedUrl = await createJobImageSignedUrl(filePath);
+  const objectUrl = await createJobImageObjectUrl(filePath);
 
   const image = {
     id: crypto.randomUUID(),
     jobId,
-    url: signedUrl,
+    url: objectUrl,
     fileName: uploadFile.name,
     name: uploadFile.name,
     storagePath: filePath,
@@ -102,7 +102,7 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
   const { error: dbError } = await supabase.from('job_images').insert({
     id: image.id,
     job_id: jobId,
-    url: image.url,
+    url: '',
     public_url: '',
     storage_path: image.storagePath,
     file_name: image.fileName,

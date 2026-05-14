@@ -1,28 +1,26 @@
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 
-const JOB_IMAGE_SIGNED_URL_TTL_SECONDS = 60 * 60 * 24;
-
-export async function createJobImageSignedUrl(storagePath) {
+export async function createJobImageObjectUrl(storagePath) {
   if (!storagePath || !hasSupabaseConfig || !supabase) {
     return '';
   }
 
   const { data, error } = await supabase.storage
     .from('job-images')
-    .createSignedUrl(storagePath, JOB_IMAGE_SIGNED_URL_TTL_SECONDS);
+    .download(storagePath);
 
   if (error) {
-    console.error('Job image signed URL creation failed.', error);
+    console.error('Job image download failed.', error);
     return '';
   }
 
-  return data?.signedUrl || '';
+  return data ? URL.createObjectURL(data) : '';
 }
 
 export async function resolveJobImageUrl(image) {
   const storagePath = image?.storagePath || image?.storage_path || '';
-  const signedUrl = await createJobImageSignedUrl(storagePath);
-  return signedUrl || image?.url || image?.public_url || '';
+  const objectUrl = await createJobImageObjectUrl(storagePath);
+  return objectUrl || image?.url || image?.public_url || '';
 }
 
 export async function resolveJobImageUrls(images = []) {
