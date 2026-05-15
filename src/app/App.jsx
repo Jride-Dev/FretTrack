@@ -11,8 +11,8 @@ import { getCurrentSession, onAuthSessionChange, signOut } from '../modules/auth
 import { getJobs, updateJob } from '../modules/jobs/jobService';
 import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService';
 import { calculateTillSummary, sortNewestFirst } from '../modules/jobs/jobSelectors';
-import { getCurrentShopName } from '../modules/shops/shopConfig';
-import { bootstrapCurrentUserAsOwner, getCurrentShopMembership } from '../modules/shops/shopMembershipService';
+import { clearSelectedShop, getCurrentShopName, getSelectedShop, setSelectedShop } from '../modules/shops/shopConfig';
+import { bootstrapCurrentUserAsOwner, getCurrentUserShopMemberships } from '../modules/shops/shopMembershipService';
 import { getCurrentShopProfile } from '../modules/shops/shopProfileService';
 import { money } from '../shared/utils/money';
 import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes';
@@ -30,9 +30,11 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(hasSupabaseConfig);
   const [membership, setMembership] = useState(null);
+  const [memberships, setMemberships] = useState([]);
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
   const [shopProfile, setShopProfile] = useState(null);
   const [isShopProfileLoading, setIsShopProfileLoading] = useState(false);
+  const [newShopName, setNewShopName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState(null);
   const [theme, setTheme] = useState(() => {
@@ -80,6 +82,7 @@ export default function App() {
     const unsubscribe = onAuthSessionChange((nextSession) => {
       setSession(nextSession);
       setMembership(null);
+      setMemberships([]);
       setShopProfile(null);
       setJobs([]);
       setCustomers([]);
@@ -98,7 +101,7 @@ export default function App() {
       return;
     }
 
-    loadMembershipAndJobs();
+    loadShopAccess();
   }, [session]);
 
   useEffect(() => {
@@ -129,16 +132,21 @@ export default function App() {
     }
   }
 
-  async function loadMembershipAndJobs() {
+  async function loadShopAccess(preferredShopId = getSelectedShop().shopId) {
     setIsMembershipLoading(true);
     try {
-      const currentMembership = await getCurrentShopMembership();
+      const availableMemberships = await getCurrentUserShopMemberships();
+      setMemberships(availableMemberships);
+      const currentMembership = resolveMembership(availableMemberships, preferredShopId);
       setMembership(currentMembership);
       if (!currentMembership) {
         setSupabaseStatus('auth-required');
+        clearSelectedShop();
         return;
       }
 
+      setSelectedShop(currentMembership);
+      setShopName(currentMembership.shopName || getCurrentShopName());
       setIsShopProfileLoading(true);
       const currentShopProfile = await getCurrentShopProfile(currentMembership.shopId);
       setShopProfile(currentShopProfile);
@@ -168,11 +176,28 @@ export default function App() {
   }
 
   async function handleBootstrapOwner() {
+    const shopNameValue = newShopName.trim();
+    if (!shopNameValue) {
+      setNotice({ type: 'error', message: 'Enter a shop name first.' });
+      return;
+    }
+
+    const shopId = slugifyShopId(shopNameValue);
+    if (!shopId) {
+      setNotice({ type: 'error', message: 'Enter a valid shop name.' });
+      return;
+    }
+
     setIsMembershipLoading(true);
     setNotice(null);
     try {
-      const ownerMembership = await bootstrapCurrentUserAsOwner();
-      setMembership(ownerMembership);
+      const ownerMembership = await bootstrapCurrentUserAsOwner(shopId);
+      const ownerShop = { ...ownerMembership, shopName: shopNameValue };
+      setSelectedShop(ownerShop);
+      setMembership(ownerShop);
+      setMemberships([ownerShop]);
+      setShopName(shopNameValue);
+      setNewShopName('');
       await checkSupabaseConnection();
       setNotice({ type: 'success', message: 'Shop owner access created.' });
     } catch (error) {
@@ -190,8 +215,10 @@ export default function App() {
     setCustomers([]);
     setSelectedJobId(null);
     setMembership(null);
+    setMemberships([]);
     setShopProfile(null);
     setMode('new');
+    clearSelectedShop();
     try {
       await signOut();
       setNotice(null);
@@ -312,11 +339,32 @@ export default function App() {
 
   async function handleShopProfileSaved(savedProfile) {
     setShopProfile(savedProfile);
+    setSelectedShop(savedProfile);
     setShopName(savedProfile.shopName);
     const loadedJobs = await refreshJobs();
     await refreshCustomers(loadedJobs);
     await checkSupabaseConnection();
     setMode('new');
+  }
+
+  async function handleShopSelected(selectedMembership) {
+    setJobs([]);
+    setCustomers([]);
+    setSelectedJobId(null);
+    setShopProfile(null);
+    setMembership(selectedMembership);
+    setSelectedShop(selectedMembership);
+    setShopName(selectedMembership.shopName || selectedMembership.shopId);
+    await loadShopAccess(selectedMembership.shopId);
+  }
+
+  function showShopPicker() {
+    setJobs([]);
+    setCustomers([]);
+    setSelectedJobId(null);
+    setShopProfile(null);
+    setMembership(null);
+    clearSelectedShop();
   }
 
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
@@ -348,18 +396,55 @@ export default function App() {
     );
   }
 
+  if (hasSupabaseConfig && session && memberships.length > 1 && !membership) {
+    return (
+      <main className="app auth-shell">
+        <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+        <section className="panel auth-panel">
+          <h1>Select Shop</h1>
+          <p className="muted-text">{session.user?.email}</p>
+          <div className="shop-picker-list">
+            {memberships.map((shopMembership) => (
+              <button
+                type="button"
+                key={shopMembership.id}
+                className="shop-picker-button"
+                onClick={() => handleShopSelected(shopMembership)}
+              >
+                <strong>{shopMembership.shopName || shopMembership.shopId}</strong>
+                <span>{shopMembership.role}</span>
+              </button>
+            ))}
+          </div>
+          <button type="button" className="button-tertiary" onClick={handleSignOut}>
+            Sign Out
+          </button>
+        </section>
+      </main>
+    );
+  }
+
   if (hasSupabaseConfig && session && !membership) {
     return (
       <main className="app auth-shell">
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
         <section className="panel auth-panel">
-          <h1>Shop Access Required</h1>
-          <p>{isMembershipLoading ? 'Checking shop membership...' : 'Your account is signed in, but it is not connected to this FretTrack shop yet.'}</p>
+          <h1>Create Shop</h1>
+          <p>{isMembershipLoading ? 'Checking shop membership...' : 'Your account is signed in, but it is not connected to a FretTrack shop yet.'}</p>
           <p className="muted-text">{session.user?.email}</p>
+          <label>
+            Shop Name
+            <input
+              value={newShopName}
+              onChange={(event) => setNewShopName(event.target.value)}
+              placeholder="PV Music House"
+              disabled={isMembershipLoading}
+            />
+          </label>
           <button type="button" className="primary-action" onClick={handleBootstrapOwner} disabled={isMembershipLoading}>
-            {isMembershipLoading ? 'Working...' : 'Create First Shop Owner'}
+            {isMembershipLoading ? 'Working...' : 'Create My Shop'}
           </button>
-          <button type="button" className="button-tertiary" onClick={loadMembershipAndJobs} disabled={isMembershipLoading}>
+          <button type="button" className="button-tertiary" onClick={() => loadShopAccess()} disabled={isMembershipLoading}>
             Retry Access Check
           </button>
           <button type="button" className="button-tertiary" onClick={handleSignOut}>
@@ -432,6 +517,9 @@ export default function App() {
           <button type="button" onClick={() => setMode('list')}>Current Jobs</button>
           <button type="button" onClick={() => setMode('customers')}>Customers</button>
           <button type="button" onClick={() => setMode('settings')}>Shop Settings</button>
+          {memberships.length > 1 && (
+            <button type="button" onClick={showShopPicker}>Switch Shop</button>
+          )}
           {session && (
             <button type="button" onClick={handleSignOut}>Sign Out</button>
           )}
@@ -533,6 +621,36 @@ function getCurrentShopProfileFallback() {
     taxablePartsDefault: true,
     taxableServicesDefault: false
   };
+}
+
+function resolveMembership(availableMemberships = [], preferredShopId = '') {
+  if (!availableMemberships.length) {
+    return null;
+  }
+
+  if (preferredShopId) {
+    const preferredMembership = availableMemberships.find((item) => item.shopId === preferredShopId);
+    if (preferredMembership) {
+      return preferredMembership;
+    }
+  }
+
+  if (availableMemberships.length === 1) {
+    return availableMemberships[0];
+  }
+
+  return null;
+}
+
+function slugifyShopId(shopName) {
+  return String(shopName || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 64);
 }
 
 function getErrorMessage(error, fallback) {

@@ -52,10 +52,11 @@ Apply all current schema changes, including:
 1. Start the app with `npm run dev`.
 2. Confirm the app shows the sign-in screen when Supabase is configured.
 3. Create or sign into a Supabase Auth user.
-4. If this is the first user for the configured shop, click `Create First Shop Owner`.
+4. If the signed-in user has no shops, enter the shop name and click `Create My Shop`.
 5. Complete the first-run shop onboarding profile.
 6. Confirm the app loads jobs only after shop membership and shop onboarding are available.
-7. Sign out and confirm the app returns to the sign-in screen.
+7. If the signed-in user has more than one shop, confirm the shop picker appears and only the selected shop opens.
+8. Sign out and confirm the app returns to the sign-in screen.
 
 ## Test Job Creation Flow
 

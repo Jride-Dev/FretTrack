@@ -1287,6 +1287,27 @@ form.panel button {
   margin-top: 8px;
 }
 
+.shop-picker-list {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0 14px;
+}
+
+.shop-picker-button {
+  align-items: center;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  min-height: 44px;
+  width: 100%;
+}
+
+.shop-picker-button span {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
 .muted-text {
   color: var(--muted);
 }

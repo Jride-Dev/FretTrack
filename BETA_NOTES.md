@@ -14,6 +14,7 @@
 ## v0.2.6-beta.2
 
 - Added first-run shop onboarding/profile setup.
+- Added post-login shop selection and self-service beta shop creation.
 - Added private shop logo storage.
 - Print sheets can now use uploaded shop logos.
 - Added beta operations notes for backups, exports, recovery, and limitations.
