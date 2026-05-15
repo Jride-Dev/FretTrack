@@ -6,6 +6,8 @@ import JobDetail from '../modules/jobs/JobDetail.jsx';
 import JobForm from '../modules/jobs/JobForm.jsx';
 import JobList from '../modules/jobs/JobList.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
+import FeedbackReporter from '../modules/system/FeedbackReporter.jsx';
+import SystemAnnouncements from '../modules/system/SystemAnnouncements.jsx';
 import { checkSupabaseJobsConnection, hasSupabaseConfig } from '../shared/lib/supabaseClient';
 import { getCurrentSession, onAuthSessionChange, signOut } from '../modules/auth/authService';
 import { getJobs, updateJob } from '../modules/jobs/jobService';
@@ -517,6 +519,9 @@ export default function App() {
           <button type="button" onClick={() => setMode('list')}>Current Jobs</button>
           <button type="button" onClick={() => setMode('customers')}>Customers</button>
           <button type="button" onClick={() => setMode('settings')}>Shop Settings</button>
+          {session && (
+            <FeedbackReporter selectedJob={selectedJob} onNotice={setNotice} />
+          )}
           {memberships.length > 1 && (
             <button type="button" onClick={showShopPicker}>Switch Shop</button>
           )}
@@ -525,6 +530,7 @@ export default function App() {
           )}
         </div>
       </header>
+      {session && <SystemAnnouncements />}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       <div className="layout app-layout">
         <aside className="no-print">
