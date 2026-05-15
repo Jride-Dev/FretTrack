@@ -619,6 +619,7 @@ label {
 .damage-canvas img {
   display: block;
   height: auto;
+  max-height: 520px;
   min-height: 320px;
   object-fit: contain;
   user-select: none;
@@ -711,6 +712,10 @@ label {
   gap: 6px;
   font-weight: 700;
   min-width: 0;
+}
+
+.marker-photo-link button {
+  flex: 0 0 auto;
 }
 
 .marker-photo-link img {

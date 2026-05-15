@@ -5,7 +5,7 @@ import { formatJobNumber, generateJobNumber, getJobDayCode } from './jobNumber';
 import { logJobEventSafe } from './jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
 import { validateJobForSave } from './jobValidation';
-import { resolveJobImageUrls } from '../photos/photoUrls';
+import { resolveJobImageUrl, resolveJobImageUrls } from '../photos/photoUrls';
 
 const STORAGE_KEY = 'guitar_checkin_jobs';
 const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
@@ -989,13 +989,58 @@ function fromDbJob(job) {
 }
 
 async function hydrateJobImageUrls(job) {
+  const hydratedDamageMap = await hydrateDamageMapImageUrls(job.techDetails?.damageMap);
+
+  const jobWithHydratedDamageMap = hydratedDamageMap
+    ? {
+        ...job,
+        techDetails: {
+          ...job.techDetails,
+          damageMap: hydratedDamageMap
+        }
+      }
+    : job;
+
   if (!job.images?.length) {
-    return job;
+    return jobWithHydratedDamageMap;
   }
 
   return {
-    ...job,
+    ...jobWithHydratedDamageMap,
     images: await resolveJobImageUrls(job.images)
+  };
+}
+
+async function hydrateDamageMapImageUrls(damageMap) {
+  if (!damageMap?.views) {
+    return damageMap;
+  }
+
+  const hydratedViews = {};
+  for (const [viewName, view] of Object.entries(damageMap.views)) {
+    const viewImageUrl = await resolveJobImageUrl({
+      storagePath: view.storagePath,
+      url: view.imageUrl
+    });
+
+    const marks = await Promise.all((view.marks || []).map(async (mark) => ({
+      ...mark,
+      photoUrl: await resolveJobImageUrl({
+        storagePath: mark.storagePath,
+        url: mark.photoUrl
+      })
+    })));
+
+    hydratedViews[viewName] = {
+      ...view,
+      imageUrl: viewImageUrl,
+      marks
+    };
+  }
+
+  return {
+    ...damageMap,
+    views: hydratedViews
   };
 }
 

@@ -70,6 +70,10 @@ export default function App() {
       .then((currentSession) => {
         if (isMounted) {
           setSession(currentSession);
+          if (!currentSession) {
+            clearSelectedShop();
+            setShopName(getCurrentShopName());
+          }
           setIsAuthLoading(false);
         }
       })
@@ -81,15 +85,29 @@ export default function App() {
         }
       });
 
-    const unsubscribe = onAuthSessionChange((nextSession) => {
-      setSession(nextSession);
-      setMembership(null);
-      setMemberships([]);
-      setShopProfile(null);
-      setJobs([]);
-      setCustomers([]);
-      setSelectedJobId(null);
-      setMode('new');
+    const unsubscribe = onAuthSessionChange((nextSession, event) => {
+      setSession((currentSession) => {
+        const currentUserId = currentSession?.user?.id || '';
+        const nextUserId = nextSession?.user?.id || '';
+        const shouldResetWorkspace = event === 'SIGNED_OUT'
+          || (event === 'SIGNED_IN' && currentUserId && nextUserId && currentUserId !== nextUserId);
+
+        if (shouldResetWorkspace) {
+          setMembership(null);
+          setMemberships([]);
+          setShopProfile(null);
+          setJobs([]);
+          setCustomers([]);
+          setSelectedJobId(null);
+          setMode('new');
+          if (!nextSession) {
+            clearSelectedShop();
+            setShopName(getCurrentShopName());
+          }
+        }
+
+        return nextSession;
+      });
     });
 
     return () => {
@@ -104,7 +122,7 @@ export default function App() {
     }
 
     loadShopAccess();
-  }, [session]);
+  }, [session?.user?.id]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;

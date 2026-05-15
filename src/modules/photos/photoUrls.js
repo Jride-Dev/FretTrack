@@ -20,7 +20,8 @@ export async function createJobImageObjectUrl(storagePath) {
 export async function resolveJobImageUrl(image) {
   const storagePath = image?.storagePath || image?.storage_path || '';
   const objectUrl = await createJobImageObjectUrl(storagePath);
-  return objectUrl || image?.url || image?.public_url || '';
+  const fallbackUrl = image?.url || image?.public_url || '';
+  return objectUrl || (String(fallbackUrl).startsWith('blob:') ? '' : fallbackUrl);
 }
 
 export async function resolveJobImageUrls(images = []) {

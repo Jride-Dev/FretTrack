@@ -162,6 +162,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
           recommendedRepair: '',
           photoUrl: '',
           photoName: '',
+          storagePath: '',
           x: Math.max(0, Math.min(100, x)),
           y: Math.max(0, Math.min(100, y))
         }
@@ -208,7 +209,8 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
       }
       updateMark(markId, {
         photoUrl: await readFileAsDataUrl(file),
-        photoName: file.name
+        photoName: file.name,
+        storagePath: ''
       });
     } catch (error) {
       setImportError(error instanceof Error ? error.message : 'Damage photo import failed.');
@@ -240,7 +242,8 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
       }
       updateCurrentView({
         imageUrl: await readFileAsDataUrl(file),
-        imageName: file.name
+        imageName: file.name,
+        storagePath: ''
       });
     } catch (error) {
       setImportError(error instanceof Error ? error.message : 'Damage view image import failed.');
@@ -360,13 +363,27 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
                     event.target.value = '';
                   }}
                 />
-                <button type="button" onClick={() => markerInputRefs.current[mark.id]?.click()}>Import from Device</button>
+                <button type="button" onClick={() => markerInputRefs.current[mark.id]?.click()}>
+                  {mark.photoUrl ? 'Replace Photo' : 'Import from Device'}
+                </button>
               </label>
               {mark.photoUrl && (
-                <a className="marker-photo-link" href={mark.photoUrl} target="_blank" rel="noreferrer">
+                <div className="marker-photo-link">
                   <img src={mark.photoUrl} alt={mark.photoName || `Damage mark ${index + 1} photo`} />
                   <span>{mark.photoName || 'View photo'}</span>
-                </a>
+                  <button
+                    type="button"
+                    className="button-tertiary no-print"
+                    onClick={() => updateMark(mark.id, {
+                      photoUrl: '',
+                      photoName: '',
+                      photoId: '',
+                      storagePath: ''
+                    })}
+                  >
+                    Remove Photo
+                  </button>
+                </div>
               )}
               <button
                 type="button"
