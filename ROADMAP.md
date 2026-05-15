@@ -45,6 +45,11 @@ This file tracks where FretTrack is headed after the current `0.2.6-beta.1` cust
 
 ## Messaging
 
+- Add Supabase Realtime delivery for `system_announcements` so maintenance/bug-fix notices appear during an active logged-in session without requiring logout/login.
+- Keep announcement polling as a fallback, but trigger a refetch immediately when Realtime receives a new announcement insert.
+- Continue targeting announcements by shop/user membership first; defer session-id-specific targeting until there is a real need for force-logout, per-device notices, or acknowledgment auditing.
+- Add operator notifications for new `beta_feedback` reports, likely email first, then optional GitHub issue creation after private data handling is settled.
+- Add a lightweight operator/admin feedback view for reading, triaging, and updating `beta_feedback.status` without opening Supabase directly.
 - Add SMS after carrier registration is ready.
 - Keep SMS buttons visible but disabled in trial builds so the workflow remains discoverable.
 - Keep the existing `send-sms` Edge Function code available for later Twilio/carrier registration work.

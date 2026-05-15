@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import AppNotice from '../shared/components/AppNotice.jsx';
 import AuthGate from '../modules/auth/AuthGate.jsx';
 import { CustomerManager, getCustomers } from '../modules/customers';
@@ -22,6 +22,7 @@ import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes'
 const APP_VERSION = '0.2.6-beta.1';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
+const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';
 
 export default function App() {
   const [jobs, setJobs] = useState([]);
@@ -44,6 +45,7 @@ export default function App() {
     return themes.some((themeOption) => themeOption.value === savedTheme) ? savedTheme : defaultTheme;
   });
   const [shopName, setShopName] = useState(() => getCurrentShopName());
+  const manualSignOutRef = useRef(false);
 
   async function refreshJobs() {
     const loadedJobs = await getJobs();
@@ -87,10 +89,18 @@ export default function App() {
 
     const unsubscribe = onAuthSessionChange((nextSession, event) => {
       setSession((currentSession) => {
+        if (nextSession) {
+          manualSignOutRef.current = false;
+        }
+
         const currentUserId = currentSession?.user?.id || '';
         const nextUserId = nextSession?.user?.id || '';
-        const shouldResetWorkspace = event === 'SIGNED_OUT'
+        const shouldResetWorkspace = (event === 'SIGNED_OUT' && manualSignOutRef.current)
           || (event === 'SIGNED_IN' && currentUserId && nextUserId && currentUserId !== nextUserId);
+
+        if (event === 'SIGNED_OUT' && !manualSignOutRef.current && currentSession) {
+          return currentSession;
+        }
 
         if (shouldResetWorkspace) {
           setMembership(null);
@@ -123,6 +133,31 @@ export default function App() {
 
     loadShopAccess();
   }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (!membership?.shopId || !jobs.length || selectedJobId) {
+      return;
+    }
+
+    const workspaceState = getStoredWorkspaceState(membership.shopId);
+    if (workspaceState.mode === 'detail' && jobs.some((job) => job.id === workspaceState.selectedJobId)) {
+      setSelectedJobId(workspaceState.selectedJobId);
+      setMode('detail');
+    } else if (workspaceState.mode && workspaceState.mode !== 'detail') {
+      setMode(workspaceState.mode);
+    }
+  }, [membership?.shopId, jobs, selectedJobId]);
+
+  useEffect(() => {
+    if (!membership?.shopId) {
+      return;
+    }
+
+    saveWorkspaceState(membership.shopId, {
+      mode,
+      selectedJobId
+    });
+  }, [membership?.shopId, mode, selectedJobId]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -231,6 +266,7 @@ export default function App() {
   }
 
   async function handleSignOut() {
+    manualSignOutRef.current = true;
     setJobs([]);
     setCustomers([]);
     setSelectedJobId(null);
@@ -243,6 +279,7 @@ export default function App() {
       await signOut();
       setNotice(null);
     } catch (error) {
+      manualSignOutRef.current = false;
       setNotice({
         type: 'error',
         message: getErrorMessage(error, 'Sign out failed.')
@@ -457,7 +494,7 @@ export default function App() {
             <input
               value={newShopName}
               onChange={(event) => setNewShopName(event.target.value)}
-              placeholder="PV Music House"
+              placeholder="Your shop name"
               disabled={isMembershipLoading}
             />
           </label>
@@ -628,6 +665,26 @@ export default function App() {
       </div>
     </main>
   );
+}
+
+function getWorkspaceStateKey(shopId) {
+  return `${WORKSPACE_STATE_PREFIX}:${shopId || 'unknown'}`;
+}
+
+function getStoredWorkspaceState(shopId) {
+  try {
+    return JSON.parse(localStorage.getItem(getWorkspaceStateKey(shopId))) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveWorkspaceState(shopId, state) {
+  try {
+    localStorage.setItem(getWorkspaceStateKey(shopId), JSON.stringify(state));
+  } catch {
+    // Non-critical: workspace restore should never block normal app use.
+  }
 }
 
 function getCurrentShopProfileFallback() {
