@@ -1,8 +1,29 @@
 # Changelog
 
-Current version: `0.2.6-beta.1`
+Current version: `0.2.6-beta.2`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
+
+## v0.2.6-beta.2
+
+- Added first-run shop onboarding/profile setup with shop defaults, tax defaults, print footer text, and private shop logo storage.
+- Added post-login shop selection for users with more than one shop membership.
+- Added self-service beta shop creation for signed-in users without an existing shop membership.
+- Added custom domain deployment support for `app.frettrack-app.com` through Cloudflare Pages.
+- Documented FretTrack domain email/DNS setup for Resend and Supabase Auth invite branding.
+- Added `system_announcements` and in-app announcement banners for beta maintenance and bug-fix notices.
+- Added `beta_feedback` and a logged-in **Report Issue** form that stores user, shop, page, browser, and selected job context in Supabase.
+- Added beta messaging operator notes in `docs/BETA_MESSAGING.md`.
+- Added roadmap items for Supabase Realtime announcement delivery, beta feedback notifications/admin view, and a future paid AI-assisted 3D instrument visualization option.
+- Fixed selected-shop job saves so House of Bass and other non-default shops no longer fail RLS because `jobService` captured an old shop id at module load.
+- Fixed auth token/focus refresh churn so transient auth events no longer clear the open workspace unless the user explicitly signs out or changes account.
+- Added per-shop workspace restore so a browser reload can reopen the last selected mode/job for that shop.
+- Fixed stale shop display confusion by clearing local shop selection when no session exists and removing the hardcoded `PV Music House` Create Shop placeholder.
+- Fixed damage-map and damage-marker photo persistence by saving storage paths and rehydrating fresh object URLs when saved jobs are reopened.
+- Changed damage-marker photo links to inline previews with Replace/Remove controls instead of opening temporary blob links in a new tab.
+- Capped damage-map image display height so imported damage views stay manageable in the inspection UI.
+- Verified RLS for House of Bass feedback/announcement access and cross-shop feedback blocking.
+- Deployed beta fixes to Cloudflare Pages and confirmed the production custom domain served the updated bundles.
 
 ## v0.2.6-beta.1
 

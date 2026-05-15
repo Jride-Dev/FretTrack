@@ -1,6 +1,6 @@
 # Roadmap
 
-This file tracks where FretTrack is headed after the current `0.2.6-beta.1` customer-module baseline.
+This file tracks where FretTrack is headed after the current `0.2.6-beta.2` private beta baseline.
 
 ## Current Release Position
 
@@ -90,6 +90,7 @@ This file tracks where FretTrack is headed after the current `0.2.6-beta.1` cust
 ## Product Direction
 
 - Continue improving the work order flow for real shop use.
+- Explore a future paid upgrade for AI-assisted 3D JavaScript instrument visualization: generate or select a modeled instrument from uploaded photos or preset instrument images, then let shops zoom, rotate, and inspect instrument sections without requiring many separate uploaded photos.
 - Expand Activity Timeline filtering and detail views after initial trial feedback.
 - Expand customer communication around check-in, estimate approval, repair status, pickup reminders, payment reminders, and photo updates.
 - Keep customer history lookup, quick-fill, and repeat-customer workflows central to intake.

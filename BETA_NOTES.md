@@ -18,3 +18,11 @@
 - Added private shop logo storage.
 - Print sheets can now use uploaded shop logos.
 - Added beta operations notes for backups, exports, recovery, and limitations.
+- Added in-app beta announcements for maintenance and bug-fix notices.
+- Added in-app Report Issue form backed by Supabase `beta_feedback`.
+- Added custom FretTrack domain/email setup notes for branded Supabase Auth invites.
+- Fixed selected-shop job saves that could fail RLS for non-default shops.
+- Fixed browser focus/session refresh churn that could reset the open workspace.
+- Added per-shop workspace restore for the last open mode/job.
+- Fixed damage-map and marker photo reloads by rehydrating saved storage paths.
+- Replaced damage-marker new-tab links with inline photo preview, replace, and remove controls.
