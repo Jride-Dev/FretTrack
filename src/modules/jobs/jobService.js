@@ -10,7 +10,6 @@ import { resolveJobImageUrls } from '../photos/photoUrls';
 const STORAGE_KEY = 'guitar_checkin_jobs';
 const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
 const fretTrackFunctionKey = import.meta.env.VITE_FRETTRACK_FUNCTION_KEY || '';
-const defaultShopId = getCurrentShopId();
 const duplicateWorkOrderPrefix = 'MULTIPLE WORK ORDERS CANNOT BE CREATED';
 export const smsEnabled = import.meta.env.VITE_SMS_ENABLED === 'true';
 const STRING_COUNTS = {
@@ -100,16 +99,21 @@ const defaultTechDetails = {
 
 export { combineCustomerName, generateJobNumber, splitCustomerName };
 
+function getActiveShopId(shopId = '') {
+  return shopId || getCurrentShopId();
+}
+
 export function getLocalJobs() {
   try {
+    const activeShopId = getActiveShopId();
     const storedJobs = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (storedJobs) {
-      return storedJobs.map(normalizeJob).filter((job) => job.shopId === defaultShopId);
+      return storedJobs.map(normalizeJob).filter((job) => job.shopId === activeShopId);
     }
 
     const oldStoredJobs = JSON.parse(localStorage.getItem(OLD_STORAGE_KEY));
     if (oldStoredJobs) {
-      const migratedJobs = oldStoredJobs.map(normalizeJob).filter((job) => job.shopId === defaultShopId);
+      const migratedJobs = oldStoredJobs.map(normalizeJob).filter((job) => job.shopId === activeShopId);
       saveLocalJobs(migratedJobs);
       return migratedJobs;
     }
@@ -133,6 +137,7 @@ export const saveJobs = saveLocalJobs;
 function mergeJobsByUpdatedAt(remoteJobs, localJobs) {
   const merged = new Map();
   const remoteKeys = new Set();
+  const activeShopId = getActiveShopId();
 
   remoteJobs.forEach((job) => {
     merged.set(job.id, job);
@@ -143,7 +148,7 @@ function mergeJobsByUpdatedAt(remoteJobs, localJobs) {
   });
 
   localJobs.forEach((localJob) => {
-    if ((localJob.shopId || defaultShopId) !== defaultShopId) {
+    if (getActiveShopId(localJob.shopId) !== activeShopId) {
       return;
     }
 
@@ -168,7 +173,7 @@ function mergeJobsByUpdatedAt(remoteJobs, localJobs) {
 }
 
 function getJobIdentityKey(job) {
-  const shopId = job.shopId || job.shop_id || defaultShopId;
+  const shopId = getActiveShopId(job.shopId || job.shop_id);
   const jobNumber = job.jobNumber || job.job_number || '';
   return shopId && jobNumber ? `${shopId}:${jobNumber}` : '';
 }
@@ -184,6 +189,8 @@ function isNewerJob(candidate, baseline) {
 }
 
 export async function getJobs() {
+  const activeShopId = getActiveShopId();
+
   if (!hasSupabaseConfig || !supabase) {
     return getLocalJobs();
   }
@@ -198,7 +205,7 @@ export async function getJobs() {
       job_images (*),
       customer_messages (*)
     `)
-    .eq('shop_id', defaultShopId)
+    .eq('shop_id', activeShopId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -214,10 +221,11 @@ export async function getJobs() {
 
 export async function addJob(job) {
   const now = new Date().toISOString();
+  const activeShopId = getActiveShopId(job.shopId);
   const localJobs = getLocalJobs();
   const newJob = normalizeJob({
     ...job,
-    shopId: job.shopId || defaultShopId,
+    shopId: activeShopId,
     id: job.id || crypto.randomUUID(),
     createdAt: job.createdAt || now,
     updatedAt: now
@@ -382,9 +390,10 @@ export async function updateJob(updatedJob) {
 }
 
 export async function ensureRemoteJob(job) {
+  const activeShopId = getActiveShopId(job.shopId);
   const normalizedJob = normalizeJob({
     ...job,
-    shopId: job.shopId || defaultShopId,
+    shopId: activeShopId,
     updatedAt: job.updatedAt || new Date().toISOString()
   });
 
@@ -396,7 +405,7 @@ export async function ensureRemoteJob(job) {
     .from('jobs')
     .select('id')
     .eq('id', normalizedJob.id)
-    .eq('shop_id', normalizedJob.shopId || defaultShopId)
+    .eq('shop_id', getActiveShopId(normalizedJob.shopId))
     .maybeSingle();
 
   if (existingJobError) {
@@ -429,11 +438,12 @@ export async function ensureRemoteJob(job) {
 }
 
 async function updateSupabaseJob(job) {
+  const activeShopId = getActiveShopId(job.shopId);
   let { data, error } = await supabase
     .from('jobs')
     .update(toDbJob(job))
     .eq('id', job.id)
-    .eq('shop_id', job.shopId || defaultShopId)
+    .eq('shop_id', activeShopId)
     .select('id')
     .maybeSingle();
 
@@ -454,7 +464,7 @@ async function updateSupabaseJob(job) {
     .from('jobs')
     .update(toLegacyDbJob(job))
     .eq('id', job.id)
-    .eq('shop_id', job.shopId || defaultShopId)
+    .eq('shop_id', activeShopId)
     .select('id')
     .maybeSingle());
 
@@ -478,7 +488,7 @@ async function findRemoteDuplicateWorkOrder(job) {
   const { data, error } = await supabase
     .from('jobs')
     .select('id, job_number')
-    .eq('shop_id', job.shopId || defaultShopId)
+    .eq('shop_id', getActiveShopId(job.shopId))
     .eq('job_number', job.jobNumber)
     .limit(1)
     .maybeSingle();
@@ -492,8 +502,9 @@ async function findRemoteDuplicateWorkOrder(job) {
 }
 
 function assertNoDuplicateLocalWorkOrder(job, localJobs) {
+  const jobShopId = getActiveShopId(job.shopId);
   const duplicateLocalJob = localJobs.find((item) => (
-    (item.shopId || defaultShopId) === (job.shopId || defaultShopId)
+    getActiveShopId(item.shopId) === jobShopId
     && item.jobNumber === job.jobNumber
     && item.id !== job.id
   ));
@@ -602,7 +613,7 @@ export async function addService(jobId, service) {
 
 function normalizeJob(job, jobs = []) {
   const dateReceived = job.dateReceived || new Date().toISOString().slice(0, 10);
-  const shopId = job.shopId || job.shop_id || defaultShopId;
+  const shopId = getActiveShopId(job.shopId || job.shop_id);
   const jobDate = job.jobDate || job.job_date || dateReceived;
   const jobDayCode = job.jobDayCode || job.job_day_code || getJobDayCode(jobDate);
   const parsedSequence = parseDailySequence(job.dailySequence ?? job.daily_sequence, job.jobNumber || job.job_number);
@@ -843,13 +854,14 @@ function parseDailySequence(sequenceValue, jobNumber = '') {
 }
 
 function toDbJob(job) {
+  const shopId = getActiveShopId(job.shopId);
   return {
     ...toLegacyDbJob(job),
     customer_id: job.customerId || null,
     job_date: job.jobDate || job.dateReceived || null,
     job_day_code: job.jobDayCode || getJobDayCode(job.jobDate || job.dateReceived),
     daily_sequence: job.dailySequence || null,
-    shop_id: job.shopId || defaultShopId,
+    shop_id: shopId,
     status: job.status || 'Checked In'
   };
 }
@@ -924,7 +936,7 @@ function fromDbJob(job) {
     jobDate: job.job_date || job.date_received || '',
     jobDayCode: job.job_day_code || '',
     dailySequence: job.daily_sequence || null,
-    shopId: job.shop_id || defaultShopId,
+    shopId: getActiveShopId(job.shop_id),
     jobNumber: job.job_number || '',
     status: job.status || 'Checked In',
     discountType: job.tech_details?.discountType || 'none',
