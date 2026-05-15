@@ -16,6 +16,8 @@ Domain: `frettrack-app.com`
   - `app.frettrack-app.com` CNAME to `frettrack.pages.dev`
   - Cloudflare Email Routing MX records enabled
   - SPF includes Cloudflare Email Routing and Amazon SES/Resend
+  - Resend custom MAIL FROM records added at `send.frettrack-app.com`
+  - Resend DKIM record added at `resend._domainkey.frettrack-app.com`
   - DMARC monitoring record exists
 - Inbound email routing:
   - `support@frettrack-app.com` forwards to the verified Cloudflare destination `jaycurtis@techie.com`
@@ -37,20 +39,16 @@ Supabase Auth needs custom SMTP configured with an outbound email provider such 
 
 Recommended provider: Resend.
 
-1. Add `frettrack-app.com` as a sending domain in Resend.
-2. Add the Resend DNS records to Cloudflare.
-   - SPF is already prepared for Amazon SES/Resend.
-   - Resend still needs its generated DKIM records.
-3. Verify the domain in Resend.
-4. In Supabase Dashboard, go to Authentication SMTP settings.
-5. Enable custom SMTP using Resend SMTP credentials.
-6. Set sender:
+1. Verify the domain in Resend.
+2. In Supabase Dashboard, go to Authentication SMTP settings.
+3. Enable custom SMTP using Resend SMTP credentials.
+4. Set sender:
 
 ```text
 FretTrack <noreply@frettrack-app.com>
 ```
 
-7. In Supabase Authentication URL settings, set:
+5. In Supabase Authentication URL settings, set:
 
 ```text
 Site URL: https://app.frettrack-app.com
@@ -59,8 +57,8 @@ https://app.frettrack-app.com/**
 http://localhost:5173/**
 ```
 
-8. Customize the Supabase Invite user email template so it says FretTrack, not Supabase.
-9. Send a test invite to an internal address before inviting outside testers.
+6. Customize the Supabase Invite user email template so it says FretTrack, not Supabase.
+7. Send a test invite to an internal address before inviting outside testers.
 
 ## Website Deployment Notes
 
