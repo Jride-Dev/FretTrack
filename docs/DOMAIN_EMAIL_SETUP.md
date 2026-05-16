@@ -24,6 +24,7 @@ Domain: `frettrack-app.com`
   - Current objects:
     - `site/frettrack-banner.png`
     - `site/frettrack-emblem.png`
+  - Beta applications are stored as private JSON objects under `beta-applications/YYYY-MM-DD/{uuid}.json`
 - DNS:
   - `app.frettrack-app.com` CNAME to `frettrack.pages.dev`
   - Cloudflare Email Routing MX records enabled
@@ -122,4 +123,19 @@ Confirm images:
 ```powershell
 curl.exe -I https://frettrack-app.com/assets/frettrack-banner.png
 curl.exe -I https://frettrack-app.com/assets/frettrack-emblem.png
+```
+
+Smoke test the beta application form endpoint:
+
+```powershell
+$payload = @{
+  name = 'FretTrack Smoke Test'
+  state = 'CA'
+  shopName = 'Internal Test Shop'
+  teamSize = '1'
+  currentTracking = 'Smoke test submission from deployment verification.'
+  email = 'support@frettrack-app.com'
+} | ConvertTo-Json -Compress
+
+$payload | curl.exe -sS --max-time 20 -X POST https://frettrack-app.com/api/beta-application -H "Content-Type: application/json" --data-binary "@-"
 ```

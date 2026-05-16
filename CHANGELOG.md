@@ -12,6 +12,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added custom domain deployment support for `app.frettrack-app.com` through Cloudflare Pages.
 - Added a Cloudflare Worker coming-soon page for `frettrack-app.com` and `www.frettrack-app.com`, with beta login routing to the app domain.
 - Added a dedicated Cloudflare R2 bucket for public `frettrack-app.com` site assets and moved the coming-soon banner/emblem to Worker-served R2 paths.
+- Added a public "Shop Owners Wanted for Beta Testing" application modal on `frettrack-app.com`, with submissions stored in R2.
 - Documented FretTrack domain email/DNS setup for Resend and Supabase Auth invite branding.
 - Added `system_announcements` and in-app announcement banners for beta maintenance and bug-fix notices.
 - Added `beta_feedback` and a logged-in **Report Issue** form that stores user, shop, page, browser, and selected job context in Supabase.

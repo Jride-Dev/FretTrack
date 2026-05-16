@@ -156,6 +156,157 @@ function landingPage() {
         color: #ffffff;
       }
 
+      .beta-callout {
+        background: var(--charcoal);
+        color: #ffffff;
+      }
+
+      .beta-callout .section {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 32px 0;
+      }
+
+      .beta-callout h2 {
+        font-size: clamp(26px, 4vw, 42px);
+        line-height: 1.05;
+        margin: 0;
+      }
+
+      .beta-callout p {
+        color: #d1d5db;
+        font-size: 17px;
+        margin: 8px 0 0;
+        max-width: 680px;
+      }
+
+      .beta-callout .button {
+        background: #ffffff;
+        border: 0;
+        color: var(--charcoal);
+        cursor: pointer;
+        flex: 0 0 auto;
+        font-family: inherit;
+        font-size: 15px;
+      }
+
+      .modal-backdrop {
+        align-items: center;
+        background: rgba(17, 24, 39, 0.72);
+        display: none;
+        inset: 0;
+        justify-content: center;
+        padding: 20px;
+        position: fixed;
+        z-index: 20;
+      }
+
+      body.modal-open {
+        overflow: hidden;
+      }
+
+      body.modal-open .modal-backdrop {
+        display: flex;
+      }
+
+      .modal {
+        background: var(--panel);
+        border-radius: 8px;
+        color: var(--ink);
+        max-height: min(720px, calc(100vh - 40px));
+        max-width: 560px;
+        overflow: auto;
+        padding: 24px;
+        width: min(100%, 560px);
+      }
+
+      .modal-header {
+        align-items: flex-start;
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 16px;
+      }
+
+      .modal h2 {
+        font-size: 28px;
+        line-height: 1.12;
+        margin: 0;
+      }
+
+      .modal p {
+        color: var(--muted);
+        margin: 8px 0 0;
+      }
+
+      .modal-close {
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        color: var(--ink);
+        cursor: pointer;
+        font-size: 22px;
+        height: 36px;
+        line-height: 1;
+        width: 36px;
+      }
+
+      .application-form {
+        display: grid;
+        gap: 12px;
+      }
+
+      .application-form label {
+        color: var(--ink);
+        display: grid;
+        font-size: 14px;
+        font-weight: 700;
+        gap: 6px;
+      }
+
+      .application-form input,
+      .application-form textarea {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        color: var(--ink);
+        font: inherit;
+        min-height: 42px;
+        padding: 10px 12px;
+        width: 100%;
+      }
+
+      .application-form textarea {
+        min-height: 92px;
+        resize: vertical;
+      }
+
+      .application-form .button {
+        background: var(--brand);
+        border: 0;
+        color: #ffffff;
+        cursor: pointer;
+        font-family: inherit;
+        justify-content: center;
+        margin-top: 6px;
+      }
+
+      .form-status {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 2px 0 0;
+        min-height: 20px;
+      }
+
+      .form-status.success {
+        color: #0f766e;
+      }
+
+      .form-status.error {
+        color: #b3261e;
+      }
+
       .lower {
         display: grid;
         gap: 16px;
@@ -266,6 +417,11 @@ function landingPage() {
         footer .section {
           display: grid;
         }
+
+        .beta-callout .section {
+          align-items: flex-start;
+          flex-direction: column;
+        }
       }
     </style>
   </head>
@@ -306,6 +462,16 @@ function landingPage() {
     </section>
 
     <main>
+      <section class="beta-callout" aria-labelledby="beta-heading">
+        <div class="section">
+          <div>
+            <h2 id="beta-heading">Shop Owners Wanted for Beta Testing!</h2>
+            <p>We are looking for a few real repair shops to test FretTrack with actual bench work, photos, customer lookup, and repair sheets.</p>
+          </div>
+          <button class="button" type="button" id="open-application">APPLY HERE</button>
+        </div>
+      </section>
+
       <section class="section">
         <h2>Made for small repair shops, not generic ticket queues.</h2>
         <p>FretTrack is being tested with real guitar repair workflows: intake notes, instrument condition, job history, parts and services, shop branding, and customer-ready printouts.</p>
@@ -332,6 +498,106 @@ function landingPage() {
         <span><a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></span>
       </div>
     </footer>
+
+    <div class="modal-backdrop" id="application-modal" role="presentation">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="application-title">
+        <div class="modal-header">
+          <div>
+            <h2 id="application-title">Beta tester application</h2>
+            <p>Tell us a little about your shop so we can keep this beta useful and controlled.</p>
+          </div>
+          <button class="modal-close" type="button" id="close-application" aria-label="Close application">X</button>
+        </div>
+        <form class="application-form" id="application-form">
+          <label>
+            Name
+            <input name="name" autocomplete="name" required>
+          </label>
+          <label>
+            State
+            <input name="state" autocomplete="address-level1" required>
+          </label>
+          <label>
+            Shop Name
+            <input name="shopName" autocomplete="organization" required>
+          </label>
+          <label>
+            How many people work at your shop?
+            <input name="teamSize" inputmode="numeric" required>
+          </label>
+          <label>
+            What are you using now to track your bench work?
+            <textarea name="currentTracking" required></textarea>
+          </label>
+          <label>
+            Email address
+            <input name="email" type="email" autocomplete="email" required>
+          </label>
+          <button class="button" type="submit">Submit Application</button>
+          <p class="form-status" id="application-status" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const body = document.body;
+      const openButton = document.getElementById('open-application');
+      const closeButton = document.getElementById('close-application');
+      const modal = document.getElementById('application-modal');
+      const form = document.getElementById('application-form');
+      const status = document.getElementById('application-status');
+
+      function openModal() {
+        body.classList.add('modal-open');
+        status.textContent = '';
+        status.className = 'form-status';
+        form.elements.name.focus();
+      }
+
+      function closeModal() {
+        body.classList.remove('modal-open');
+        openButton.focus();
+      }
+
+      openButton.addEventListener('click', openModal);
+      closeButton.addEventListener('click', closeModal);
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeModal();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && body.classList.contains('modal-open')) closeModal();
+      });
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const submitButton = form.querySelector('button[type="submit"]');
+        const payload = Object.fromEntries(new FormData(form).entries());
+
+        submitButton.disabled = true;
+        status.textContent = 'Submitting...';
+        status.className = 'form-status';
+
+        try {
+          const response = await fetch('/api/beta-application', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json();
+          if (!response.ok || !result.ok) {
+            throw new Error(result.error || 'Unable to submit right now.');
+          }
+          form.reset();
+          status.textContent = 'Application received. Thank you.';
+          status.className = 'form-status success';
+        } catch (error) {
+          status.textContent = error.message || 'Unable to submit right now.';
+          status.className = 'form-status error';
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+    </script>
   </body>
 </html>`;
 }
@@ -349,6 +615,13 @@ export default {
       return serveAsset(url.pathname, env);
     }
 
+    if (url.pathname === '/api/beta-application') {
+      if (request.method !== 'POST') {
+        return jsonResponse({ ok: false, error: 'Method not allowed.' }, 405);
+      }
+      return saveBetaApplication(request, env);
+    }
+
     if (url.pathname === '/app') {
       return Response.redirect(APP_URL, 302);
     }
@@ -364,6 +637,56 @@ export default {
   }
 };
 
+async function saveBetaApplication(request, env) {
+  const contentType = request.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return jsonResponse({ ok: false, error: 'Invalid request.' }, 400);
+  }
+
+  let data;
+  try {
+    data = await request.json();
+  } catch (error) {
+    return jsonResponse({ ok: false, error: 'Invalid request.' }, 400);
+  }
+
+  const application = {
+    name: cleanText(data.name, 120),
+    state: cleanText(data.state, 80),
+    shopName: cleanText(data.shopName, 160),
+    teamSize: cleanText(data.teamSize, 80),
+    currentTracking: cleanText(data.currentTracking, 1200),
+    email: cleanText(data.email, 180).toLowerCase(),
+    submittedAt: new Date().toISOString(),
+    userAgent: cleanText(request.headers.get('user-agent') || '', 500),
+    ipCountry: cleanText(request.cf?.country || '', 8)
+  };
+
+  const missingField = ['name', 'state', 'shopName', 'teamSize', 'currentTracking', 'email'].find((field) => !application[field]);
+  if (missingField) {
+    return jsonResponse({ ok: false, error: 'Please fill out every field.' }, 400);
+  }
+
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(application.email)) {
+    return jsonResponse({ ok: false, error: 'Please enter a valid email address.' }, 400);
+  }
+
+  const id = crypto.randomUUID();
+  const datePath = application.submittedAt.slice(0, 10);
+  await env.FRETTRACK_APP_ASSETS.put(
+    `beta-applications/${datePath}/${id}.json`,
+    JSON.stringify(application, null, 2),
+    {
+      httpMetadata: {
+        contentType: 'application/json',
+        cacheControl: 'private, max-age=0'
+      }
+    }
+  );
+
+  return jsonResponse({ ok: true });
+}
+
 async function serveAsset(pathname, env) {
   const key = `site/${pathname.replace('/assets/', '')}`;
   const object = await env.FRETTRACK_APP_ASSETS.get(key);
@@ -378,4 +701,19 @@ async function serveAsset(pathname, env) {
   headers.set('cache-control', object.httpMetadata?.cacheControl || 'public, max-age=300');
 
   return new Response(object.body, { headers });
+}
+
+function cleanText(value, maxLength) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, maxLength);
+}
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff'
+    }
+  });
 }
