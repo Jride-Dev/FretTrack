@@ -7,6 +7,7 @@ import JobInfoSection from './JobInfoSection';
 import JobPrintSheet from './JobPrintSheet';
 import JobStatusSelect from './JobStatusSelect';
 import PrintActions from './PrintActions';
+import SubcontractorPickupEmailDialog, { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
 import TechDetailsSection from './TechDetailsSection';
 import TotalsSection from './TotalsSection';
@@ -38,6 +39,8 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
   const [payment, setPayment] = useState({ amount: '', method: 'Cash', note: '', date: new Date().toISOString().slice(0, 10) });
   const [imageImportErrors, setImageImportErrors] = useState([]);
   const [isImportingImages, setIsImportingImages] = useState(false);
+  const [subcontractorPickupJob, setSubcontractorPickupJob] = useState(null);
+  const [isSendingSubcontractorEmail, setIsSendingSubcontractorEmail] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState(job.events || []);
   const imageImportInputRef = useRef(null);
 
@@ -515,7 +518,50 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
 
     setDraftJob(nextJob);
     setIsDirty(true);
-    await saveDraftNow(nextJob).catch(() => {});
+    try {
+      const savedJob = await saveDraftNow(nextJob);
+      if (shouldOfferPvmhPickupEmail(savedJob || nextJob)) {
+        setSubcontractorPickupJob(savedJob || nextJob);
+      }
+    } catch {
+      // saveDraftNow already surfaces save errors through the app notice path.
+    }
+  }
+
+  async function sendSubcontractorPickupEmail(message) {
+    if (!subcontractorPickupJob) {
+      return;
+    }
+
+    setIsSendingSubcontractorEmail(true);
+    const result = await sendCustomerMessage(subcontractorPickupJob, {
+      channel: 'email',
+      templateKey: 'subcontractor_pickup_ready',
+      to: message.to,
+      subject: message.subject,
+      body: message.body
+    });
+
+    if (!result.ok) {
+      setIsSendingSubcontractorEmail(false);
+      window.alert(result.error || 'PVMH email failed to send.');
+      return;
+    }
+
+    setSubcontractorPickupJob(null);
+    setIsSendingSubcontractorEmail(false);
+    if (result.message) {
+      setDraftJob((current) => ({
+        ...current,
+        messages: [
+          result.message,
+          ...(current.messages || []).filter((item) => item.id !== result.message.id)
+        ]
+      }));
+    }
+    if (onRefresh) {
+      await onRefresh();
+    }
   }
 
   function reportDamageView(viewName) {
@@ -734,6 +780,12 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
 
   return (
     <section className="panel detail job-detail">
+      <SubcontractorPickupEmailDialog
+        job={subcontractorPickupJob}
+        isSending={isSendingSubcontractorEmail}
+        onCancel={() => setSubcontractorPickupJob(null)}
+        onSend={sendSubcontractorPickupEmail}
+      />
       <div className="detail-header">
         <div>
           <h2>{draftJob.customerName}</h2>

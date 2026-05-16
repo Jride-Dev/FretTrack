@@ -25,6 +25,7 @@
 - Fixed browser focus/session refresh churn that could reset the open workspace.
 - Added explicit password reset/update flow instead of relying on reset links that only establish a session.
 - Added a User section in Shop Settings for authenticated password changes.
+- Added a default-shop-only PVMH subcontractor pickup email prompt on Finish / Picked Up for eligible Sub-Contract jobs.
 - Added per-shop workspace restore for the last open mode/job.
 - Fixed damage-map and marker photo reloads by rehydrating saved storage paths.
 - Replaced damage-marker new-tab links with inline photo preview, replace, and remove controls.

@@ -276,7 +276,7 @@ export async function addJob(job) {
 export async function sendCustomerMessage(job, message) {
   const normalizedJob = normalizeJob(job);
   const channel = message.channel;
-  const recipient = channel === 'sms' ? normalizedJob.phone : normalizedJob.email;
+  const recipient = message.to || message.recipient || (channel === 'sms' ? normalizedJob.phone : normalizedJob.email);
 
   if (channel === 'sms' && !smsEnabled) {
     return { ok: false, error: 'SMS is disabled for this trial build. Email is active.' };
