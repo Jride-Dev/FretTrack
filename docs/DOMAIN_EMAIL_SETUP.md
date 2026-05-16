@@ -17,6 +17,13 @@ Domain: `frettrack-app.com`
   - Custom root domain: `frettrack-app.com`
   - Custom www domain: `www.frettrack-app.com`
   - Source: `cloudflare/frettrack-coming-soon`
+- Cloudflare R2:
+  - Bucket: `frettrack-app-assets`
+  - Worker binding: `FRETTRACK_APP_ASSETS`
+  - Public asset paths are served through the Worker under `https://frettrack-app.com/assets/...`
+  - Current objects:
+    - `site/frettrack-banner.png`
+    - `site/frettrack-emblem.png`
 - DNS:
   - `app.frettrack-app.com` CNAME to `frettrack.pages.dev`
   - Cloudflare Email Routing MX records enabled
@@ -101,4 +108,18 @@ Confirm:
 ```powershell
 curl.exe -I https://frettrack-app.com/
 curl.exe -I https://www.frettrack-app.com/
+```
+
+Update public site images:
+
+```powershell
+npx wrangler r2 object put frettrack-app-assets/site/frettrack-banner.png --remote --file public/frettrack-banner.png --content-type image/png --cache-control "public, max-age=300"
+npx wrangler r2 object put frettrack-app-assets/site/frettrack-emblem.png --remote --file public/frettrack-emblem.png --content-type image/png --cache-control "public, max-age=300"
+```
+
+Confirm images:
+
+```powershell
+curl.exe -I https://frettrack-app.com/assets/frettrack-banner.png
+curl.exe -I https://frettrack-app.com/assets/frettrack-emblem.png
 ```

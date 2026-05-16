@@ -1,5 +1,7 @@
 const APP_URL = 'https://app.frettrack-app.com';
 const SUPPORT_EMAIL = 'support@frettrack-app.com';
+const BANNER_URL = '/assets/frettrack-banner.png';
+const EMBLEM_URL = '/assets/frettrack-emblem.png';
 
 function landingPage() {
   return `<!doctype html>
@@ -11,7 +13,7 @@ function landingPage() {
     <meta name="description" content="FretTrack is a private beta repair workflow for guitar shops: jobs, customers, photos, service records, and printable repair sheets.">
     <meta property="og:title" content="FretTrack | Private Beta">
     <meta property="og:description" content="Guitar repair workflow, jobs, photos, customers, and shop records.">
-    <meta property="og:image" content="${APP_URL}/frettrack-banner.png">
+    <meta property="og:image" content="https://frettrack-app.com${BANNER_URL}">
     <meta property="og:type" content="website">
     <style>
       :root {
@@ -46,7 +48,7 @@ function landingPage() {
         min-height: 100vh;
         display: grid;
         grid-template-rows: auto 1fr auto;
-        background: url("${APP_URL}/frettrack-banner.png") center / cover no-repeat;
+        background: url("${BANNER_URL}") center / cover no-repeat;
         color: #ffffff;
         isolation: isolate;
         position: relative;
@@ -271,7 +273,7 @@ function landingPage() {
     <section class="hero">
       <nav class="nav" aria-label="Main">
         <div class="brand">
-          <img src="${APP_URL}/frettrack-emblem.png" alt="">
+          <img src="${EMBLEM_URL}" alt="">
           <span>FretTrack</span>
         </div>
         <a href="${APP_URL}">Beta Login</a>
@@ -335,12 +337,16 @@ function landingPage() {
 }
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
 
     if (url.hostname === 'www.frettrack-app.com') {
       url.hostname = 'frettrack-app.com';
       return Response.redirect(url.toString(), 301);
+    }
+
+    if (url.pathname.startsWith('/assets/')) {
+      return serveAsset(url.pathname, env);
     }
 
     if (url.pathname === '/app') {
@@ -357,3 +363,19 @@ export default {
     });
   }
 };
+
+async function serveAsset(pathname, env) {
+  const key = `site/${pathname.replace('/assets/', '')}`;
+  const object = await env.FRETTRACK_APP_ASSETS.get(key);
+
+  if (!object) {
+    return new Response('Asset not found', { status: 404 });
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('etag', object.httpEtag);
+  headers.set('cache-control', object.httpMetadata?.cacheControl || 'public, max-age=300');
+
+  return new Response(object.body, { headers });
+}

@@ -22,6 +22,7 @@
 - Added in-app Report Issue form backed by Supabase `beta_feedback`.
 - Added custom FretTrack domain/email setup notes for branded Supabase Auth invites.
 - Added a public coming-soon page at `frettrack-app.com` with a beta login link to `app.frettrack-app.com`.
+- Added Cloudflare R2 storage for the public coming-soon page banner and emblem assets.
 - Fixed selected-shop job saves that could fail RLS for non-default shops.
 - Fixed browser focus/session refresh churn that could reset the open workspace.
 - Added explicit password reset/update flow instead of relying on reset links that only establish a session.
