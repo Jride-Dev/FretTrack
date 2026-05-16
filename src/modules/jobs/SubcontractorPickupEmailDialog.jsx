@@ -76,9 +76,10 @@ export function shouldOfferPvmhPickupEmail(job) {
 }
 
 function createDefaultMessage(job = {}) {
-  const customerName = job.customerName || 'Customer';
-  const instrument = [job.guitarBrand, job.model].filter(Boolean).join(' ') || job.instrumentType || 'instrument';
-  const jobNumber = job.jobNumber ? ` Job #${job.jobNumber}` : '';
+  const safeJob = job || {};
+  const customerName = safeJob.customerName || 'Customer';
+  const instrument = [safeJob.guitarBrand, safeJob.model].filter(Boolean).join(' ') || safeJob.instrumentType || 'instrument';
+  const jobNumber = safeJob.jobNumber ? ` Job #${safeJob.jobNumber}` : '';
 
   return {
     subject: `${customerName}'s ${instrument} is ready${jobNumber}`,
