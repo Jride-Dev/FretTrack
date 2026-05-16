@@ -13,6 +13,19 @@ export async function getCurrentSession() {
   return data.session || null;
 }
 
+export async function getCurrentUser() {
+  if (!hasSupabaseConfig || !supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.getUser();
+  if (error) {
+    throw error;
+  }
+
+  return data.user || null;
+}
+
 export function onAuthSessionChange(callback) {
   if (!hasSupabaseConfig || !supabase) {
     return () => {};
@@ -59,6 +72,15 @@ export async function updateCurrentUserPassword(password) {
   }
 
   return data.user || null;
+}
+
+export async function changeCurrentUserPassword({ email, currentPassword, nextPassword }) {
+  if (!email) {
+    throw new Error('Unable to confirm account email.');
+  }
+
+  await signInWithPassword({ email, password: currentPassword });
+  return updateCurrentUserPassword(nextPassword);
 }
 
 export async function signOut() {

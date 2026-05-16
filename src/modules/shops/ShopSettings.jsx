@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import UserSettings from '../auth/UserSettings.jsx';
 import { getShopSettings, saveShopSettings } from './shopConfig';
 import { saveShopProfile, uploadShopLogo } from './shopProfileService';
 
@@ -78,61 +79,65 @@ export default function ShopSettings({
           Complete this before creating work orders so printed sheets, defaults, and shop access are scoped correctly.
         </p>
       )}
-      {!canManageShop && <p className="muted-text">Only shop owners and admins can change shop settings.</p>}
-      <form className="form-grid" onSubmit={handleSubmit}>
-        <label>
-          Shop Name
-          <input name="shopName" value={settings.shopName} onChange={updateField} disabled={!canManageShop || isSaving} required />
-        </label>
-        <label>
-          Phone
-          <input name="phone" value={settings.phone} onChange={updateField} disabled={!canManageShop || isSaving} />
-        </label>
-        <label>
-          Email
-          <input type="email" name="email" value={settings.email} onChange={updateField} disabled={!canManageShop || isSaving} />
-        </label>
-        <label className="wide">
-          Address
-          <textarea name="address" value={settings.address} onChange={updateField} rows="2" disabled={!canManageShop || isSaving} />
-        </label>
-        <label className="wide">
-          Logo Upload
-          <input
-            type="file"
-            accept="image/*"
-            disabled={!canManageShop || isSaving}
-            onChange={(event) => setLogoFile(event.target.files?.[0] || null)}
-          />
-          <small>{settings.logoStoragePath ? 'Current logo is saved for this shop.' : 'Optional. Used for shop branding where available.'}</small>
-        </label>
-        {settings.logoUrl && (
-          <div className="wide shop-logo-preview">
-            <img src={settings.logoUrl} alt={`${settings.shopName || 'Shop'} logo preview`} />
-          </div>
-        )}
-        <label>
-          State
-          <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving} required={requireCompletion} maxLength="2" />
-        </label>
-        <label>
-          Default Sales Tax %
-          <input type="number" min="0" step="0.001" name="salesTaxRate" value={settings.salesTaxRate || ''} onChange={updateField} disabled={!canManageShop || isSaving} />
-        </label>
-        <label className="checkline">
-          <input type="checkbox" name="taxablePartsDefault" checked={settings.taxablePartsDefault !== false} onChange={updateField} disabled={!canManageShop || isSaving} />
-          Parts taxable by default
-        </label>
-        <label className="checkline">
-          <input type="checkbox" name="taxableServicesDefault" checked={Boolean(settings.taxableServicesDefault)} onChange={updateField} disabled={!canManageShop || isSaving} />
-          Services taxable by default
-        </label>
-        <label className="wide">
-          Print Footer Text
-          <textarea name="printFooterText" value={settings.printFooterText} onChange={updateField} rows="3" disabled={!canManageShop || isSaving} />
-        </label>
-        <button type="submit" disabled={!canManageShop || isSaving}>{isSaving ? 'Saving...' : requireCompletion ? 'Finish Shop Setup' : 'Save Shop Settings'}</button>
-      </form>
+      <section className="shop-profile-settings">
+        <h3>Shop Profile</h3>
+        {!canManageShop && <p className="muted-text">Only shop owners and admins can change shop settings.</p>}
+        <form className="form-grid" onSubmit={handleSubmit}>
+          <label>
+            Shop Name
+            <input name="shopName" value={settings.shopName} onChange={updateField} disabled={!canManageShop || isSaving} required />
+          </label>
+          <label>
+            Phone
+            <input name="phone" value={settings.phone} onChange={updateField} disabled={!canManageShop || isSaving} />
+          </label>
+          <label>
+            Email
+            <input type="email" name="email" value={settings.email} onChange={updateField} disabled={!canManageShop || isSaving} />
+          </label>
+          <label className="wide">
+            Address
+            <textarea name="address" value={settings.address} onChange={updateField} rows="2" disabled={!canManageShop || isSaving} />
+          </label>
+          <label className="wide">
+            Logo Upload
+            <input
+              type="file"
+              accept="image/*"
+              disabled={!canManageShop || isSaving}
+              onChange={(event) => setLogoFile(event.target.files?.[0] || null)}
+            />
+            <small>{settings.logoStoragePath ? 'Current logo is saved for this shop.' : 'Optional. Used for shop branding where available.'}</small>
+          </label>
+          {settings.logoUrl && (
+            <div className="wide shop-logo-preview">
+              <img src={settings.logoUrl} alt={`${settings.shopName || 'Shop'} logo preview`} />
+            </div>
+          )}
+          <label>
+            State
+            <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving} required={requireCompletion} maxLength="2" />
+          </label>
+          <label>
+            Default Sales Tax %
+            <input type="number" min="0" step="0.001" name="salesTaxRate" value={settings.salesTaxRate || ''} onChange={updateField} disabled={!canManageShop || isSaving} />
+          </label>
+          <label className="checkline">
+            <input type="checkbox" name="taxablePartsDefault" checked={settings.taxablePartsDefault !== false} onChange={updateField} disabled={!canManageShop || isSaving} />
+            Parts taxable by default
+          </label>
+          <label className="checkline">
+            <input type="checkbox" name="taxableServicesDefault" checked={Boolean(settings.taxableServicesDefault)} onChange={updateField} disabled={!canManageShop || isSaving} />
+            Services taxable by default
+          </label>
+          <label className="wide">
+            Print Footer Text
+            <textarea name="printFooterText" value={settings.printFooterText} onChange={updateField} rows="3" disabled={!canManageShop || isSaving} />
+          </label>
+          <button type="submit" disabled={!canManageShop || isSaving}>{isSaving ? 'Saving...' : requireCompletion ? 'Finish Shop Setup' : 'Save Shop Settings'}</button>
+        </form>
+      </section>
+      {!requireCompletion && <UserSettings onNotice={onNotice} />}
     </section>
   );
 }

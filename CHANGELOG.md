@@ -20,6 +20,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added per-shop workspace restore so a browser reload can reopen the last selected mode/job for that shop.
 - Fixed stale shop display confusion by clearing local shop selection when no session exists and removing the hardcoded `PV Music House` Create Shop placeholder.
 - Added a real password reset/update flow: reset links now land on a set-new-password form, and sign-up/password updates require confirmation and at least 12 characters.
+- Added a User section in Shop Settings with a current-password-confirmed Change Password form wired to Supabase Auth.
 - Fixed damage-map and damage-marker photo persistence by saving storage paths and rehydrating fresh object URLs when saved jobs are reopened.
 - Changed damage-marker photo links to inline previews with Replace/Remove controls instead of opening temporary blob links in a new tab.
 - Capped damage-map image display height so imported damage views stay manageable in the inspection UI.
