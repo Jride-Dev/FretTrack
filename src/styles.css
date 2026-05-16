@@ -1726,26 +1726,43 @@ th.internal-only {
 }
 
 .report-damage-view {
+  break-inside: avoid;
   page-break-inside: avoid;
 }
 
 .report-damage-canvas {
   border: 1px solid var(--print-text);
+  break-inside: avoid;
+  line-height: 0;
   margin: 8px auto 12px;
-  max-width: 620px;
+  max-width: min(100%, 620px);
+  overflow: hidden;
+  page-break-inside: avoid;
   position: relative;
+  width: fit-content;
 }
 
 .report-damage-canvas img {
   display: block;
-  width: 100%;
+  height: auto;
+  max-height: 540px;
+  max-width: 100%;
+  object-fit: contain;
+  width: auto;
 }
 
 .report-damage-placeholder {
   color: var(--print-muted);
-  min-height: 220px;
-  padding: 80px 16px;
+  min-height: 72px;
+  padding: 24px 16px;
   text-align: center;
+}
+
+.report-damage-missing {
+  border: 1px solid var(--print-text);
+  color: var(--print-muted);
+  margin: 8px 0 12px;
+  padding: 10px 12px;
 }
 
 .work-order-photo-grid {
@@ -1762,10 +1779,10 @@ th.internal-only {
 .work-order-photo img {
   border: 1px solid var(--print-text);
   display: block;
-  max-height: 600px;
-  max-width: 300px;
+  max-height: 220px;
+  max-width: 100%;
   object-fit: contain;
-  width: auto;
+  width: 100%;
 }
 
 .work-order-photo figcaption {
@@ -1864,6 +1881,7 @@ th.internal-only {
   header,
   aside,
   .detail > section:not(.print-sheet),
+  .job-tab-panel,
   .detail-header label,
   .actions,
   .no-print,
@@ -1904,6 +1922,7 @@ th.internal-only {
   }
 
   body.customer-report-printing .detail > section:not(.customer-report),
+  body.customer-report-printing .job-tab-panel,
   body.customer-report-printing .detail-header {
     display: none !important;
   }
@@ -1921,13 +1940,49 @@ th.internal-only {
     page-break-inside: avoid;
   }
 
+  .customer-report {
+    font-size: 10.5px;
+  }
+
+  .customer-report h3 {
+    break-after: avoid;
+    margin: 10px 0 6px;
+  }
+
+  .customer-report table {
+    break-inside: auto;
+    font-size: 10px;
+    page-break-inside: auto;
+  }
+
+  .customer-report tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-damage-view {
+    break-inside: avoid;
+    margin-top: 10px;
+    page-break-inside: avoid;
+  }
+
+  .report-damage-canvas {
+    max-width: 100%;
+  }
+
+  .report-damage-canvas img {
+    max-height: 4.7in;
+    max-width: 100%;
+  }
+
   .work-order-photo-grid {
-    grid-template-columns: repeat(2, 300px);
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .work-order-photo img {
-    max-height: 600px;
-    max-width: 300px;
+    max-height: 2in;
+    max-width: 100%;
   }
 
   .totals {

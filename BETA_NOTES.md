@@ -29,3 +29,4 @@
 - Added per-shop workspace restore for the last open mode/job.
 - Fixed damage-map and marker photo reloads by rehydrating saved storage paths.
 - Replaced damage-marker new-tab links with inline photo preview, replace, and remove controls.
+- Fixed customer damage report print layout so damage maps and work-order photos stay paper-safe.

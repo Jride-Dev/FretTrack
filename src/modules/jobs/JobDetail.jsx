@@ -569,26 +569,31 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
     const view = damageMap.views?.[viewName] || { marks: [] };
     const imageUrl = view.imageUrl || '';
     const marks = view.marks || [];
+    const title = viewName === 'front' ? 'Front Damage Map' : 'Back Damage Map';
+
+    if (!imageUrl && marks.length === 0) {
+      return null;
+    }
 
     return (
       <div className="report-damage-view">
-        <h3>{viewName === 'front' ? 'Front Damage Map' : 'Back Damage Map'}</h3>
-        <div className="report-damage-canvas">
-          {imageUrl ? (
+        <h3>{title}</h3>
+        {imageUrl ? (
+          <div className="report-damage-canvas">
             <img src={imageUrl} alt={`${viewName} damage map`} />
-          ) : (
-            <div className="report-damage-placeholder">No damage map image imported.</div>
-          )}
-          {marks.map((mark, index) => (
-            <span
-              key={mark.id}
-              className="damage-marker"
-              style={{ left: `${mark.x}%`, top: `${mark.y}%`, backgroundColor: markerColorForReport(mark.severity) }}
-            >
-              {index + 1}
-            </span>
-          ))}
-        </div>
+            {marks.map((mark, index) => (
+              <span
+                key={mark.id}
+                className="damage-marker"
+                style={{ left: `${mark.x}%`, top: `${mark.y}%`, backgroundColor: markerColorForReport(mark.severity) }}
+              >
+                {index + 1}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="report-damage-missing">No {title.toLowerCase()} image was available for this report.</p>
+        )}
         {marks.length > 0 && (
           <table>
             <thead>

@@ -10,6 +10,7 @@ export default function CustomerDamageReport({
 }) {
   const shopSettings = getShopSettings();
   const printFooterText = getPrintFooterText();
+  const printableWorkOrderImages = workOrderImages.filter((image) => image.url);
 
   return (
     <section className="customer-report">
@@ -87,11 +88,11 @@ export default function CustomerDamageReport({
       <h3>Authorization</h3>
       <p>{draftJob.techDetails.damageMap?.liabilityText || 'Customer acknowledges documented condition and authorizes repair intake.'}</p>
       <p>Damage acknowledgment checked: {draftJob.techDetails.damageMap?.liabilityAcknowledged ? 'Yes' : 'No'}</p>
-      {workOrderImages.length > 0 && (
+      {printableWorkOrderImages.length > 0 && (
         <section className="work-order-photos">
           <h3>Work Order Pictures</h3>
           <div className="work-order-photo-grid">
-            {workOrderImages.map((image) => (
+            {printableWorkOrderImages.map((image) => (
               <figure key={image.id} className="work-order-photo">
                 <img src={image.url} alt={image.name || image.fileName || 'Work order upload'} />
                 <figcaption>{image.name || image.fileName || 'Work order picture'}</figcaption>

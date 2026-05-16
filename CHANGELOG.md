@@ -25,6 +25,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Fixed damage-map and damage-marker photo persistence by saving storage paths and rehydrating fresh object URLs when saved jobs are reopened.
 - Changed damage-marker photo links to inline previews with Replace/Remove controls instead of opening temporary blob links in a new tab.
 - Capped damage-map image display height so imported damage views stay manageable in the inspection UI.
+- Fixed customer damage report printing so screen-only message panels do not print, empty damage-map placeholders do not consume full pages, and damage/work-order images are capped to print-safe sizes.
 - Verified RLS for House of Bass feedback/announcement access and cross-shop feedback blocking.
 - Deployed beta fixes to Cloudflare Pages and confirmed the production custom domain served the updated bundles.
 
