@@ -12,6 +12,11 @@ Domain: `frettrack-app.com`
   - Project: `frettrack`
   - Pages subdomain: `frettrack.pages.dev`
   - Custom app domain: `app.frettrack-app.com`
+- Cloudflare Worker:
+  - Worker: `frettrack-coming-soon`
+  - Custom root domain: `frettrack-app.com`
+  - Custom www domain: `www.frettrack-app.com`
+  - Source: `cloudflare/frettrack-coming-soon`
 - DNS:
   - `app.frettrack-app.com` CNAME to `frettrack.pages.dev`
   - Cloudflare Email Routing MX records enabled
@@ -62,9 +67,19 @@ http://localhost:5173/**
 
 ## Website Deployment Notes
 
-The Cloudflare Pages project and custom domain exist, but the app still needs a deployment.
+The production app is hosted on Cloudflare Pages at:
 
-Recommended deployment:
+```text
+https://app.frettrack-app.com
+```
+
+The public root domain is a separate Cloudflare Worker:
+
+```text
+https://frettrack-app.com
+```
+
+Deploy the app:
 
 1. Connect Cloudflare Pages to `Jride-Dev/FretTrack`.
 2. Production branch: `add-auth-shop-memberships` until the beta branch is merged.
@@ -74,3 +89,16 @@ Recommended deployment:
 6. Deploy.
 7. Confirm `https://app.frettrack-app.com` loads.
 8. Update Supabase Auth Site URL and redirect URLs.
+
+Deploy the root coming-soon page:
+
+```powershell
+npx wrangler deploy --config cloudflare/frettrack-coming-soon/wrangler.jsonc
+```
+
+Confirm:
+
+```powershell
+curl.exe -I https://frettrack-app.com/
+curl.exe -I https://www.frettrack-app.com/
+```
