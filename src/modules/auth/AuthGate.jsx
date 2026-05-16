@@ -1,11 +1,23 @@
 import { useState } from 'react';
-import { signInWithPassword, signUpWithPassword } from './authService';
+import {
+  sendPasswordResetEmail,
+  signInWithPassword,
+  signUpWithPassword,
+  updateCurrentUserPassword
+} from './authService';
 
-export default function AuthGate({ onNotice }) {
-  const [mode, setMode] = useState('sign-in');
+export default function AuthGate({ initialMode = 'sign-in', onPasswordUpdated, onNotice }) {
+  const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function switchMode(nextMode) {
+    setMode(nextMode);
+    setPassword('');
+    setConfirmPassword('');
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -13,7 +25,22 @@ export default function AuthGate({ onNotice }) {
     onNotice?.(null);
 
     try {
-      if (mode === 'sign-up') {
+      if (mode === 'reset-request') {
+        await sendPasswordResetEmail(email);
+        onNotice?.({
+          type: 'success',
+          message: 'Password reset email sent. Open the link, then set a new password.'
+        });
+        switchMode('sign-in');
+      } else if (mode === 'update-password') {
+        validateNewPassword(password, confirmPassword);
+        await updateCurrentUserPassword(password);
+        setPassword('');
+        setConfirmPassword('');
+        onNotice?.({ type: 'success', message: 'Password updated. You are signed in.' });
+        onPasswordUpdated?.();
+      } else if (mode === 'sign-up') {
+        validateNewPassword(password, confirmPassword);
         const session = await signUpWithPassword({ email, password });
         onNotice?.({
           type: 'success',
@@ -37,47 +64,124 @@ export default function AuthGate({ onNotice }) {
     <main className="app auth-shell">
       <section className="panel auth-panel">
         <h1>FretTrack</h1>
-        <p>Sign in to access shop work orders and customer records.</p>
+        <p>{copyForMode(mode).description}</p>
 
         <form onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </label>
+          {mode !== 'update-password' && (
+            <label>
+              Email
+              <input
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
+            </label>
+          )}
 
-          <label>
-            Password
-            <input
-              type="password"
-              autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              minLength={6}
-              required
-            />
-          </label>
+          {mode !== 'reset-request' && (
+            <label>
+              {mode === 'update-password' ? 'New Password' : 'Password'}
+              <input
+                type="password"
+                autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                minLength={12}
+                required
+              />
+            </label>
+          )}
+
+          {(mode === 'sign-up' || mode === 'update-password') && (
+            <label>
+              Confirm Password
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                minLength={12}
+                required
+              />
+            </label>
+          )}
 
           <button type="submit" className="primary-action" disabled={isSubmitting}>
-            {isSubmitting ? 'Please wait...' : mode === 'sign-up' ? 'Create Account' : 'Sign In'}
+            {isSubmitting ? 'Please wait...' : copyForMode(mode).submit}
           </button>
         </form>
 
-        <button
-          type="button"
-          className="button-tertiary auth-mode-toggle"
-          onClick={() => setMode((currentMode) => (currentMode === 'sign-in' ? 'sign-up' : 'sign-in'))}
-        >
-          {mode === 'sign-in' ? 'Create a shop user account' : 'Already have an account? Sign in'}
-        </button>
+        {mode === 'sign-in' && (
+          <>
+            <button
+              type="button"
+              className="button-tertiary auth-mode-toggle"
+              onClick={() => switchMode('reset-request')}
+            >
+              Forgot password?
+            </button>
+            <button
+              type="button"
+              className="button-tertiary auth-mode-toggle"
+              onClick={() => switchMode('sign-up')}
+            >
+              Create a shop user account
+            </button>
+          </>
+        )}
+
+        {mode !== 'sign-in' && mode !== 'update-password' && (
+          <button
+            type="button"
+            className="button-tertiary auth-mode-toggle"
+            onClick={() => switchMode('sign-in')}
+          >
+            Back to sign in
+          </button>
+        )}
       </section>
     </main>
   );
+}
+
+function copyForMode(mode) {
+  if (mode === 'reset-request') {
+    return {
+      description: 'Enter your email and FretTrack will send a password reset link.',
+      submit: 'Send Reset Email'
+    };
+  }
+
+  if (mode === 'update-password') {
+    return {
+      description: 'Set a new password for this FretTrack account.',
+      submit: 'Update Password'
+    };
+  }
+
+  if (mode === 'sign-up') {
+    return {
+      description: 'Create a shop user account.',
+      submit: 'Create Account'
+    };
+  }
+
+  return {
+    description: 'Sign in to access shop work orders and customer records.',
+    submit: 'Sign In'
+  };
+}
+
+function validateNewPassword(password, confirmPassword) {
+  if (password.length < 12) {
+    throw new Error('Password must be at least 12 characters.');
+  }
+
+  if (password !== confirmPassword) {
+    throw new Error('Passwords do not match.');
+  }
 }
 
 function getErrorMessage(error, fallback) {

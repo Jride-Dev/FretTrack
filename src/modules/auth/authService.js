@@ -43,6 +43,24 @@ export async function signUpWithPassword({ email, password }) {
   return data.session || null;
 }
 
+export async function sendPasswordResetEmail(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin
+  });
+  if (error) {
+    throw error;
+  }
+}
+
+export async function updateCurrentUserPassword(password) {
+  const { data, error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    throw error;
+  }
+
+  return data.user || null;
+}
+
 export async function signOut() {
   if (!hasSupabaseConfig || !supabase) {
     return;

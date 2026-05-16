@@ -23,6 +23,7 @@
 - Added custom FretTrack domain/email setup notes for branded Supabase Auth invites.
 - Fixed selected-shop job saves that could fail RLS for non-default shops.
 - Fixed browser focus/session refresh churn that could reset the open workspace.
+- Added explicit password reset/update flow instead of relying on reset links that only establish a session.
 - Added per-shop workspace restore for the last open mode/job.
 - Fixed damage-map and marker photo reloads by rehydrating saved storage paths.
 - Replaced damage-marker new-tab links with inline photo preview, replace, and remove controls.

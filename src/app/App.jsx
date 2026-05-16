@@ -31,6 +31,7 @@ export default function App() {
   const [mode, setMode] = useState('new');
   const [supabaseStatus, setSupabaseStatus] = useState(hasSupabaseConfig ? 'checking' : 'not-configured');
   const [session, setSession] = useState(null);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(hasSupabaseConfig);
   const [membership, setMembership] = useState(null);
   const [memberships, setMemberships] = useState([]);
@@ -88,6 +89,10 @@ export default function App() {
       });
 
     const unsubscribe = onAuthSessionChange((nextSession, event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true);
+      }
+
       setSession((currentSession) => {
         if (nextSession) {
           manualSignOutRef.current = false;
@@ -448,6 +453,19 @@ export default function App() {
     return (
       <>
         <AuthGate onNotice={setNotice} />
+        <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+      </>
+    );
+  }
+
+  if (hasSupabaseConfig && session && isPasswordRecovery) {
+    return (
+      <>
+        <AuthGate
+          initialMode="update-password"
+          onPasswordUpdated={() => setIsPasswordRecovery(false)}
+          onNotice={setNotice}
+        />
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       </>
     );
