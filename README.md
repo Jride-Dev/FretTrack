@@ -28,7 +28,7 @@ By invite only. Applications are being taken on the website. Click the link and 
 
 ## Current Position
 
-- Public beta is live at [frettrack-app.com](https://frettrack-app.com).
+- Invite ONLY beta is live at [frettrack-app.com](https://frettrack-app.com).
 - The app is deployed through Cloudflare Pages and backed by Supabase Auth, database, storage, and Edge Functions.
 - Email notifications are active through Supabase Edge Functions and Resend.
 - SMS plumbing exists, but SMS is disabled in beta builds until carrier registration is ready.
