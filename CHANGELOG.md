@@ -1,8 +1,15 @@
 # Changelog
 
-Current version: `0.2.6-beta.2`
+Current version: `0.2.6-beta.4`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
+
+## v0.2.6-beta.4
+
+- Added lightweight Accounting / Reports with shop-scoped summaries, payments by method, tax/VAT collected, open balances, CSV export, and print/PDF-friendly report output.
+- Added shop-level currency, locale, tax/VAT label, and tax/VAT registration settings with USD and GBP defaults.
+- Added shop-level date formatting settings for US, UK, and ISO-style display without changing stored timestamps.
+- Added shop-level measurement preferences for imperial/in and metric/mm display/input behavior without silently migrating stored measurements.
 
 ## v0.2.6-beta.2
 

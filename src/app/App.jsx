@@ -20,7 +20,7 @@ import { getCurrentShopProfile } from '../modules/shops/shopProfileService';
 import { money } from '../shared/utils/money';
 import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes';
 
-const APP_VERSION = '0.2.6-beta.2';
+const APP_VERSION = '0.2.6-beta.4';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';
