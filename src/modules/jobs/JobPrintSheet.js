@@ -1,5 +1,5 @@
 import { retailTotal, rowQuantity } from '../billing/accounting';
-import { getPrintFooterText, getShopSettings } from '../shops/shopConfig';
+import { getPrintFooterText, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
 import { money } from '../../shared/utils/money';
 
 export default function JobPrintSheet({
@@ -11,6 +11,12 @@ export default function JobPrintSheet({
 }) {
   const shopSettings = getShopSettings();
   const printFooterText = getPrintFooterText();
+  const taxSettings = draftJob.techDetails?.tax || {};
+  const moneyOptions = getShopMoneyOptions({
+    currencyCode: taxSettings.currencyCode || shopSettings.currencyCode,
+    locale: taxSettings.locale || shopSettings.locale
+  });
+  const taxLabel = taxSettings.taxLabel || shopSettings.taxLabel || 'Sales Tax';
 
   return (
     <section className="print-sheet">
@@ -44,7 +50,7 @@ export default function JobPrintSheet({
             <tr key={row.id}>
               <td>{row.description}</td>
               <td>{row.quantity || 1}</td>
-              <td>{money((Number(row.retail) || 0) * rowQuantity(row))}</td>
+              <td>{money((Number(row.retail) || 0) * rowQuantity(row), moneyOptions)}</td>
             </tr>
           ))}
         </tbody>
@@ -56,30 +62,30 @@ export default function JobPrintSheet({
             <tr key={row.id}>
               <td>{row.name}</td>
               <td>{row.quantity || 1}</td>
-              <td>{row.includedInService ? 'Included' : money(retailTotal(row))}</td>
+              <td>{row.includedInService ? 'Included' : money(retailTotal(row), moneyOptions)}</td>
             </tr>
           ))}
         </tbody>
       </table>
       <div className="totals">
         <span>Services</span>
-        <strong>{money(totals.servicesTotal)}</strong>
+        <strong>{money(totals.servicesTotal, moneyOptions)}</strong>
         <span>Billable Parts</span>
-        <strong>{money(totals.partsTotal)}</strong>
+        <strong>{money(totals.partsTotal, moneyOptions)}</strong>
         <span>Included Parts</span>
-        <strong>{money(totals.includedPartsTotal)}</strong>
+        <strong>{money(totals.includedPartsTotal, moneyOptions)}</strong>
         <span>Subtotal</span>
-        <strong>{money(totals.subtotal)}</strong>
+        <strong>{money(totals.subtotal, moneyOptions)}</strong>
         <span>Discount</span>
-        <strong>-{money(totals.discountAmount)}</strong>
-        <span>Sales Tax</span>
-        <strong>{money(totals.salesTaxAmount)}</strong>
+        <strong>-{money(totals.discountAmount, moneyOptions)}</strong>
+        <span>{taxLabel}</span>
+        <strong>{money(totals.salesTaxAmount, moneyOptions)}</strong>
         <span>Total Due</span>
-        <strong>{money(totals.totalDue)}</strong>
+        <strong>{money(totals.totalDue, moneyOptions)}</strong>
         <span>Paid</span>
-        <strong>{money(totals.paidTotal)}</strong>
+        <strong>{money(totals.paidTotal, moneyOptions)}</strong>
         <span>Balance</span>
-        <strong>{money(totals.balanceDue)}</strong>
+        <strong>{money(totals.balanceDue, moneyOptions)}</strong>
       </div>
       {printFooterText && <p className="print-footer-text">{printFooterText}</p>}
     </section>

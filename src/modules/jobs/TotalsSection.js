@@ -1,5 +1,6 @@
 import PaymentsSection from './PaymentsSection';
 import { money } from '../../shared/utils/money';
+import { getShopMoneyOptions } from '../shops/shopConfig';
 
 export default function TotalsSection({
   addPayment,
@@ -14,6 +15,12 @@ export default function TotalsSection({
   updatePayment,
   updateTaxField
 }) {
+  const taxLabel = taxSettings.taxLabel || 'Sales Tax';
+  const moneyOptions = getShopMoneyOptions({
+    currencyCode: taxSettings.currencyCode,
+    locale: taxSettings.locale
+  });
+
   return (
     <section>
       <h3>Totals</h3>
@@ -43,7 +50,7 @@ export default function TotalsSection({
           <input name="state" value={taxSettings.state || ''} onChange={updateTaxField} />
         </label>
         <label>
-          Sales Tax %
+          {taxLabel} %
           <input type="number" min="0" step="0.001" name="salesTaxRate" value={taxSettings.salesTaxRate || ''} onChange={updateTaxField} />
         </label>
         <label className="checkline">
@@ -65,25 +72,25 @@ export default function TotalsSection({
       />
       <div className="totals">
         <span>Billable Parts</span>
-        <strong>{money(totals.partsTotal)}</strong>
+        <strong>{money(totals.partsTotal, moneyOptions)}</strong>
         <span>Included Parts</span>
-        <strong>{money(totals.includedPartsTotal)}</strong>
+        <strong>{money(totals.includedPartsTotal, moneyOptions)}</strong>
         <span>Services</span>
-        <strong>{money(totals.servicesTotal)}</strong>
+        <strong>{money(totals.servicesTotal, moneyOptions)}</strong>
         <span>Subtotal</span>
-        <strong>{money(totals.subtotal)}</strong>
+        <strong>{money(totals.subtotal, moneyOptions)}</strong>
         <span>Discount</span>
-        <strong>-{money(totals.discountAmount)}</strong>
+        <strong>-{money(totals.discountAmount, moneyOptions)}</strong>
         <span>Taxable Amount</span>
-        <strong>{money(totals.taxableAmount)}</strong>
-        <span>Sales Tax</span>
-        <strong>{money(totals.salesTaxAmount)}</strong>
+        <strong>{money(totals.taxableAmount, moneyOptions)}</strong>
+        <span>{taxLabel}</span>
+        <strong>{money(totals.salesTaxAmount, moneyOptions)}</strong>
         <span>Total Due</span>
-        <strong>{money(totals.totalDue)}</strong>
+        <strong>{money(totals.totalDue, moneyOptions)}</strong>
         <span>Paid</span>
-        <strong>{money(totals.paidTotal)}</strong>
+        <strong>{money(totals.paidTotal, moneyOptions)}</strong>
         <span>Balance</span>
-        <strong>{money(totals.balanceDue)}</strong>
+        <strong>{money(totals.balanceDue, moneyOptions)}</strong>
       </div>
     </section>
   );

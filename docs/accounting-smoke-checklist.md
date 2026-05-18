@@ -11,3 +11,4 @@ Run these against one test shop, then repeat the cross-shop item with a second s
 7. Cross-shop isolation: switch to another shop and confirm the report only includes jobs for that selected shop.
 8. Export: click Export CSV and confirm the file includes summary, payments by method, tax collected, open balances, and job detail.
 9. Print/PDF: click Print / PDF and confirm the print view shows the report tables without job form controls.
+10. UK currency: set a test shop to GBP/en-GB with tax label VAT, then confirm reports and printed job sheets show £ amounts, VAT wording, and CSV rows include `currency_code` as `GBP`.

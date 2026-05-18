@@ -15,10 +15,14 @@ export function getDefaultAccountingDateRange(now = new Date()) {
 
 export function buildAccountingReport(jobs = [], options = {}) {
   const shopId = options.shopId || '';
+  const currencyCode = normalizeCurrencyCode(options.currencyCode || options.shopProfile?.currencyCode || 'USD');
+  const locale = options.locale || options.shopProfile?.locale || 'en-US';
+  const taxLabel = options.taxLabel || options.shopProfile?.taxLabel || (currencyCode === 'GBP' ? 'VAT' : 'Sales Tax');
   const range = normalizeDateRange(options);
   const scopedJobs = jobs
     .filter((job) => !shopId || job.shopId === shopId || job.shop_id === shopId)
-    .map(buildJobAccountingSnapshot);
+    .map((job) => buildJobAccountingSnapshot(job, { currencyCode, locale, taxLabel }))
+    .filter((snapshot) => snapshot.currencyCode === currencyCode);
 
   const jobsInRange = scopedJobs.filter((snapshot) => isDateInRange(snapshot.accountingDate, range));
   const paymentEvents = scopedJobs.flatMap((snapshot) => snapshot.paymentEvents)
@@ -31,6 +35,9 @@ export function buildAccountingReport(jobs = [], options = {}) {
     range,
     generatedAt: new Date().toISOString(),
     shopId,
+    currencyCode,
+    locale,
+    taxLabel,
     summary: summarizeAccounting(jobsInRange, paymentEvents, adjustmentEvents, openBalances),
     dailyCloseout: groupSnapshotsByPeriod(jobsInRange, paymentEvents, adjustmentEvents, 'day'),
     monthlyTotals: groupSnapshotsByPeriod(jobsInRange, paymentEvents, adjustmentEvents, 'month'),
@@ -44,7 +51,7 @@ export function buildAccountingReport(jobs = [], options = {}) {
   };
 }
 
-export function buildJobAccountingSnapshot(job = {}) {
+export function buildJobAccountingSnapshot(job = {}, options = {}) {
   const totals = calculateJobTotals(job);
   const parts = job.parts || [];
   const services = job.services || job.labor || [];
@@ -53,6 +60,9 @@ export function buildJobAccountingSnapshot(job = {}) {
   const accountingDate = job.completedAt || job.pickedUpAt || job.jobDate || job.dateReceived || job.createdAt || job.updatedAt || '';
   const taxRatePercent = Number(taxSettings.salesTaxRate) || 0;
   const taxJurisdiction = taxSettings.jurisdiction || taxSettings.state || '';
+  const currencyCode = normalizeCurrencyCode(taxSettings.currencyCode || options.currencyCode || 'USD');
+  const locale = taxSettings.locale || options.locale || 'en-US';
+  const taxLabel = taxSettings.taxLabel || options.taxLabel || (currencyCode === 'GBP' ? 'VAT' : 'Sales Tax');
   const partLines = parts.map((part) => {
     const quantity = rowQuantity(part);
     const retailAmount = part.includedInService ? 0 : retailTotal(part);
@@ -121,6 +131,9 @@ export function buildJobAccountingSnapshot(job = {}) {
     jobNumber: job.jobNumber || job.job_number || '',
     customerName: job.customerName || job.customer_name || '',
     shopId: job.shopId || job.shop_id || '',
+    currencyCode,
+    locale,
+    taxLabel,
     status: job.status || '',
     accountingDate,
     partsRevenue: totals.partsTotal,
@@ -138,6 +151,10 @@ export function buildJobAccountingSnapshot(job = {}) {
     taxSnapshot: {
       tax_rate_percent: taxRatePercent,
       tax_jurisdiction: taxJurisdiction,
+      tax_label: taxLabel,
+      tax_registration_number: taxSettings.taxRegistrationNumber || '',
+      currency_code: currencyCode,
+      locale,
       taxable_subtotal: taxableSubtotal,
       non_taxable_subtotal: nonTaxableSubtotal,
       tax_amount: totals.salesTaxAmount
@@ -331,4 +348,9 @@ function toDateInputValue(value) {
 
 function sumBy(rows, key) {
   return rows.reduce((total, row) => total + (Number(row[key]) || 0), 0);
+}
+
+function normalizeCurrencyCode(currencyCode) {
+  const code = String(currencyCode || 'USD').toUpperCase();
+  return code === 'GBP' ? 'GBP' : 'USD';
 }

@@ -81,6 +81,10 @@ const defaultTechDetails = {
   tax: {
     state: '',
     salesTaxRate: '',
+    taxLabel: 'Sales Tax',
+    taxRegistrationNumber: '',
+    currencyCode: 'USD',
+    locale: 'en-US',
     taxableParts: true,
     taxableServices: false
   },

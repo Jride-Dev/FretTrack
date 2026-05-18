@@ -1,5 +1,6 @@
 import { servicePresets } from '../data/servicePresets';
 import { money } from '../shared/utils/money';
+import { getShopMoneyOptions } from '../modules/shops/shopConfig';
 
 function margin(row) {
   const quantity = Number(row.quantity || 1);
@@ -11,6 +12,7 @@ function retailTotal(row) {
 }
 
 export default function ServicesList({ services, service, setService, onAddService, onUpdateService }) {
+  const moneyOptions = getShopMoneyOptions();
   function applyPreset(event) {
     const preset = servicePresets.find((item) => item.name === event.target.value);
     if (!preset) {
@@ -68,10 +70,10 @@ export default function ServicesList({ services, service, setService, onAddServi
               <td className="internal-only">
                 <input type="number" min="0" step="0.01" value={row.cost} onChange={(event) => onUpdateService(row.id, 'cost', event.target.value)} />
               </td>
-              <td className="internal-only">{money(margin(row))}</td>
+              <td className="internal-only">{money(margin(row), moneyOptions)}</td>
               <td>
                 <input type="number" min="0" step="0.01" value={row.retail} onChange={(event) => onUpdateService(row.id, 'retail', event.target.value)} />
-                <strong>{money(retailTotal(row))}</strong>
+                <strong>{money(retailTotal(row), moneyOptions)}</strong>
               </td>
             </tr>
           ))}

@@ -14,7 +14,7 @@ import { getCurrentSession, onAuthSessionChange, signOut } from '../modules/auth
 import { getJobs, updateJob } from '../modules/jobs/jobService';
 import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService';
 import { calculateTillSummary, sortNewestFirst } from '../modules/jobs/jobSelectors';
-import { clearSelectedShop, getCurrentShopName, getSelectedShop, setSelectedShop } from '../modules/shops/shopConfig';
+import { clearSelectedShop, getCurrentShopName, getSelectedShop, getShopMoneyOptions, setSelectedShop } from '../modules/shops/shopConfig';
 import { bootstrapCurrentUserAsOwner, getCurrentUserShopMemberships } from '../modules/shops/shopMembershipService';
 import { getCurrentShopProfile } from '../modules/shops/shopProfileService';
 import { money } from '../shared/utils/money';
@@ -434,6 +434,7 @@ export default function App() {
   const canWrite = !hasSupabaseConfig || ['owner', 'admin', 'tech'].includes(membership?.role);
   const canManageShop = !hasSupabaseConfig || ['owner', 'admin'].includes(membership?.role);
   const tillSummary = calculateTillSummary(jobs);
+  const moneyOptions = getShopMoneyOptions(shopProfile || undefined);
   const statusText = {
     checking: 'Supabase Checking',
     connected: 'Supabase Connected',
@@ -615,15 +616,15 @@ export default function App() {
             <h2>Till Summary</h2>
             <div className="totals">
               <span>Paid In</span>
-              <strong>{money(tillSummary.paidTotal)}</strong>
-              <span>Sales Tax</span>
-              <strong>{money(tillSummary.salesTaxAccrued)}</strong>
+              <strong>{money(tillSummary.paidTotal, moneyOptions)}</strong>
+              <span>{shopProfile?.taxLabel || 'Sales Tax'}</span>
+              <strong>{money(tillSummary.salesTaxAccrued, moneyOptions)}</strong>
               <span>Open Balance</span>
-              <strong>{money(tillSummary.openBalance)}</strong>
+              <strong>{money(tillSummary.openBalance, moneyOptions)}</strong>
               {Object.entries(tillSummary.byMethod).map(([method, amount]) => (
                 <Fragment key={method}>
                   <span>{method}</span>
-                  <strong>{money(amount)}</strong>
+                  <strong>{money(amount, moneyOptions)}</strong>
                 </Fragment>
               ))}
             </div>
@@ -666,7 +667,7 @@ export default function App() {
           )}
 
           {mode === 'accounting' && (
-            <AccountingReports jobs={jobs} shopId={membership?.shopId || getSelectedShop().shopId} />
+            <AccountingReports jobs={jobs} shopId={membership?.shopId || getSelectedShop().shopId} shopProfile={shopProfile} />
           )}
 
           {mode === 'detail' && selectedJob && (
@@ -712,15 +713,21 @@ function saveWorkspaceState(shopId, state) {
 }
 
 function getCurrentShopProfileFallback() {
+  const shopName = getCurrentShopName();
+  const looksUnitedKingdom = /\b(norwich|united kingdom|uk|england|gb|great britain)\b/i.test(shopName);
   return {
     shopId: '',
-    shopName: getCurrentShopName(),
+    shopName,
     phone: '',
     email: '',
     address: '',
     logoUrl: '',
     logoStoragePath: '',
     printFooterText: '',
+    currencyCode: looksUnitedKingdom ? 'GBP' : 'USD',
+    locale: looksUnitedKingdom ? 'en-GB' : 'en-US',
+    taxLabel: looksUnitedKingdom ? 'VAT' : 'Sales Tax',
+    taxRegistrationNumber: '',
     taxState: '',
     salesTaxRate: '',
     taxablePartsDefault: true,

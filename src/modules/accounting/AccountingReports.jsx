@@ -5,13 +5,15 @@ import { downloadAccountingCsv } from './accountingExport';
 
 const defaultRange = getDefaultAccountingDateRange();
 
-export default function AccountingReports({ jobs = [], shopId = '' }) {
+export default function AccountingReports({ jobs = [], shopId = '', shopProfile = null }) {
   const [dateRange, setDateRange] = useState(defaultRange);
   const report = useMemo(() => buildAccountingReport(jobs, {
     shopId,
+    shopProfile,
     startDate: dateRange.start,
     endDate: dateRange.end
-  }), [jobs, shopId, dateRange.start, dateRange.end]);
+  }), [jobs, shopId, shopProfile, dateRange.start, dateRange.end]);
+  const moneyOptions = { currency: report.currencyCode, locale: report.locale };
 
   function updateRange(event) {
     const { name, value } = event.target;
@@ -31,7 +33,7 @@ export default function AccountingReports({ jobs = [], shopId = '' }) {
       <div className="accounting-header no-print">
         <div>
           <h2>Accounting / Reports</h2>
-          <p className="muted-text">Operational summaries for tax prep and bookkeeping handoff.</p>
+          <p className="muted-text">Operational summaries for tax prep and bookkeeping handoff. Currency: {report.currencyCode}</p>
         </div>
         <div className="accounting-actions">
           <label>
@@ -53,14 +55,14 @@ export default function AccountingReports({ jobs = [], shopId = '' }) {
       </div>
 
       <div className="accounting-summary-grid">
-        <SummaryCard label="Job Totals" value={money(report.summary.jobTotals)} />
-        <SummaryCard label="Paid In" value={money(report.summary.paidTotal)} />
-        <SummaryCard label="Open Balances" value={money(report.summary.outstandingBalance)} />
-        <SummaryCard label="Tax Collected" value={money(report.summary.taxCollected)} />
-        <SummaryCard label="Parts Revenue" value={money(report.summary.partsRevenue)} />
-        <SummaryCard label="Labor Revenue" value={money(report.summary.laborRevenue)} />
-        <SummaryCard label="Discounts" value={money(report.summary.discounts)} />
-        <SummaryCard label="Refunds / Voids" value={money(report.summary.refundsAndVoids)} />
+        <SummaryCard label="Job Totals" value={money(report.summary.jobTotals, moneyOptions)} />
+        <SummaryCard label="Paid In" value={money(report.summary.paidTotal, moneyOptions)} />
+        <SummaryCard label="Open Balances" value={money(report.summary.outstandingBalance, moneyOptions)} />
+        <SummaryCard label={`${report.taxLabel} Collected`} value={money(report.summary.taxCollected, moneyOptions)} />
+        <SummaryCard label="Parts Revenue" value={money(report.summary.partsRevenue, moneyOptions)} />
+        <SummaryCard label="Labor Revenue" value={money(report.summary.laborRevenue, moneyOptions)} />
+        <SummaryCard label="Discounts" value={money(report.summary.discounts, moneyOptions)} />
+        <SummaryCard label="Refunds / Voids" value={money(report.summary.refundsAndVoids, moneyOptions)} />
       </div>
 
       <ReportTable
@@ -72,13 +74,13 @@ export default function AccountingReports({ jobs = [], shopId = '' }) {
           <tr key={row.method}>
             <td>{row.method}</td>
             <td>{row.count}</td>
-            <td>{money(row.amount)}</td>
+            <td>{money(row.amount, moneyOptions)}</td>
           </tr>
         )}
       />
 
       <ReportTable
-        title="Tax Collected"
+        title={`${report.taxLabel} Collected`}
         emptyText="No taxable jobs in this date range."
         headers={['Jurisdiction', 'Tax %', 'Taxable', 'Non-Taxable', 'Tax']}
         rows={report.taxCollected}
@@ -86,9 +88,9 @@ export default function AccountingReports({ jobs = [], shopId = '' }) {
           <tr key={row.jurisdiction}>
             <td>{row.jurisdiction}</td>
             <td>{row.taxRatePercent}</td>
-            <td>{money(row.taxableSubtotal)}</td>
-            <td>{money(row.nonTaxableSubtotal)}</td>
-            <td>{money(row.taxAmount)}</td>
+            <td>{money(row.taxableSubtotal, moneyOptions)}</td>
+            <td>{money(row.nonTaxableSubtotal, moneyOptions)}</td>
+            <td>{money(row.taxAmount, moneyOptions)}</td>
           </tr>
         )}
       />
@@ -103,9 +105,9 @@ export default function AccountingReports({ jobs = [], shopId = '' }) {
             <td>{row.jobNumber}</td>
             <td>{row.customerName}</td>
             <td>{row.status}</td>
-            <td>{money(row.totalDue)}</td>
-            <td>{money(row.paidTotal)}</td>
-            <td>{money(row.balanceDue)}</td>
+            <td>{money(row.totalDue, moneyOptions)}</td>
+            <td>{money(row.paidTotal, moneyOptions)}</td>
+            <td>{money(row.balanceDue, moneyOptions)}</td>
           </tr>
         )}
       />
@@ -119,12 +121,12 @@ export default function AccountingReports({ jobs = [], shopId = '' }) {
           <tr key={row.period}>
             <td>{row.period}</td>
             <td>{row.jobCount}</td>
-            <td>{money(row.jobTotals)}</td>
-            <td>{money(row.paidTotal)}</td>
-            <td>{money(row.partsRevenue)}</td>
-            <td>{money(row.laborRevenue)}</td>
-            <td>{money(row.discounts)}</td>
-            <td>{money(row.taxCollected)}</td>
+            <td>{money(row.jobTotals, moneyOptions)}</td>
+            <td>{money(row.paidTotal, moneyOptions)}</td>
+            <td>{money(row.partsRevenue, moneyOptions)}</td>
+            <td>{money(row.laborRevenue, moneyOptions)}</td>
+            <td>{money(row.discounts, moneyOptions)}</td>
+            <td>{money(row.taxCollected, moneyOptions)}</td>
           </tr>
         )}
       />

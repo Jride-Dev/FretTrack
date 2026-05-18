@@ -359,6 +359,10 @@ function getDefaultTaxSettings(shopProfile = {}) {
   return {
     state: shopProfile?.taxState || '',
     salesTaxRate: shopProfile?.salesTaxRate || '',
+    taxLabel: shopProfile?.taxLabel || 'Sales Tax',
+    taxRegistrationNumber: shopProfile?.taxRegistrationNumber || '',
+    currencyCode: shopProfile?.currencyCode || 'USD',
+    locale: shopProfile?.locale || 'en-US',
     taxableParts: shopProfile?.taxablePartsDefault !== false,
     taxableServices: Boolean(shopProfile?.taxableServicesDefault)
   };

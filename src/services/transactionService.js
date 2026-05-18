@@ -1,5 +1,5 @@
 import { hasSupabaseConfig, supabase } from '../shared/lib/supabaseClient';
-import { getCurrentShopId } from '../modules/shops/shopConfig';
+import { getCurrentShopId, getShopSettings } from '../modules/shops/shopConfig';
 import { getDefaultCurrency } from '../shared/utils/money';
 
 const COMMERCE_NOT_CONFIGURED = 'Supabase is not configured for commerce events.';
@@ -69,7 +69,7 @@ export async function reverseTransaction(transaction, options = {}) {
     sourceId: options.sourceId || original.source_id || original.sourceId || original.id,
     customerId: options.customerId || original.customer_id || original.customerId,
     employeeId: options.employeeId || original.employee_id || original.employeeId,
-    currencyCode: options.currencyCode || original.currency_code || original.currencyCode || getDefaultCurrency(),
+    currencyCode: options.currencyCode || original.currency_code || original.currencyCode || getShopCurrencyCode(),
     subtotalMinor: -Number(original.subtotal_minor ?? original.subtotalMinor ?? 0),
     taxMinor: -Number(original.tax_minor ?? original.taxMinor ?? 0),
     totalMinor: -Number(original.total_minor ?? original.totalMinor ?? 0),
@@ -88,7 +88,7 @@ function normalizeTransactionPayload(payload) {
     source_id: payload.source_id || payload.sourceId || null,
     customer_id: payload.customer_id || payload.customerId || null,
     employee_id: payload.employee_id || payload.employeeId || null,
-    currency_code: payload.currency_code || payload.currencyCode || getDefaultCurrency(),
+    currency_code: payload.currency_code || payload.currencyCode || getShopCurrencyCode(),
     subtotal_minor: Number(payload.subtotal_minor ?? payload.subtotalMinor ?? 0),
     tax_minor: Number(payload.tax_minor ?? payload.taxMinor ?? 0),
     total_minor: Number(payload.total_minor ?? payload.totalMinor ?? 0),
@@ -96,4 +96,8 @@ function normalizeTransactionPayload(payload) {
     reversed_transaction_id: payload.reversed_transaction_id || payload.reversedTransactionId || null,
     created_by: payload.created_by || payload.createdBy || null
   };
+}
+
+function getShopCurrencyCode() {
+  return getShopSettings().currencyCode || getDefaultCurrency();
 }

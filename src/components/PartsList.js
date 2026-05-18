@@ -1,4 +1,5 @@
 import { money } from '../shared/utils/money';
+import { getShopMoneyOptions } from '../modules/shops/shopConfig';
 
 function margin(row) {
   const quantity = Number(row.quantity || 1);
@@ -10,6 +11,7 @@ function retailTotal(row) {
 }
 
 export default function PartsList({ parts, part, setPart, onAddPart, onUpdatePart }) {
+  const moneyOptions = getShopMoneyOptions();
   return (
     <section>
       <h3>Parts</h3>
@@ -43,7 +45,7 @@ export default function PartsList({ parts, part, setPart, onAddPart, onUpdatePar
               <td className="internal-only">
                 <input type="number" min="0" step="0.01" value={row.cost} onChange={(event) => onUpdatePart(row.id, 'cost', event.target.value)} />
               </td>
-              <td className="internal-only">{money(margin(row))}</td>
+              <td className="internal-only">{money(margin(row), moneyOptions)}</td>
               <td>
                 <label className="table-checkbox">
                   <input
@@ -56,7 +58,7 @@ export default function PartsList({ parts, part, setPart, onAddPart, onUpdatePar
               </td>
               <td>
                 <input type="number" min="0" step="0.01" value={row.retail} onChange={(event) => onUpdatePart(row.id, 'retail', event.target.value)} />
-                <strong>{row.includedInService ? 'Included' : money(retailTotal(row))}</strong>
+                <strong>{row.includedInService ? 'Included' : money(retailTotal(row), moneyOptions)}</strong>
               </td>
             </tr>
           ))}
