@@ -2,6 +2,8 @@
 
 Current version: `0.2.6-beta.4`
 
+`v0.2.6-beta.4` is Simon's Beta Release: a UK shop readiness pass with GBP, VAT wording, UK date display, metric measurement preferences, and lightweight accounting/report exports for beta tax-prep workflows.
+
 FretTrack is a guitar and bass repair shop check-in and work order app. It helps a shop track customer intake, instrument details, inspection notes, damage photos, parts, services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
 The current `0.2.x` line is a public trial baseline. It is intended for controlled shop testing, not broad unattended production use.
@@ -31,6 +33,7 @@ The current `0.2.x` line is a public trial baseline. It is intended for controll
 - SMS plumbing exists, but SMS is disabled in trial builds until carrier registration is ready.
 - Dark theme is the default for new users.
 - Work orders, standalone customer records, damage maps, customer lookup, photo handling, payments, print sheets, and activity timeline basics are available.
+- Simon's Beta Release adds UK-ready shop settings for GBP, VAT labels, DD/MM/YYYY dates, millimeter measurements, and accounting/report exports.
 - Supabase Auth and shop membership foundations are underway; member-management screens and full role-based permissions are still planned.
 
 ## Features

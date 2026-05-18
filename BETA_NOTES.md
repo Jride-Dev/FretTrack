@@ -11,12 +11,13 @@
 - Known issue: older Supabase schema drift remains under review, but current beta-blocking privacy checks passed.
 - Backup awareness, export paths, and recovery notes are documented in `docs/BETA_OPERATIONS.md`.
 
-## v0.2.6-beta.4
+## v0.2.6-beta.4 — Simon's Beta Release
 
 - Added Accounting / Reports for beta-safe tax-prep summaries and CSV export.
 - Added USD/GBP currency settings, configurable Sales Tax/VAT wording, and shop-level tax/VAT registration field.
 - Added shop-level date display formats for US, UK, and ISO-style display.
 - Added shop-level measurement preferences for inches or millimeters without migrating historical raw values.
+- UK/Norwich beta shop readiness: GBP, VAT, DD/MM/YYYY dates, and millimeter setup measurements.
 
 ## v0.2.6-beta.2
 
