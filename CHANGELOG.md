@@ -1,20 +1,23 @@
 # Changelog
 
-Current version: `0.2.6-beta.4`
+Current version: `0.2.6-beta.4.1`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.6-beta.4 — Simon's Beta Release
+## v0.2.6-beta.4.1 - Simon's Beta Release Hotfix
+
+- Fixed Inspection neck relief/action inputs by applying measurement value and unit updates atomically so controlled fields no longer discard keyboard entry.
+- Hardened the Inspection measurement fields further so typing stores raw text immediately and unit parsing only runs when the field loses focus.
+- Removed Palos Verdes Music House placeholder text from generic sub-contract business fields.
+- Refreshed README beta access instructions and screenshots for the current invite-only beta flow.
+
+## v0.2.6-beta.4 - Simon's Beta Release
 
 - Added lightweight Accounting / Reports with shop-scoped summaries, payments by method, tax/VAT collected, open balances, CSV export, and print/PDF-friendly report output.
 - Added shop-level currency, locale, tax/VAT label, and tax/VAT registration settings with USD and GBP defaults.
 - Added shop-level date formatting settings for US, UK, and ISO-style display without changing stored timestamps.
 - Added shop-level measurement preferences for imperial/in and metric/mm display/input behavior without silently migrating stored measurements.
 - Prepared the beta workflow for a Norwich, United Kingdom shop using GBP, VAT, DD/MM/YYYY dates, and millimeters.
-- Fixed Inspection neck relief/action inputs by applying measurement value and unit updates atomically so controlled fields no longer discard keyboard entry.
-- Hardened the Inspection measurement fields further so typing stores raw text immediately and unit parsing only runs when the field loses focus.
-- Removed Palos Verdes Music House placeholder text from generic sub-contract business fields.
-- Refreshed README beta access instructions and screenshots for the current public beta flow.
 
 ## v0.2.6-beta.2
 
@@ -139,7 +142,7 @@ This file tracks what changed in each release, including fixes that were added b
 ## v0.2.0
 
 - Promoted the app from beta/trial polish into the 0.2.0 live baseline.
-- Positioned as the first public trial-ready release.
+- Positioned as the first invite-only beta release.
 - Email notifications are active.
 - SMS is planned/optional.
 - Dark theme is the default for new users.

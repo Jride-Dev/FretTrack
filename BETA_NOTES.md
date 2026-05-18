@@ -11,7 +11,11 @@
 - Known issue: older Supabase schema drift remains under review, but current beta-blocking privacy checks passed.
 - Backup awareness, export paths, and recovery notes are documented in `docs/BETA_OPERATIONS.md`.
 
-## v0.2.6-beta.4 — Simon's Beta Release
+## v0.2.6-beta.4.1 - Simon's Beta Release Hotfix
+
+- Keeps Simon's Beta Release current with the Inspection measurement input hotfix and invite-only beta README wording.
+
+## v0.2.6-beta.4 - Simon's Beta Release
 
 - Added Accounting / Reports for beta-safe tax-prep summaries and CSV export.
 - Added USD/GBP currency settings, configurable Sales Tax/VAT wording, and shop-level tax/VAT registration field.
@@ -31,7 +35,7 @@
 - Added custom FretTrack domain/email setup notes for branded Supabase Auth invites.
 - Added a public coming-soon page at `frettrack-app.com` with a beta login link to `app.frettrack-app.com`.
 - Added Cloudflare R2 storage for the public coming-soon page banner and emblem assets.
-- Added a public beta tester application form for interested shop owners.
+- Added an invite-only beta tester application form for interested shop owners.
 - Fixed selected-shop job saves that could fail RLS for non-default shops.
 - Fixed browser focus/session refresh churn that could reset the open workspace.
 - Added explicit password reset/update flow instead of relying on reset links that only establish a session.
