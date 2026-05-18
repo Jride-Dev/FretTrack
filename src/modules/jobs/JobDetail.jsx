@@ -16,6 +16,7 @@ import CustomerDamageReport from './CustomerDamageReport';
 import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
 import MessagesPanel from '../messaging/MessagesPanel';
+import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { combineCustomerName } from '../customers';
 import { normalizeInstrumentType, stringCountForInstrument } from '../instruments/instrumentService';
 import { generateJobNumber } from './jobNumber';
@@ -36,7 +37,7 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
   const [workLogText, setWorkLogText] = useState('');
   const [part, setPart] = useState({ name: '', quantity: '1', cost: '', retail: '' });
   const [service, setService] = useState({ description: '', quantity: '1', cost: '', retail: '' });
-  const [payment, setPayment] = useState({ amount: '', method: 'Cash', note: '', date: new Date().toISOString().slice(0, 10) });
+  const [payment, setPayment] = useState({ amount: '', method: 'Cash', note: '', date: toIsoDateInputValue() });
   const [imageImportErrors, setImageImportErrors] = useState([]);
   const [isImportingImages, setIsImportingImages] = useState(false);
   const [subcontractorPickupJob, setSubcontractorPickupJob] = useState(null);
@@ -250,7 +251,7 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
         ]
       }
     });
-    setPayment({ amount: '', method: 'Cash', note: '', date: new Date().toISOString().slice(0, 10) });
+    setPayment({ amount: '', method: 'Cash', note: '', date: toIsoDateInputValue() });
   }
 
   function updatePayment(paymentId, field, value) {

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { formatShopDate } from '../../shared/utils/dateFormat';
 import { money } from '../../shared/utils/money';
 import { buildAccountingReport, getDefaultAccountingDateRange } from './accountingSelectors';
 import { downloadAccountingCsv } from './accountingExport';
@@ -14,6 +15,7 @@ export default function AccountingReports({ jobs = [], shopId = '', shopProfile 
     endDate: dateRange.end
   }), [jobs, shopId, shopProfile, dateRange.start, dateRange.end]);
   const moneyOptions = { currency: report.currencyCode, locale: report.locale };
+  const dateOptions = { dateFormat: report.dateFormat, locale: report.locale };
 
   function updateRange(event) {
     const { name, value } = event.target;
@@ -51,7 +53,7 @@ export default function AccountingReports({ jobs = [], shopId = '', shopProfile 
 
       <div className="accounting-print-heading print-only">
         <h2>Accounting Summary</h2>
-        <p>{dateRange.start} to {dateRange.end}</p>
+        <p>{formatShopDate(dateRange.start, dateOptions)} to {formatShopDate(dateRange.end, dateOptions)}</p>
       </div>
 
       <div className="accounting-summary-grid">
@@ -119,7 +121,7 @@ export default function AccountingReports({ jobs = [], shopId = '', shopProfile 
         rows={report.monthlyTotals}
         renderRow={(row) => (
           <tr key={row.period}>
-            <td>{row.period}</td>
+            <td>{formatPeriod(row.period, dateOptions)}</td>
             <td>{row.jobCount}</td>
             <td>{money(row.jobTotals, moneyOptions)}</td>
             <td>{money(row.paidTotal, moneyOptions)}</td>
@@ -132,6 +134,13 @@ export default function AccountingReports({ jobs = [], shopId = '', shopProfile 
       />
     </section>
   );
+}
+
+function formatPeriod(period, dateOptions) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(period)) {
+    return formatShopDate(period, dateOptions);
+  }
+  return period;
 }
 
 function SummaryCard({ label, value }) {

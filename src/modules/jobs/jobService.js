@@ -1,6 +1,7 @@
 import { combineCustomerName, ensureCustomerForJob, splitCustomerName } from '../customers';
 import { normalizeInstrumentType } from '../instruments/instrumentService';
 import { supabase, hasSupabaseConfig } from '../../shared/lib/supabaseClient';
+import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { formatJobNumber, generateJobNumber, getJobDayCode } from './jobNumber';
 import { logJobEventSafe } from './jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
@@ -85,6 +86,7 @@ const defaultTechDetails = {
     taxRegistrationNumber: '',
     currencyCode: 'USD',
     locale: 'en-US',
+    dateFormat: 'MM/DD/YYYY',
     taxableParts: true,
     taxableServices: false
   },
@@ -616,7 +618,7 @@ export async function addService(jobId, service) {
 }
 
 function normalizeJob(job, jobs = []) {
-  const dateReceived = job.dateReceived || new Date().toISOString().slice(0, 10);
+  const dateReceived = job.dateReceived || toIsoDateInputValue();
   const shopId = getActiveShopId(job.shopId || job.shop_id);
   const jobDate = job.jobDate || job.job_date || dateReceived;
   const jobDayCode = job.jobDayCode || job.job_day_code || getJobDayCode(jobDate);
@@ -793,7 +795,7 @@ function normalizeNeckStage(stage = {}) {
 function normalizePayment(payment) {
   return {
     id: payment.id || crypto.randomUUID(),
-    date: payment.date || new Date().toISOString().slice(0, 10),
+    date: payment.date || toIsoDateInputValue(),
     amount: payment.amount ?? '',
     method: payment.method || 'Cash',
     note: payment.note || ''

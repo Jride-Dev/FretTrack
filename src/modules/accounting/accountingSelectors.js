@@ -18,10 +18,11 @@ export function buildAccountingReport(jobs = [], options = {}) {
   const currencyCode = normalizeCurrencyCode(options.currencyCode || options.shopProfile?.currencyCode || 'USD');
   const locale = options.locale || options.shopProfile?.locale || 'en-US';
   const taxLabel = options.taxLabel || options.shopProfile?.taxLabel || (currencyCode === 'GBP' ? 'VAT' : 'Sales Tax');
+  const dateFormat = options.dateFormat || options.shopProfile?.dateFormat || (locale === 'en-GB' ? 'DD/MM/YYYY' : 'MM/DD/YYYY');
   const range = normalizeDateRange(options);
   const scopedJobs = jobs
     .filter((job) => !shopId || job.shopId === shopId || job.shop_id === shopId)
-    .map((job) => buildJobAccountingSnapshot(job, { currencyCode, locale, taxLabel }))
+    .map((job) => buildJobAccountingSnapshot(job, { currencyCode, locale, taxLabel, dateFormat }))
     .filter((snapshot) => snapshot.currencyCode === currencyCode);
 
   const jobsInRange = scopedJobs.filter((snapshot) => isDateInRange(snapshot.accountingDate, range));
@@ -38,6 +39,7 @@ export function buildAccountingReport(jobs = [], options = {}) {
     currencyCode,
     locale,
     taxLabel,
+    dateFormat,
     summary: summarizeAccounting(jobsInRange, paymentEvents, adjustmentEvents, openBalances),
     dailyCloseout: groupSnapshotsByPeriod(jobsInRange, paymentEvents, adjustmentEvents, 'day'),
     monthlyTotals: groupSnapshotsByPeriod(jobsInRange, paymentEvents, adjustmentEvents, 'month'),
@@ -63,6 +65,7 @@ export function buildJobAccountingSnapshot(job = {}, options = {}) {
   const currencyCode = normalizeCurrencyCode(taxSettings.currencyCode || options.currencyCode || 'USD');
   const locale = taxSettings.locale || options.locale || 'en-US';
   const taxLabel = taxSettings.taxLabel || options.taxLabel || (currencyCode === 'GBP' ? 'VAT' : 'Sales Tax');
+  const dateFormat = taxSettings.dateFormat || options.dateFormat || (locale === 'en-GB' ? 'DD/MM/YYYY' : 'MM/DD/YYYY');
   const partLines = parts.map((part) => {
     const quantity = rowQuantity(part);
     const retailAmount = part.includedInService ? 0 : retailTotal(part);
@@ -134,6 +137,7 @@ export function buildJobAccountingSnapshot(job = {}, options = {}) {
     currencyCode,
     locale,
     taxLabel,
+    dateFormat,
     status: job.status || '',
     accountingDate,
     partsRevenue: totals.partsTotal,
@@ -155,6 +159,7 @@ export function buildJobAccountingSnapshot(job = {}, options = {}) {
       tax_registration_number: taxSettings.taxRegistrationNumber || '',
       currency_code: currencyCode,
       locale,
+      date_format: dateFormat,
       taxable_subtotal: taxableSubtotal,
       non_taxable_subtotal: nonTaxableSubtotal,
       tax_amount: totals.salesTaxAmount

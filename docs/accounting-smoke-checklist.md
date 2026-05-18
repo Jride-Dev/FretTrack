@@ -12,3 +12,7 @@ Run these against one test shop, then repeat the cross-shop item with a second s
 8. Export: click Export CSV and confirm the file includes summary, payments by method, tax collected, open balances, and job detail.
 9. Print/PDF: click Print / PDF and confirm the print view shows the report tables without job form controls.
 10. UK currency: set a test shop to GBP/en-GB with tax label VAT, then confirm reports and printed job sheets show £ amounts, VAT wording, and CSV rows include `currency_code` as `GBP`.
+11. US date format: set a test shop to `MM/DD/YYYY`, print a job sheet, and confirm intake/work log dates use month/day/year.
+12. UK date format: set a test shop to `DD/MM/YYYY`, print a job sheet, and confirm intake/work log dates use day/month/year.
+13. UK report export: export Accounting / Reports for a UK shop and confirm display date columns use `DD/MM/YYYY` while ISO safety columns remain ISO.
+14. Event timeline ordering/display: add two events on different timestamps and confirm newest ordering is unchanged while displayed dates follow the selected shop format.

@@ -1,3 +1,6 @@
+import { formatShopDateTime } from '../../shared/utils/dateFormat';
+import { getShopDateOptions } from '../shops/shopConfig';
+
 export default function WorkLogSection({
   appendWorkLog,
   draftJob,
@@ -7,6 +10,8 @@ export default function WorkLogSection({
   updateWorkLogEntry,
   workLogText
 }) {
+  const dateOptions = getShopDateOptions();
+
   return (
     <section>
       <h3>Work Log</h3>
@@ -17,7 +22,7 @@ export default function WorkLogSection({
       <div className="entries">
         {draftJob.workLog.map((entry) => (
           <div key={entry.id} className="entry">
-            <time>{new Date(entry.timestamp).toLocaleString()}</time>
+            <time>{formatShopDateTime(entry.timestamp, dateOptions)}</time>
             <textarea
               value={entry.text}
               onChange={(event) => updateWorkLogEntry(entry.id, event.target.value)}

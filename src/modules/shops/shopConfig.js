@@ -1,3 +1,5 @@
+import { getDefaultDateFormatForLocale, normalizeDateFormat } from '../../shared/utils/dateFormat';
+
 const DEFAULT_SHOP_ID = 'default-shop';
 const DEFAULT_SHOP_NAME = 'FretTrack Trial Shop';
 const SHOP_SETTINGS_STORAGE_KEY = 'frettrack_shop_settings';
@@ -19,6 +21,7 @@ export const defaultShopSettings = {
   locale: DEFAULT_LOCALE,
   taxLabel: DEFAULT_TAX_LABEL,
   taxRegistrationNumber: '',
+  dateFormat: getDefaultDateFormatForLocale(DEFAULT_LOCALE),
   taxState: '',
   salesTaxRate: '',
   taxablePartsDefault: true,
@@ -53,6 +56,9 @@ export function getShopSettings() {
     locale: savedSettingsMatchShop ? savedSettings.locale || DEFAULT_LOCALE : DEFAULT_LOCALE,
     taxLabel: savedSettingsMatchShop ? savedSettings.taxLabel || DEFAULT_TAX_LABEL : DEFAULT_TAX_LABEL,
     taxRegistrationNumber: savedSettingsMatchShop ? savedSettings.taxRegistrationNumber || '' : '',
+    dateFormat: savedSettingsMatchShop
+      ? normalizeDateFormat(savedSettings.dateFormat, savedSettings.locale || DEFAULT_LOCALE)
+      : getDefaultDateFormatForLocale(DEFAULT_LOCALE),
     taxState: savedSettingsMatchShop ? savedSettings.taxState || '' : '',
     salesTaxRate: savedSettingsMatchShop ? savedSettings.salesTaxRate || '' : '',
     taxablePartsDefault: savedSettingsMatchShop ? savedSettings.taxablePartsDefault !== false : true,
@@ -95,6 +101,17 @@ export function getShopMoneyOptions(settings = getShopSettings()) {
 
 export function getShopTaxLabel(settings = getShopSettings()) {
   return settings.taxLabel || getShopSettings().taxLabel || DEFAULT_TAX_LABEL;
+}
+
+export function getShopDateOptions(settings = getShopSettings()) {
+  const mergedSettings = {
+    ...getShopSettings(),
+    ...(settings || {})
+  };
+  return {
+    dateFormat: normalizeDateFormat(mergedSettings.dateFormat, mergedSettings.locale || DEFAULT_LOCALE),
+    locale: mergedSettings.locale || DEFAULT_LOCALE
+  };
 }
 
 export function getSelectedShop() {

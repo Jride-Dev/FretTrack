@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import UserSettings from '../auth/UserSettings.jsx';
+import { SUPPORTED_DATE_FORMATS, getDefaultDateFormatForLocale } from '../../shared/utils/dateFormat';
 import { SUPPORTED_CURRENCIES, getDefaultLocaleForCurrency, getSupportedCurrency } from '../../shared/utils/money';
 import { getShopSettings, saveShopSettings } from './shopConfig';
 import { saveShopProfile, uploadShopLogo } from './shopProfileService';
@@ -30,7 +31,8 @@ export default function ShopSettings({
           ...current,
           currencyCode: currency.code,
           locale: getDefaultLocaleForCurrency(currency.code),
-          taxLabel: currency.taxLabel
+          taxLabel: currency.taxLabel,
+          dateFormat: getDefaultDateFormatForLocale(getDefaultLocaleForCurrency(currency.code))
         };
       }
 
@@ -138,6 +140,14 @@ export default function ShopSettings({
           <label>
             Locale
             <input name="locale" value={settings.locale || ''} onChange={updateField} disabled={!canManageShop || isSaving} placeholder="en-US" />
+          </label>
+          <label>
+            Date Format
+            <select name="dateFormat" value={settings.dateFormat || getDefaultDateFormatForLocale(settings.locale)} onChange={updateField} disabled={!canManageShop || isSaving}>
+              {SUPPORTED_DATE_FORMATS.map((format) => (
+                <option key={format} value={format}>{format}</option>
+              ))}
+            </select>
           </label>
           <label>
             Tax/VAT Label

@@ -728,6 +728,7 @@ function getCurrentShopProfileFallback() {
     locale: looksUnitedKingdom ? 'en-GB' : 'en-US',
     taxLabel: looksUnitedKingdom ? 'VAT' : 'Sales Tax',
     taxRegistrationNumber: '',
+    dateFormat: looksUnitedKingdom ? 'DD/MM/YYYY' : 'MM/DD/YYYY',
     taxState: '',
     salesTaxRate: '',
     taxablePartsDefault: true,

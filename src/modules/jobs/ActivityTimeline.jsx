@@ -1,3 +1,6 @@
+import { formatShopDateTime } from '../../shared/utils/dateFormat';
+import { getShopDateOptions } from '../shops/shopConfig';
+
 const VISIBLE_EVENT_TYPES = new Set([
   'job_created',
   'job_updated',
@@ -10,6 +13,7 @@ const VISIBLE_EVENT_TYPES = new Set([
 
 export default function ActivityTimeline({ events = [] }) {
   const visibleEvents = events.filter((event) => VISIBLE_EVENT_TYPES.has(event.eventType || event.event_type));
+  const dateOptions = getShopDateOptions();
 
   return (
     <section className="activity-timeline no-print">
@@ -20,7 +24,7 @@ export default function ActivityTimeline({ events = [] }) {
         <ol className="timeline-list">
           {visibleEvents.map((event) => (
             <li key={event.id}>
-              <time>{formatEventTime(event.createdAt || event.created_at)}</time>
+              <time>{formatShopDateTime(event.createdAt || event.created_at, dateOptions)}</time>
               <strong>{event.eventLabel || event.event_label}</strong>
               {(event.eventNote || event.event_note) && <span>{event.eventNote || event.event_note}</span>}
             </li>
@@ -29,12 +33,4 @@ export default function ActivityTimeline({ events = [] }) {
       )}
     </section>
   );
-}
-
-function formatEventTime(value) {
-  if (!value) {
-    return '';
-  }
-
-  return new Date(value).toLocaleString();
 }

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { formatShopDateTime } from '../../shared/utils/dateFormat';
+import { getShopDateOptions } from '../shops/shopConfig';
 import { defaultTemplateKey, instrumentName, messageTemplates, renderTemplate } from './messageTemplates';
 import { sendCustomerChannelMessage, smsDisabledMessage, smsEnabled } from './messageService';
 
@@ -8,6 +10,7 @@ export default function MessagesPanel({ job, onPreferenceChange, onSendMessage, 
   const [body, setBody] = useState('');
   const [sendState, setSendState] = useState({ sending: '', error: '', success: '' });
   const [smsMode, setSmsMode] = useState('checking');
+  const dateOptions = getShopDateOptions();
 
   const variables = useMemo(() => ({
     customer_name: job.customerName || '',
@@ -200,7 +203,7 @@ export default function MessagesPanel({ job, onPreferenceChange, onSendMessage, 
             <tbody>
               {messages.map((message) => (
                 <tr key={message.id}>
-                  <td>{new Date(message.createdAt).toLocaleString()}</td>
+                  <td>{formatShopDateTime(message.createdAt, dateOptions)}</td>
                   <td>{message.channel}</td>
                   <td>{message.status}</td>
                   <td>{message.recipient}</td>

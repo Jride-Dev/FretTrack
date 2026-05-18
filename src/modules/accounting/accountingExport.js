@@ -1,9 +1,14 @@
+import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat.js';
+
 export function buildAccountingCsv(report, options = {}) {
   const includeInternalCost = Boolean(options.includeInternalCost);
+  const dateOptions = { dateFormat: report.dateFormat, locale: report.locale };
   const rows = [
     ['FretTrack accounting summary'],
-    ['Range', report.range.start || '', report.range.end || ''],
-    ['Generated At', report.generatedAt],
+    ['Range', formatShopDate(report.range.start, dateOptions), formatShopDate(report.range.end, dateOptions)],
+    ['Range ISO', report.range.start || '', report.range.end || ''],
+    ['Generated At', formatShopDateTime(report.generatedAt, dateOptions)],
+    ['Generated At ISO', report.generatedAt],
     ['Currency Code', report.currencyCode],
     ['Tax Label', report.taxLabel],
     [],
@@ -48,7 +53,7 @@ export function buildAccountingCsv(report, options = {}) {
     [],
     ['Job Detail'],
     buildJobHeader(includeInternalCost),
-    ...report.jobs.map((row) => buildJobRow(row, includeInternalCost))
+    ...report.jobs.map((row) => buildJobRow(row, includeInternalCost, dateOptions))
   ];
 
   return rows.map((row) => row.map(escapeCsvCell).join(',')).join('\r\n');
@@ -72,6 +77,7 @@ function buildJobHeader(includeInternalCost) {
     'Job #',
     'Customer',
     'Accounting Date',
+    'Accounting Date ISO',
     'Currency Code',
     'Parts Revenue',
     'Labor Revenue',
@@ -91,10 +97,11 @@ function buildJobHeader(includeInternalCost) {
   return header;
 }
 
-function buildJobRow(row, includeInternalCost) {
+function buildJobRow(row, includeInternalCost, dateOptions) {
   const cells = [
     row.jobNumber,
     row.customerName,
+    formatShopDate(row.accountingDate, dateOptions),
     row.accountingDate,
     row.currencyCode,
     moneyCell(row.partsRevenue),

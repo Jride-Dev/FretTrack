@@ -1,5 +1,6 @@
 import { prepareImageForStorage, readFileAsDataUrl } from '../../services/imageProcessing';
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
+import { getDefaultDateFormatForLocale, normalizeDateFormat } from '../../shared/utils/dateFormat';
 import { getDefaultLocaleForCurrency, getSupportedCurrency } from '../../shared/utils/money';
 import { getCurrentShopId, getShopSettings, saveShopSettings } from './shopConfig';
 
@@ -123,6 +124,7 @@ function normalizeShopSettings(settings = {}) {
     locale: String(settings.locale || inferredCurrency.locale || getDefaultLocaleForCurrency(inferredCurrency.currencyCode)).trim(),
     taxLabel: String(settings.taxLabel || inferredCurrency.taxLabel || getSupportedCurrency(inferredCurrency.currencyCode).taxLabel).trim(),
     taxRegistrationNumber: String(settings.taxRegistrationNumber || '').trim(),
+    dateFormat: normalizeDateFormat(settings.dateFormat, settings.locale || inferredCurrency.locale),
     taxState: String(settings.taxState || '').trim().toUpperCase(),
     salesTaxRate: settings.salesTaxRate === '' || settings.salesTaxRate == null
       ? ''
@@ -156,6 +158,7 @@ async function fromDbProfile(profile) {
     locale: profile.locale || 'en-US',
     taxLabel: profile.tax_label || 'Sales Tax',
     taxRegistrationNumber: profile.tax_registration_number || '',
+    dateFormat: normalizeDateFormat(profile.date_format, profile.locale || 'en-US'),
     taxState: profile.tax_state || '',
     salesTaxRate: profile.sales_tax_rate == null ? '' : String(Number(profile.sales_tax_rate)),
     taxablePartsDefault: profile.taxable_parts_default !== false,
@@ -179,6 +182,7 @@ function toDbProfile(settings, userId) {
     locale: settings.locale || 'en-US',
     tax_label: settings.taxLabel || 'Sales Tax',
     tax_registration_number: settings.taxRegistrationNumber || '',
+    date_format: settings.dateFormat || getDefaultDateFormatForLocale(settings.locale || 'en-US'),
     tax_state: settings.taxState,
     sales_tax_rate: Number(settings.salesTaxRate) || 0,
     taxable_parts_default: settings.taxablePartsDefault !== false,

@@ -3,9 +3,11 @@ import { addJob } from './jobService';
 import { generateJobNumber } from './jobNumber';
 import { combineCustomerName, findCustomerMatches } from '../customers';
 import { instrumentCatalog } from '../instruments/instrumentService';
+import { formatShopDate, toIsoDateInputValue } from '../../shared/utils/dateFormat';
+import { getShopDateOptions } from '../shops/shopConfig';
 
 function todayValue() {
-  return new Date().toISOString().slice(0, 10);
+  return toIsoDateInputValue();
 }
 
 function getInitialFormState(jobs = []) {
@@ -36,6 +38,7 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerMatches, setCustomerMatches] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const dateOptions = getShopDateOptions(shopProfile || undefined);
 
   useEffect(() => {
     setForm((current) => ({
@@ -235,7 +238,7 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
                       <span>
                         {customer.jobs.length} previous job{customer.jobs.length === 1 ? '' : 's'}
                         {latestJob.jobNumber ? ` | Latest #${latestJob.jobNumber}` : ''}
-                        {latestJob.dateReceived ? ` | ${latestJob.dateReceived}` : ''}
+                        {latestJob.dateReceived ? ` | ${formatShopDate(latestJob.dateReceived, dateOptions)}` : ''}
                       </span>
                     </div>
                     <button type="button" onClick={() => useCustomer(customer)} disabled={!canWrite}>Use Customer</button>
@@ -249,7 +252,7 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
               <h3>Previous Jobs</h3>
               {selectedCustomer.jobs.map((job) => (
                 <div className="previous-job" key={job.id}>
-                  <strong>#{job.jobNumber || 'No number'} | {job.dateReceived || 'No date'}</strong>
+                  <strong>#{job.jobNumber || 'No number'} | {formatShopDate(job.dateReceived, dateOptions) || 'No date'}</strong>
                   <span>{job.guitarBrand} {job.model} | {job.status}</span>
                   <p>{job.reasonForVisit}</p>
                 </div>
@@ -363,6 +366,7 @@ function getDefaultTaxSettings(shopProfile = {}) {
     taxRegistrationNumber: shopProfile?.taxRegistrationNumber || '',
     currencyCode: shopProfile?.currencyCode || 'USD',
     locale: shopProfile?.locale || 'en-US',
+    dateFormat: shopProfile?.dateFormat || '',
     taxableParts: shopProfile?.taxablePartsDefault !== false,
     taxableServices: Boolean(shopProfile?.taxableServicesDefault)
   };

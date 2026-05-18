@@ -1,4 +1,5 @@
-import { getPrintFooterText, getShopSettings } from '../shops/shopConfig';
+import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat';
+import { getPrintFooterText, getShopDateOptions, getShopSettings } from '../shops/shopConfig';
 
 export default function CustomerDamageReport({
   draftJob,
@@ -10,6 +11,10 @@ export default function CustomerDamageReport({
 }) {
   const shopSettings = getShopSettings();
   const printFooterText = getPrintFooterText();
+  const dateOptions = getShopDateOptions({
+    dateFormat: draftJob.techDetails?.tax?.dateFormat || shopSettings.dateFormat,
+    locale: draftJob.techDetails?.tax?.locale || shopSettings.locale
+  });
   const printableWorkOrderImages = workOrderImages.filter((image) => image.url);
 
   return (
@@ -27,7 +32,7 @@ export default function CustomerDamageReport({
         <span>Instrument</span><strong>{normalizeInstrumentType(draftJob.instrumentType)}</strong>
         <span>Brand / Model</span><strong>{draftJob.guitarBrand} {draftJob.model}</strong>
         <span>Serial</span><strong>{draftJob.serial}</strong>
-        <span>Date Received</span><strong>{draftJob.dateReceived}</strong>
+        <span>Date Received</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions)}</strong>
       </div>
       {reportDamageView('front')}
       {reportDamageView('back')}
@@ -79,7 +84,7 @@ export default function CustomerDamageReport({
           ))}
           {draftJob.workLog.map((entry) => (
             <tr key={entry.id}>
-              <td>{new Date(entry.timestamp).toLocaleString()}</td>
+              <td>{formatShopDateTime(entry.timestamp, dateOptions)}</td>
               <td>{entry.text}</td>
             </tr>
           ))}

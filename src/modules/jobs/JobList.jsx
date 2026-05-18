@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { formatShopDate } from '../../shared/utils/dateFormat';
+import { getShopDateOptions } from '../shops/shopConfig';
 import { sortNewestFirst } from './jobSelectors';
 
 function searchableText(job) {
@@ -22,6 +24,7 @@ export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob }) 
   const [search, setSearch] = useState('');
   const [showPickedUp, setShowPickedUp] = useState(false);
   const handleSelect = onSelectJob || onSelect;
+  const dateOptions = getShopDateOptions();
 
   const filteredJobs = useMemo(() => {
     const sortedJobs = sortNewestFirst(jobs).filter((job) => showPickedUp || !['Picked Up', 'Picked up'].includes(job.status));
@@ -65,7 +68,7 @@ export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob }) 
                 {job.guitarBrand} {job.model}
               </span>
               <span>{job.status}</span>
-              <span>{job.dateReceived}</span>
+              <span>{formatShopDate(job.dateReceived, dateOptions)}</span>
             </button>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import { retailTotal, rowQuantity } from '../billing/accounting';
-import { getPrintFooterText, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
+import { formatShopDate } from '../../shared/utils/dateFormat';
+import { getPrintFooterText, getShopDateOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
 import { money } from '../../shared/utils/money';
 
 export default function JobPrintSheet({
@@ -14,6 +15,10 @@ export default function JobPrintSheet({
   const taxSettings = draftJob.techDetails?.tax || {};
   const moneyOptions = getShopMoneyOptions({
     currencyCode: taxSettings.currencyCode || shopSettings.currencyCode,
+    locale: taxSettings.locale || shopSettings.locale
+  });
+  const dateOptions = getShopDateOptions({
+    dateFormat: taxSettings.dateFormat || shopSettings.dateFormat,
     locale: taxSettings.locale || shopSettings.locale
   });
   const taxLabel = taxSettings.taxLabel || shopSettings.taxLabel || 'Sales Tax';
@@ -37,7 +42,7 @@ export default function JobPrintSheet({
         <span>Serial</span><strong>{draftJob.serial}</strong>
         <span>Color</span><strong>{draftJob.color}</strong>
         <span>Job Number</span><strong>{draftJob.jobNumber}</strong>
-        <span>Date Received</span><strong>{draftJob.dateReceived}</strong>
+        <span>Date Received</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions)}</strong>
         <span>Status</span><strong>{draftJob.status}</strong>
         <span>Job Source</span><strong>{draftJob.techDetails.intakeType || 'Walk-In'}</strong>
         <span>Sub-Contract</span><strong>{draftJob.techDetails.subcontractorName || '-'}</strong>
