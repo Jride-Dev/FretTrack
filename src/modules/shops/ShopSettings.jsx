@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import UserSettings from '../auth/UserSettings.jsx';
+import { SUPPORTED_CURRENCIES, getDefaultLocaleForCurrency, getSupportedCurrency } from '../../shared/utils/money';
 import { getShopSettings, saveShopSettings } from './shopConfig';
 import { saveShopProfile, uploadShopLogo } from './shopProfileService';
 
@@ -22,7 +23,19 @@ export default function ShopSettings({
 
   function updateField(event) {
     const { name, type, checked, value } = event.target;
-    setSettings((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }));
+    setSettings((current) => {
+      if (name === 'currencyCode') {
+        const currency = getSupportedCurrency(value);
+        return {
+          ...current,
+          currencyCode: currency.code,
+          locale: getDefaultLocaleForCurrency(currency.code),
+          taxLabel: currency.taxLabel
+        };
+      }
+
+      return { ...current, [name]: type === 'checkbox' ? checked : value };
+    });
   }
 
   async function handleSubmit(event) {
@@ -115,11 +128,31 @@ export default function ShopSettings({
             </div>
           )}
           <label>
-            State
-            <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving} required={requireCompletion} maxLength="2" />
+            Currency
+            <select name="currencyCode" value={settings.currencyCode || 'USD'} onChange={updateField} disabled={!canManageShop || isSaving}>
+              {SUPPORTED_CURRENCIES.map((currency) => (
+                <option key={currency.code} value={currency.code}>{currency.label}</option>
+              ))}
+            </select>
           </label>
           <label>
-            Default Sales Tax %
+            Locale
+            <input name="locale" value={settings.locale || ''} onChange={updateField} disabled={!canManageShop || isSaving} placeholder="en-US" />
+          </label>
+          <label>
+            Tax/VAT Label
+            <input name="taxLabel" value={settings.taxLabel || ''} onChange={updateField} disabled={!canManageShop || isSaving} placeholder="Sales Tax" />
+          </label>
+          <label>
+            Tax/VAT Registration #
+            <input name="taxRegistrationNumber" value={settings.taxRegistrationNumber || ''} onChange={updateField} disabled={!canManageShop || isSaving} />
+          </label>
+          <label>
+            Tax Jurisdiction
+            <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving} required={requireCompletion} maxLength="80" />
+          </label>
+          <label>
+            Default {settings.taxLabel || 'Tax'} %
             <input type="number" min="0" step="0.001" name="salesTaxRate" value={settings.salesTaxRate || ''} onChange={updateField} disabled={!canManageShop || isSaving} />
           </label>
           <label className="checkline">

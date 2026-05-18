@@ -1,8 +1,23 @@
-const DEFAULT_CURRENCY = import.meta.env.VITE_DEFAULT_CURRENCY || 'USD';
-const DEFAULT_LOCALE = import.meta.env.VITE_DEFAULT_LOCALE || undefined;
+const ENV = import.meta.env || {};
+const DEFAULT_CURRENCY = ENV.VITE_DEFAULT_CURRENCY || 'USD';
+const DEFAULT_LOCALE = ENV.VITE_DEFAULT_LOCALE || undefined;
+
+export const SUPPORTED_CURRENCIES = [
+  { code: 'USD', label: 'USD - US Dollar', symbol: '$', locale: 'en-US', taxLabel: 'Sales Tax' },
+  { code: 'GBP', label: 'GBP - British Pound', symbol: '\u00a3', locale: 'en-GB', taxLabel: 'VAT' }
+];
 
 export function getDefaultCurrency() {
   return DEFAULT_CURRENCY;
+}
+
+export function getSupportedCurrency(currencyCode = DEFAULT_CURRENCY) {
+  const code = String(currencyCode || DEFAULT_CURRENCY).toUpperCase();
+  return SUPPORTED_CURRENCIES.find((currency) => currency.code === code) || SUPPORTED_CURRENCIES[0];
+}
+
+export function getDefaultLocaleForCurrency(currencyCode = DEFAULT_CURRENCY) {
+  return getSupportedCurrency(currencyCode).locale;
 }
 
 export function getCurrencyMinorUnit(currencyCode = DEFAULT_CURRENCY) {

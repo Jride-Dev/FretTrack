@@ -2,6 +2,9 @@ const DEFAULT_SHOP_ID = 'default-shop';
 const DEFAULT_SHOP_NAME = 'FretTrack Trial Shop';
 const SHOP_SETTINGS_STORAGE_KEY = 'frettrack_shop_settings';
 const SHOP_SELECTION_STORAGE_KEY = 'frettrack_selected_shop';
+const DEFAULT_CURRENCY_CODE = 'USD';
+const DEFAULT_LOCALE = 'en-US';
+const DEFAULT_TAX_LABEL = 'Sales Tax';
 
 export const defaultShopSettings = {
   shopId: DEFAULT_SHOP_ID,
@@ -12,6 +15,10 @@ export const defaultShopSettings = {
   logoUrl: '',
   logoStoragePath: '',
   printFooterText: '',
+  currencyCode: DEFAULT_CURRENCY_CODE,
+  locale: DEFAULT_LOCALE,
+  taxLabel: DEFAULT_TAX_LABEL,
+  taxRegistrationNumber: '',
   taxState: '',
   salesTaxRate: '',
   taxablePartsDefault: true,
@@ -42,6 +49,10 @@ export function getShopSettings() {
     logoUrl: savedSettingsMatchShop ? savedSettings.logoUrl || '' : '',
     logoStoragePath: savedSettingsMatchShop ? savedSettings.logoStoragePath || '' : '',
     printFooterText: savedSettingsMatchShop ? savedSettings.printFooterText || '' : '',
+    currencyCode: savedSettingsMatchShop ? normalizeCurrencyCode(savedSettings.currencyCode) : DEFAULT_CURRENCY_CODE,
+    locale: savedSettingsMatchShop ? savedSettings.locale || DEFAULT_LOCALE : DEFAULT_LOCALE,
+    taxLabel: savedSettingsMatchShop ? savedSettings.taxLabel || DEFAULT_TAX_LABEL : DEFAULT_TAX_LABEL,
+    taxRegistrationNumber: savedSettingsMatchShop ? savedSettings.taxRegistrationNumber || '' : '',
     taxState: savedSettingsMatchShop ? savedSettings.taxState || '' : '',
     salesTaxRate: savedSettingsMatchShop ? savedSettings.salesTaxRate || '' : '',
     taxablePartsDefault: savedSettingsMatchShop ? savedSettings.taxablePartsDefault !== false : true,
@@ -71,6 +82,21 @@ export function getPrintFooterText() {
   return getShopSettings().printFooterText;
 }
 
+export function getShopMoneyOptions(settings = getShopSettings()) {
+  const mergedSettings = {
+    ...getShopSettings(),
+    ...(settings || {})
+  };
+  return {
+    currency: normalizeCurrencyCode(mergedSettings.currencyCode),
+    locale: mergedSettings.locale || DEFAULT_LOCALE
+  };
+}
+
+export function getShopTaxLabel(settings = getShopSettings()) {
+  return settings.taxLabel || getShopSettings().taxLabel || DEFAULT_TAX_LABEL;
+}
+
 export function getSelectedShop() {
   try {
     return JSON.parse(localStorage.getItem(SHOP_SELECTION_STORAGE_KEY)) || {};
@@ -96,6 +122,11 @@ export function setSelectedShop(shop) {
 
 export function clearSelectedShop() {
   localStorage.removeItem(SHOP_SELECTION_STORAGE_KEY);
+}
+
+function normalizeCurrencyCode(currencyCode) {
+  const code = String(currencyCode || DEFAULT_CURRENCY_CODE).toUpperCase();
+  return code === 'GBP' ? 'GBP' : 'USD';
 }
 
 export { DEFAULT_SHOP_ID, DEFAULT_SHOP_NAME, SHOP_SETTINGS_STORAGE_KEY, SHOP_SELECTION_STORAGE_KEY };

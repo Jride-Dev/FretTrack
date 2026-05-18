@@ -1,5 +1,6 @@
 import { prepareImageForStorage, readFileAsDataUrl } from '../../services/imageProcessing';
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
+import { getDefaultLocaleForCurrency, getSupportedCurrency } from '../../shared/utils/money';
 import { getCurrentShopId, getShopSettings, saveShopSettings } from './shopConfig';
 
 const SHOP_ASSETS_BUCKET = 'shop-assets';
@@ -106,6 +107,7 @@ export async function createShopLogoObjectUrl(storagePath) {
 
 function normalizeShopSettings(settings = {}) {
   const currentSettings = getShopSettings();
+  const inferredCurrency = inferCurrencySettings(settings, currentSettings);
   return {
     ...currentSettings,
     ...settings,
@@ -117,6 +119,10 @@ function normalizeShopSettings(settings = {}) {
     logoStoragePath: settings.logoStoragePath || '',
     logoUrl: settings.logoUrl || '',
     printFooterText: String(settings.printFooterText || '').trim(),
+    currencyCode: inferredCurrency.currencyCode,
+    locale: String(settings.locale || inferredCurrency.locale || getDefaultLocaleForCurrency(inferredCurrency.currencyCode)).trim(),
+    taxLabel: String(settings.taxLabel || inferredCurrency.taxLabel || getSupportedCurrency(inferredCurrency.currencyCode).taxLabel).trim(),
+    taxRegistrationNumber: String(settings.taxRegistrationNumber || '').trim(),
     taxState: String(settings.taxState || '').trim().toUpperCase(),
     salesTaxRate: settings.salesTaxRate === '' || settings.salesTaxRate == null
       ? ''
@@ -146,6 +152,10 @@ async function fromDbProfile(profile) {
     logoStoragePath,
     logoUrl,
     printFooterText: profile.print_footer_text || '',
+    currencyCode: profile.currency_code || 'USD',
+    locale: profile.locale || 'en-US',
+    taxLabel: profile.tax_label || 'Sales Tax',
+    taxRegistrationNumber: profile.tax_registration_number || '',
     taxState: profile.tax_state || '',
     salesTaxRate: profile.sales_tax_rate == null ? '' : String(Number(profile.sales_tax_rate)),
     taxablePartsDefault: profile.taxable_parts_default !== false,
@@ -165,12 +175,44 @@ function toDbProfile(settings, userId) {
     address: settings.address,
     logo_storage_path: settings.logoStoragePath || '',
     print_footer_text: settings.printFooterText,
+    currency_code: settings.currencyCode || 'USD',
+    locale: settings.locale || 'en-US',
+    tax_label: settings.taxLabel || 'Sales Tax',
+    tax_registration_number: settings.taxRegistrationNumber || '',
     tax_state: settings.taxState,
     sales_tax_rate: Number(settings.salesTaxRate) || 0,
     taxable_parts_default: settings.taxablePartsDefault !== false,
     taxable_services_default: Boolean(settings.taxableServicesDefault),
     onboarded_at: new Date().toISOString(),
     created_by: userId || null
+  };
+}
+
+function inferCurrencySettings(settings = {}, currentSettings = {}) {
+  const explicitCurrency = settings.currencyCode || settings.currency_code;
+  if (explicitCurrency) {
+    const currency = getSupportedCurrency(explicitCurrency);
+    return {
+      currencyCode: currency.code,
+      locale: settings.locale || currentSettings.locale || currency.locale,
+      taxLabel: settings.taxLabel || currentSettings.taxLabel || currency.taxLabel
+    };
+  }
+
+  const text = [
+    settings.shopName,
+    settings.shop_name,
+    settings.address,
+    settings.taxState,
+    currentSettings.shopName,
+    currentSettings.address
+  ].join(' ').toLowerCase();
+  const looksUnitedKingdom = /\b(norwich|united kingdom|uk|england|gb|great britain)\b/.test(text);
+  const currency = getSupportedCurrency(looksUnitedKingdom ? 'GBP' : currentSettings.currencyCode || 'USD');
+  return {
+    currencyCode: currency.code,
+    locale: settings.locale || currentSettings.locale || currency.locale,
+    taxLabel: settings.taxLabel || currentSettings.taxLabel || currency.taxLabel
   };
 }
 
