@@ -85,11 +85,6 @@ export async function uploadShopLogo(file, shopId = getCurrentShopId()) {
     throw error;
   }
 
-  const profileMeasurementDefaults = getDefaultMeasurementPreferences({
-    currencyCode: profile.currency_code || 'USD',
-    locale: profile.locale || 'en-US'
-  });
-
   return {
     logoStoragePath: filePath,
     logoUrl: await createShopLogoObjectUrl(filePath)
@@ -149,6 +144,10 @@ function normalizeShopSettings(settings = {}) {
 }
 
 async function fromDbProfile(profile) {
+  const profileMeasurementDefaults = getDefaultMeasurementPreferences({
+    currencyCode: profile.currency_code || 'USD',
+    locale: profile.locale || 'en-US'
+  });
   const logoStoragePath = profile.logo_storage_path || '';
   let logoUrl = '';
   if (logoStoragePath) {
