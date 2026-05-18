@@ -1,5 +1,6 @@
 import { retailTotal, rowQuantity } from '../billing/accounting';
 import { formatShopDate } from '../../shared/utils/dateFormat';
+import { formatLength } from '../../shared/utils/measurements';
 import { getPrintFooterText, getShopDateOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
 import { money } from '../../shared/utils/money';
 
@@ -92,6 +93,27 @@ export default function JobPrintSheet({
         <span>Balance</span>
         <strong>{money(totals.balanceDue, moneyOptions)}</strong>
       </div>
+      {draftJob.techDetails?.neckInspection && (
+        <>
+          <h3>Setup Measurements</h3>
+          <table>
+            <tbody>
+              {['initial', 'final'].map((stageKey) => {
+                const stage = draftJob.techDetails.neckInspection?.[stageKey] || {};
+                const unit = stage.lengthUnit || stage.reliefUnit || draftJob.techDetails.lengthUnit || 'in';
+                return (
+                  <tr key={stageKey}>
+                    <td>{stageKey === 'initial' ? 'Initial' : 'Final'}</td>
+                    <td>Relief: {formatLength(stage.relief, stage.reliefUnit || unit)}</td>
+                    <td>Nut: {formatLength(stage.nutHighE, stage.nutHighEUnit || unit)} / {formatLength(stage.nutLowE, stage.nutLowEUnit || unit)}</td>
+                    <td>12th: {formatLength(stage.actionHighE12th, stage.actionHighE12thUnit || unit)} / {formatLength(stage.actionLowE12th, stage.actionLowE12thUnit || unit)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </>
+      )}
       {printFooterText && <p className="print-footer-text">{printFooterText}</p>}
     </section>
   );

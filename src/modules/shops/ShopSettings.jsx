@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import UserSettings from '../auth/UserSettings.jsx';
 import { SUPPORTED_DATE_FORMATS, getDefaultDateFormatForLocale } from '../../shared/utils/dateFormat';
+import { getDefaultMeasurementPreferences } from '../../shared/utils/measurements';
 import { SUPPORTED_CURRENCIES, getDefaultLocaleForCurrency, getSupportedCurrency } from '../../shared/utils/money';
 import { getShopSettings, saveShopSettings } from './shopConfig';
 import { saveShopProfile, uploadShopLogo } from './shopProfileService';
@@ -32,7 +33,19 @@ export default function ShopSettings({
           currencyCode: currency.code,
           locale: getDefaultLocaleForCurrency(currency.code),
           taxLabel: currency.taxLabel,
-          dateFormat: getDefaultDateFormatForLocale(getDefaultLocaleForCurrency(currency.code))
+          dateFormat: getDefaultDateFormatForLocale(getDefaultLocaleForCurrency(currency.code)),
+          ...getDefaultMeasurementPreferences({
+            currencyCode: currency.code,
+            locale: getDefaultLocaleForCurrency(currency.code)
+          })
+        };
+      }
+
+      if (name === 'measurementSystem') {
+        return {
+          ...current,
+          measurementSystem: value,
+          lengthUnit: value === 'metric' ? 'mm' : 'in'
         };
       }
 
@@ -147,6 +160,20 @@ export default function ShopSettings({
               {SUPPORTED_DATE_FORMATS.map((format) => (
                 <option key={format} value={format}>{format}</option>
               ))}
+            </select>
+          </label>
+          <label>
+            Measurement System
+            <select name="measurementSystem" value={settings.measurementSystem || 'imperial'} onChange={updateField} disabled={!canManageShop || isSaving}>
+              <option value="imperial">Imperial</option>
+              <option value="metric">Metric</option>
+            </select>
+          </label>
+          <label>
+            Length Unit
+            <select name="lengthUnit" value={settings.lengthUnit || 'in'} onChange={updateField} disabled={!canManageShop || isSaving}>
+              <option value="in">in</option>
+              <option value="mm">mm</option>
             </select>
           </label>
           <label>

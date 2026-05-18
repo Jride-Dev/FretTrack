@@ -1,6 +1,7 @@
 import { prepareImageForStorage, readFileAsDataUrl } from '../../services/imageProcessing';
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { getDefaultDateFormatForLocale, normalizeDateFormat } from '../../shared/utils/dateFormat';
+import { getDefaultMeasurementPreferences, normalizeLengthUnit, normalizeMeasurementSystem } from '../../shared/utils/measurements';
 import { getDefaultLocaleForCurrency, getSupportedCurrency } from '../../shared/utils/money';
 import { getCurrentShopId, getShopSettings, saveShopSettings } from './shopConfig';
 
@@ -84,6 +85,11 @@ export async function uploadShopLogo(file, shopId = getCurrentShopId()) {
     throw error;
   }
 
+  const profileMeasurementDefaults = getDefaultMeasurementPreferences({
+    currencyCode: profile.currency_code || 'USD',
+    locale: profile.locale || 'en-US'
+  });
+
   return {
     logoStoragePath: filePath,
     logoUrl: await createShopLogoObjectUrl(filePath)
@@ -109,6 +115,12 @@ export async function createShopLogoObjectUrl(storagePath) {
 function normalizeShopSettings(settings = {}) {
   const currentSettings = getShopSettings();
   const inferredCurrency = inferCurrencySettings(settings, currentSettings);
+  const inferredMeasurements = getDefaultMeasurementPreferences({
+    ...currentSettings,
+    ...settings,
+    currencyCode: inferredCurrency.currencyCode,
+    locale: settings.locale || inferredCurrency.locale
+  });
   return {
     ...currentSettings,
     ...settings,
@@ -125,6 +137,8 @@ function normalizeShopSettings(settings = {}) {
     taxLabel: String(settings.taxLabel || inferredCurrency.taxLabel || getSupportedCurrency(inferredCurrency.currencyCode).taxLabel).trim(),
     taxRegistrationNumber: String(settings.taxRegistrationNumber || '').trim(),
     dateFormat: normalizeDateFormat(settings.dateFormat, settings.locale || inferredCurrency.locale),
+    measurementSystem: normalizeMeasurementSystem(settings.measurementSystem, inferredMeasurements.measurementSystem),
+    lengthUnit: normalizeLengthUnit(settings.lengthUnit, inferredMeasurements.lengthUnit),
     taxState: String(settings.taxState || '').trim().toUpperCase(),
     salesTaxRate: settings.salesTaxRate === '' || settings.salesTaxRate == null
       ? ''
@@ -159,6 +173,8 @@ async function fromDbProfile(profile) {
     taxLabel: profile.tax_label || 'Sales Tax',
     taxRegistrationNumber: profile.tax_registration_number || '',
     dateFormat: normalizeDateFormat(profile.date_format, profile.locale || 'en-US'),
+    measurementSystem: normalizeMeasurementSystem(profile.measurement_system, profileMeasurementDefaults.measurementSystem),
+    lengthUnit: normalizeLengthUnit(profile.length_unit, profileMeasurementDefaults.lengthUnit),
     taxState: profile.tax_state || '',
     salesTaxRate: profile.sales_tax_rate == null ? '' : String(Number(profile.sales_tax_rate)),
     taxablePartsDefault: profile.taxable_parts_default !== false,
@@ -183,6 +199,8 @@ function toDbProfile(settings, userId) {
     tax_label: settings.taxLabel || 'Sales Tax',
     tax_registration_number: settings.taxRegistrationNumber || '',
     date_format: settings.dateFormat || getDefaultDateFormatForLocale(settings.locale || 'en-US'),
+    measurement_system: settings.measurementSystem || getDefaultMeasurementPreferences(settings).measurementSystem,
+    length_unit: settings.lengthUnit || getDefaultMeasurementPreferences(settings).lengthUnit,
     tax_state: settings.taxState,
     sales_tax_rate: Number(settings.salesTaxRate) || 0,
     taxable_parts_default: settings.taxablePartsDefault !== false,

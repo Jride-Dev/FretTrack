@@ -3,6 +3,7 @@ import NeckInspectionSection from './NeckInspectionSection';
 export default function TechDetailsSection({
   draftJob,
   formatMeasurementDelta,
+  lengthUnit,
   updateNeckInspection,
   updateStringGauge,
   updateTechField
@@ -32,6 +33,7 @@ export default function TechDetailsSection({
           <input name="newStringGauge" value={draftJob.techDetails.newStringGauge} onChange={updateTechField} />
         </label>
         <NeckInspectionSection
+          lengthUnit={lengthUnit}
           techDetails={draftJob.techDetails}
           formatMeasurementDelta={formatMeasurementDelta}
           updateNeckInspection={updateNeckInspection}

@@ -1,20 +1,44 @@
+import { getLengthUnitLabel, normalizeLengthUnit, parseLengthInput } from '../../shared/utils/measurements';
+
 export default function NeckInspectionSection({
+  lengthUnit = 'in',
   techDetails,
   formatMeasurementDelta,
   updateNeckInspection
 }) {
+  const preferredUnit = normalizeLengthUnit(lengthUnit);
+
+  function getStageLengthUnit(stage) {
+    return normalizeLengthUnit(stage.lengthUnit || stage.reliefUnit, preferredUnit);
+  }
+
+  function updateLengthField(stageKey, field, value, unit) {
+    const parsed = parseLengthInput(value, unit);
+    updateNeckInspection(stageKey, field, parsed.value);
+    updateNeckInspection(stageKey, `${field}Unit`, parsed.unit);
+    updateNeckInspection(stageKey, 'lengthUnit', parsed.unit);
+  }
+
   function renderNeckStage(stageKey, title) {
     const stage = techDetails.neckInspection?.[stageKey] || {};
+    const stageLengthUnit = getStageLengthUnit(stage);
+    const unitLabel = getLengthUnitLabel(stageLengthUnit);
     return (
       <fieldset className="neck-stage">
         <legend>{title}</legend>
         <label>
-          Relief
-          <input value={stage.relief || ''} onChange={(event) => updateNeckInspection(stageKey, 'relief', event.target.value)} />
+          Relief ({unitLabel})
+          <input value={stage.relief || ''} onChange={(event) => updateLengthField(stageKey, 'relief', event.target.value, stageLengthUnit)} />
         </label>
         <label>
           Relief Unit
-          <select value={stage.reliefUnit || 'in'} onChange={(event) => updateNeckInspection(stageKey, 'reliefUnit', event.target.value)}>
+          <select
+            value={stage.reliefUnit || stageLengthUnit}
+            onChange={(event) => {
+              updateNeckInspection(stageKey, 'reliefUnit', event.target.value);
+              updateNeckInspection(stageKey, 'lengthUnit', event.target.value);
+            }}
+          >
             <option value="in">inches</option>
             <option value="mm">mm</option>
           </select>
@@ -24,20 +48,20 @@ export default function NeckInspectionSection({
           <input value={stage.reliefMethod || ''} onChange={(event) => updateNeckInspection(stageKey, 'reliefMethod', event.target.value)} />
         </label>
         <label>
-          Action High E @ 3rd
-          <input value={stage.nutHighE || ''} onChange={(event) => updateNeckInspection(stageKey, 'nutHighE', event.target.value)} />
+          Action High E @ 3rd ({unitLabel})
+          <input value={stage.nutHighE || ''} onChange={(event) => updateLengthField(stageKey, 'nutHighE', event.target.value, stageLengthUnit)} />
         </label>
         <label>
-          Action Low E @ 3rd
-          <input value={stage.nutLowE || ''} onChange={(event) => updateNeckInspection(stageKey, 'nutLowE', event.target.value)} />
+          Action Low E @ 3rd ({unitLabel})
+          <input value={stage.nutLowE || ''} onChange={(event) => updateLengthField(stageKey, 'nutLowE', event.target.value, stageLengthUnit)} />
         </label>
         <label>
-          Action High E @ 12th
-          <input value={stage.actionHighE12th || ''} onChange={(event) => updateNeckInspection(stageKey, 'actionHighE12th', event.target.value)} />
+          Action High E @ 12th ({unitLabel})
+          <input value={stage.actionHighE12th || ''} onChange={(event) => updateLengthField(stageKey, 'actionHighE12th', event.target.value, stageLengthUnit)} />
         </label>
         <label>
-          Action Low E @ 12th
-          <input value={stage.actionLowE12th || ''} onChange={(event) => updateNeckInspection(stageKey, 'actionLowE12th', event.target.value)} />
+          Action Low E @ 12th ({unitLabel})
+          <input value={stage.actionLowE12th || ''} onChange={(event) => updateLengthField(stageKey, 'actionLowE12th', event.target.value, stageLengthUnit)} />
         </label>
         <label>
           3rd Fret Height
@@ -110,11 +134,11 @@ export default function NeckInspectionSection({
       </div>
       <div className="wide neck-deltas">
         <strong>Measured Changes</strong>
-        <span>Relief: {formatMeasurementDelta(techDetails.neckInspection?.initial?.relief, techDetails.neckInspection?.final?.relief)}</span>
-        <span>Action High E @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutHighE, techDetails.neckInspection?.final?.nutHighE)}</span>
-        <span>Action Low E @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutLowE, techDetails.neckInspection?.final?.nutLowE)}</span>
-        <span>Action High E @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionHighE12th, techDetails.neckInspection?.final?.actionHighE12th)}</span>
-        <span>Action Low E @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionLowE12th, techDetails.neckInspection?.final?.actionLowE12th)}</span>
+        <span>Relief: {formatMeasurementDelta(techDetails.neckInspection?.initial?.relief, techDetails.neckInspection?.final?.relief, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
+        <span>Action High E @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutHighE, techDetails.neckInspection?.final?.nutHighE, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
+        <span>Action Low E @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutLowE, techDetails.neckInspection?.final?.nutLowE, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
+        <span>Action High E @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionHighE12th, techDetails.neckInspection?.final?.actionHighE12th, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
+        <span>Action Low E @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionLowE12th, techDetails.neckInspection?.final?.actionLowE12th, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
       </div>
     </>
   );

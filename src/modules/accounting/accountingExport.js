@@ -89,7 +89,13 @@ function buildJobHeader(includeInternalCost) {
     'Tax Amount',
     'Total Due',
     'Paid',
-    'Balance'
+    'Balance',
+    'Initial Relief',
+    'Initial Unit',
+    'Final Relief',
+    'Final Unit',
+    'Initial Action 12th',
+    'Final Action 12th'
   ];
   if (includeInternalCost) {
     header.splice(5, 0, 'Internal Parts Cost');
@@ -114,7 +120,13 @@ function buildJobRow(row, includeInternalCost, dateOptions) {
     moneyCell(row.taxAmount),
     moneyCell(row.totalDue),
     moneyCell(row.paidTotal),
-    moneyCell(row.balanceDue)
+    moneyCell(row.balanceDue),
+    row.measurementSummary?.initial?.relief || '',
+    row.measurementSummary?.initial?.unit || '',
+    row.measurementSummary?.final?.relief || '',
+    row.measurementSummary?.final?.unit || '',
+    [row.measurementSummary?.initial?.actionHighE12th, row.measurementSummary?.initial?.actionLowE12th].filter(Boolean).join(' / '),
+    [row.measurementSummary?.final?.actionHighE12th, row.measurementSummary?.final?.actionLowE12th].filter(Boolean).join(' / ')
   ];
   if (includeInternalCost) {
     cells.splice(5, 0, moneyCell(row.partsInternalCost));

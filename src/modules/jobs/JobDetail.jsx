@@ -17,6 +17,8 @@ import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
 import MessagesPanel from '../messaging/MessagesPanel';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
+import { formatLength } from '../../shared/utils/measurements';
+import { getShopMeasurementOptions } from '../shops/shopConfig';
 import { combineCustomerName } from '../customers';
 import { normalizeInstrumentType, stringCountForInstrument } from '../instruments/instrumentService';
 import { generateJobNumber } from './jobNumber';
@@ -29,6 +31,26 @@ function markerColorForReport(severity) {
   if (severity === 'Critical') return '#b3261e';
   if (severity === 'Structural') return '#a15c00';
   return '#255f85';
+}
+
+function buildMeasurementDisplay(job, lengthUnit) {
+  const neckInspection = job.techDetails?.neckInspection || {};
+  return {
+    lengthUnit,
+    initial: formatMeasurementStageForExport(neckInspection.initial, lengthUnit),
+    final: formatMeasurementStageForExport(neckInspection.final, lengthUnit)
+  };
+}
+
+function formatMeasurementStageForExport(stage = {}, fallbackUnit = 'in') {
+  const unit = stage.lengthUnit || stage.reliefUnit || fallbackUnit;
+  return {
+    relief: formatLength(stage.relief, stage.reliefUnit || unit),
+    nutHighE: formatLength(stage.nutHighE, stage.nutHighEUnit || unit),
+    nutLowE: formatLength(stage.nutLowE, stage.nutLowEUnit || unit),
+    actionHighE12th: formatLength(stage.actionHighE12th, stage.actionHighE12thUnit || unit),
+    actionLowE12th: formatLength(stage.actionLowE12th, stage.actionLowE12thUnit || unit)
+  };
 }
 
 export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onImageDelete, onRefresh, onClose, canWrite = true }) {
@@ -76,6 +98,12 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
   const workOrderImages = images.filter((image) => workOrderImageIds.includes(image.id));
   const taxSettings = draftJob.techDetails.tax || {};
   const payments = draftJob.techDetails.payments || [];
+  const measurementOptions = getShopMeasurementOptions({
+    measurementSystem: draftJob.techDetails.measurementSystem,
+    lengthUnit: draftJob.techDetails.lengthUnit,
+    currencyCode: taxSettings.currencyCode,
+    locale: taxSettings.locale
+  });
 
   const totals = useMemo(() => calculateJobTotals(draftJob), [draftJob]);
 
@@ -278,6 +306,7 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
     const payload = {
       exportedAt: new Date().toISOString(),
       job: draftJob,
+      measurementDisplay: buildMeasurementDisplay(draftJob, measurementOptions.lengthUnit),
       timelineEvents
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -496,7 +525,7 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
     window.print();
   }
 
-  function formatMeasurementDelta(initialValue, finalValue) {
+  function formatMeasurementDelta(initialValue, finalValue, unit = measurementOptions.lengthUnit) {
     if (!initialValue && !finalValue) {
       return '';
     }
@@ -505,9 +534,9 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
     if (initialValue !== '' && finalValue !== '' && Number.isFinite(initialNumber) && Number.isFinite(finalNumber)) {
       const delta = finalNumber - initialNumber;
       const sign = delta > 0 ? '+' : '';
-      return `${initialValue} -> ${finalValue} (${sign}${delta.toFixed(3)})`;
+      return `${formatLength(initialValue, unit)} -> ${formatLength(finalValue, unit)} (${sign}${formatLength(delta.toFixed(3), unit)})`;
     }
-    return `${initialValue || '-'} -> ${finalValue || '-'}`;
+    return `${initialValue ? formatLength(initialValue, unit) : '-'} -> ${finalValue ? formatLength(finalValue, unit) : '-'}`;
   }
 
   async function finishJob() {
@@ -686,6 +715,7 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
       <CustomerDamageReport
         draftJob={draftJob}
         formatMeasurementDelta={formatMeasurementDelta}
+        lengthUnit={measurementOptions.lengthUnit}
         normalizeInstrumentType={normalizeInstrumentType}
         reportDamageView={reportDamageView}
         services={services}
@@ -711,6 +741,7 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
       <TechDetailsSection
         draftJob={draftJob}
         formatMeasurementDelta={formatMeasurementDelta}
+        lengthUnit={measurementOptions.lengthUnit}
         updateNeckInspection={updateNeckInspection}
         updateStringGauge={updateStringGauge}
         updateTechField={updateTechField}

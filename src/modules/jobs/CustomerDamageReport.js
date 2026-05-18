@@ -4,6 +4,7 @@ import { getPrintFooterText, getShopDateOptions, getShopSettings } from '../shop
 export default function CustomerDamageReport({
   draftJob,
   formatMeasurementDelta,
+  lengthUnit = 'in',
   normalizeInstrumentType,
   reportDamageView,
   services,
@@ -41,23 +42,23 @@ export default function CustomerDamageReport({
         <tbody>
           <tr>
             <td>Relief</td>
-            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.relief, draftJob.techDetails.neckInspection?.final?.relief)}</td>
+            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.relief, draftJob.techDetails.neckInspection?.final?.relief, lengthUnit)}</td>
           </tr>
           <tr>
             <td>Action High E @ 3rd</td>
-            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutHighE, draftJob.techDetails.neckInspection?.final?.nutHighE)}</td>
+            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutHighE, draftJob.techDetails.neckInspection?.final?.nutHighE, lengthUnit)}</td>
           </tr>
           <tr>
             <td>Action Low E @ 3rd</td>
-            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutLowE, draftJob.techDetails.neckInspection?.final?.nutLowE)}</td>
+            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutLowE, draftJob.techDetails.neckInspection?.final?.nutLowE, lengthUnit)}</td>
           </tr>
           <tr>
             <td>Action High E @ 12th</td>
-            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionHighE12th, draftJob.techDetails.neckInspection?.final?.actionHighE12th)}</td>
+            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionHighE12th, draftJob.techDetails.neckInspection?.final?.actionHighE12th, lengthUnit)}</td>
           </tr>
           <tr>
             <td>Action Low E @ 12th</td>
-            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionLowE12th, draftJob.techDetails.neckInspection?.final?.actionLowE12th)}</td>
+            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionLowE12th, draftJob.techDetails.neckInspection?.final?.actionLowE12th, lengthUnit)}</td>
           </tr>
           <tr>
             <td>Fret Condition</td>

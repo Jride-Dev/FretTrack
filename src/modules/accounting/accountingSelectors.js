@@ -1,4 +1,5 @@
 import { calculateJobTotals, retailTotal, rowQuantity } from '../billing/accounting.js';
+import { formatLength, normalizeLengthUnit } from '../../shared/utils/measurements.js';
 
 const DEFAULT_RANGE_DAYS = 30;
 const MONEY_EPSILON = 0.005;
@@ -19,10 +20,11 @@ export function buildAccountingReport(jobs = [], options = {}) {
   const locale = options.locale || options.shopProfile?.locale || 'en-US';
   const taxLabel = options.taxLabel || options.shopProfile?.taxLabel || (currencyCode === 'GBP' ? 'VAT' : 'Sales Tax');
   const dateFormat = options.dateFormat || options.shopProfile?.dateFormat || (locale === 'en-GB' ? 'DD/MM/YYYY' : 'MM/DD/YYYY');
+  const lengthUnit = options.lengthUnit || options.shopProfile?.lengthUnit || (currencyCode === 'GBP' ? 'mm' : 'in');
   const range = normalizeDateRange(options);
   const scopedJobs = jobs
     .filter((job) => !shopId || job.shopId === shopId || job.shop_id === shopId)
-    .map((job) => buildJobAccountingSnapshot(job, { currencyCode, locale, taxLabel, dateFormat }))
+    .map((job) => buildJobAccountingSnapshot(job, { currencyCode, locale, taxLabel, dateFormat, lengthUnit }))
     .filter((snapshot) => snapshot.currencyCode === currencyCode);
 
   const jobsInRange = scopedJobs.filter((snapshot) => isDateInRange(snapshot.accountingDate, range));
@@ -40,6 +42,7 @@ export function buildAccountingReport(jobs = [], options = {}) {
     locale,
     taxLabel,
     dateFormat,
+    lengthUnit,
     summary: summarizeAccounting(jobsInRange, paymentEvents, adjustmentEvents, openBalances),
     dailyCloseout: groupSnapshotsByPeriod(jobsInRange, paymentEvents, adjustmentEvents, 'day'),
     monthlyTotals: groupSnapshotsByPeriod(jobsInRange, paymentEvents, adjustmentEvents, 'month'),
@@ -164,6 +167,7 @@ export function buildJobAccountingSnapshot(job = {}, options = {}) {
       non_taxable_subtotal: nonTaxableSubtotal,
       tax_amount: totals.salesTaxAmount
     },
+    measurementSummary: buildMeasurementSummary(job, options.lengthUnit || taxSettings.lengthUnit || 'in'),
     lineItems,
     paymentEvents,
     adjustmentEvents
@@ -358,4 +362,24 @@ function sumBy(rows, key) {
 function normalizeCurrencyCode(currencyCode) {
   const code = String(currencyCode || 'USD').toUpperCase();
   return code === 'GBP' ? 'GBP' : 'USD';
+}
+
+function buildMeasurementSummary(job, fallbackUnit = 'in') {
+  const neckInspection = job.techDetails?.neckInspection || {};
+  return {
+    initial: buildMeasurementStageSummary(neckInspection.initial, fallbackUnit),
+    final: buildMeasurementStageSummary(neckInspection.final, fallbackUnit)
+  };
+}
+
+function buildMeasurementStageSummary(stage = {}, fallbackUnit = 'in') {
+  const unit = normalizeLengthUnit(stage.lengthUnit || stage.reliefUnit, fallbackUnit);
+  return {
+    unit,
+    relief: formatLength(stage.relief, stage.reliefUnit || unit),
+    nutHighE: formatLength(stage.nutHighE, stage.nutHighEUnit || unit),
+    nutLowE: formatLength(stage.nutLowE, stage.nutLowEUnit || unit),
+    actionHighE12th: formatLength(stage.actionHighE12th, stage.actionHighE12thUnit || unit),
+    actionLowE12th: formatLength(stage.actionLowE12th, stage.actionLowE12thUnit || unit)
+  };
 }

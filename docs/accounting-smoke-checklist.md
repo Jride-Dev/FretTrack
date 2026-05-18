@@ -16,3 +16,6 @@ Run these against one test shop, then repeat the cross-shop item with a second s
 12. UK date format: set a test shop to `DD/MM/YYYY`, print a job sheet, and confirm intake/work log dates use day/month/year.
 13. UK report export: export Accounting / Reports for a UK shop and confirm display date columns use `DD/MM/YYYY` while ISO safety columns remain ISO.
 14. Event timeline ordering/display: add two events on different timestamps and confirm newest ordering is unchanged while displayed dates follow the selected shop format.
+15. US measurements: set a test shop to imperial/in, enter neck relief and action values, then confirm the job screen and print sheet show `in`.
+16. UK measurements: set a test shop to metric/mm, enter neck relief and action values, then confirm the job screen and print sheet show `mm`.
+17. Measurement export: export a report or job JSON and confirm measurement display values include units, while raw stored values remain unchanged.

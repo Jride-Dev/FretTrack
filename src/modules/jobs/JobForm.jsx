@@ -4,6 +4,7 @@ import { generateJobNumber } from './jobNumber';
 import { combineCustomerName, findCustomerMatches } from '../customers';
 import { instrumentCatalog } from '../instruments/instrumentService';
 import { formatShopDate, toIsoDateInputValue } from '../../shared/utils/dateFormat';
+import { getDefaultMeasurementPreferences } from '../../shared/utils/measurements';
 import { getShopDateOptions } from '../shops/shopConfig';
 
 function todayValue() {
@@ -113,6 +114,7 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
 
     const now = new Date().toISOString();
     const dateReceived = form.dateReceived || todayValue();
+    const measurementPreferences = getDefaultMeasurementPreferences(shopProfile || {});
 
     const newJob = {
       id: crypto.randomUUID(),
@@ -134,8 +136,14 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
         neckInspectionBefore: '',
         neckInspectionAfter: '',
         neckInspection: {
-          initial: {},
-          final: {}
+          initial: {
+            lengthUnit: measurementPreferences.lengthUnit,
+            reliefUnit: measurementPreferences.lengthUnit
+          },
+          final: {
+            lengthUnit: measurementPreferences.lengthUnit,
+            reliefUnit: measurementPreferences.lengthUnit
+          }
         },
         damageMap: {
           selectedArea: 'Body',
@@ -161,6 +169,8 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
         action12thHighE: '',
         action12thLowE: '',
         neckRelief: '',
+        measurementSystem: measurementPreferences.measurementSystem,
+        lengthUnit: measurementPreferences.lengthUnit,
         notes: '',
         includedPartIds: [],
         discountType: 'none',
@@ -367,6 +377,8 @@ function getDefaultTaxSettings(shopProfile = {}) {
     currencyCode: shopProfile?.currencyCode || 'USD',
     locale: shopProfile?.locale || 'en-US',
     dateFormat: shopProfile?.dateFormat || '',
+    measurementSystem: shopProfile?.measurementSystem || getDefaultMeasurementPreferences(shopProfile || {}).measurementSystem,
+    lengthUnit: shopProfile?.lengthUnit || getDefaultMeasurementPreferences(shopProfile || {}).lengthUnit,
     taxableParts: shopProfile?.taxablePartsDefault !== false,
     taxableServices: Boolean(shopProfile?.taxableServicesDefault)
   };

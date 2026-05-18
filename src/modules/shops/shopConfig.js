@@ -1,4 +1,5 @@
 import { getDefaultDateFormatForLocale, normalizeDateFormat } from '../../shared/utils/dateFormat';
+import { getDefaultMeasurementPreferences, normalizeLengthUnit, normalizeMeasurementSystem } from '../../shared/utils/measurements';
 
 const DEFAULT_SHOP_ID = 'default-shop';
 const DEFAULT_SHOP_NAME = 'FretTrack Trial Shop';
@@ -7,6 +8,8 @@ const SHOP_SELECTION_STORAGE_KEY = 'frettrack_selected_shop';
 const DEFAULT_CURRENCY_CODE = 'USD';
 const DEFAULT_LOCALE = 'en-US';
 const DEFAULT_TAX_LABEL = 'Sales Tax';
+const DEFAULT_MEASUREMENT_SYSTEM = 'imperial';
+const DEFAULT_LENGTH_UNIT = 'in';
 
 export const defaultShopSettings = {
   shopId: DEFAULT_SHOP_ID,
@@ -22,6 +25,8 @@ export const defaultShopSettings = {
   taxLabel: DEFAULT_TAX_LABEL,
   taxRegistrationNumber: '',
   dateFormat: getDefaultDateFormatForLocale(DEFAULT_LOCALE),
+  measurementSystem: DEFAULT_MEASUREMENT_SYSTEM,
+  lengthUnit: DEFAULT_LENGTH_UNIT,
   taxState: '',
   salesTaxRate: '',
   taxablePartsDefault: true,
@@ -59,6 +64,12 @@ export function getShopSettings() {
     dateFormat: savedSettingsMatchShop
       ? normalizeDateFormat(savedSettings.dateFormat, savedSettings.locale || DEFAULT_LOCALE)
       : getDefaultDateFormatForLocale(DEFAULT_LOCALE),
+    measurementSystem: savedSettingsMatchShop
+      ? normalizeMeasurementSystem(savedSettings.measurementSystem, getDefaultMeasurementPreferences(savedSettings).measurementSystem)
+      : DEFAULT_MEASUREMENT_SYSTEM,
+    lengthUnit: savedSettingsMatchShop
+      ? normalizeLengthUnit(savedSettings.lengthUnit, getDefaultMeasurementPreferences(savedSettings).lengthUnit)
+      : DEFAULT_LENGTH_UNIT,
     taxState: savedSettingsMatchShop ? savedSettings.taxState || '' : '',
     salesTaxRate: savedSettingsMatchShop ? savedSettings.salesTaxRate || '' : '',
     taxablePartsDefault: savedSettingsMatchShop ? savedSettings.taxablePartsDefault !== false : true,
@@ -111,6 +122,18 @@ export function getShopDateOptions(settings = getShopSettings()) {
   return {
     dateFormat: normalizeDateFormat(mergedSettings.dateFormat, mergedSettings.locale || DEFAULT_LOCALE),
     locale: mergedSettings.locale || DEFAULT_LOCALE
+  };
+}
+
+export function getShopMeasurementOptions(settings = getShopSettings()) {
+  const mergedSettings = {
+    ...getShopSettings(),
+    ...(settings || {})
+  };
+  const defaults = getDefaultMeasurementPreferences(mergedSettings);
+  return {
+    measurementSystem: normalizeMeasurementSystem(mergedSettings.measurementSystem, defaults.measurementSystem),
+    lengthUnit: normalizeLengthUnit(mergedSettings.lengthUnit, defaults.lengthUnit)
   };
 }
 

@@ -2,6 +2,7 @@ import { combineCustomerName, ensureCustomerForJob, splitCustomerName } from '..
 import { normalizeInstrumentType } from '../instruments/instrumentService';
 import { supabase, hasSupabaseConfig } from '../../shared/lib/supabaseClient';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
+import { getDefaultMeasurementPreferences, normalizeLengthUnit, normalizeMeasurementSystem } from '../../shared/utils/measurements';
 import { formatJobNumber, generateJobNumber, getJobDayCode } from './jobNumber';
 import { logJobEventSafe } from './jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
@@ -32,6 +33,7 @@ const defaultTechDetails = {
     initial: {
       relief: '',
       reliefUnit: 'in',
+      lengthUnit: 'in',
       reliefMethod: 'Capo 1st + fret last, measure at 7th/8th',
       actionLowE12th: '',
       actionHighE12th: '',
@@ -51,6 +53,7 @@ const defaultTechDetails = {
     final: {
       relief: '',
       reliefUnit: 'in',
+      lengthUnit: 'in',
       reliefMethod: 'Capo 1st + fret last, measure at 7th/8th',
       actionLowE12th: '',
       actionHighE12th: '',
@@ -96,6 +99,8 @@ const defaultTechDetails = {
   action12thHighE: '',
   action12thLowE: '',
   neckRelief: '',
+  measurementSystem: 'imperial',
+  lengthUnit: 'in',
   notes: '',
   includedPartIds: [],
   workOrderImageIds: [],
@@ -710,6 +715,8 @@ function normalizeTechDetails(techDetails = {}, instrumentType = 'Guitar') {
       ...defaultTechDetails.tax,
       ...(techDetails.tax || {})
     },
+    measurementSystem: normalizeMeasurementSystem(techDetails.measurementSystem, getDefaultMeasurementPreferences(techDetails.tax || {}).measurementSystem),
+    lengthUnit: normalizeLengthUnit(techDetails.lengthUnit, getDefaultMeasurementPreferences(techDetails.tax || {}).lengthUnit),
     payments: Array.isArray(techDetails.payments) ? techDetails.payments.map(normalizePayment) : [],
     includedPartIds: techDetails.includedPartIds || [],
     workOrderImageIds: techDetails.workOrderImageIds || [],
@@ -782,9 +789,12 @@ function normalizeNeckInspection(neckInspection = {}) {
 }
 
 function normalizeNeckStage(stage = {}) {
+  const lengthUnit = normalizeLengthUnit(stage.lengthUnit || stage.reliefUnit, 'in');
   return {
     ...defaultTechDetails.neckInspection.initial,
     ...stage,
+    lengthUnit,
+    reliefUnit: normalizeLengthUnit(stage.reliefUnit, lengthUnit),
     twist: Boolean(stage.twist),
     buzzPresent: Boolean(stage.buzzPresent),
     deadSpots: Boolean(stage.deadSpots),
