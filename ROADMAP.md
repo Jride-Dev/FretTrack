@@ -1,6 +1,6 @@
 # Roadmap
 
-This file tracks where FretTrack is headed after the current `0.2.6-beta.2` private beta baseline.
+This file tracks where FretTrack is headed after the current `0.2.6-beta.4` private beta baseline.
 
 ## Current Release Position
 
@@ -12,6 +12,7 @@ This file tracks where FretTrack is headed after the current `0.2.6-beta.2` priv
 - v0.2.4 adds module stabilization, photos-module ownership, shop config foundations, and non-blocking job event logging for the future activity timeline.
 - v0.2.5 adds a visible activity timeline, basic shop settings, trial-readiness documentation, data integrity checks, and job JSON export for debugging.
 - v0.2.6-beta.1 adds auth/shop membership foundations, shop-scoped RLS audit work, a standalone customer module, customer import-prep fields, and migration drift guard tooling.
+- v0.2.6-beta.4 adds Simon's Beta Release: UK-ready GBP/VAT settings, UK date display, metric measurements, and lightweight accounting/report exports.
 
 ## Near Term
 
