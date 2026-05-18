@@ -48,7 +48,7 @@ export default function JobInfoSection({
             name="subcontractorName"
             value={draftJob.techDetails.subcontractorName || ''}
             onChange={updateTechField}
-            placeholder="Palos Verdes Music House"
+            placeholder="Sub-contractor business name"
             disabled={(draftJob.techDetails.intakeType || 'Walk-In') !== 'Sub-Contract'}
           />
         </label>

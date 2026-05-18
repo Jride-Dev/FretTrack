@@ -293,7 +293,7 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
             name="subcontractorName"
             value={form.subcontractorName}
             onChange={handleChange}
-            placeholder="Palos Verdes Music House"
+            placeholder="Sub-contractor business name"
             disabled={!canWrite || form.intakeType !== 'Sub-Contract'}
           />
         </label>

@@ -14,9 +14,11 @@ export default function NeckInspectionSection({
 
   function updateLengthField(stageKey, field, value, unit) {
     const parsed = parseLengthInput(value, unit);
-    updateNeckInspection(stageKey, field, parsed.value);
-    updateNeckInspection(stageKey, `${field}Unit`, parsed.unit);
-    updateNeckInspection(stageKey, 'lengthUnit', parsed.unit);
+    updateNeckInspection(stageKey, {
+      [field]: parsed.value,
+      [`${field}Unit`]: parsed.unit,
+      lengthUnit: parsed.unit
+    });
   }
 
   function renderNeckStage(stageKey, title) {

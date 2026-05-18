@@ -246,19 +246,25 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
     }
   }
 
-  function updateNeckInspection(stage, field, value) {
-    patchJob({
+  function updateNeckInspection(stage, fieldOrPatch, value) {
+    const fieldPatch = typeof fieldOrPatch === 'object'
+      ? fieldOrPatch
+      : { [fieldOrPatch]: value };
+
+    setDraftJob((current) => ({
+      ...current,
       techDetails: {
-        ...draftJob.techDetails,
+        ...current.techDetails,
         neckInspection: {
-          ...(draftJob.techDetails.neckInspection || {}),
+          ...(current.techDetails.neckInspection || {}),
           [stage]: {
-            ...(draftJob.techDetails.neckInspection?.[stage] || {}),
-            [field]: value
+            ...(current.techDetails.neckInspection?.[stage] || {}),
+            ...fieldPatch
           }
         }
       }
-    });
+    }));
+    setIsDirty(true);
   }
 
   function addPayment(event) {
