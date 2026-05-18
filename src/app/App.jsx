@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import AppNotice from '../shared/components/AppNotice.jsx';
 import AuthGate from '../modules/auth/AuthGate.jsx';
+import AccountingReports from '../modules/accounting/AccountingReports.jsx';
 import { CustomerManager, getCustomers } from '../modules/customers';
 import JobDetail from '../modules/jobs/JobDetail.jsx';
 import JobForm from '../modules/jobs/JobForm.jsx';
@@ -591,6 +592,7 @@ export default function App() {
           <button type="button" onClick={showNewJob}>New Job</button>
           <button type="button" onClick={() => setMode('list')}>Current Jobs</button>
           <button type="button" onClick={() => setMode('customers')}>Customers</button>
+          <button type="button" onClick={() => setMode('accounting')}>Accounting / Reports</button>
           <button type="button" onClick={() => setMode('settings')}>Shop Settings</button>
           {session && (
             <FeedbackReporter selectedJob={selectedJob} onNotice={setNotice} />
@@ -661,6 +663,10 @@ export default function App() {
               onCustomerSaved={handleCustomerSaved}
               onNotice={setNotice}
             />
+          )}
+
+          {mode === 'accounting' && (
+            <AccountingReports jobs={jobs} shopId={membership?.shopId || getSelectedShop().shopId} />
           )}
 
           {mode === 'detail' && selectedJob && (

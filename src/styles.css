@@ -1631,6 +1631,71 @@ th.internal-only {
   text-align: right;
 }
 
+.accounting-report {
+  display: grid;
+  gap: 16px;
+}
+
+.accounting-header {
+  align-items: end;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.accounting-header h2 {
+  margin-bottom: 3px;
+}
+
+.accounting-actions {
+  align-items: end;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.accounting-actions label {
+  min-width: 150px;
+}
+
+.accounting-summary-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.accounting-summary-card {
+  background: var(--surface-muted);
+  border: 1px solid var(--border-soft);
+  display: grid;
+  gap: 6px;
+  min-height: 76px;
+  padding: 12px;
+}
+
+.accounting-summary-card span {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.accounting-summary-card strong {
+  font-size: 20px;
+}
+
+.accounting-table-section {
+  overflow-x: auto;
+}
+
+.accounting-table-section h3 {
+  margin-top: 10px;
+}
+
+.accounting-print-heading {
+  margin-bottom: 12px;
+}
+
 .empty,
 .empty-state {
   color: var(--text-subtle);
