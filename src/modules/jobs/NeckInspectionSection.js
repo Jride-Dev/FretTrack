@@ -12,7 +12,11 @@ export default function NeckInspectionSection({
     return normalizeLengthUnit(stage.lengthUnit || stage.reliefUnit, preferredUnit);
   }
 
-  function updateLengthField(stageKey, field, value, unit) {
+  function updateLengthValue(stageKey, field, value) {
+    updateNeckInspection(stageKey, field, value);
+  }
+
+  function commitLengthField(stageKey, field, value, unit) {
     const parsed = parseLengthInput(value, unit);
     updateNeckInspection(stageKey, {
       [field]: parsed.value,
@@ -30,7 +34,13 @@ export default function NeckInspectionSection({
         <legend>{title}</legend>
         <label>
           Relief ({unitLabel})
-          <input value={stage.relief || ''} onChange={(event) => updateLengthField(stageKey, 'relief', event.target.value, stageLengthUnit)} />
+          <input
+            type="text"
+            inputMode="decimal"
+            value={stage.relief || ''}
+            onChange={(event) => updateLengthValue(stageKey, 'relief', event.target.value)}
+            onBlur={(event) => commitLengthField(stageKey, 'relief', event.target.value, stageLengthUnit)}
+          />
         </label>
         <label>
           Relief Unit
@@ -51,19 +61,43 @@ export default function NeckInspectionSection({
         </label>
         <label>
           Action High E @ 3rd ({unitLabel})
-          <input value={stage.nutHighE || ''} onChange={(event) => updateLengthField(stageKey, 'nutHighE', event.target.value, stageLengthUnit)} />
+          <input
+            type="text"
+            inputMode="decimal"
+            value={stage.nutHighE || ''}
+            onChange={(event) => updateLengthValue(stageKey, 'nutHighE', event.target.value)}
+            onBlur={(event) => commitLengthField(stageKey, 'nutHighE', event.target.value, stageLengthUnit)}
+          />
         </label>
         <label>
           Action Low E @ 3rd ({unitLabel})
-          <input value={stage.nutLowE || ''} onChange={(event) => updateLengthField(stageKey, 'nutLowE', event.target.value, stageLengthUnit)} />
+          <input
+            type="text"
+            inputMode="decimal"
+            value={stage.nutLowE || ''}
+            onChange={(event) => updateLengthValue(stageKey, 'nutLowE', event.target.value)}
+            onBlur={(event) => commitLengthField(stageKey, 'nutLowE', event.target.value, stageLengthUnit)}
+          />
         </label>
         <label>
           Action High E @ 12th ({unitLabel})
-          <input value={stage.actionHighE12th || ''} onChange={(event) => updateLengthField(stageKey, 'actionHighE12th', event.target.value, stageLengthUnit)} />
+          <input
+            type="text"
+            inputMode="decimal"
+            value={stage.actionHighE12th || ''}
+            onChange={(event) => updateLengthValue(stageKey, 'actionHighE12th', event.target.value)}
+            onBlur={(event) => commitLengthField(stageKey, 'actionHighE12th', event.target.value, stageLengthUnit)}
+          />
         </label>
         <label>
           Action Low E @ 12th ({unitLabel})
-          <input value={stage.actionLowE12th || ''} onChange={(event) => updateLengthField(stageKey, 'actionLowE12th', event.target.value, stageLengthUnit)} />
+          <input
+            type="text"
+            inputMode="decimal"
+            value={stage.actionLowE12th || ''}
+            onChange={(event) => updateLengthValue(stageKey, 'actionLowE12th', event.target.value)}
+            onBlur={(event) => commitLengthField(stageKey, 'actionLowE12th', event.target.value, stageLengthUnit)}
+          />
         </label>
         <label>
           3rd Fret Height

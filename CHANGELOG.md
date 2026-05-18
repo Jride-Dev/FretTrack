@@ -12,6 +12,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added shop-level measurement preferences for imperial/in and metric/mm display/input behavior without silently migrating stored measurements.
 - Prepared the beta workflow for a Norwich, United Kingdom shop using GBP, VAT, DD/MM/YYYY dates, and millimeters.
 - Fixed Inspection neck relief/action inputs by applying measurement value and unit updates atomically so controlled fields no longer discard keyboard entry.
+- Hardened the Inspection measurement fields further so typing stores raw text immediately and unit parsing only runs when the field loses focus.
 - Removed Palos Verdes Music House placeholder text from generic sub-contract business fields.
 - Refreshed README beta access instructions and screenshots for the current public beta flow.
 
