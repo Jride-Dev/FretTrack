@@ -143,7 +143,8 @@ function normalizeShopSettings(settings = {}) {
   };
 }
 
-async function fromDbProfile(profile) {
+async function fromDbProfile(dbProfile) {
+  const profile = dbProfile || {};
   const profileMeasurementDefaults = getDefaultMeasurementPreferences({
     currencyCode: profile.currency_code || 'USD',
     locale: profile.locale || 'en-US'
