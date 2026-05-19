@@ -1465,6 +1465,21 @@ form.panel button {
   margin-top: 14px;
 }
 
+.message-history table {
+  table-layout: auto;
+}
+
+.message-history th:last-child,
+.message-history td:last-child {
+  text-align: left;
+  width: auto;
+}
+
+.message-history-title strong {
+  display: block;
+  line-height: 1.35;
+}
+
 .message-actions {
   display: flex;
   gap: 8px;

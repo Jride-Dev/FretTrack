@@ -207,9 +207,8 @@ export default function MessagesPanel({ job, onPreferenceChange, onSendMessage, 
                   <td>{message.channel}</td>
                   <td>{message.status}</td>
                   <td>{message.recipient}</td>
-                  <td>
-                    <strong>{message.subject}</strong>
-                    <p>{message.body}</p>
+                  <td className="message-history-title">
+                    <strong title={message.subject || 'Message sent'}>{message.subject || 'Message sent'}</strong>
                     {message.errorMessage && <p className="message-error">{message.errorMessage}</p>}
                   </td>
                 </tr>

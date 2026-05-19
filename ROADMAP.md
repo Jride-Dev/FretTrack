@@ -98,6 +98,11 @@ This file tracks where FretTrack is headed after the current `0.2.6-beta.4.1` pr
 - Keep supporting unusual instruments by allowing free-typed brand/model values even when suggestions exist.
 - Keep print/export views readable regardless of active app theme.
 
+## Next Major Build Performance
+
+- Lazy-load HEIC/HEIF photo conversion so the heavy `heic2any` dependency is downloaded only when a shop uploads a HEIC/HEIF image.
+- Review Vite bundle chunks after lazy-loading photo conversion and consider additional code splitting only where it improves first-load time without making the beta workflow brittle.
+
 ## Future Polish Candidates
 
 - Tighten trial feedback around the Acoustic / Electric / Bass instrument flow.
