@@ -11,7 +11,7 @@ function retailTotal(row) {
   return (Number(row.retail) || 0) * (Number(row.quantity || 1));
 }
 
-export default function ServicesList({ services, service, setService, onAddService, onUpdateService }) {
+export default function ServicesList({ services, service, setService, onAddService, onUpdateService, onRemoveService }) {
   const moneyOptions = getShopMoneyOptions();
   function applyPreset(event) {
     const preset = servicePresets.find((item) => item.name === event.target.value);
@@ -56,6 +56,7 @@ export default function ServicesList({ services, service, setService, onAddServi
             <th className="internal-only">Cost</th>
             <th className="internal-only">Margin</th>
             <th>Retail Total</th>
+            <th className="no-print">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -74,6 +75,9 @@ export default function ServicesList({ services, service, setService, onAddServi
               <td>
                 <input type="number" min="0" step="0.01" value={row.retail} onChange={(event) => onUpdateService(row.id, 'retail', event.target.value)} />
                 <strong>{money(retailTotal(row), moneyOptions)}</strong>
+              </td>
+              <td className="no-print">
+                <button type="button" className="row-remove" onClick={() => onRemoveService(row.id)}>Remove</button>
               </td>
             </tr>
           ))}

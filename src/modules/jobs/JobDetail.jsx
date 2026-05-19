@@ -417,6 +417,17 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
     });
   }
 
+  function removePart(partId) {
+    const nextParts = parts.filter((row) => row.id !== partId);
+    patchJob({
+      parts: nextParts,
+      techDetails: {
+        ...draftJob.techDetails,
+        includedPartIds: nextParts.filter((row) => row.includedInService).map((row) => row.id)
+      }
+    });
+  }
+
   function addService(event) {
     event.preventDefault();
     if (!service.description.trim()) {
@@ -431,6 +442,12 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
   function updateService(serviceId, field, value) {
     patchJob({
       services: services.map((row) => (row.id === serviceId ? { ...row, [field]: value } : row))
+    });
+  }
+
+  function removeService(serviceId) {
+    patchJob({
+      services: services.filter((row) => row.id !== serviceId)
     });
   }
 
@@ -772,14 +789,14 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
         updateWorkLogEntry={updateWorkLogEntry}
         workLogText={workLogText}
       />
-      <ServicesList services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} />
+      <ServicesList services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
     </>
   );
 
   const billingSections = (
     <>
-      <PartsList parts={parts} part={part} setPart={setPart} onAddPart={addPart} onUpdatePart={updatePart} />
-      <ServicesList services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} />
+      <PartsList parts={parts} part={part} setPart={setPart} onAddPart={addPart} onUpdatePart={updatePart} onRemovePart={removePart} />
+      <ServicesList services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
       <TotalsSection
         addPayment={addPayment}
         draftJob={draftJob}

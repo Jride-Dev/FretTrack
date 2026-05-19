@@ -10,7 +10,7 @@ function retailTotal(row) {
   return (Number(row.retail) || 0) * (Number(row.quantity || 1));
 }
 
-export default function PartsList({ parts, part, setPart, onAddPart, onUpdatePart }) {
+export default function PartsList({ parts, part, setPart, onAddPart, onUpdatePart, onRemovePart }) {
   const moneyOptions = getShopMoneyOptions();
   return (
     <section>
@@ -31,6 +31,7 @@ export default function PartsList({ parts, part, setPart, onAddPart, onUpdatePar
             <th className="internal-only">Margin</th>
             <th>Included</th>
             <th>Retail Total</th>
+            <th className="no-print">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -59,6 +60,9 @@ export default function PartsList({ parts, part, setPart, onAddPart, onUpdatePar
               <td>
                 <input type="number" min="0" step="0.01" value={row.retail} onChange={(event) => onUpdatePart(row.id, 'retail', event.target.value)} />
                 <strong>{row.includedInService ? 'Included' : money(retailTotal(row), moneyOptions)}</strong>
+              </td>
+              <td className="no-print">
+                <button type="button" className="row-remove" onClick={() => onRemovePart(row.id)}>Remove</button>
               </td>
             </tr>
           ))}
