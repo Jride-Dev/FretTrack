@@ -1823,17 +1823,29 @@ th.internal-only {
   display: none !important;
 }
 
+.import-notices,
 .import-errors,
 .import-error {
-  background: var(--error-bg);
-  border: 1px solid var(--error-border);
-  color: var(--error-text);
   display: grid;
   gap: 4px;
   margin-bottom: 10px;
   padding: 10px;
 }
 
+.import-notices {
+  background: #eef7ef;
+  border: 1px solid #9ac79f;
+  color: #235126;
+}
+
+.import-errors,
+.import-error {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+}
+
+.import-notices p,
 .import-errors p,
 .import-error {
   font-size: 12px;

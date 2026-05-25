@@ -80,6 +80,9 @@ export default function ShopSettings({
           logoStoragePath: logo?.logoStoragePath || nextSettings.logoStoragePath || '',
           logoUrl: logo?.logoUrl || nextSettings.logoUrl || ''
         };
+        if (logo?.logoOptimizationNotice) {
+          onNotice?.({ type: 'success', message: logo.logoOptimizationNotice });
+        }
       }
 
       const savedSettings = await saveShopProfile(nextSettings);

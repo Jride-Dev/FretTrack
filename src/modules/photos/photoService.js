@@ -1,4 +1,4 @@
-import { prepareImageForStorage, readFileAsDataUrl } from '../../services/imageProcessing';
+import { optimizeImageForStorage, readFileAsDataUrl } from '../../services/imageProcessing';
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { ensureRemoteJob, getLocalJobs, saveLocalJobs, updateJob } from '../jobs/jobService';
 import { logJobEventSafe } from '../jobs/jobEventsService';
@@ -8,15 +8,23 @@ import { createJobImageObjectUrl } from './photoUrls';
 export async function uploadJobImages(job, files, options = {}) {
   const fileList = Array.from(files || []);
   const errors = [];
+  const optimizationNotices = [];
   let currentJob = normalizePhotoJob(job);
 
   for (let index = 0; index < fileList.length; index += 1) {
     try {
-      const savedJob = await uploadJobImage(currentJob, fileList[index], {
+      const savedImageResult = await uploadJobImage(currentJob, fileList[index], {
         ...options,
         index: index + 1
       });
 
+      const savedJob = savedImageResult?.job || savedImageResult;
+      if (savedImageResult?.optimizationNotice) {
+        optimizationNotices.push({
+          fileName: fileList[index]?.name || `Image ${index + 1}`,
+          message: savedImageResult.optimizationNotice
+        });
+      }
       if (savedJob) {
         currentJob = normalizePhotoJob(savedJob);
       }
@@ -29,7 +37,7 @@ export async function uploadJobImages(job, files, options = {}) {
     }
   }
 
-  return { job: currentJob, errors };
+  return { job: currentJob, errors, optimizationNotices };
 }
 
 export async function uploadJobImage(jobOrId, file, options = {}) {
@@ -41,9 +49,14 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
   let jobId = typeof jobOrId === 'string' ? jobOrId : jobOrId.id;
   let normalizedJob = job ? normalizePhotoJob(job) : null;
   const originalFileName = file.name || 'imported-image';
-  const uploadFile = await prepareImageForStorage(file, originalFileName);
   const uploadedAt = new Date().toISOString();
   const category = options.category || 'job';
+  const optimization = await optimizeImageForStorage(file, {
+    preset: category.startsWith('damage-map') ? 'damage' : 'job',
+    originalFileName
+  });
+  const uploadFile = optimization.file;
+  const optimizationMetadata = optimization.metadata;
 
   if (!hasSupabaseConfig || !supabase) {
     if (!job) {
@@ -58,11 +71,12 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
       originalFileName,
       uploadedAt,
       category,
-      createdAt: uploadedAt
+      createdAt: uploadedAt,
+      ...imageMetadataToObject(optimizationMetadata)
     };
     const savedJob = await updateJob({ ...normalizedJob, images: [...(normalizedJob.images || []), image] });
     logImageUploaded(savedJob || normalizedJob, image);
-    return savedJob;
+    return { job: savedJob, optimizationNotice: optimization.notice };
   }
 
   if (normalizedJob) {
@@ -70,7 +84,8 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
     jobId = normalizedJob.id;
   }
 
-  const filePath = `${jobId}/${makeJobImageFileName(normalizedJob, options.index || 1)}`;
+  const storedFileName = makeJobImageFileName(normalizedJob, options.index || 1);
+  const filePath = `${jobId}/${storedFileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from('job-images')
@@ -90,13 +105,17 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
     id: crypto.randomUUID(),
     jobId,
     url: objectUrl,
-    fileName: uploadFile.name,
-    name: uploadFile.name,
+    fileName: storedFileName,
+    name: storedFileName,
     storagePath: filePath,
     originalFileName,
     uploadedAt,
     category,
-    createdAt: uploadedAt
+    createdAt: uploadedAt,
+    ...imageMetadataToObject({
+      ...optimizationMetadata,
+      storedFileName
+    })
   };
 
   const { error: dbError } = await supabase.from('job_images').insert({
@@ -106,7 +125,14 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
     public_url: '',
     storage_path: image.storagePath,
     file_name: image.fileName,
+    stored_filename: image.storedFileName,
     original_filename: image.originalFileName,
+    original_size_bytes: image.originalSizeBytes,
+    optimized_size_bytes: image.optimizedSizeBytes,
+    mime_type: image.mimeType,
+    width: image.width,
+    height: image.height,
+    optimization_version: image.optimizationVersion,
     uploaded_at: image.uploadedAt,
     category: image.category,
     created_at: image.createdAt
@@ -120,11 +146,14 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
   if (job) {
     const savedJob = await updateJob({ ...normalizedJob, images: [...(normalizedJob.images || []), image] });
     logImageUploaded(savedJob || normalizedJob, image);
-    return savedJob;
+    return { job: savedJob, optimizationNotice: optimization.notice };
   }
 
   logImageUploaded({ id: jobId, shopId: getCurrentShopId() }, image);
-  return image;
+  return {
+    ...image,
+    optimizationNotice: optimization.notice
+  };
 }
 
 export async function deleteJobImage(job, image) {
@@ -186,10 +215,29 @@ function normalizeImage(image) {
     storagePath: image.storagePath || image.storage_path || '',
     fileName: image.fileName || image.file_name || image.name || '',
     originalFileName: image.originalFileName || image.original_filename || image.fileName || image.file_name || image.name || '',
+    storedFileName: image.storedFileName || image.stored_filename || image.fileName || image.file_name || image.name || '',
+    originalSizeBytes: Number(image.originalSizeBytes ?? image.original_size_bytes ?? 0),
+    optimizedSizeBytes: Number(image.optimizedSizeBytes ?? image.optimized_size_bytes ?? 0),
+    mimeType: image.mimeType || image.mime_type || '',
+    width: Number(image.width || 0),
+    height: Number(image.height || 0),
+    optimizationVersion: image.optimizationVersion || image.optimization_version || '',
     name: image.name || image.fileName || image.file_name || '',
     uploadedAt: image.uploadedAt || image.uploaded_at || image.createdAt || image.created_at || new Date().toISOString(),
     category: image.category || 'job',
     createdAt: image.createdAt || image.created_at || new Date().toISOString()
+  };
+}
+
+function imageMetadataToObject(metadata = {}) {
+  return {
+    storedFileName: metadata.storedFileName || '',
+    originalSizeBytes: Number(metadata.originalSizeBytes || 0),
+    optimizedSizeBytes: Number(metadata.optimizedSizeBytes || 0),
+    mimeType: metadata.mimeType || '',
+    width: Number(metadata.width || 0),
+    height: Number(metadata.height || 0),
+    optimizationVersion: metadata.optimizationVersion || ''
   };
 }
 
@@ -251,7 +299,10 @@ function logImageUploaded(job, image) {
       imageId: image.id,
       category: image.category,
       fileName: image.fileName,
-      storagePath: image.storagePath || ''
+      storagePath: image.storagePath || '',
+      originalSizeBytes: image.originalSizeBytes || 0,
+      optimizedSizeBytes: image.optimizedSizeBytes || 0,
+      optimizationVersion: image.optimizationVersion || ''
     }
   });
 }

@@ -1,4 +1,4 @@
-import { prepareImageForStorage, readFileAsDataUrl } from '../../services/imageProcessing';
+import { optimizeImageForStorage, readFileAsDataUrl } from '../../services/imageProcessing';
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { getDefaultDateFormatForLocale, normalizeDateFormat } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences, normalizeLengthUnit, normalizeMeasurementSystem } from '../../shared/utils/measurements';
@@ -63,12 +63,17 @@ export async function uploadShopLogo(file, shopId = getCurrentShopId()) {
     return null;
   }
 
-  const preparedFile = await prepareImageForStorage(file, file.name || 'shop-logo');
+  const optimizedLogo = await optimizeImageForStorage(file, {
+    preset: 'shopLogo',
+    originalFileName: file.name || 'shop-logo'
+  });
+  const preparedFile = optimizedLogo.file;
 
   if (!hasSupabaseConfig || !supabase) {
     return {
       logoStoragePath: '',
-      logoUrl: await readFileAsDataUrl(preparedFile)
+      logoUrl: await readFileAsDataUrl(preparedFile),
+      logoOptimizationNotice: optimizedLogo.notice
     };
   }
 
@@ -87,7 +92,8 @@ export async function uploadShopLogo(file, shopId = getCurrentShopId()) {
 
   return {
     logoStoragePath: filePath,
-    logoUrl: await createShopLogoObjectUrl(filePath)
+    logoUrl: await createShopLogoObjectUrl(filePath),
+    logoOptimizationNotice: optimizedLogo.notice
   };
 }
 

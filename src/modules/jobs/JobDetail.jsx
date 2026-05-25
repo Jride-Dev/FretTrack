@@ -73,6 +73,7 @@ export default function JobDetail({
   const [service, setService] = useState({ description: '', quantity: '1', cost: '', retail: '' });
   const [payment, setPayment] = useState({ amount: '', method: 'Cash', note: '', date: toIsoDateInputValue() });
   const [imageImportErrors, setImageImportErrors] = useState([]);
+  const [imageOptimizationNotices, setImageOptimizationNotices] = useState([]);
   const [isImportingImages, setIsImportingImages] = useState(false);
   const [subcontractorPickupJob, setSubcontractorPickupJob] = useState(null);
   const [isSendingSubcontractorEmail, setIsSendingSubcontractorEmail] = useState(false);
@@ -494,6 +495,7 @@ export default function JobDetail({
     }
 
     setImageImportErrors([]);
+    setImageOptimizationNotices([]);
     setIsImportingImages(true);
     const result = await onImageUpload(draftJob, files);
     if (result?.job) {
@@ -501,6 +503,7 @@ export default function JobDetail({
       setIsDirty(false);
     }
     setImageImportErrors(result?.errors || []);
+    setImageOptimizationNotices(result?.optimizationNotices || []);
     setIsImportingImages(false);
   }
 
@@ -840,6 +843,7 @@ export default function JobDetail({
       handleImageChange={handleImageChange}
       handleImageDelete={handleImageDelete}
       imageImportErrors={imageImportErrors}
+      imageOptimizationNotices={imageOptimizationNotices}
       imageImportInputRef={imageImportInputRef}
       images={images}
       isImportingImages={isImportingImages}
