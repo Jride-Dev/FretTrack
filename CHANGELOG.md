@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.6-beta.4.1 - Simon's Beta Release Hotfix
 
+- Fixed the printed Job Sheet tech summary so it shows New String Brand, New String Gauge, and Final Neck Inspection instead of printing the full setup measurement table after the balance section.
 - Fixed Inspection neck relief/action inputs by applying measurement value and unit updates atomically so controlled fields no longer discard keyboard entry.
 - Hardened the Inspection measurement fields further so typing stores raw text immediately and unit parsing only runs when the field loses focus.
 - Removed Palos Verdes Music House placeholder text from generic sub-contract business fields.

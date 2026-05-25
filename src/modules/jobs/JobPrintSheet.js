@@ -23,6 +23,15 @@ export default function JobPrintSheet({
     locale: taxSettings.locale || shopSettings.locale
   });
   const taxLabel = taxSettings.taxLabel || shopSettings.taxLabel || 'Sales Tax';
+  const techDetails = draftJob.techDetails || {};
+  const finalNeckInspection = techDetails.neckInspection?.final || {};
+  const finalLengthUnit = finalNeckInspection.lengthUnit || finalNeckInspection.reliefUnit || techDetails.lengthUnit || 'in';
+  const finalFlags = [
+    finalNeckInspection.twist ? 'Twist' : '',
+    finalNeckInspection.buzzPresent ? 'Buzz present' : '',
+    finalNeckInspection.deadSpots ? 'Dead spots' : '',
+    finalNeckInspection.highFrets ? 'High frets' : ''
+  ].filter(Boolean);
 
   return (
     <section className="print-sheet">
@@ -45,8 +54,8 @@ export default function JobPrintSheet({
         <span>Job Number</span><strong>{draftJob.jobNumber}</strong>
         <span>Date Received</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions)}</strong>
         <span>Status</span><strong>{draftJob.status}</strong>
-        <span>Job Source</span><strong>{draftJob.techDetails.intakeType || 'Walk-In'}</strong>
-        <span>Sub-Contract</span><strong>{draftJob.techDetails.subcontractorName || '-'}</strong>
+        <span>Job Source</span><strong>{techDetails.intakeType || 'Walk-In'}</strong>
+        <span>Sub-Contract</span><strong>{techDetails.subcontractorName || '-'}</strong>
         <span>Reason For Visit</span><strong>{draftJob.reasonForVisit}</strong>
       </div>
       <h3>Services</h3>
@@ -93,23 +102,52 @@ export default function JobPrintSheet({
         <span>Balance</span>
         <strong>{money(totals.balanceDue, moneyOptions)}</strong>
       </div>
-      {draftJob.techDetails?.neckInspection && (
+      <h3>Tech Summary</h3>
+      <div className="print-grid">
+        <span>New String Brand</span><strong>{techDetails.newStringBrand || '-'}</strong>
+        <span>New String Gauge</span><strong>{techDetails.newStringGauge || '-'}</strong>
+      </div>
+      {techDetails.neckInspection?.final && (
         <>
-          <h3>Setup Measurements</h3>
+          <h3>Final Neck Inspection</h3>
           <table>
             <tbody>
-              {['initial', 'final'].map((stageKey) => {
-                const stage = draftJob.techDetails.neckInspection?.[stageKey] || {};
-                const unit = stage.lengthUnit || stage.reliefUnit || draftJob.techDetails.lengthUnit || 'in';
-                return (
-                  <tr key={stageKey}>
-                    <td>{stageKey === 'initial' ? 'Initial' : 'Final'}</td>
-                    <td>Relief: {formatLength(stage.relief, stage.reliefUnit || unit)}</td>
-                    <td>Nut: {formatLength(stage.nutHighE, stage.nutHighEUnit || unit)} / {formatLength(stage.nutLowE, stage.nutLowEUnit || unit)}</td>
-                    <td>12th: {formatLength(stage.actionHighE12th, stage.actionHighE12thUnit || unit)} / {formatLength(stage.actionLowE12th, stage.actionLowE12thUnit || unit)}</td>
-                  </tr>
-                );
-              })}
+              <tr>
+                <td>Relief</td>
+                <td>{formatLength(finalNeckInspection.relief, finalNeckInspection.reliefUnit || finalLengthUnit) || '-'}</td>
+              </tr>
+              <tr>
+                <td>Action High E / Low E @ 3rd</td>
+                <td>{formatLength(finalNeckInspection.nutHighE, finalNeckInspection.nutHighEUnit || finalLengthUnit) || '-'} / {formatLength(finalNeckInspection.nutLowE, finalNeckInspection.nutLowEUnit || finalLengthUnit) || '-'}</td>
+              </tr>
+              <tr>
+                <td>Action High E / Low E @ 12th</td>
+                <td>{formatLength(finalNeckInspection.actionHighE12th, finalNeckInspection.actionHighE12thUnit || finalLengthUnit) || '-'} / {formatLength(finalNeckInspection.actionLowE12th, finalNeckInspection.actionLowE12thUnit || finalLengthUnit) || '-'}</td>
+              </tr>
+              <tr>
+                <td>Fret Condition</td>
+                <td>{finalNeckInspection.fretCondition || '-'}</td>
+              </tr>
+              <tr>
+                <td>Neck Condition</td>
+                <td>{finalNeckInspection.neckCondition || '-'}</td>
+              </tr>
+              <tr>
+                <td>Truss Rod</td>
+                <td>{finalNeckInspection.trussRodStatus || '-'}</td>
+              </tr>
+              <tr>
+                <td>Flags</td>
+                <td>{finalFlags.join(', ') || '-'}</td>
+              </tr>
+              <tr>
+                <td>Fret Notes</td>
+                <td>{finalNeckInspection.fretNotes || '-'}</td>
+              </tr>
+              <tr>
+                <td>Notes</td>
+                <td>{finalNeckInspection.notes || '-'}</td>
+              </tr>
             </tbody>
           </table>
         </>

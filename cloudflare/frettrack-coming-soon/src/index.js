@@ -129,6 +129,14 @@ function landingPage() {
         max-width: 720px;
       }
 
+      .origin-note {
+        color: #f4d6b4;
+        font-size: 16px;
+        font-weight: 800;
+        margin: 18px 0 0;
+        max-width: 720px;
+      }
+
       .actions {
         display: flex;
         flex-wrap: wrap;
@@ -439,6 +447,7 @@ function landingPage() {
         <p class="eyebrow">Private beta now in progress</p>
         <h1>Repair shop workflow for instruments that actually leave the bench.</h1>
         <p class="intro">FretTrack helps guitar repair shops manage check-ins, customers, repair jobs, photos, parts, services, payments, and printable work sheets in one focused workspace.</p>
+        <p class="origin-note">Made by a guitar player and technician for guitar technicians.</p>
         <div class="actions">
           <a class="button primary" href="${APP_URL}">Go to Beta Login</a>
           <a class="button secondary" href="mailto:${SUPPORT_EMAIL}">Contact FretTrack</a>
