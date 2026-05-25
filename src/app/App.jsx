@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import AppNotice from '../shared/components/AppNotice.jsx';
 import AuthGate from '../modules/auth/AuthGate.jsx';
 import AccountingReports from '../modules/accounting/AccountingReports.jsx';
+import BillingPage from '../modules/billing/BillingPage.jsx';
 import { CustomerManager, getCustomers } from '../modules/customers';
 import JobDetail from '../modules/jobs/JobDetail.jsx';
 import JobForm from '../modules/jobs/JobForm.jsx';
@@ -19,6 +20,14 @@ import { bootstrapCurrentUserAsOwner, getCurrentUserShopMemberships } from '../m
 import { getCurrentShopProfile } from '../modules/shops/shopProfileService';
 import { money } from '../shared/utils/money';
 import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes';
+import {
+  getBillingStatusLabel,
+  getDefaultEntitlementSnapshot,
+  getEffectiveStatus,
+  getShopEntitlementSnapshot,
+  isGraceStatus,
+  isReadOnlyStatus
+} from '../modules/billing/entitlementService';
 
 const APP_VERSION = '0.2.6-beta.4.1';
 const APP_NAME = 'FretTrack Systems';
@@ -38,6 +47,7 @@ export default function App() {
   const [memberships, setMemberships] = useState([]);
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
   const [shopProfile, setShopProfile] = useState(null);
+  const [entitlementSnapshot, setEntitlementSnapshot] = useState(() => getDefaultEntitlementSnapshot());
   const [isShopProfileLoading, setIsShopProfileLoading] = useState(false);
   const [newShopName, setNewShopName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -112,6 +122,7 @@ export default function App() {
           setMembership(null);
           setMemberships([]);
           setShopProfile(null);
+          setEntitlementSnapshot(getDefaultEntitlementSnapshot());
           setJobs([]);
           setCustomers([]);
           setSelectedJobId(null);
@@ -208,6 +219,8 @@ export default function App() {
 
       setSelectedShop(currentMembership);
       setShopName(currentMembership.shopName || getCurrentShopName());
+      const currentEntitlements = await getShopEntitlementSnapshot(currentMembership.shopId);
+      setEntitlementSnapshot(currentEntitlements);
       setIsShopProfileLoading(true);
       const currentShopProfile = await getCurrentShopProfile(currentMembership.shopId);
       setShopProfile(currentShopProfile);
@@ -257,6 +270,7 @@ export default function App() {
       setSelectedShop(ownerShop);
       setMembership(ownerShop);
       setMemberships([ownerShop]);
+      setEntitlementSnapshot(getDefaultEntitlementSnapshot(ownerShop.shopId));
       setShopName(shopNameValue);
       setNewShopName('');
       await checkSupabaseConnection();
@@ -279,6 +293,7 @@ export default function App() {
     setMembership(null);
     setMemberships([]);
     setShopProfile(null);
+    setEntitlementSnapshot(getDefaultEntitlementSnapshot());
     setMode('new');
     clearSelectedShop();
     try {
@@ -366,6 +381,11 @@ export default function App() {
       setNotice({ type: 'error', message: 'Your shop role is read-only.' });
       return { job, errors: [{ fileName: 'Upload', message: 'Your shop role is read-only.' }] };
     }
+    if (!canUploadPhotos) {
+      const message = entitlementMessage || 'Photo uploads are unavailable for this shop plan or billing state.';
+      setNotice({ type: 'error', message });
+      return { job, errors: [{ fileName: 'Upload', message }] };
+    }
 
     const { skipRefresh = false, ...uploadOptions } = options;
     const result = await uploadJobImages(job, files, { category: 'job', ...uploadOptions });
@@ -404,6 +424,7 @@ export default function App() {
     setShopProfile(savedProfile);
     setSelectedShop(savedProfile);
     setShopName(savedProfile.shopName);
+    setEntitlementSnapshot(await getShopEntitlementSnapshot(savedProfile.shopId));
     const loadedJobs = await refreshJobs();
     await refreshCustomers(loadedJobs);
     await checkSupabaseConnection();
@@ -415,6 +436,7 @@ export default function App() {
     setCustomers([]);
     setSelectedJobId(null);
     setShopProfile(null);
+    setEntitlementSnapshot(getDefaultEntitlementSnapshot(selectedMembership.shopId));
     setMembership(selectedMembership);
     setSelectedShop(selectedMembership);
     setShopName(selectedMembership.shopName || selectedMembership.shopId);
@@ -427,12 +449,19 @@ export default function App() {
     setSelectedJobId(null);
     setShopProfile(null);
     setMembership(null);
+    setEntitlementSnapshot(getDefaultEntitlementSnapshot());
     clearSelectedShop();
   }
 
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
-  const canWrite = !hasSupabaseConfig || ['owner', 'admin', 'tech'].includes(membership?.role);
+  const billingAccess = entitlementSnapshot || getDefaultEntitlementSnapshot(membership?.shopId);
+  const isBillingReadOnly = hasSupabaseConfig && isReadOnlyStatus(billingAccess);
+  const canWrite = (!hasSupabaseConfig || ['owner', 'admin', 'tech'].includes(membership?.role)) && !isBillingReadOnly;
   const canManageShop = !hasSupabaseConfig || ['owner', 'admin'].includes(membership?.role);
+  const canUploadPhotos = canWrite && billingAccess.access?.canUploadPhotos !== false;
+  const canSendEmail = canWrite && billingAccess.access?.canSendEmail !== false;
+  const canSendSms = canWrite && billingAccess.access?.canSendSms === true;
+  const entitlementMessage = getEntitlementMessage(billingAccess);
   const tillSummary = calculateTillSummary(jobs);
   const moneyOptions = getShopMoneyOptions(shopProfile || undefined);
   const statusText = {
@@ -595,6 +624,7 @@ export default function App() {
           <button type="button" onClick={() => setMode('customers')}>Customers</button>
           <button type="button" onClick={() => setMode('accounting')}>Accounting / Reports</button>
           <button type="button" onClick={() => setMode('settings')}>Shop Settings</button>
+          {canManageShop && <button type="button" onClick={() => setMode('billing')}>Billing</button>}
           {session && (
             <FeedbackReporter selectedJob={selectedJob} onNotice={setNotice} />
           )}
@@ -607,6 +637,12 @@ export default function App() {
         </div>
       </header>
       {session && <SystemAnnouncements />}
+      {hasSupabaseConfig && membership && (
+        <BillingStateBanner
+          canManageShop={canManageShop}
+          entitlementSnapshot={billingAccess}
+        />
+      )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       <div className="layout app-layout">
         <aside className="no-print">
@@ -670,6 +706,14 @@ export default function App() {
             <AccountingReports jobs={jobs} shopId={membership?.shopId || getSelectedShop().shopId} shopProfile={shopProfile} />
           )}
 
+          {mode === 'billing' && (
+            <BillingPage
+              canManageShop={canManageShop}
+              entitlementSnapshot={billingAccess}
+              shopProfile={shopProfile}
+            />
+          )}
+
           {mode === 'detail' && selectedJob && (
             <JobDetail
               job={selectedJob}
@@ -680,6 +724,9 @@ export default function App() {
               onRefresh={refreshJobs}
               onClose={showNewJob}
               canWrite={canWrite}
+              canSendEmail={canSendEmail}
+              canSendSms={canSendSms}
+              entitlementMessage={entitlementMessage}
             />
           )}
 
@@ -766,6 +813,45 @@ function slugifyShopId(shopName) {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 64);
+}
+
+function BillingStateBanner({ canManageShop, entitlementSnapshot }) {
+  if (!entitlementSnapshot) {
+    return null;
+  }
+
+  const status = getEffectiveStatus(entitlementSnapshot);
+  if (!isGraceStatus(entitlementSnapshot) && !isReadOnlyStatus(entitlementSnapshot)) {
+    return null;
+  }
+
+  const isReadOnly = isReadOnlyStatus(entitlementSnapshot);
+  const actionText = canManageShop
+    ? 'Open Billing to review plan details or contact support.'
+    : 'Ask a shop owner or admin to review billing.';
+  const message = isReadOnly
+    ? `This shop is ${getBillingStatusLabel(status).toLowerCase()}. Existing jobs and customers remain viewable, but new work, uploads, and customer messages are paused. ${actionText}`
+    : `This shop is in a billing grace period. Normal work is still available for now. ${actionText}`;
+
+  return (
+    <section className={`billing-state-banner ${isReadOnly ? 'read-only' : 'grace'}`}>
+      <strong>{isReadOnly ? 'Read-only access' : 'Grace period'}</strong>
+      <span>{message}</span>
+    </section>
+  );
+}
+
+function getEntitlementMessage(entitlementSnapshot) {
+  if (isReadOnlyStatus(entitlementSnapshot)) {
+    return 'This shop is read-only. Viewing, printing, and exports remain available, but new writes and customer messages are paused.';
+  }
+
+  const status = getEffectiveStatus(entitlementSnapshot);
+  if (status === 'grace') {
+    return '';
+  }
+
+  return '';
 }
 
 function getErrorMessage(error, fallback) {

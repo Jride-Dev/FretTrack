@@ -4,7 +4,16 @@ import { getShopDateOptions } from '../shops/shopConfig';
 import { defaultTemplateKey, instrumentName, messageTemplates, renderTemplate } from './messageTemplates';
 import { sendCustomerChannelMessage, smsDisabledMessage, smsEnabled } from './messageService';
 
-export default function MessagesPanel({ job, onPreferenceChange, onSendMessage, onGetSmsMode, onTemplateChange }) {
+export default function MessagesPanel({
+  canSendEmailByPlan = true,
+  canSendSmsByPlan = true,
+  entitlementMessage = '',
+  job,
+  onPreferenceChange,
+  onSendMessage,
+  onGetSmsMode,
+  onTemplateChange
+}) {
   const [templateKey, setTemplateKey] = useState(job.techDetails?.lastMessageTemplate || defaultTemplateKey);
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -101,8 +110,8 @@ export default function MessagesPanel({ job, onPreferenceChange, onSendMessage, 
   }
 
   const messages = job.messages || [];
-  const canSendEmail = Boolean(job.email && body.trim());
-  const canSendSms = smsEnabled && Boolean(job.phone && body.trim() && job.smsOptIn);
+  const canSendEmail = canSendEmailByPlan && Boolean(job.email && body.trim());
+  const canSendSms = canSendSmsByPlan && smsEnabled && Boolean(job.phone && body.trim() && job.smsOptIn);
 
   return (
     <section className="work-order-messages">
@@ -159,6 +168,7 @@ export default function MessagesPanel({ job, onPreferenceChange, onSendMessage, 
           <textarea value={body} onChange={(event) => setBody(event.target.value)} rows="6" />
         </label>
         {!smsEnabled && <p className="message-info wide">{smsDisabledMessage}</p>}
+        {entitlementMessage && <p className="message-info wide">{entitlementMessage}</p>}
         {smsEnabled && !job.smsOptIn && <p className="message-error wide">SMS opt-in is required before texting this customer.</p>}
         {sendState.error && <p className="message-error wide">{sendState.error}</p>}
         {sendState.success && <p className="message-success wide">{sendState.success}</p>}

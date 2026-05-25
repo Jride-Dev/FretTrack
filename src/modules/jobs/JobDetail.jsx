@@ -53,7 +53,19 @@ function formatMeasurementStageForExport(stage = {}, fallbackUnit = 'in') {
   };
 }
 
-export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onImageDelete, onRefresh, onClose, canWrite = true }) {
+export default function JobDetail({
+  job,
+  jobs = [],
+  onUpdate,
+  onImageUpload,
+  onImageDelete,
+  onRefresh,
+  onClose,
+  canWrite = true,
+  canSendEmail = true,
+  canSendSms = true,
+  entitlementMessage = ''
+}) {
   const [draftJob, setDraftJob] = useState(job);
   const [isDirty, setIsDirty] = useState(false);
   const [workLogText, setWorkLogText] = useState('');
@@ -585,6 +597,10 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
     if (!subcontractorPickupJob) {
       return;
     }
+    if (!canSendEmail) {
+      window.alert(entitlementMessage || 'Email sending is unavailable for this shop plan or billing state.');
+      return;
+    }
 
     setIsSendingSubcontractorEmail(true);
     const result = await sendCustomerMessage(subcontractorPickupJob, {
@@ -691,6 +707,12 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
   async function handleSendCustomerMessage(message) {
     if (!canWrite) {
       return { ok: false, error: 'Your shop role is read-only.' };
+    }
+    if ((message.channel === 'email' || message.channel === 'both') && !canSendEmail) {
+      return { ok: false, error: entitlementMessage || 'Email sending is unavailable for this shop plan or billing state.' };
+    }
+    if ((message.channel === 'sms' || message.channel === 'both') && !canSendSms) {
+      return { ok: false, error: entitlementMessage || 'SMS sending is unavailable for this shop plan or billing state.' };
     }
 
     const result = await sendCustomerMessage(draftJob, message);
@@ -828,6 +850,9 @@ export default function JobDetail({ job, jobs = [], onUpdate, onImageUpload, onI
 
   const messagesPanel = (
     <MessagesPanel
+      canSendEmailByPlan={canSendEmail}
+      canSendSmsByPlan={canSendSms}
+      entitlementMessage={entitlementMessage}
       job={draftJob}
       onPreferenceChange={updateContactPreference}
       onTemplateChange={updateMessageTemplate}
