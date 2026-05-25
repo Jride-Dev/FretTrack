@@ -249,6 +249,43 @@ left join public.shop_subscriptions existing
   on existing.shop_id = shop_profiles.shop_id
 where existing.shop_id is null;
 
+create or replace function public.create_trial_subscription_for_shop_profile()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.shop_subscriptions (
+    shop_id,
+    plan_id,
+    status,
+    trial_ends_at,
+    grace_ends_at,
+    billing_email
+  )
+  values (
+    new.shop_id,
+    'trial',
+    'trialing',
+    now() + interval '30 days',
+    now() + interval '44 days',
+    new.email
+  )
+  on conflict (shop_id) do nothing;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists shop_profiles_create_trial_subscription on public.shop_profiles;
+create trigger shop_profiles_create_trial_subscription
+  after insert on public.shop_profiles
+  for each row
+  execute function public.create_trial_subscription_for_shop_profile();
+
+revoke all on function public.create_trial_subscription_for_shop_profile() from public, anon, authenticated;
+
 create or replace function public.get_shop_entitlement_snapshot(target_shop_id text)
 returns jsonb
 language plpgsql
