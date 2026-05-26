@@ -114,6 +114,74 @@ export async function bootstrapCurrentUserAsOwner(shopId = getCurrentShopId()) {
   return fromDbMembership(data);
 }
 
+export async function getShopMembers(shopId = getCurrentShopId()) {
+  if (!hasSupabaseConfig || !supabase || !shopId) {
+    return [];
+  }
+
+  const { data, error } = await supabase.rpc('get_shop_members', {
+    target_shop_id: shopId
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data || []).map(fromDbMemberDetail);
+}
+
+export async function addShopMemberByEmail({ shopId = getCurrentShopId(), email, role = 'tech', displayName = '' }) {
+  if (!hasSupabaseConfig || !supabase || !shopId) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc('upsert_shop_member_by_email', {
+    target_shop_id: shopId,
+    target_email: email,
+    target_role: role,
+    target_display_name: displayName
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function updateShopMemberRole(memberId, role) {
+  if (!hasSupabaseConfig || !supabase || !memberId) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc('update_shop_member_role', {
+    target_member_id: memberId,
+    target_role: role
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function removeShopMember(memberId) {
+  if (!hasSupabaseConfig || !supabase || !memberId) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc('remove_shop_member', {
+    target_member_id: memberId
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 function fromDbMembership(membership) {
   return {
     id: membership.id,
@@ -123,6 +191,21 @@ function fromDbMembership(membership) {
     displayName: membership.display_name || '',
     createdAt: membership.created_at,
     updatedAt: membership.updated_at
+  };
+}
+
+function fromDbMemberDetail(member) {
+  return {
+    id: member.id,
+    shopId: member.shop_id || member.shopId,
+    userId: member.user_id || member.userId,
+    email: member.email || '',
+    role: member.role || 'viewer',
+    displayName: member.display_name || member.displayName || '',
+    status: member.status || '',
+    lastSignInAt: member.last_sign_in_at || member.lastSignInAt || '',
+    createdAt: member.created_at || member.createdAt || '',
+    updatedAt: member.updated_at || member.updatedAt || ''
   };
 }
 

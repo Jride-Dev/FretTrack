@@ -16,6 +16,7 @@ This file tracks where FretTrack is headed after the current `0.2.6-beta.6` priv
 
 - Continue real shop testing against the `0.2.6-beta.6` baseline.
 - Watch photo upload optimization, Job Sheet printing, payment autosave, and customer messaging first during beta sessions.
+- For multi-user shops, test adding an existing signed-up user by email, changing their role, and removing them.
 - Keep `npm run check:migrations` quiet before every Supabase push.
 - Keep the Beta Operator Dashboard as the main support surface for beta shops.
 - Keep email-only trial messaging active while SMS remains disabled.
@@ -24,14 +25,12 @@ This file tracks where FretTrack is headed after the current `0.2.6-beta.6` priv
 
 ## Member Management
 
-- Add owner/admin member management inside Shop Settings or a dedicated Members page.
-- List current shop members with email, role, created date, and latest activity when available.
-- Add invite flow for new members without exposing service-role keys or broad admin APIs to the frontend.
-- Allow owner/admin users to change roles for admin, tech, and viewer users.
-- Allow owner/admin users to remove or deactivate members while preserving historical job/event records.
-- Prevent owners from accidentally removing the last owner from a shop.
+- Keep the new owner/admin member-management panel in Shop Settings focused on current beta needs.
+- Add full email invitation later through a server-side Auth Admin flow, not frontend-only logic.
+- Add member deactivation/suspension if removal proves too destructive for support workflows.
+- Add member activity review once `job_events.created_by` is wired consistently.
 - Keep viewer read-only, tech operational, and owner/admin administrative permissions aligned with existing RLS and helper functions.
-- Connect `job_events.created_by` to authenticated users where practical.
+- Confirm role changes, removals, and last-owner protection during beta smoke tests.
 
 ## Customer Management And Import
 

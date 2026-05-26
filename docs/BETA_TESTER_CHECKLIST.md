@@ -15,7 +15,9 @@ Thank you for testing FretTrack. Please use it like a normal repair intake tool,
 9. Can you add services or labor?
 10. Can you print or preview the repair/job sheet?
 11. Can you find the customer/job again with customer lookup?
-12. Can you sign out and sign back in?
+12. If you are an owner/admin, can you open Shop Settings and review shop members?
+13. If testing a multi-user shop, can you add an existing signed-up user by email and set their role?
+14. Can you sign out and sign back in?
 
 ## Feedback Questions
 

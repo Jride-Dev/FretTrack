@@ -6,12 +6,12 @@ This file tracks active bugs, setup traps, beta limitations, and historical brea
 
 ## Active Beta Limitations
 
-### Member management is incomplete
+### Full email invitation flow is not built yet
 
-- Status: Next planned build.
-- Current behavior: Supabase-configured builds require sign-in and shop membership. The first signed-in user can bootstrap the first shop owner when a shop has no members. Operator tools can inspect beta shops, but normal shop owners do not yet have a full member-management UI.
-- Limitation: There is not yet a shop-facing screen for invitations, role changes, member removal/deactivation, or member activity review.
-- Planned fix: Add owner/admin member administration with invite flow, role editing, removal/deactivation, and last-owner protection.
+- Status: Future member-management expansion.
+- Current behavior: Owners/admins can manage shop members from Shop Settings when the target user already has a FretTrack Auth account. They can add/update by email, change roles, remove members, and the database protects the last owner.
+- Limitation: FretTrack does not yet send Auth invitation emails or create Auth users from the member-management panel.
+- Planned fix: Add a server-side Auth Admin invite flow later through an Edge Function or equivalent trusted backend path.
 
 ### Customer import workflow is not built yet
 

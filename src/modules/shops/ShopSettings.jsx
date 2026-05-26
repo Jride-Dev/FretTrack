@@ -5,9 +5,11 @@ import { getDefaultMeasurementPreferences } from '../../shared/utils/measurement
 import { SUPPORTED_CURRENCIES, getDefaultLocaleForCurrency, getSupportedCurrency } from '../../shared/utils/money';
 import { getShopSettings, saveShopSettings } from './shopConfig';
 import { saveShopProfile, uploadShopLogo } from './shopProfileService';
+import ShopMembersPanel from './ShopMembersPanel.jsx';
 
 export default function ShopSettings({
   canManageShop = true,
+  currentUserId = '',
   initialSettings = null,
   requireCompletion = false,
   onSave,
@@ -210,6 +212,14 @@ export default function ShopSettings({
           <button type="submit" disabled={!canManageShop || isSaving}>{isSaving ? 'Saving...' : requireCompletion ? 'Finish Shop Setup' : 'Save Shop Settings'}</button>
         </form>
       </section>
+      {!requireCompletion && (
+        <ShopMembersPanel
+          canManageShop={canManageShop}
+          shopId={settings.shopId}
+          currentUserId={currentUserId}
+          onNotice={onNotice}
+        />
+      )}
       {!requireCompletion && <UserSettings onNotice={onNotice} />}
     </section>
   );

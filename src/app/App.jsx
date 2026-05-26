@@ -656,6 +656,7 @@ export default function App() {
           ) : (
             <ShopSettings
               canManageShop={canManageShop}
+              currentUserId={session?.user?.id || ''}
               initialSettings={{ ...getCurrentShopProfileFallback(), shopId: membership.shopId }}
               requireCompletion
               onSave={handleShopProfileSaved}
@@ -769,6 +770,7 @@ export default function App() {
           {mode === 'settings' && (
             <ShopSettings
               canManageShop={canManageShop}
+              currentUserId={session?.user?.id || ''}
               initialSettings={shopProfile}
               onSave={(settings) => {
                 setShopProfile(settings);
