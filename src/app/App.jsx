@@ -7,6 +7,7 @@ import { CustomerManager, getCustomers } from '../modules/customers';
 import JobDetail from '../modules/jobs/JobDetail.jsx';
 import JobForm from '../modules/jobs/JobForm.jsx';
 import JobList from '../modules/jobs/JobList.jsx';
+import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import FeedbackReporter from '../modules/system/FeedbackReporter.jsx';
 import SystemAnnouncements from '../modules/system/SystemAnnouncements.jsx';
@@ -28,6 +29,7 @@ import {
   isGraceStatus,
   isReadOnlyStatus
 } from '../modules/billing/entitlementService';
+import { isCurrentOperator } from '../modules/operator/operatorService';
 
 const APP_VERSION = '0.2.6-beta.4.1';
 const APP_NAME = 'FretTrack Systems';
@@ -49,6 +51,8 @@ export default function App() {
   const [shopProfile, setShopProfile] = useState(null);
   const [entitlementSnapshot, setEntitlementSnapshot] = useState(() => getDefaultEntitlementSnapshot());
   const [isShopProfileLoading, setIsShopProfileLoading] = useState(false);
+  const [isOperator, setIsOperator] = useState(false);
+  const [isOperatorLoading, setIsOperatorLoading] = useState(false);
   const [newShopName, setNewShopName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState(null);
@@ -122,6 +126,7 @@ export default function App() {
           setMembership(null);
           setMemberships([]);
           setShopProfile(null);
+          setIsOperator(false);
           setEntitlementSnapshot(getDefaultEntitlementSnapshot());
           setJobs([]);
           setCustomers([]);
@@ -145,11 +150,25 @@ export default function App() {
 
   useEffect(() => {
     if (!hasSupabaseConfig || !session) {
+      setIsOperator(false);
       return;
     }
 
+    loadOperatorAccess();
     loadShopAccess();
   }, [session?.user?.id]);
+
+  async function loadOperatorAccess() {
+    setIsOperatorLoading(true);
+    try {
+      setIsOperator(await isCurrentOperator());
+    } catch (error) {
+      console.error('Operator access check failed.', error);
+      setIsOperator(false);
+    } finally {
+      setIsOperatorLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (!membership?.shopId || !jobs.length || selectedJobId) {
@@ -293,6 +312,7 @@ export default function App() {
     setMembership(null);
     setMemberships([]);
     setShopProfile(null);
+    setIsOperator(false);
     setEntitlementSnapshot(getDefaultEntitlementSnapshot());
     setMode('new');
     clearSelectedShop();
@@ -531,6 +551,37 @@ export default function App() {
   }
 
   if (hasSupabaseConfig && session && !membership) {
+    if (isOperatorLoading) {
+      return (
+        <main className="app auth-shell">
+          <section className="panel auth-panel">Checking operator access...</section>
+        </main>
+      );
+    }
+
+    if (isOperator) {
+      return (
+        <main className="app app-shell operator-only-shell">
+          <header>
+            <div className="brand-header">
+              <img src="/frettrack-emblem.png" alt="" aria-hidden="true" />
+              <div className="brand-copy">
+                <h1>{APP_NAME}</h1>
+                <small>{APP_TAGLINE}</small>
+                <strong>Operator</strong>
+                <span className="app-version">Version {APP_VERSION}</span>
+              </div>
+            </div>
+            <div className="mode-actions no-print">
+              <button type="button" onClick={handleSignOut}>Sign Out</button>
+            </div>
+          </header>
+          <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+          <BetaOperatorDashboard onNotice={setNotice} />
+        </main>
+      );
+    }
+
     return (
       <main className="app auth-shell">
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
@@ -625,6 +676,7 @@ export default function App() {
           <button type="button" onClick={() => setMode('accounting')}>Accounting / Reports</button>
           <button type="button" onClick={() => setMode('settings')}>Shop Settings</button>
           {canManageShop && <button type="button" onClick={() => setMode('billing')}>Billing</button>}
+          {isOperator && <button type="button" onClick={() => setMode('operator')}>Operator</button>}
           {session && (
             <FeedbackReporter selectedJob={selectedJob} onNotice={setNotice} />
           )}
@@ -712,6 +764,10 @@ export default function App() {
               entitlementSnapshot={billingAccess}
               shopProfile={shopProfile}
             />
+          )}
+
+          {mode === 'operator' && (
+            <BetaOperatorDashboard onNotice={setNotice} />
           )}
 
           {mode === 'detail' && selectedJob && (
