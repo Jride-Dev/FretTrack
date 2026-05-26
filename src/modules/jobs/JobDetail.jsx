@@ -79,6 +79,7 @@ export default function JobDetail({
   const [isSendingSubcontractorEmail, setIsSendingSubcontractorEmail] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState(job.events || []);
   const imageImportInputRef = useRef(null);
+  const paymentAutosaveTimeoutRef = useRef(null);
 
   useEffect(() => {
     setDraftJob(job);
@@ -93,6 +94,7 @@ export default function JobDetail({
   useEffect(() => {
     return () => {
       document.body.classList.remove('customer-report-printing');
+      window.clearTimeout(paymentAutosaveTimeoutRef.current);
     };
   }, []);
 
@@ -280,13 +282,29 @@ export default function JobDetail({
     setIsDirty(true);
   }
 
+  async function savePaymentChange(nextJob, { immediate = false } = {}) {
+    window.clearTimeout(paymentAutosaveTimeoutRef.current);
+    setDraftJob(nextJob);
+    setIsDirty(true);
+
+    if (immediate) {
+      await saveDraftNow(nextJob).catch(() => {});
+      return;
+    }
+
+    paymentAutosaveTimeoutRef.current = window.setTimeout(() => {
+      saveDraftNow(nextJob).catch(() => {});
+    }, 700);
+  }
+
   function addPayment(event) {
     event.preventDefault();
     if (!Number(payment.amount)) {
       return;
     }
 
-    patchJob({
+    const nextJob = {
+      ...draftJob,
       techDetails: {
         ...draftJob.techDetails,
         payments: [
@@ -297,28 +315,36 @@ export default function JobDetail({
           }
         ]
       }
-    });
+    };
+
+    savePaymentChange(nextJob, { immediate: true });
     setPayment({ amount: '', method: 'Cash', note: '', date: toIsoDateInputValue() });
   }
 
   function updatePayment(paymentId, field, value) {
-    patchJob({
+    const nextJob = {
+      ...draftJob,
       techDetails: {
         ...draftJob.techDetails,
         payments: (draftJob.techDetails.payments || []).map((row) => (
           row.id === paymentId ? { ...row, [field]: value } : row
         ))
       }
-    });
+    };
+
+    savePaymentChange(nextJob);
   }
 
   function removePayment(paymentId) {
-    patchJob({
+    const nextJob = {
+      ...draftJob,
       techDetails: {
         ...draftJob.techDetails,
         payments: (draftJob.techDetails.payments || []).filter((row) => row.id !== paymentId)
       }
-    });
+    };
+
+    savePaymentChange(nextJob, { immediate: true });
   }
 
   function exportJobJson() {
