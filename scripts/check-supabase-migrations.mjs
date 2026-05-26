@@ -4,10 +4,12 @@ const strict = process.argv.includes('--strict');
 
 function runSupabaseMigrationList() {
   try {
-    const npxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-    return execFileSync(npxBin, ['supabase', 'migration', 'list'], {
+    const command = process.platform === 'win32' ? 'cmd.exe' : 'npx';
+    const args = process.platform === 'win32'
+      ? ['/d', '/s', '/c', 'npx supabase migration list']
+      : ['supabase', 'migration', 'list'];
+    return execFileSync(command, args, {
       encoding: 'utf8',
-      shell: process.platform === 'win32',
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 30000
     });
