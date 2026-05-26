@@ -1,62 +1,49 @@
 # Known Issues
 
-Current version: `0.2.6-beta.4.1`
+Current version: `0.2.6-beta.6`
 
-This file tracks known bugs, setup traps, trial limitations, and historical break/fix notes that are useful when debugging regressions.
+This file tracks active bugs, setup traps, beta limitations, and historical break/fix notes that are useful when debugging regressions.
 
-## Active Trial Limitations
+## Active Beta Limitations
+
+### Member management is incomplete
+
+- Status: Next planned build.
+- Current behavior: Supabase-configured builds require sign-in and shop membership. The first signed-in user can bootstrap the first shop owner when a shop has no members. Operator tools can inspect beta shops, but normal shop owners do not yet have a full member-management UI.
+- Limitation: There is not yet a shop-facing screen for invitations, role changes, member removal/deactivation, or member activity review.
+- Planned fix: Add owner/admin member administration with invite flow, role editing, removal/deactivation, and last-owner protection.
 
 ### Customer import workflow is not built yet
 
 - Status: Future release change.
-- Current behavior: Customers can now be created without a work order and records include import-ready fields.
+- Current behavior: Customers can be created without a work order and records include import-ready fields.
 - Current prep: `customerImportMapper` can map future spreadsheet rows into customer drafts, normalization and validation are split out, and duplicate detection is separated from persistence.
 - Limitation: Bulk Excel/CSV import, import preview, duplicate merge, bulk insert/update, and rollback are not implemented yet.
 - Planned fix: Add a customer import screen that stages spreadsheet rows, flags likely duplicates, then creates/updates customer records in a reviewed batch.
 
-### Supabase db push is blocked by pooler auth lockout
-
-- Status: External tooling/setup blocker.
-- Current behavior: `npm run check:migrations` reports no remote-only drift, but Supabase `db push`/dry-run was blocked by the pooler circuit breaker.
-- Error: `FATAL: Circuit breaker open: Too many authentication errors`
-- Pending local migrations: `20260512083351`, `20260514032803`, and `20260514035528`.
-- Next step: Refresh/verify database credentials or wait for the Supabase pooler lockout to clear, then rerun `npm run check:migrations` and `npx supabase db push --dry-run`.
-
-### Migration drift check emits a Node deprecation warning
-
-- Status: Tooling cleanup.
-- Current behavior: `npm run check:migrations` passes, but Node emits `[DEP0190]` because the script invokes the Supabase CLI with `shell: true`.
-- Risk: No current functional failure, but this should be cleaned up before relying on the script in CI.
-- Planned fix: Update `scripts/check-supabase-migrations.mjs` to call the CLI without `shell: true` or escape arguments explicitly.
-
-### Local safe database may have stale schema despite recorded migrations
-
-- Status: Local setup trap found during five-shop seed testing.
-- Current behavior: The local safe database had migration history entries for older work-log changes, but the physical `work_logs.text` column was missing.
-- Error found: `column "text" of relation "work_logs" does not exist`
-- Mitigation: `npm run seed:local-test-shops` now runs `alter table work_logs add column if not exists text text not null default ''` before seeding local test data.
-- Planned fix: Prefer rebuilding or reapplying local migrations from a clean local database when schema history and actual columns disagree.
-
 ### Accounting totals are not permission-gated yet
 
 - Status: Future release change.
-- Current behavior: Role-level write protection is in place, but discount and monetary controls are still editable directly by users with write access to the work order UI.
+- Current behavior: Role-level write protection is in place and payment changes autosave, but discount and monetary controls are still editable directly by users with write access to the work order UI.
 - Problem: Once a discount is applied, it should become part of the saved work order totals and should not remain casually editable. Reopening an existing work order should expose an intentional `Edit Totals` action only when monetary edits are needed.
 - Tax concern: Discounts, taxes, labor totals, parts totals, and balance-affecting edits need stronger audit behavior before broader shop/member use.
 - Planned fix: Modularize accounting, lock applied totals, and allow regular employees to add payments without giving them access to edit already-applied monetary portions.
 
-### Shop settings are local trial settings
+### Stripe billing is intentionally not built yet
 
-- Status: Known trial limitation.
-- Current behavior: Shop settings are stored in browser local storage with environment fallbacks. The UI only allows owner/admin roles to edit settings in authenticated builds, but the settings are not database-backed.
-- Future fix: Move shop settings into authenticated organization/shop records with `shop_id`, RLS, and owner/admin-only write policies.
+- Status: Planned after beta entitlement behavior settles.
+- Current behavior: Plans, entitlements, subscription states, trial/grace/read-only/beta-bypass states, usage snapshots, and a billing placeholder exist. Manual beta billing and operator-controlled access are the current path.
+- Limitation: Stripe Checkout, Customer Portal, webhooks, failed-payment handling, and self-serve subscription changes are not implemented.
+- Planned fix: Add Stripe only after the current entitlement and trial/read-only behavior is stable in live beta use.
 
-### Job image delivery still uses public URLs
+### SMS is disabled in beta builds
 
-- Status: Known trial limitation.
-- Current behavior: `job_images` metadata and Storage object mutations are shop-role protected, but the `job-images` bucket still uses public URLs for display and print workflows.
-- Risk: Anyone with a public image URL can view that image.
-- Planned fix: Move job images to a private bucket or signed URL delivery before broader production use.
+- Status: Known limitation.
+- Current behavior: SMS buttons are visible but disabled.
+- Expected disabled message: `SMS is disabled for this trial build. Email is active.`
+- Reason: SMS requires carrier registration and a metered cost model.
+- Current setting: `VITE_SMS_ENABLED=false`.
+- Related changes: `v0.1.10-beta` added Twilio SMS plumbing; `v0.1.11` removed Twilio from required trial setup and disabled SMS for trial builds.
 
 ### Instruments are not a standalone customer asset table yet
 
@@ -65,40 +52,27 @@ This file tracks known bugs, setup traps, trial limitations, and historical brea
 - Limitation: Customer-owned instruments/assets do not yet have their own `shop_id`-scoped table or RLS policies.
 - Planned fix: Add a customer instruments/assets module linked by `customer_id` and `shop_id`.
 
-### SMS is disabled in trial builds
-
-- Status: Known limitation.
-- Current behavior: SMS buttons are visible but disabled.
-- Expected disabled message: `SMS is disabled for this trial build. Email is active.`
-- Reason: SMS requires carrier registration and is planned for later.
-- Current setting: `VITE_SMS_ENABLED=false`.
-- Related changes: `v0.1.10-beta` added Twilio SMS plumbing; `v0.1.11` removed Twilio from required trial setup and disabled SMS for trial builds.
-
-### Auth member management is incomplete
-
-- Status: Known limitation.
-- Current behavior: Supabase-configured builds require sign-in and shop membership, and the first signed-in user can bootstrap the first shop owner when a shop has no members.
-- Limitation: There is not yet a member invitation or member-management screen.
-- Future fix: Add shop member administration, invitations, role editing, and `job_events.created_by` wiring.
-- Related setup values:
-
-```text
-FRETTRACK_FUNCTION_KEY=<same random value>
-VITE_FRETTRACK_FUNCTION_KEY=<same random value>
-```
-
-Generate the key with:
-
-```sh
-openssl rand -hex 32
-```
-
 ### Existing timeline history is partially backfilled
 
 - Status: Known v0.2.5 limitation.
 - Current behavior: Existing jobs have a backfilled `Job created` event, and new activity is logged going forward.
 - Limitation: Detailed historical events before the timeline migration, such as older status changes or photo uploads, are not reconstructed.
-- Planned fix: Add deeper historical backfill only if trial shops need it.
+- Planned fix: Add deeper historical backfill only if beta shops need it.
+
+### Migration drift check emits a Node deprecation warning
+
+- Status: Tooling cleanup.
+- Current behavior: `npm run check:migrations` passes, but Node may emit `[DEP0190]` because the script invokes the Supabase CLI with `shell: true`.
+- Risk: No current functional failure, but this should be cleaned up before relying on the script in CI.
+- Planned fix: Update `scripts/check-supabase-migrations.mjs` to call the CLI without `shell: true` or escape arguments explicitly.
+
+### Local safe database may have stale schema despite recorded migrations
+
+- Status: Local setup trap found during five-shop seed testing.
+- Current behavior: A local safe database can have migration history entries for older work-log changes while the physical `work_logs.text` column is missing.
+- Error found: `column "text" of relation "work_logs" does not exist`
+- Mitigation: `npm run seed:local-test-shops` runs `alter table work_logs add column if not exists text text not null default ''` before seeding local test data.
+- Planned fix: Prefer rebuilding or reapplying local migrations from a clean local database when schema history and actual columns disagree.
 
 ### Supabase/Postgres port is not the app URL
 
@@ -116,9 +90,43 @@ openssl rand -hex 32
 - Reason: Vite should fail clearly instead of silently moving to another port.
 - Related fix: `v0.1.1` added strict Vite port settings.
 
+## Recently Fixed Or Reclassified
+
+### Shop settings are database-backed
+
+- Fixed/reclassified in: `v0.2.6-beta.2`.
+- Previous issue: Shop settings were documented as local trial settings.
+- Current behavior: Shop profile, print footer, logo, tax defaults, currency, date format, and measurement preferences are stored in shop-scoped records/storage with owner/admin editing controls.
+
+### Job image storage is private and optimized
+
+- Fixed/reclassified in: `v0.2.6-beta.6`.
+- Previous issue: Job image delivery was documented as public-URL based.
+- Current behavior: Job photos use private storage access patterns and are optimized before upload. The original full-size phone-camera file is not uploaded by default.
+- Remaining watch item: Keep photo upload, private authenticated display, print rendering, and storage quota behavior in the beta smoke checklist.
+
+### Job Sheet printed unwanted setup measurement data
+
+- Fixed in: `v0.2.6-beta.4.1`.
+- Problem: The Job Sheet printed the full setup measurement table after the money/balance section.
+- Fix: The printed tech summary now shows only New String Brand, New String Gauge, and Final Neck Inspection.
+
+### Payment changes required manual save
+
+- Fixed in: `v0.2.6-beta.6`.
+- Problem: Adding, removing, or editing payments could leave the job detail screen visually updated before the remote save completed.
+- Fix: Payment adds/removes save immediately and payment edits debounce-save.
+
+### Supabase db push was blocked by pooler auth lockout
+
+- Reclassified: External tooling/setup incident.
+- Previous behavior: `npm run check:migrations` reported no remote-only drift, but Supabase `db push`/dry-run was blocked by the pooler circuit breaker.
+- Error: `FATAL: Circuit breaker open: Too many authentication errors`
+- Current guidance: If this returns, refresh/verify database credentials or wait for the Supabase pooler lockout to clear, then rerun `npm run check:migrations` and `npx supabase db push --dry-run`.
+
 ## Messaging Provider Test Checklist
 
-Trial builds use email-only messaging. SMS requires carrier registration and will be added later.
+Beta builds use email-only messaging. SMS requires carrier registration and will be added later.
 
 Local frontend `.env`:
 
@@ -137,7 +145,7 @@ SHOP_EMAIL_FROM=<verified sender email>
 
 Checklist:
 
-1. Confirm `VITE_SMS_ENABLED=false` for trial builds.
+1. Confirm `VITE_SMS_ENABLED=false` for beta builds.
 2. Send test email to your own email.
 3. Confirm the send appears in message history.
 4. Confirm SMS buttons are visible but disabled with this message: `SMS is disabled for this trial build. Email is active.`
@@ -219,9 +227,9 @@ Checklist:
 
 ### Supabase bucket size pressure from images
 
-- Mitigated in: `v0.1.2`.
-- Problem: Large original uploads could quickly consume the 50MB Supabase bucket limit.
-- Fix: Browser-side compression resizes images to a maximum long edge of `1600px` and converts uploads to JPEG at reduced quality.
+- Mitigated in: `v0.1.2` and expanded in `v0.2.6-beta.6`.
+- Problem: Large original uploads could quickly consume storage.
+- Fix: Browser-side compression resizes images, converts repair photos to JPEG, and avoids uploading original phone-camera files by default.
 
 ### Deleted images needed full cleanup
 
