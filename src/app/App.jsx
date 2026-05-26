@@ -53,6 +53,7 @@ export default function App() {
   const [isShopProfileLoading, setIsShopProfileLoading] = useState(false);
   const [isOperator, setIsOperator] = useState(false);
   const [isOperatorLoading, setIsOperatorLoading] = useState(false);
+  const [showOperatorDashboard, setShowOperatorDashboard] = useState(false);
   const [newShopName, setNewShopName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState(null);
@@ -127,6 +128,7 @@ export default function App() {
           setMemberships([]);
           setShopProfile(null);
           setIsOperator(false);
+          setShowOperatorDashboard(false);
           setEntitlementSnapshot(getDefaultEntitlementSnapshot());
           setJobs([]);
           setCustomers([]);
@@ -313,6 +315,7 @@ export default function App() {
     setMemberships([]);
     setShopProfile(null);
     setIsOperator(false);
+    setShowOperatorDashboard(false);
     setEntitlementSnapshot(getDefaultEntitlementSnapshot());
     setMode('new');
     clearSelectedShop();
@@ -456,6 +459,7 @@ export default function App() {
     setCustomers([]);
     setSelectedJobId(null);
     setShopProfile(null);
+    setShowOperatorDashboard(false);
     setEntitlementSnapshot(getDefaultEntitlementSnapshot(selectedMembership.shopId));
     setMembership(selectedMembership);
     setSelectedShop(selectedMembership);
@@ -469,6 +473,7 @@ export default function App() {
     setSelectedJobId(null);
     setShopProfile(null);
     setMembership(null);
+    setShowOperatorDashboard(false);
     setEntitlementSnapshot(getDefaultEntitlementSnapshot());
     clearSelectedShop();
   }
@@ -523,6 +528,30 @@ export default function App() {
   }
 
   if (hasSupabaseConfig && session && memberships.length > 1 && !membership) {
+    if (isOperator && showOperatorDashboard) {
+      return (
+        <main className="app app-shell operator-only-shell">
+          <header>
+            <div className="brand-header">
+              <img src="/frettrack-emblem.png" alt="" aria-hidden="true" />
+              <div className="brand-copy">
+                <h1>{APP_NAME}</h1>
+                <small>{APP_TAGLINE}</small>
+                <strong>Operator</strong>
+                <span className="app-version">Version {APP_VERSION}</span>
+              </div>
+            </div>
+            <div className="mode-actions no-print">
+              <button type="button" onClick={() => setShowOperatorDashboard(false)}>Back to Shops</button>
+              <button type="button" onClick={handleSignOut}>Sign Out</button>
+            </div>
+          </header>
+          <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+          <BetaOperatorDashboard onNotice={setNotice} />
+        </main>
+      );
+    }
+
     return (
       <main className="app auth-shell">
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
@@ -542,6 +571,11 @@ export default function App() {
               </button>
             ))}
           </div>
+          {isOperator && (
+            <button type="button" className="primary-action" onClick={() => setShowOperatorDashboard(true)}>
+              Operator Dashboard
+            </button>
+          )}
           <button type="button" className="button-tertiary" onClick={handleSignOut}>
             Sign Out
           </button>
