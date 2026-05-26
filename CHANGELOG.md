@@ -1,8 +1,17 @@
 # Changelog
 
-Current version: `0.2.6-beta.4.1`
+Current version: `0.2.6-beta.6`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
+
+## v0.2.6-beta.6 - Beta Operations And Storage Hotfix
+
+- Added paid-tier foundation tables, trial/grace/read-only/beta-bypass states, entitlement snapshots, and a billing placeholder without enabling Stripe.
+- Added client-side image optimization before Supabase Storage upload, including JPEG conversion, resize/compression defaults, upload notices, and job image optimization metadata.
+- Added the internal Beta Operator Dashboard with server-side operator checks, shop/member/usage/activity views, beta-bypass toggle, trial extension, and status controls.
+- Fixed the operator dashboard entry point for operator users with multiple shop memberships.
+- Added autosave for job payment changes so payment adds/removes save immediately and payment edits debounce-save.
+- Confirmed Cloudflare Pages production custom domain now serves the updated app bundle.
 
 ## v0.2.6-beta.4.1 - Simon's Beta Release Hotfix
 

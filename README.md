@@ -1,8 +1,8 @@
 # FretTrack
 
-Current version: `0.2.6-beta.4.1`
+Current version: `0.2.6-beta.6`
 
-`v0.2.6-beta.4.1` is Simon's Beta Release hotfix: it keeps the UK shop readiness work current and includes the Inspection measurement input fix for neck relief and action fields.
+`v0.2.6-beta.6` is the beta operations and storage hotfix: it adds paid-tier foundations, image optimization, the internal Beta Operator Dashboard, and payment autosave.
 
 FretTrack is a guitar and bass repair shop check-in and work order app. It helps repair shops track customer intake, instrument details, inspection notes, damage photos, parts, services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
