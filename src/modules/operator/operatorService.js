@@ -57,13 +57,13 @@ export async function updateBetaShopSubscription(shopId, updates = {}) {
   return data;
 }
 
-export async function updateBetaAccessRequest(userId, status, notes = null) {
-  if (!hasSupabaseConfig || !supabase || !userId) {
+export async function updateBetaAccessRequest(requestId, status, notes = null) {
+  if (!hasSupabaseConfig || !supabase || !requestId) {
     return null;
   }
 
   const { data, error } = await supabase.rpc('update_beta_access_request', {
-    target_user_id: userId,
+    target_request_id: requestId,
     next_status: status,
     next_notes: notes
   });

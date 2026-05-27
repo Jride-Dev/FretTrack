@@ -54,11 +54,11 @@ export default function BetaOperatorDashboard({ onNotice }) {
   }
 
   async function updateBetaAccess(accessRequest, status) {
-    setIsSavingAccessUserId(accessRequest.userId);
+    setIsSavingAccessUserId(accessRequest.id);
     try {
-      await updateBetaAccessRequest(accessRequest.userId, status, accessRequest.notes || null);
+      await updateBetaAccessRequest(accessRequest.id, status, accessRequest.notes || null);
       await loadDashboard();
-      onNotice?.({ type: 'success', message: `${accessRequest.email || accessRequest.userId} beta access updated.` });
+      onNotice?.({ type: 'success', message: `${accessRequest.email || accessRequest.userId || accessRequest.id} beta access updated.` });
     } catch (error) {
       console.error('Operator beta access update failed.', error);
       onNotice?.({
@@ -235,10 +235,10 @@ function BetaAccessTable({ requests, isSavingAccessUserId, onUpdateAccess }) {
         </thead>
         <tbody>
           {requests.map((request) => (
-            <tr key={request.userId}>
+            <tr key={request.id || request.userId || request.email}>
               <td>
-                <strong>{request.email || request.userId}</strong>
-                <small>{request.userId}</small>
+                <strong>{request.email || request.userId || request.id}</strong>
+                <small>{request.userId || 'No auth user yet'}</small>
               </td>
               <td><BetaAccessStatusBadge status={request.status} /></td>
               <td>{formatDateTime(request.requestedAt)}</td>
@@ -252,21 +252,21 @@ function BetaAccessTable({ requests, isSavingAccessUserId, onUpdateAccess }) {
                 <div className="operator-row-actions">
                   <button
                     type="button"
-                    disabled={isSavingAccessUserId === request.userId || request.status === 'approved'}
+                    disabled={isSavingAccessUserId === request.id || request.status === 'approved'}
                     onClick={() => onUpdateAccess(request, 'approved')}
                   >
                     Approve
                   </button>
                   <button
                     type="button"
-                    disabled={isSavingAccessUserId === request.userId || request.status === 'rejected'}
+                    disabled={isSavingAccessUserId === request.id || request.status === 'rejected'}
                     onClick={() => onUpdateAccess(request, 'rejected')}
                   >
                     Reject
                   </button>
                   <button
                     type="button"
-                    disabled={isSavingAccessUserId === request.userId || request.status === 'pending'}
+                    disabled={isSavingAccessUserId === request.id || request.status === 'pending'}
                     onClick={() => onUpdateAccess(request, 'pending')}
                   >
                     Pending
