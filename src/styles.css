@@ -2034,20 +2034,23 @@ th.internal-only {
 }
 
 .status-badge.beta-bypass,
-.status-badge.active {
+.status-badge.active,
+.status-badge.approved {
   background: #e9f6ee;
   border-color: #97c9a8;
   color: #205532;
 }
 
 .status-badge.grace,
+.status-badge.pending,
 .quota-warning {
   color: #a15c00;
 }
 
 .status-badge.read-only,
 .status-badge.canceled,
-.status-badge.blocked {
+.status-badge.blocked,
+.status-badge.rejected {
   background: var(--error-bg);
   border-color: var(--error-border);
   color: var(--error-text);

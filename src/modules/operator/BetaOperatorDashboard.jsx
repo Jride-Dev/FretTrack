@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { formatStorage, getBillingStatusLabel } from '../billing/entitlementService';
-import { getBetaOperatorDashboard, updateBetaShopSubscription } from './operatorService';
+import { getBetaOperatorDashboard, updateBetaAccessRequest, updateBetaShopSubscription } from './operatorService';
 
 const statusFilters = ['all', 'trialing', 'beta_bypass', 'active', 'grace', 'read_only', 'canceled'];
 const editableStatuses = ['trialing', 'active', 'grace', 'read_only', 'canceled', 'beta_bypass'];
@@ -13,6 +13,7 @@ export default function BetaOperatorDashboard({ onNotice }) {
   const [activeView, setActiveView] = useState('shops');
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingShopId, setIsSavingShopId] = useState('');
+  const [isSavingAccessUserId, setIsSavingAccessUserId] = useState('');
 
   useEffect(() => {
     loadDashboard();
@@ -52,6 +53,23 @@ export default function BetaOperatorDashboard({ onNotice }) {
     }
   }
 
+  async function updateBetaAccess(accessRequest, status) {
+    setIsSavingAccessUserId(accessRequest.userId);
+    try {
+      await updateBetaAccessRequest(accessRequest.userId, status, accessRequest.notes || null);
+      await loadDashboard();
+      onNotice?.({ type: 'success', message: `${accessRequest.email || accessRequest.userId} beta access updated.` });
+    } catch (error) {
+      console.error('Operator beta access update failed.', error);
+      onNotice?.({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Beta access update failed.'
+      });
+    } finally {
+      setIsSavingAccessUserId('');
+    }
+  }
+
   const filteredShops = useMemo(() => {
     const text = query.trim().toLowerCase();
     return (dashboard?.shops || []).filter((shop) => {
@@ -82,6 +100,14 @@ export default function BetaOperatorDashboard({ onNotice }) {
       return matchesShop && (!text || haystack.includes(text));
     });
   }, [activeView, dashboard?.members, query, selectedShop?.shopId]);
+
+  const filteredBetaAccessRequests = useMemo(() => {
+    const text = query.trim().toLowerCase();
+    return (dashboard?.betaAccessRequests || []).filter((request) => {
+      const haystack = [request.email, request.status, request.userId, request.notes].join(' ').toLowerCase();
+      return !text || haystack.includes(text);
+    });
+  }, [dashboard?.betaAccessRequests, query]);
 
   if (isLoading && !dashboard) {
     return <section className="panel operator-dashboard">Loading beta operator dashboard...</section>;
@@ -123,14 +149,14 @@ export default function BetaOperatorDashboard({ onNotice }) {
           ))}
         </select>
         <div className="segmented-control" role="tablist" aria-label="Operator views">
-          {['shops', 'members', 'usage', 'activity'].map((view) => (
+          {['shops', 'members', 'betaAccess', 'usage', 'activity'].map((view) => (
             <button
               key={view}
               type="button"
               className={activeView === view ? 'active' : ''}
               onClick={() => setActiveView(view)}
             >
-              {view}
+              {view === 'betaAccess' ? 'beta access' : view}
             </button>
           ))}
         </div>
@@ -147,6 +173,14 @@ export default function BetaOperatorDashboard({ onNotice }) {
       )}
 
       {activeView === 'members' && <MembersTable members={filteredMembers} />}
+
+      {activeView === 'betaAccess' && (
+        <BetaAccessTable
+          requests={filteredBetaAccessRequests}
+          isSavingAccessUserId={isSavingAccessUserId}
+          onUpdateAccess={updateBetaAccess}
+        />
+      )}
 
       {activeView === 'usage' && <UsageTable shops={dashboard.usage} />}
 
@@ -168,6 +202,7 @@ function SummaryCards({ summary }) {
     ['Grace/read-only', summary.graceOrReadOnlyShops],
     ['Storage', formatStorage(summary.totalStorageBytes)],
     ['Jobs', summary.totalJobs],
+    ['Pending approvals', summary.pendingBetaAccessRequests],
     ['Recent activity', summary.recentActivityCount]
   ];
 
@@ -179,6 +214,74 @@ function SummaryCards({ summary }) {
           <strong>{value}</strong>
         </div>
       ))}
+    </div>
+  );
+}
+
+function BetaAccessTable({ requests, isSavingAccessUserId, onUpdateAccess }) {
+  return (
+    <div className="operator-table-wrap">
+      <table className="operator-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Status</th>
+            <th>Requested</th>
+            <th>Reviewed</th>
+            <th>Last Sign-In</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {requests.map((request) => (
+            <tr key={request.userId}>
+              <td>
+                <strong>{request.email || request.userId}</strong>
+                <small>{request.userId}</small>
+              </td>
+              <td><BetaAccessStatusBadge status={request.status} /></td>
+              <td>{formatDateTime(request.requestedAt)}</td>
+              <td>
+                {formatDateTime(request.reviewedAt)}
+                {request.reviewedByEmail && <small>{request.reviewedByEmail}</small>}
+              </td>
+              <td>{formatDateTime(request.lastSignInAt)}</td>
+              <td>{request.notes || 'None'}</td>
+              <td>
+                <div className="operator-row-actions">
+                  <button
+                    type="button"
+                    disabled={isSavingAccessUserId === request.userId || request.status === 'approved'}
+                    onClick={() => onUpdateAccess(request, 'approved')}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSavingAccessUserId === request.userId || request.status === 'rejected'}
+                    onClick={() => onUpdateAccess(request, 'rejected')}
+                  >
+                    Reject
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSavingAccessUserId === request.userId || request.status === 'pending'}
+                    onClick={() => onUpdateAccess(request, 'pending')}
+                  >
+                    Pending
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+          {!requests.length && (
+            <tr>
+              <td colSpan="7">No beta access requests found.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -369,6 +472,15 @@ function DetailItem({ label, value }) {
 
 function StatusBadge({ status }) {
   return <span className={`status-badge ${String(status || '').replace(/_/g, '-')}`}>{getBillingStatusLabel(status)}</span>;
+}
+
+function BetaAccessStatusBadge({ status }) {
+  const labels = {
+    pending: 'Pending',
+    approved: 'Approved',
+    rejected: 'Rejected'
+  };
+  return <span className={`status-badge ${String(status || '').replace(/_/g, '-')}`}>{labels[status] || status || 'Unknown'}</span>;
 }
 
 function getStorageSafetyLabel(shop) {
