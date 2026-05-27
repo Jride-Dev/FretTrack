@@ -93,6 +93,7 @@ This file tracks where FretTrack is headed after the current `0.2.6-beta.6` priv
 ## Product Direction
 
 - Continue improving the work order flow for real shop use.
+- Add shop-custom job/status dropdown values after beta testers clarify the statuses they need.
 - Expand Activity Timeline filtering and detail views after beta feedback shows what shops actually need.
 - Expand customer communication around check-in, estimate approval, repair status, pickup reminders, payment reminders, and photo updates.
 - Keep customer history lookup, quick-fill, and repeat-customer workflows central to intake.

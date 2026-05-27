@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react';
 import { addJob } from './jobService';
 import { generateJobNumber } from './jobNumber';
 import { combineCustomerName, findCustomerMatches } from '../customers';
-import { instrumentCatalog } from '../instruments/instrumentService';
+import {
+  STRING_COUNT_OPTIONS,
+  instrumentCatalog,
+  normalizeStringCount,
+  resizeStringGauges,
+  stringCountForInstrument
+} from '../instruments/instrumentService';
 import { formatShopDate, toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences } from '../../shared/utils/measurements';
 import { getShopDateOptions } from '../shops/shopConfig';
@@ -21,6 +27,7 @@ function getInitialFormState(jobs = []) {
     intakeType: 'Walk-In',
     subcontractorName: '',
     instrumentType: 'Electric',
+    stringCount: 6,
     phone: '',
     email: '',
     guitarBrand: '',
@@ -72,12 +79,19 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
         const dateReceived = value || todayValue();
         nextForm.jobNumber = generateJobNumber(dateReceived, jobs);
       }
+      if (name === 'stringCount') {
+        nextForm.stringCount = normalizeStringCount(value, current.instrumentType);
+      }
       return nextForm;
     });
   }
 
   function setInstrumentType(instrumentType) {
-    setForm((current) => ({ ...current, instrumentType }));
+    setForm((current) => ({
+      ...current,
+      instrumentType,
+      stringCount: stringCountForInstrument(instrumentType)
+    }));
   }
 
   function useCustomer(customer) {
@@ -128,9 +142,10 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
       discountValue: '',
       techDetails: {
         instrumentType: form.instrumentType,
+        stringCount: form.stringCount,
         intakeType: form.intakeType,
         subcontractorName: form.subcontractorName,
-        stringGauges: Array.from({ length: form.instrumentType === 'Bass' ? 4 : 6 }, () => ''),
+        stringGauges: resizeStringGauges([], form.stringCount),
         newStringBrand: '',
         newStringGauge: '',
         neckInspectionBefore: '',
@@ -220,6 +235,11 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
       <datalist id="new-job-model-options">
         {(instrumentCatalog[form.instrumentType]?.models || []).map((model) => (
           <option key={model} value={model} />
+        ))}
+      </datalist>
+      <datalist id="new-job-string-count-options">
+        {STRING_COUNT_OPTIONS.map((count) => (
+          <option key={count} value={count} />
         ))}
       </datalist>
       <div className="form-grid">
@@ -326,6 +346,19 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
             </button>
           </div>
         </div>
+        <label>
+          String Count
+          <input
+            type="number"
+            min="1"
+            max="24"
+            name="stringCount"
+            list="new-job-string-count-options"
+            value={form.stringCount}
+            onChange={handleChange}
+            disabled={!canWrite}
+          />
+        </label>
         <label>
           Phone
           <input name="phone" value={form.phone} onChange={handleChange} disabled={!canWrite} />

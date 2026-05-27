@@ -1,5 +1,5 @@
 import { combineCustomerName, ensureCustomerForJob, splitCustomerName } from '../customers';
-import { normalizeInstrumentType } from '../instruments/instrumentService';
+import { getInstrumentStringCount, normalizeInstrumentType, resizeStringGauges } from '../instruments/instrumentService';
 import { supabase, hasSupabaseConfig } from '../../shared/lib/supabaseClient';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences, normalizeLengthUnit, normalizeMeasurementSystem } from '../../shared/utils/measurements';
@@ -14,17 +14,12 @@ const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
 const fretTrackFunctionKey = import.meta.env.VITE_FRETTRACK_FUNCTION_KEY || '';
 const duplicateWorkOrderPrefix = 'MULTIPLE WORK ORDERS CANNOT BE CREATED';
 export const smsEnabled = import.meta.env.VITE_SMS_ENABLED === 'true';
-const STRING_COUNTS = {
-  Acoustic: 6,
-  Electric: 6,
-  Bass: 4
-};
-
 const defaultTechDetails = {
   intakeType: 'Walk-In',
   subcontractorName: '',
   lastMessageTemplate: 'check_in',
   stringGauges: ['', '', '', '', '', ''],
+  stringCount: 6,
   newStringBrand: '',
   newStringGauge: '',
   neckInspectionBefore: '',
@@ -695,12 +690,11 @@ function normalizeWorkLog(log) {
 
 function normalizeTechDetails(techDetails = {}, instrumentType = 'Guitar') {
   const normalizedInstrumentType = normalizeInstrumentType(instrumentType);
-  const stringCount = STRING_COUNTS[normalizedInstrumentType] || STRING_COUNTS.Electric;
-  const stringGauges = [...(techDetails.stringGauges || [])].slice(0, stringCount);
-
-  while (stringGauges.length < stringCount) {
-    stringGauges.push('');
-  }
+  const stringCount = getInstrumentStringCount({
+    instrumentType: normalizedInstrumentType,
+    techDetails
+  });
+  const stringGauges = resizeStringGauges(techDetails.stringGauges, stringCount);
 
   return {
     ...defaultTechDetails,
@@ -709,6 +703,7 @@ function normalizeTechDetails(techDetails = {}, instrumentType = 'Guitar') {
     subcontractorName: techDetails.subcontractorName || '',
     lastMessageTemplate: techDetails.lastMessageTemplate || defaultTechDetails.lastMessageTemplate,
     instrumentType: normalizedInstrumentType,
+    stringCount,
     damageMap: normalizeDamageMap(techDetails.damageMap),
     neckInspection: normalizeNeckInspection(techDetails.neckInspection),
     tax: {
