@@ -4,6 +4,7 @@ export default function TechDetailsSection({
   draftJob,
   formatMeasurementDelta,
   lengthUnit,
+  outerStringLabels,
   updateNeckInspection,
   updateStringGauge,
   updateTechField
@@ -16,7 +17,7 @@ export default function TechDetailsSection({
           <legend>String Gauges</legend>
           {draftJob.techDetails.stringGauges.map((gauge, index) => (
             <label key={index}>
-              {index + 1}
+              {getStringGaugeLabel(index, draftJob.techDetails.stringGauges.length, outerStringLabels)}
               <input
                 value={gauge}
                 onChange={(event) => updateStringGauge(index, event.target.value)}
@@ -34,6 +35,7 @@ export default function TechDetailsSection({
         </label>
         <NeckInspectionSection
           lengthUnit={lengthUnit}
+          outerStringLabels={outerStringLabels}
           techDetails={draftJob.techDetails}
           formatMeasurementDelta={formatMeasurementDelta}
           updateNeckInspection={updateNeckInspection}
@@ -45,4 +47,14 @@ export default function TechDetailsSection({
       </div>
     </section>
   );
+}
+
+function getStringGaugeLabel(index, stringCount, outerStringLabels = {}) {
+  if (index === 0) {
+    return outerStringLabels.bass || 'Bass side';
+  }
+  if (index === stringCount - 1) {
+    return outerStringLabels.treble || 'Treble side';
+  }
+  return index + 1;
 }

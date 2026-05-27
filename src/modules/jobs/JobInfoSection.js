@@ -1,4 +1,4 @@
-import { instrumentCatalog } from '../instruments/instrumentService';
+import { STRING_COUNT_OPTIONS, instrumentCatalog } from '../instruments/instrumentService';
 import { smsEnabled } from '../../data/messagesRepository';
 
 export default function JobInfoSection({
@@ -6,6 +6,7 @@ export default function JobInfoSection({
   intakeTypes,
   normalizeInstrumentType,
   setInstrumentType,
+  updateStringCount,
   updateContactPreference,
   updateField,
   updateTechField
@@ -22,6 +23,11 @@ export default function JobInfoSection({
       <datalist id="detail-model-options">
         {(instrumentCatalog[instrumentType]?.models || []).map((model) => (
           <option key={model} value={model} />
+        ))}
+      </datalist>
+      <datalist id="detail-string-count-options">
+        {STRING_COUNT_OPTIONS.map((count) => (
+          <option key={count} value={count} />
         ))}
       </datalist>
       <h3>Job Info</h3>
@@ -78,6 +84,17 @@ export default function JobInfoSection({
             </button>
           </div>
         </div>
+        <label>
+          String Count
+          <input
+            type="number"
+            min="1"
+            max="24"
+            list="detail-string-count-options"
+            value={draftJob.techDetails.stringCount || draftJob.techDetails.stringGauges?.length || 6}
+            onChange={(event) => updateStringCount(event.target.value)}
+          />
+        </label>
         <label>
           Phone
           <input name="phone" value={draftJob.phone} onChange={updateField} />

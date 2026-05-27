@@ -10,6 +10,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added client-side image optimization before Supabase Storage upload, including JPEG conversion, resize/compression defaults, upload notices, and job image optimization metadata.
 - Added the internal Beta Operator Dashboard with server-side operator checks, shop/member/usage/activity views, beta-bypass toggle, trial extension, and status controls.
 - Added owner/admin shop member management for existing FretTrack users, including member list, role changes, removal, and last-owner protection.
+- Added extended-range instrument support with selectable/custom string count, baritone model suggestions, string-aware setup labels, and string-count display on print/report output.
 - Fixed the operator dashboard entry point for operator users with multiple shop memberships.
 - Added autosave for job payment changes so payment adds/removes save immediately and payment edits debounce-save.
 - Confirmed Cloudflare Pages production custom domain now serves the updated app bundle.

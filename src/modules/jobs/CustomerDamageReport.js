@@ -3,8 +3,10 @@ import { getPrintFooterText, getShopDateOptions, getShopSettings } from '../shop
 
 export default function CustomerDamageReport({
   draftJob,
+  formatInstrumentLabel,
   formatMeasurementDelta,
   lengthUnit = 'in',
+  outerStringLabels = { treble: 'High E', bass: 'Low E' },
   normalizeInstrumentType,
   reportDamageView,
   services,
@@ -30,7 +32,7 @@ export default function CustomerDamageReport({
       <div className="print-grid">
         <span>Customer</span><strong>{draftJob.customerName}</strong>
         <span>Phone</span><strong>{draftJob.phone}</strong>
-        <span>Instrument</span><strong>{normalizeInstrumentType(draftJob.instrumentType)}</strong>
+        <span>Instrument</span><strong>{formatInstrumentLabel ? formatInstrumentLabel(draftJob) : normalizeInstrumentType(draftJob.instrumentType)}</strong>
         <span>Brand / Model</span><strong>{draftJob.guitarBrand} {draftJob.model}</strong>
         <span>Serial</span><strong>{draftJob.serial}</strong>
         <span>Date Received</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions)}</strong>
@@ -45,19 +47,19 @@ export default function CustomerDamageReport({
             <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.relief, draftJob.techDetails.neckInspection?.final?.relief, lengthUnit)}</td>
           </tr>
           <tr>
-            <td>Action High E @ 3rd</td>
+            <td>Action {outerStringLabels.treble} @ 3rd</td>
             <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutHighE, draftJob.techDetails.neckInspection?.final?.nutHighE, lengthUnit)}</td>
           </tr>
           <tr>
-            <td>Action Low E @ 3rd</td>
+            <td>Action {outerStringLabels.bass} @ 3rd</td>
             <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutLowE, draftJob.techDetails.neckInspection?.final?.nutLowE, lengthUnit)}</td>
           </tr>
           <tr>
-            <td>Action High E @ 12th</td>
+            <td>Action {outerStringLabels.treble} @ 12th</td>
             <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionHighE12th, draftJob.techDetails.neckInspection?.final?.actionHighE12th, lengthUnit)}</td>
           </tr>
           <tr>
-            <td>Action Low E @ 12th</td>
+            <td>Action {outerStringLabels.bass} @ 12th</td>
             <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionLowE12th, draftJob.techDetails.neckInspection?.final?.actionLowE12th, lengthUnit)}</td>
           </tr>
           <tr>

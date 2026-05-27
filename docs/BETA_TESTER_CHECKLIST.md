@@ -17,7 +17,10 @@ Thank you for testing FretTrack. Please use it like a normal repair intake tool,
 11. Can you find the customer/job again with customer lookup?
 12. If you are an owner/admin, can you open Shop Settings and review shop members?
 13. If testing a multi-user shop, can you add an existing signed-up user by email and set their role?
-14. Can you sign out and sign back in?
+14. Can you create a 7-string guitar job and confirm setup/string fields make sense?
+15. Can you create a 5-string bass job and confirm setup/string fields make sense?
+16. Can you print the job sheet and confirm the instrument/string count appears correctly?
+17. Can you sign out and sign back in?
 
 ## Feedback Questions
 

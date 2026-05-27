@@ -2,6 +2,7 @@ import { getLengthUnitLabel, normalizeLengthUnit, parseLengthInput } from '../..
 
 export default function NeckInspectionSection({
   lengthUnit = 'in',
+  outerStringLabels = { treble: 'High E', bass: 'Low E' },
   techDetails,
   formatMeasurementDelta,
   updateNeckInspection
@@ -60,7 +61,7 @@ export default function NeckInspectionSection({
           <input value={stage.reliefMethod || ''} onChange={(event) => updateNeckInspection(stageKey, 'reliefMethod', event.target.value)} />
         </label>
         <label>
-          Action High E @ 3rd ({unitLabel})
+          Action {outerStringLabels.treble} @ 3rd ({unitLabel})
           <input
             type="text"
             inputMode="decimal"
@@ -70,7 +71,7 @@ export default function NeckInspectionSection({
           />
         </label>
         <label>
-          Action Low E @ 3rd ({unitLabel})
+          Action {outerStringLabels.bass} @ 3rd ({unitLabel})
           <input
             type="text"
             inputMode="decimal"
@@ -80,7 +81,7 @@ export default function NeckInspectionSection({
           />
         </label>
         <label>
-          Action High E @ 12th ({unitLabel})
+          Action {outerStringLabels.treble} @ 12th ({unitLabel})
           <input
             type="text"
             inputMode="decimal"
@@ -90,7 +91,7 @@ export default function NeckInspectionSection({
           />
         </label>
         <label>
-          Action Low E @ 12th ({unitLabel})
+          Action {outerStringLabels.bass} @ 12th ({unitLabel})
           <input
             type="text"
             inputMode="decimal"
@@ -171,10 +172,10 @@ export default function NeckInspectionSection({
       <div className="wide neck-deltas">
         <strong>Measured Changes</strong>
         <span>Relief: {formatMeasurementDelta(techDetails.neckInspection?.initial?.relief, techDetails.neckInspection?.final?.relief, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
-        <span>Action High E @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutHighE, techDetails.neckInspection?.final?.nutHighE, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
-        <span>Action Low E @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutLowE, techDetails.neckInspection?.final?.nutLowE, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
-        <span>Action High E @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionHighE12th, techDetails.neckInspection?.final?.actionHighE12th, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
-        <span>Action Low E @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionLowE12th, techDetails.neckInspection?.final?.actionLowE12th, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
+        <span>Action {outerStringLabels.treble} @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutHighE, techDetails.neckInspection?.final?.nutHighE, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
+        <span>Action {outerStringLabels.bass} @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutLowE, techDetails.neckInspection?.final?.nutLowE, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
+        <span>Action {outerStringLabels.treble} @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionHighE12th, techDetails.neckInspection?.final?.actionHighE12th, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
+        <span>Action {outerStringLabels.bass} @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionLowE12th, techDetails.neckInspection?.final?.actionLowE12th, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
       </div>
     </>
   );

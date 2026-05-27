@@ -20,7 +20,15 @@ import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { formatLength } from '../../shared/utils/measurements';
 import { getShopMeasurementOptions } from '../shops/shopConfig';
 import { combineCustomerName } from '../customers';
-import { normalizeInstrumentType, stringCountForInstrument } from '../instruments/instrumentService';
+import {
+  formatInstrumentLabel,
+  getInstrumentStringCount,
+  getOuterStringLabels,
+  normalizeInstrumentType,
+  normalizeStringCount,
+  resizeStringGauges,
+  stringCountForInstrument
+} from '../instruments/instrumentService';
 import { generateJobNumber } from './jobNumber';
 import { getJobEvents } from './jobEventsService';
 import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
@@ -113,6 +121,8 @@ export default function JobDetail({
   const workOrderImages = images.filter((image) => workOrderImageIds.includes(image.id));
   const taxSettings = draftJob.techDetails.tax || {};
   const payments = draftJob.techDetails.payments || [];
+  const instrumentStringCount = getInstrumentStringCount(draftJob);
+  const outerStringLabels = getOuterStringLabels(draftJob.instrumentType, instrumentStringCount);
   const measurementOptions = getShopMeasurementOptions({
     measurementSystem: draftJob.techDetails.measurementSystem,
     lengthUnit: draftJob.techDetails.lengthUnit,
@@ -152,16 +162,13 @@ export default function JobDetail({
     if (name === 'instrumentType') {
       const normalizedInstrumentType = normalizeInstrumentType(value);
       const stringCount = stringCountForInstrument(normalizedInstrumentType);
-      const stringGauges = [...(draftJob.techDetails.stringGauges || [])].slice(0, stringCount);
-      while (stringGauges.length < stringCount) {
-        stringGauges.push('');
-      }
       patchJob({
         instrumentType: normalizedInstrumentType,
         techDetails: {
           ...draftJob.techDetails,
           instrumentType: normalizedInstrumentType,
-          stringGauges
+          stringCount,
+          stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
         }
       });
       return;
@@ -196,16 +203,25 @@ export default function JobDetail({
   function setInstrumentType(instrumentType) {
     const normalizedInstrumentType = normalizeInstrumentType(instrumentType);
     const stringCount = stringCountForInstrument(normalizedInstrumentType);
-    const stringGauges = [...(draftJob.techDetails.stringGauges || [])].slice(0, stringCount);
-    while (stringGauges.length < stringCount) {
-      stringGauges.push('');
-    }
     patchJob({
       instrumentType: normalizedInstrumentType,
       techDetails: {
         ...draftJob.techDetails,
         instrumentType: normalizedInstrumentType,
-        stringGauges
+        stringCount,
+        stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
+      }
+    });
+  }
+
+  function updateStringCount(value) {
+    const stringCount = normalizeStringCount(value, draftJob.instrumentType);
+    patchJob({
+      stringCount,
+      techDetails: {
+        ...draftJob.techDetails,
+        stringCount,
+        stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
       }
     });
   }
@@ -781,15 +797,19 @@ export default function JobDetail({
     <>
       <JobPrintSheet
         draftJob={draftJob}
+        formatInstrumentLabel={formatInstrumentLabel}
         normalizeInstrumentType={normalizeInstrumentType}
+        outerStringLabels={outerStringLabels}
         parts={parts}
         services={services}
         totals={totals}
       />
       <CustomerDamageReport
         draftJob={draftJob}
+        formatInstrumentLabel={formatInstrumentLabel}
         formatMeasurementDelta={formatMeasurementDelta}
         lengthUnit={measurementOptions.lengthUnit}
+        outerStringLabels={outerStringLabels}
         normalizeInstrumentType={normalizeInstrumentType}
         reportDamageView={reportDamageView}
         services={services}
@@ -804,6 +824,7 @@ export default function JobDetail({
       intakeTypes={intakeTypes}
       normalizeInstrumentType={normalizeInstrumentType}
       setInstrumentType={setInstrumentType}
+      updateStringCount={updateStringCount}
       updateContactPreference={updateContactPreference}
       updateField={updateField}
       updateTechField={updateTechField}
@@ -816,6 +837,7 @@ export default function JobDetail({
         draftJob={draftJob}
         formatMeasurementDelta={formatMeasurementDelta}
         lengthUnit={measurementOptions.lengthUnit}
+        outerStringLabels={outerStringLabels}
         updateNeckInspection={updateNeckInspection}
         updateStringGauge={updateStringGauge}
         updateTechField={updateTechField}

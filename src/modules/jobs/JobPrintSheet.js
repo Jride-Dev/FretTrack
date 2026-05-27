@@ -6,7 +6,9 @@ import { money } from '../../shared/utils/money';
 
 export default function JobPrintSheet({
   draftJob,
+  formatInstrumentLabel,
   normalizeInstrumentType,
+  outerStringLabels = { treble: 'High E', bass: 'Low E' },
   parts,
   services,
   totals
@@ -47,7 +49,7 @@ export default function JobPrintSheet({
         <span>Customer</span><strong>{draftJob.customerName}</strong>
         <span>Phone</span><strong>{draftJob.phone}</strong>
         <span>Email</span><strong>{draftJob.email}</strong>
-        <span>Instrument</span><strong>{normalizeInstrumentType(draftJob.instrumentType)}</strong>
+        <span>Instrument</span><strong>{formatInstrumentLabel ? formatInstrumentLabel(draftJob) : normalizeInstrumentType(draftJob.instrumentType)}</strong>
         <span>Brand / Model</span><strong>{draftJob.guitarBrand} {draftJob.model}</strong>
         <span>Serial</span><strong>{draftJob.serial}</strong>
         <span>Color</span><strong>{draftJob.color}</strong>
@@ -117,11 +119,11 @@ export default function JobPrintSheet({
                 <td>{formatLength(finalNeckInspection.relief, finalNeckInspection.reliefUnit || finalLengthUnit) || '-'}</td>
               </tr>
               <tr>
-                <td>Action High E / Low E @ 3rd</td>
+                <td>Action {outerStringLabels.treble} / {outerStringLabels.bass} @ 3rd</td>
                 <td>{formatLength(finalNeckInspection.nutHighE, finalNeckInspection.nutHighEUnit || finalLengthUnit) || '-'} / {formatLength(finalNeckInspection.nutLowE, finalNeckInspection.nutLowEUnit || finalLengthUnit) || '-'}</td>
               </tr>
               <tr>
-                <td>Action High E / Low E @ 12th</td>
+                <td>Action {outerStringLabels.treble} / {outerStringLabels.bass} @ 12th</td>
                 <td>{formatLength(finalNeckInspection.actionHighE12th, finalNeckInspection.actionHighE12thUnit || finalLengthUnit) || '-'} / {formatLength(finalNeckInspection.actionLowE12th, finalNeckInspection.actionLowE12thUnit || finalLengthUnit) || '-'}</td>
               </tr>
               <tr>
