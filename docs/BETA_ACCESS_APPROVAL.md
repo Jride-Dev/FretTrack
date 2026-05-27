@@ -6,6 +6,7 @@ FretTrack beta access is intentionally controlled. A Supabase Auth user may sign
 
 - New authenticated users get a `public.beta_access_requests` row with `pending` status.
 - Logged-out applicants can submit the landing page beta form by email. The Cloudflare Worker calls `public.submit_beta_access_request` and creates or updates a pending beta access request without creating a shop.
+- The landing page also sends a confirmation email to the applicant and a notification email to support when Resend is configured on the Worker.
 - Pending or rejected users see the Pending Approval screen before any shop bootstrap or job loading runs.
 - Operators bypass the gate and can approve or reject users from the Beta Operator Dashboard.
 - Approved users can continue into normal onboarding and create or access a shop workspace.

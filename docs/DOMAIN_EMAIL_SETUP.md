@@ -20,6 +20,9 @@ Domain: `frettrack-app.com`
   - Required variables/secrets:
     - `SUPABASE_URL`
     - `SUPABASE_ANON_KEY`
+    - `RESEND_API_KEY`
+    - `SHOP_EMAIL_FROM`
+    - Optional `BETA_APPLICATION_NOTIFY_TO`
 - Cloudflare R2:
   - Bucket: `frettrack-app-assets`
   - Worker binding: `FRETTRACK_APP_ASSETS`
@@ -108,6 +111,12 @@ npx wrangler deploy --config cloudflare/frettrack-coming-soon/wrangler.jsonc
 ```
 
 The beta application endpoint calls Supabase RPC `public.submit_beta_access_request`, so the Worker must have `SUPABASE_URL` and `SUPABASE_ANON_KEY` configured before form submissions will create Operator Dashboard requests.
+
+It also sends confirmation and notification email through Resend, so the Worker must have:
+
+- `RESEND_API_KEY`
+- `SHOP_EMAIL_FROM`
+- Optional `BETA_APPLICATION_NOTIFY_TO` if you want the operator notification to go somewhere other than `support@frettrack-app.com`
 
 Confirm:
 
