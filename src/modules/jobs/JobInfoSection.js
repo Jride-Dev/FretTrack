@@ -1,4 +1,10 @@
-import { STRING_COUNT_OPTIONS, instrumentCatalog } from '../instruments/instrumentService';
+import { useEffect, useState } from 'react';
+import {
+  getInstrumentTypeOptions,
+  getStringCountOptions,
+  instrumentCatalog,
+  normalizeStringCount
+} from '../instruments/instrumentService';
 import { smsEnabled } from '../../data/messagesRepository';
 
 export default function JobInfoSection({
@@ -12,6 +18,14 @@ export default function JobInfoSection({
   updateTechField
 }) {
   const instrumentType = normalizeInstrumentType(draftJob.instrumentType);
+  const stringCount = normalizeStringCount(draftJob.techDetails.stringCount || draftJob.techDetails.stringGauges?.length, instrumentType);
+  const isPresetStringCount = getStringCountOptions(instrumentType).includes(stringCount);
+  const [showCustomStringCount, setShowCustomStringCount] = useState(!isPresetStringCount);
+  const stringCountSelectValue = showCustomStringCount || !isPresetStringCount ? 'custom' : String(stringCount);
+
+  useEffect(() => {
+    setShowCustomStringCount(!getStringCountOptions(instrumentType).includes(stringCount));
+  }, [instrumentType, stringCount]);
 
   return (
     <section>
@@ -23,11 +37,6 @@ export default function JobInfoSection({
       <datalist id="detail-model-options">
         {(instrumentCatalog[instrumentType]?.models || []).map((model) => (
           <option key={model} value={model} />
-        ))}
-      </datalist>
-      <datalist id="detail-string-count-options">
-        {STRING_COUNT_OPTIONS.map((count) => (
-          <option key={count} value={count} />
         ))}
       </datalist>
       <h3>Job Info</h3>
@@ -61,40 +70,46 @@ export default function JobInfoSection({
         <div className="instrument-selector" role="group" aria-label="Instrument Type">
           <span>Instrument Type</span>
           <div className="segmented-control">
-            <button
-              type="button"
-              className={instrumentType === 'Acoustic' ? 'active' : ''}
-              onClick={() => setInstrumentType('Acoustic')}
-            >
-              Acoustic
-            </button>
-            <button
-              type="button"
-              className={instrumentType === 'Electric' ? 'active' : ''}
-              onClick={() => setInstrumentType('Electric')}
-            >
-              Electric
-            </button>
-            <button
-              type="button"
-              className={instrumentType === 'Bass' ? 'active' : ''}
-              onClick={() => setInstrumentType('Bass')}
-            >
-              Bass
-            </button>
+            {getInstrumentTypeOptions().map((option) => (
+              <button
+                type="button"
+                key={option.value}
+                className={instrumentType === option.value ? 'active' : ''}
+                onClick={() => setInstrumentType(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
         <label>
           String Count
-          <input
-            type="number"
-            min="1"
-            max="24"
-            list="detail-string-count-options"
-            value={draftJob.techDetails.stringCount || draftJob.techDetails.stringGauges?.length || 6}
-            onChange={(event) => updateStringCount(event.target.value)}
-          />
+          <select
+            value={stringCountSelectValue}
+            onChange={(event) => {
+              const value = event.target.value;
+              setShowCustomStringCount(value === 'custom');
+              updateStringCount(value === 'custom' ? stringCount : value);
+            }}
+          >
+            {getStringCountOptions(instrumentType).map((count) => (
+              <option key={count} value={count}>{count}-string</option>
+            ))}
+            <option value="custom">Custom</option>
+          </select>
         </label>
+        {showCustomStringCount && (
+          <label>
+            Custom String Count
+            <input
+              type="number"
+              min="1"
+              max="24"
+              value={stringCount}
+              onChange={(event) => updateStringCount(event.target.value)}
+            />
+          </label>
+        )}
         <label>
           Phone
           <input name="phone" value={draftJob.phone} onChange={updateField} />

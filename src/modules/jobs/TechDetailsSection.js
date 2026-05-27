@@ -1,4 +1,5 @@
 import NeckInspectionSection from './NeckInspectionSection';
+import { getGaugeSlotLabel, getInstrumentStringCount } from '../instruments/instrumentService';
 
 export default function TechDetailsSection({
   draftJob,
@@ -17,7 +18,7 @@ export default function TechDetailsSection({
           <legend>String Gauges</legend>
           {draftJob.techDetails.stringGauges.map((gauge, index) => (
             <label key={index}>
-              {getStringGaugeLabel(index, draftJob.techDetails.stringGauges.length, outerStringLabels)}
+              {getGaugeSlotLabel(index, getInstrumentStringCount(draftJob), draftJob.instrumentType)}
               <input
                 value={gauge}
                 onChange={(event) => updateStringGauge(index, event.target.value)}
@@ -47,14 +48,4 @@ export default function TechDetailsSection({
       </div>
     </section>
   );
-}
-
-function getStringGaugeLabel(index, stringCount, outerStringLabels = {}) {
-  if (index === 0) {
-    return outerStringLabels.bass || 'Bass side';
-  }
-  if (index === stringCount - 1) {
-    return outerStringLabels.treble || 'Treble side';
-  }
-  return index + 1;
 }
