@@ -597,7 +597,9 @@ function landingPage() {
             throw new Error(result.error || 'Unable to submit right now.');
           }
           form.reset();
-          status.textContent = 'Application received. You’ll be contacted or approved before workspace access is enabled.';
+          status.textContent = result.warning
+            ? result.message + ' ' + result.warning
+            : (result.message || 'Application received. You\'ll be contacted or approved before workspace access is enabled.');
           status.className = 'form-status success';
         } catch (error) {
           status.textContent = error.message || 'Unable to submit right now.';
@@ -681,13 +683,27 @@ async function saveBetaApplication(request, env) {
   }
 
   try {
-    await submitBetaAccessRequest(application, env);
+    const applicationResult = await submitBetaAccessRequest(application, env);
+    const emailResult = await sendBetaApplicationEmails(application, env);
     await archiveBetaApplication(application, env);
+
+    const responseBody = {
+      ok: true,
+      message: 'Application received. You\'ll be contacted or approved before workspace access is enabled.'
+    };
+
+    if (emailResult.warning) {
+      responseBody.warning = emailResult.warning;
+    }
+
+    if (applicationResult?.status) {
+      responseBody.status = applicationResult.status;
+    }
+
+    return jsonResponse(responseBody);
   } catch (error) {
     return jsonResponse({ ok: false, error: error.message || 'Unable to submit right now.' }, 500);
   }
-
-  return jsonResponse({ ok: true });
 }
 
 async function submitBetaAccessRequest(application, env) {
@@ -733,6 +749,93 @@ async function submitBetaAccessRequest(application, env) {
   }
 
   return result;
+}
+
+async function sendBetaApplicationEmails(application, env) {
+  const resendApiKey = cleanText(env.RESEND_API_KEY || '', 300);
+  const fromEmail = cleanText(env.SHOP_EMAIL_FROM || '', 180) || 'FretTrack <noreply@frettrack-app.com>';
+  const notifyTo = cleanText(env.BETA_APPLICATION_NOTIFY_TO || SUPPORT_EMAIL, 180);
+
+  if (!resendApiKey || !fromEmail) {
+    return {
+      warning: 'Application saved, but email delivery is not configured on the landing-page Worker yet.'
+    };
+  }
+
+  const details = [
+    `Name: ${application.name}`,
+    `Email: ${application.email}`,
+    `State: ${application.state}`,
+    `Shop Name: ${application.shopName}`,
+    `Team Size: ${application.teamSize}`,
+    `Current Tracking: ${application.currentTracking}`,
+    `Submitted: ${application.submittedAt}`,
+    application.ipCountry ? `Country: ${application.ipCountry}` : '',
+    application.userAgent ? `User Agent: ${application.userAgent}` : ''
+  ].filter(Boolean).join('\n');
+
+  const applicantText = [
+    'Thanks for applying for the FretTrack beta.',
+    '',
+    'Your application has been received and is waiting on operator review.',
+    'You will be contacted or approved before workspace access is enabled.',
+    '',
+    'Application summary:',
+    details
+  ].join('\n');
+
+  const operatorText = [
+    'New FretTrack beta application received.',
+    '',
+    details
+  ].join('\n');
+
+  const results = await Promise.allSettled([
+    sendResendEmail({
+      apiKey: resendApiKey,
+      from: fromEmail,
+      to: application.email,
+      subject: 'FretTrack beta application received',
+      text: applicantText
+    }),
+    sendResendEmail({
+      apiKey: resendApiKey,
+      from: fromEmail,
+      to: notifyTo,
+      subject: `New FretTrack beta application: ${application.shopName || application.email}`,
+      text: operatorText
+    })
+  ]);
+
+  const failures = results
+    .filter((result) => result.status === 'rejected' || result.value?.ok === false)
+    .map((result) => result.reason?.message || result.value?.error || 'Email send failed.');
+
+  if (failures.length) {
+    return {
+      warning: `Application saved, but email delivery had an issue: ${failures[0]}`
+    };
+  }
+
+  return { warning: '' };
+}
+
+async function sendResendEmail({ apiKey, from, to, subject, text }) {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ from, to, subject, text })
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result.message || result.error || 'Resend send failed.');
+  }
+
+  return { ok: true, id: result.id || '' };
 }
 
 async function archiveBetaApplication(application, env) {
