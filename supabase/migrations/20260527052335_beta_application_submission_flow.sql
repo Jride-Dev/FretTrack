@@ -250,6 +250,8 @@ $$;
 revoke all on function public.get_beta_access_requests() from public, anon;
 grant execute on function public.get_beta_access_requests() to authenticated;
 
+drop function if exists public.update_beta_access_request(uuid, text, text);
+
 create or replace function public.update_beta_access_request(
   target_request_id uuid,
   next_status text,
