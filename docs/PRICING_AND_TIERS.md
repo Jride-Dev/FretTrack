@@ -72,12 +72,50 @@ Included:
 - 5 users included
 - Larger storage allowance
 - Advanced reporting
+- Advanced employee permissions and staff roles
 - SMS allowance
 - Priority support
 - Future inventory access
 - Future advanced accounting access
 
 Shop Pro should fit busier shops with multiple staff, heavier photo usage, higher message volume, and stronger reporting needs.
+
+Advanced staff management is intended primarily for larger or multi-user paid shops. The current system already has basic shop membership roles; future work should expand this into granular permissions managed by owners/admins from an Admin or Staff Management page.
+
+Planned capabilities include:
+
+- Invite/remove employees
+- Assign roles
+- Granular permissions
+- Restrict sensitive financial/accounting areas
+- Restrict inventory, admin, and settings access
+- Technician-only workflow access
+- Reporting visibility controls
+- Future audit visibility per employee
+
+Potential roles:
+
+- Owner
+- Admin
+- Technician
+- Front Desk / Intake
+- Accounting / Reports
+- Read-only
+
+Possible permissions:
+
+- Create/edit jobs
+- Delete jobs
+- Manage customers
+- Upload/delete images
+- Manage pricing
+- Manage shop settings
+- Manage billing/subscription
+- Access accounting exports
+- Manage employees
+- Manage inventory later
+
+Solo/basic tiers may continue using simplified role handling, while larger shops unlock advanced staff management.
 
 ## Planned Add-Ons
 

@@ -32,6 +32,19 @@ This file tracks where FretTrack is headed after the current `0.2.6-beta.6` priv
 - Keep viewer read-only, tech operational, and owner/admin administrative permissions aligned with existing RLS and helper functions.
 - Confirm role changes, removals, and last-owner protection during beta smoke tests.
 
+## Employee Permissions / Staff Roles
+
+Planned for multi-user paid tiers, especially Shop Pro and above.
+
+- Expand the current basic shop membership roles into granular staff permission management for larger shops.
+- Add an Admin or Staff Management page where shop owners/admins can invite/remove employees, assign roles, and manage access.
+- Support roles such as Owner, Admin, Technician, Front Desk / Intake, Accounting / Reports, and Read-only.
+- Add granular permissions for create/edit jobs, delete jobs, manage customers, upload/delete images, manage pricing, manage shop settings, manage billing/subscription, access accounting exports, manage employees, and future inventory management.
+- Restrict sensitive accounting, reporting, billing, inventory, admin, and settings areas by permission instead of relying only on broad role names.
+- Preserve technician-only workflow access for employees who need job/photo/service access without full financial or admin visibility.
+- Add reporting visibility controls and future audit visibility by employee once activity tracking is mature.
+- Keep Solo/basic tiers on simplified role handling where appropriate, while larger paid shops unlock advanced staff management.
+
 ## Customer Management And Import
 
 - Build the customer import workflow in this order: raw spreadsheet row, `customerImportMapper`, normalization, validation, duplicate detection, preview, then bulk insert/update.
