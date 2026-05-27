@@ -15,6 +15,7 @@ export async function getOrCreateBetaAccessRequest() {
 
 export function normalizeBetaAccessRequest(request = {}) {
   return {
+    id: request.id || '',
     userId: request.user_id || request.userId || '',
     email: request.email || '',
     status: request.status || 'pending',

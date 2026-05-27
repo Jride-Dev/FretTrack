@@ -597,7 +597,7 @@ function landingPage() {
             throw new Error(result.error || 'Unable to submit right now.');
           }
           form.reset();
-          status.textContent = 'Application received. Thank you.';
+          status.textContent = 'Application received. You’ll be contacted or approved before workspace access is enabled.';
           status.className = 'form-status success';
         } catch (error) {
           status.textContent = error.message || 'Unable to submit right now.';
@@ -680,6 +680,66 @@ async function saveBetaApplication(request, env) {
     return jsonResponse({ ok: false, error: 'Please enter a valid email address.' }, 400);
   }
 
+  try {
+    await submitBetaAccessRequest(application, env);
+    await archiveBetaApplication(application, env);
+  } catch (error) {
+    return jsonResponse({ ok: false, error: error.message || 'Unable to submit right now.' }, 500);
+  }
+
+  return jsonResponse({ ok: true });
+}
+
+async function submitBetaAccessRequest(application, env) {
+  const supabaseUrl = cleanText(env.SUPABASE_URL || env.VITE_SUPABASE_URL || '', 300).replace(/\/+$/, '');
+  const supabaseAnonKey = cleanText(env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || '', 1000);
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Beta application service is not configured.');
+  }
+
+  const notes = [
+    `State: ${application.state}`,
+    `Team size: ${application.teamSize}`,
+    `Current tracking: ${application.currentTracking}`,
+    `Submitted: ${application.submittedAt}`,
+    application.ipCountry ? `Country: ${application.ipCountry}` : ''
+  ].filter(Boolean).join('\n');
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/submit_beta_access_request`, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseAnonKey,
+      authorization: `Bearer ${supabaseAnonKey}`,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      applicant_email: application.email,
+      applicant_name: application.name,
+      applicant_shop_name: application.shopName,
+      applicant_notes: notes
+    })
+  });
+
+  let result = null;
+  try {
+    result = await response.json();
+  } catch {
+    result = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(result?.message || result?.error || 'Unable to submit right now.');
+  }
+
+  return result;
+}
+
+async function archiveBetaApplication(application, env) {
+  if (!env.FRETTRACK_APP_ASSETS) {
+    return;
+  }
+
   const id = crypto.randomUUID();
   const datePath = application.submittedAt.slice(0, 10);
   await env.FRETTRACK_APP_ASSETS.put(
@@ -692,8 +752,6 @@ async function saveBetaApplication(request, env) {
       }
     }
   );
-
-  return jsonResponse({ ok: true });
 }
 
 async function serveAsset(pathname, env) {

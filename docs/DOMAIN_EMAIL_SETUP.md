@@ -17,6 +17,9 @@ Domain: `frettrack-app.com`
   - Custom root domain: `frettrack-app.com`
   - Custom www domain: `www.frettrack-app.com`
   - Source: `cloudflare/frettrack-coming-soon`
+  - Required variables/secrets:
+    - `SUPABASE_URL`
+    - `SUPABASE_ANON_KEY`
 - Cloudflare R2:
   - Bucket: `frettrack-app-assets`
   - Worker binding: `FRETTRACK_APP_ASSETS`
@@ -103,6 +106,8 @@ Deploy the root coming-soon page:
 ```powershell
 npx wrangler deploy --config cloudflare/frettrack-coming-soon/wrangler.jsonc
 ```
+
+The beta application endpoint calls Supabase RPC `public.submit_beta_access_request`, so the Worker must have `SUPABASE_URL` and `SUPABASE_ANON_KEY` configured before form submissions will create Operator Dashboard requests.
 
 Confirm:
 
