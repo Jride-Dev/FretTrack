@@ -1,4 +1,5 @@
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
+import { normalizeBetaAccessRequest } from '../beta/betaAccessService';
 
 export async function isCurrentOperator() {
   if (!hasSupabaseConfig || !supabase) {
@@ -19,12 +20,22 @@ export async function getBetaOperatorDashboard() {
     return getEmptyDashboard();
   }
 
-  const { data, error } = await supabase.rpc('get_beta_operator_dashboard');
-  if (error) {
-    throw error;
+  const [dashboardResult, accessResult] = await Promise.all([
+    supabase.rpc('get_beta_operator_dashboard'),
+    supabase.rpc('get_beta_access_requests')
+  ]);
+
+  if (dashboardResult.error) {
+    throw dashboardResult.error;
+  }
+  if (accessResult.error) {
+    throw accessResult.error;
   }
 
-  return normalizeDashboard(data);
+  return normalizeDashboard({
+    ...dashboardResult.data,
+    betaAccessRequests: accessResult.data || []
+  });
 }
 
 export async function updateBetaShopSubscription(shopId, updates = {}) {
@@ -46,6 +57,24 @@ export async function updateBetaShopSubscription(shopId, updates = {}) {
   return data;
 }
 
+export async function updateBetaAccessRequest(userId, status, notes = null) {
+  if (!hasSupabaseConfig || !supabase || !userId) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc('update_beta_access_request', {
+    target_user_id: userId,
+    next_status: status,
+    next_notes: notes
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 function normalizeDashboard(dashboard = {}) {
   return {
     summary: {
@@ -57,12 +86,18 @@ function normalizeDashboard(dashboard = {}) {
       totalStorageBytes: Number(dashboard.summary?.totalStorageBytes || 0),
       totalJobs: Number(dashboard.summary?.totalJobs || 0),
       recentActivityCount: Number(dashboard.summary?.recentActivityCount || 0),
-      failedUploadCount: Number(dashboard.summary?.failedUploadCount || 0)
+      failedUploadCount: Number(dashboard.summary?.failedUploadCount || 0),
+      pendingBetaAccessRequests: Number(
+        dashboard.summary?.pendingBetaAccessRequests
+          ?? (dashboard.betaAccessRequests || []).filter((request) => request.status === 'pending').length
+          ?? 0
+      )
     },
     shops: (dashboard.shops || []).map(normalizeShopRow),
     members: (dashboard.members || []).map(normalizeMemberRow),
     usage: (dashboard.usage || []).map(normalizeShopRow),
-    activity: (dashboard.activity || []).map(normalizeActivityRow)
+    activity: (dashboard.activity || []).map(normalizeActivityRow),
+    betaAccessRequests: (dashboard.betaAccessRequests || []).map(normalizeBetaAccessRequest)
   };
 }
 
@@ -129,6 +164,7 @@ function getEmptyDashboard() {
     shops: [],
     members: [],
     usage: [],
-    activity: []
+    activity: [],
+    betaAccessRequests: []
   });
 }

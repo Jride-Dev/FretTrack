@@ -29,6 +29,7 @@ import {
   isGraceStatus,
   isReadOnlyStatus
 } from '../modules/billing/entitlementService';
+import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService';
 import { isCurrentOperator } from '../modules/operator/operatorService';
 
 const APP_VERSION = '0.2.6-beta.6';
@@ -53,6 +54,8 @@ export default function App() {
   const [isShopProfileLoading, setIsShopProfileLoading] = useState(false);
   const [isOperator, setIsOperator] = useState(false);
   const [isOperatorLoading, setIsOperatorLoading] = useState(false);
+  const [betaAccess, setBetaAccess] = useState(null);
+  const [isBetaAccessLoading, setIsBetaAccessLoading] = useState(false);
   const [showOperatorDashboard, setShowOperatorDashboard] = useState(false);
   const [newShopName, setNewShopName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -128,6 +131,7 @@ export default function App() {
           setMemberships([]);
           setShopProfile(null);
           setIsOperator(false);
+          setBetaAccess(null);
           setShowOperatorDashboard(false);
           setEntitlementSnapshot(getDefaultEntitlementSnapshot());
           setJobs([]);
@@ -153,22 +157,58 @@ export default function App() {
   useEffect(() => {
     if (!hasSupabaseConfig || !session) {
       setIsOperator(false);
+      setBetaAccess(null);
+      setIsBetaAccessLoading(false);
       return;
     }
 
-    loadOperatorAccess();
-    loadShopAccess();
+    loadSessionAccess();
   }, [session?.user?.id]);
 
-  async function loadOperatorAccess() {
+  async function loadSessionAccess() {
     setIsOperatorLoading(true);
+    setIsBetaAccessLoading(true);
     try {
-      setIsOperator(await isCurrentOperator());
+      const operatorAccess = await isCurrentOperator();
+      setIsOperator(operatorAccess);
+
+      if (operatorAccess) {
+        setBetaAccess({ status: 'approved' });
+        setIsBetaAccessLoading(false);
+        await loadShopAccess();
+        return;
+      }
+
+      const accessRequest = await getOrCreateBetaAccessRequest();
+      setBetaAccess(accessRequest);
+      setIsBetaAccessLoading(false);
+
+      if (accessRequest.status === 'approved') {
+        await loadShopAccess();
+        return;
+      }
+
+      setMembership(null);
+      setMemberships([]);
+      setShopProfile(null);
+      setEntitlementSnapshot(getDefaultEntitlementSnapshot());
+      setJobs([]);
+      setCustomers([]);
+      setSelectedJobId(null);
+      setMode('new');
+      setSupabaseStatus('auth-required');
+      clearSelectedShop();
     } catch (error) {
-      console.error('Operator access check failed.', error);
+      console.error('Beta access check failed.', error);
       setIsOperator(false);
+      setBetaAccess({ status: 'pending' });
+      setNotice({
+        type: 'error',
+        message: getErrorMessage(error, 'Unable to check beta access.')
+      });
     } finally {
       setIsOperatorLoading(false);
+      setIsBetaAccessLoading(false);
     }
   }
 
@@ -283,6 +323,11 @@ export default function App() {
       return;
     }
 
+    if (hasSupabaseConfig && !isOperator && betaAccess?.status !== 'approved') {
+      setNotice({ type: 'error', message: 'An operator must approve your beta access before you can create a shop.' });
+      return;
+    }
+
     setIsMembershipLoading(true);
     setNotice(null);
     try {
@@ -315,6 +360,8 @@ export default function App() {
     setMemberships([]);
     setShopProfile(null);
     setIsOperator(false);
+    setBetaAccess(null);
+    setIsBetaAccessLoading(false);
     setShowOperatorDashboard(false);
     setEntitlementSnapshot(getDefaultEntitlementSnapshot());
     setMode('new');
@@ -521,6 +568,28 @@ export default function App() {
           initialMode="update-password"
           onPasswordUpdated={() => setIsPasswordRecovery(false)}
           onNotice={setNotice}
+        />
+        <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+      </>
+    );
+  }
+
+  if (hasSupabaseConfig && session && !isOperator && isBetaAccessLoading) {
+    return (
+      <main className="app auth-shell">
+        <section className="panel auth-panel">Checking beta access...</section>
+      </main>
+    );
+  }
+
+  if (hasSupabaseConfig && session && !isOperator && betaAccess && betaAccess.status !== 'approved') {
+    return (
+      <>
+        <PendingApprovalScreen
+          betaAccess={betaAccess}
+          email={session.user?.email || ''}
+          onRetry={loadSessionAccess}
+          onSignOut={handleSignOut}
         />
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       </>
@@ -905,6 +974,31 @@ function slugifyShopId(shopName) {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 64);
+}
+
+function PendingApprovalScreen({ betaAccess, email, onRetry, onSignOut }) {
+  const isRejected = betaAccess?.status === 'rejected';
+  const message = isRejected
+    ? 'Your FretTrack beta access request is not active. Contact support if you believe this is a mistake.'
+    : 'Your FretTrack beta access request has been received. An operator must approve your account before you can create or access a shop workspace.';
+
+  return (
+    <main className="app auth-shell">
+      <section className="panel auth-panel">
+        <h1>{isRejected ? 'Beta Access Not Active' : 'Pending Approval'}</h1>
+        <p>{message}</p>
+        <p className="muted-text">{email || betaAccess?.email}</p>
+        <div className="mode-actions">
+          <button type="button" className="primary-action" onClick={onRetry}>
+            Retry Access Check
+          </button>
+          <button type="button" className="button-tertiary" onClick={onSignOut}>
+            Sign Out
+          </button>
+        </div>
+      </section>
+    </main>
+  );
 }
 
 function BillingStateBanner({ canManageShop, entitlementSnapshot }) {
