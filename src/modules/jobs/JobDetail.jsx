@@ -215,7 +215,9 @@ export default function JobDetail({
   }
 
   function updateStringCount(value) {
-    const stringCount = normalizeStringCount(value, draftJob.instrumentType);
+    const stringCount = value === 'custom'
+      ? normalizeStringCount(draftJob.techDetails.stringCount || draftJob.techDetails.stringGauges?.length, draftJob.instrumentType)
+      : normalizeStringCount(value, draftJob.instrumentType);
     patchJob({
       stringCount,
       techDetails: {

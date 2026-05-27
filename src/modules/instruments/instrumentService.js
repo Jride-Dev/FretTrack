@@ -144,6 +144,18 @@ export const instrumentCatalog = {
   }
 };
 
+const instrumentTypeOptions = [
+  { value: 'Acoustic', label: 'Acoustic' },
+  { value: 'Electric', label: 'Electric' },
+  { value: 'Bass', label: 'Bass' }
+];
+
+const stringCountOptionsByType = {
+  Electric: [5, 6, 7, 8],
+  Bass: [4, 5, 6],
+  Acoustic: [6, 12]
+};
+
 export const STRING_COUNT_OPTIONS = [4, 5, 6, 7, 8, 9, 10, 12];
 
 export function normalizeInstrumentType(instrumentType) {
@@ -157,6 +169,18 @@ export function normalizeInstrumentType(instrumentType) {
 }
 
 export function stringCountForInstrument(instrumentType) {
+  return getDefaultStringCount(instrumentType);
+}
+
+export function getInstrumentTypeOptions() {
+  return instrumentTypeOptions;
+}
+
+export function getStringCountOptions(instrumentType) {
+  return stringCountOptionsByType[normalizeInstrumentType(instrumentType)] || stringCountOptionsByType.Electric;
+}
+
+export function getDefaultStringCount(instrumentType) {
   return normalizeInstrumentType(instrumentType) === 'Bass' ? 4 : 6;
 }
 
@@ -191,6 +215,19 @@ export function formatInstrumentLabel(job = {}) {
   return `${instrumentType} (${stringCount}-string)`;
 }
 
+export function getGaugeSlotLabel(index, stringCount, instrumentType = 'Electric') {
+  const normalizedCount = normalizeStringCount(stringCount, instrumentType);
+  const outerLabels = getOuterStringLabels(instrumentType, normalizedCount);
+
+  if (index === 0) {
+    return outerLabels.bass;
+  }
+  if (index === normalizedCount - 1) {
+    return outerLabels.treble;
+  }
+  return String(index + 1);
+}
+
 export function getOuterStringLabels(instrumentType = 'Electric', stringCount = stringCountForInstrument(instrumentType)) {
   const normalizedType = normalizeInstrumentType(instrumentType);
   const normalizedCount = normalizeStringCount(stringCount, normalizedType);
@@ -203,6 +240,14 @@ export function getOuterStringLabels(instrumentType = 'Electric', stringCount = 
       return { treble: 'High G', bass: 'Low B' };
     }
     return { treble: 'High G', bass: 'Low E' };
+  }
+
+  if (normalizedType === 'Acoustic') {
+    return { treble: 'High E', bass: 'Low E' };
+  }
+
+  if (normalizedCount >= 8) {
+    return { treble: 'High E', bass: 'Low F#' };
   }
 
   if (normalizedCount >= 7) {

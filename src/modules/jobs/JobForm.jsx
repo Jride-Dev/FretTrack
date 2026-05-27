@@ -3,11 +3,12 @@ import { addJob } from './jobService';
 import { generateJobNumber } from './jobNumber';
 import { combineCustomerName, findCustomerMatches } from '../customers';
 import {
-  STRING_COUNT_OPTIONS,
+  getDefaultStringCount,
+  getInstrumentTypeOptions,
+  getStringCountOptions,
   instrumentCatalog,
   normalizeStringCount,
   resizeStringGauges,
-  stringCountForInstrument
 } from '../instruments/instrumentService';
 import { formatShopDate, toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences } from '../../shared/utils/measurements';
@@ -27,7 +28,9 @@ function getInitialFormState(jobs = []) {
     intakeType: 'Walk-In',
     subcontractorName: '',
     instrumentType: 'Electric',
-    stringCount: 6,
+    stringCount: getDefaultStringCount('Electric'),
+    customStringCount: getDefaultStringCount('Electric'),
+    stringCountMode: 'preset',
     phone: '',
     email: '',
     guitarBrand: '',
@@ -79,8 +82,20 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
         const dateReceived = value || todayValue();
         nextForm.jobNumber = generateJobNumber(dateReceived, jobs);
       }
+      if (name === 'stringCountMode') {
+        if (value === 'custom') {
+          nextForm.stringCount = normalizeStringCount(current.customStringCount || current.stringCount, current.instrumentType);
+        } else {
+          nextForm.stringCount = normalizeStringCount(value, current.instrumentType);
+          nextForm.customStringCount = nextForm.stringCount;
+        }
+      }
       if (name === 'stringCount') {
         nextForm.stringCount = normalizeStringCount(value, current.instrumentType);
+      }
+      if (name === 'customStringCount') {
+        nextForm.customStringCount = normalizeStringCount(value, current.instrumentType);
+        nextForm.stringCount = nextForm.customStringCount;
       }
       return nextForm;
     });
@@ -90,7 +105,9 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
     setForm((current) => ({
       ...current,
       instrumentType,
-      stringCount: stringCountForInstrument(instrumentType)
+      stringCount: getDefaultStringCount(instrumentType),
+      customStringCount: getDefaultStringCount(instrumentType),
+      stringCountMode: 'preset'
     }));
   }
 
@@ -237,11 +254,6 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
           <option key={model} value={model} />
         ))}
       </datalist>
-      <datalist id="new-job-string-count-options">
-        {STRING_COUNT_OPTIONS.map((count) => (
-          <option key={count} value={count} />
-        ))}
-      </datalist>
       <div className="form-grid">
         <section className="customer-lookup wide">
           <h3>Customer Lookup</h3>
@@ -320,45 +332,47 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
         <div className="instrument-selector" role="group" aria-label="Instrument Type">
           <span>Instrument Type</span>
           <div className="segmented-control">
-            <button
-              type="button"
-              className={form.instrumentType === 'Acoustic' ? 'active' : ''}
-              onClick={() => setInstrumentType('Acoustic')}
-              disabled={!canWrite}
-            >
-              Acoustic
-            </button>
-            <button
-              type="button"
-              className={form.instrumentType === 'Electric' ? 'active' : ''}
-              onClick={() => setInstrumentType('Electric')}
-              disabled={!canWrite}
-            >
-              Electric
-            </button>
-            <button
-              type="button"
-              className={form.instrumentType === 'Bass' ? 'active' : ''}
-              onClick={() => setInstrumentType('Bass')}
-              disabled={!canWrite}
-            >
-              Bass
-            </button>
+            {getInstrumentTypeOptions().map((option) => (
+              <button
+                type="button"
+                key={option.value}
+                className={form.instrumentType === option.value ? 'active' : ''}
+                onClick={() => setInstrumentType(option.value)}
+                disabled={!canWrite}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
         <label>
           String Count
-          <input
-            type="number"
-            min="1"
-            max="24"
-            name="stringCount"
-            list="new-job-string-count-options"
-            value={form.stringCount}
+          <select
+            name="stringCountMode"
+            value={getStringCountSelectValue(form)}
             onChange={handleChange}
             disabled={!canWrite}
-          />
+          >
+            {getStringCountOptions(form.instrumentType).map((count) => (
+              <option key={count} value={count}>{count}-string</option>
+            ))}
+            <option value="custom">Custom</option>
+          </select>
         </label>
+        {getStringCountSelectValue(form) === 'custom' && (
+          <label>
+            Custom String Count
+            <input
+              type="number"
+              min="1"
+              max="24"
+              name="customStringCount"
+              value={form.customStringCount || form.stringCount}
+              onChange={handleChange}
+              disabled={!canWrite}
+            />
+          </label>
+        )}
         <label>
           Phone
           <input name="phone" value={form.phone} onChange={handleChange} disabled={!canWrite} />
@@ -399,6 +413,11 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
       <button type="submit" disabled={isSaving || !canWrite}>{isSaving ? 'Saving...' : 'Save Job'}</button>
     </form>
   );
+}
+
+function getStringCountSelectValue(form) {
+  const count = normalizeStringCount(form.stringCount, form.instrumentType);
+  return getStringCountOptions(form.instrumentType).includes(count) ? String(count) : 'custom';
 }
 
 function getDefaultTaxSettings(shopProfile = {}) {
