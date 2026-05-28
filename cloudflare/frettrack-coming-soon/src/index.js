@@ -211,6 +211,10 @@ function landingPage() {
         z-index: 20;
       }
 
+      .modal-backdrop:target {
+        display: flex;
+      }
+
       body.modal-open {
         overflow: hidden;
       }
@@ -255,9 +259,13 @@ function landingPage() {
         border-radius: 6px;
         color: var(--ink);
         cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-size: 22px;
         height: 36px;
         line-height: 1;
+        text-decoration: none;
         width: 36px;
       }
 
@@ -477,7 +485,7 @@ function landingPage() {
             <h2 id="beta-heading">Shop Owners Wanted for Beta Testing!</h2>
             <p>We are looking for a few real repair shops to test FretTrack with actual bench work, photos, customer lookup, and repair sheets.</p>
           </div>
-          <button class="button" type="button" id="open-application">APPLY HERE</button>
+          <a class="button" href="#application-modal" id="open-application">APPLY HERE</a>
         </div>
       </section>
 
@@ -515,7 +523,7 @@ function landingPage() {
             <h2 id="application-title">Beta tester application</h2>
             <p>Tell us a little about your shop so we can keep this beta useful and controlled.</p>
           </div>
-          <button class="modal-close" type="button" id="close-application" aria-label="Close application">X</button>
+          <a class="modal-close" href="#" id="close-application" aria-label="Close application">X</a>
         </div>
         <form class="application-form" id="application-form">
           <label>
@@ -570,12 +578,23 @@ function landingPage() {
 
       openButton.addEventListener('click', openModal);
       closeButton.addEventListener('click', closeModal);
+      window.addEventListener('hashchange', () => {
+        if (window.location.hash === '#application-modal') {
+          openModal();
+        } else {
+          body.classList.remove('modal-open');
+        }
+      });
       modal.addEventListener('click', (event) => {
         if (event.target === modal) closeModal();
       });
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && body.classList.contains('modal-open')) closeModal();
       });
+
+      if (window.location.hash === '#application-modal') {
+        openModal();
+      }
 
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
