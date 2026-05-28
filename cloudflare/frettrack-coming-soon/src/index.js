@@ -227,7 +227,7 @@ function landingPage() {
         background: var(--panel);
         border-radius: 8px;
         color: var(--ink);
-        max-height: min(720px, calc(100vh - 40px));
+        max-height: min(720px, calc(100vh - 24px));
         max-width: 560px;
         overflow: auto;
         padding: 24px;
@@ -437,6 +437,51 @@ function landingPage() {
         .beta-callout .section {
           align-items: flex-start;
           flex-direction: column;
+        }
+
+        .modal {
+          max-height: calc(100vh - 12px);
+          padding: 14px;
+          width: min(100%, calc(100vw - 12px));
+        }
+
+        .modal-header {
+          margin-bottom: 12px;
+        }
+
+        .modal h2 {
+          font-size: 24px;
+        }
+
+        .modal p {
+          font-size: 14px;
+        }
+
+        .application-form {
+          gap: 10px;
+        }
+
+        .application-form input,
+        .application-form textarea {
+          min-height: 40px;
+          padding: 9px 10px;
+        }
+
+        .application-form textarea {
+          min-height: 78px;
+        }
+
+        .application-form .button,
+        .nav a,
+        .button {
+          min-height: 44px;
+          margin-top: 2px;
+        }
+
+        .application-form .button {
+          position: sticky;
+          bottom: 0;
+          z-index: 1;
         }
       }
     </style>
