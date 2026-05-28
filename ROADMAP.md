@@ -118,6 +118,13 @@ Planned for multi-user paid tiers, especially Shop Pro and above.
 - Lazy-load HEIC/HEIF photo conversion so the heavy `heic2any` dependency is downloaded only when a shop uploads a HEIC/HEIF image.
 - Review Vite bundle chunks after lazy-loading photo conversion and consider additional code splitting only where it improves first-load time without making the beta workflow brittle.
 
+## Mobile And Tablet
+
+- Keep the browser-based app usable on phones and tablets without turning it into a separate mobile product.
+- Add a tablet intake mode later if real bench use shows the current stacked layout is still too busy on iPad-sized screens.
+- Consider direct camera capture, signature capture, PWA install support, and an offline draft queue only after the current browser workflow is stable on smaller screens.
+- Keep improving touch spacing, responsive grids, and modal behavior as real beta use exposes the remaining rough edges.
+
 ## Future Polish Candidates
 
 - Tighten trial feedback around the Acoustic / Electric / Bass instrument flow.

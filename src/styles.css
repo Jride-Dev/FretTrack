@@ -2248,6 +2248,261 @@ th.internal-only {
   text-align: right;
 }
 
+@media (max-width: 1024px) {
+  main {
+    min-width: 0;
+    padding: 14px;
+  }
+
+  header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .brand-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  aside {
+    gap: 14px;
+  }
+
+  .panel-heading,
+  .overview-grid,
+  .contact-preference-display,
+  .message-preferences,
+  .message-form,
+  .billing-summary-grid,
+  .accounting-summary-grid,
+  .image-grid,
+  .discount-controls,
+  .payment-form,
+  .neck-inspection-grid,
+  .form-grid,
+  .customer-card,
+  .customer-match,
+  .print-grid,
+  .signature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panel-heading {
+    align-items: start;
+  }
+
+  .customer-lookup,
+  .customer-add-form,
+  .customer-list-panel,
+  .auth-panel,
+  .onboarding-panel {
+    max-width: none;
+  }
+
+  .job-row {
+    grid-template-columns: 70px minmax(0, 1fr) minmax(0, 1fr) 96px 90px;
+  }
+
+  .damage-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .damage-row {
+    grid-template-columns: 28px minmax(0, 1fr) 120px;
+  }
+
+  .damage-row-expanded {
+    grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .billing-state-banner {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .feedback-backdrop {
+    padding: 14px;
+  }
+
+  .feedback-modal {
+    max-height: calc(100vh - 28px);
+    overflow: auto;
+    width: min(100%, 560px);
+  }
+
+  .operator-header,
+  .operator-controls {
+    align-items: flex-start;
+  }
+
+  .operator-controls input,
+  .operator-controls select {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  button,
+  .button,
+  a.button-link,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+
+  .detail-header,
+  .feedback-modal-heading,
+  .operator-activity-item div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .detail-header label,
+  .auth-panel,
+  .onboarding-panel {
+    width: 100%;
+  }
+
+  .form-grid,
+  .feedback-grid,
+  .message-preferences,
+  .message-form,
+  .contact-preference-display,
+  .neck-inspection-grid,
+  .discount-controls,
+  .payment-form,
+  .print-grid,
+  .signature-grid,
+  .overview-grid,
+  .panel-heading,
+  .billing-summary-grid,
+  .accounting-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .string-gauges {
+    grid-template-columns: 1fr;
+  }
+
+  .job-tab-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .job-tab-bar button {
+    flex: 0 0 auto;
+    min-height: 44px;
+  }
+
+  .actions,
+  .feedback-actions,
+  .mode-actions,
+  .operator-row-actions,
+  .accounting-actions,
+  .billing-chips {
+    flex-wrap: wrap;
+  }
+
+  .mode-actions {
+    width: 100%;
+  }
+
+  .mode-actions > * {
+    flex: 1 1 160px;
+  }
+
+  .image-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .image-grid img {
+    height: 132px;
+  }
+
+  .image-upload button,
+  .feedback-actions button,
+  .auth-panel .primary-action,
+  .auth-panel .button-tertiary {
+    width: 100%;
+  }
+
+  .damage-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .damage-canvas {
+    min-height: 260px;
+  }
+
+  .damage-row,
+  .damage-row-expanded,
+  .job-row {
+    grid-template-columns: 1fr;
+  }
+
+  .job-row {
+    gap: 4px;
+  }
+
+  .job-row strong,
+  .job-row span,
+  .operator-table td small {
+    overflow-wrap: anywhere;
+  }
+
+  .operator-table {
+    min-width: 760px;
+  }
+
+  .operator-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .operator-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shop-picker-button {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .billing-page,
+  .accounting-report,
+  .job-workspace {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 430px) {
+  .brand-header img {
+    height: 56px;
+    width: 56px;
+  }
+
+  .image-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .operator-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media print {
   :root {
     color-scheme: light;
