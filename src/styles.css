@@ -2170,7 +2170,7 @@ th.internal-only {
 }
 
 .report-damage-placeholder {
-  color: var(--print-muted);
+  color: var(--print-text);
   min-height: 72px;
   padding: 24px 16px;
   text-align: center;
@@ -2178,7 +2178,7 @@ th.internal-only {
 
 .report-damage-missing {
   border: 1px solid var(--print-text);
-  color: var(--print-muted);
+  color: var(--print-text);
   margin: 8px 0 12px;
   padding: 10px 12px;
 }
@@ -2519,6 +2519,13 @@ th.internal-only {
     --shadow: none;
   }
 
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   button,
   input,
   textarea,
@@ -2532,6 +2539,19 @@ th.internal-only {
     background: var(--print-bg);
     color: var(--print-text);
     font-size: 12px;
+  }
+
+  body,
+  .print-sheet,
+  .customer-report {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .print-sheet *,
+  .customer-report * {
+    color: #000 !important;
+    text-shadow: none !important;
   }
 
   .print-only {
@@ -2606,6 +2626,7 @@ th.internal-only {
 
   .print-sheet h3 {
     border-bottom: 1px solid var(--print-text);
+    color: #000 !important;
     margin-top: 18px;
   }
 
@@ -2615,6 +2636,21 @@ th.internal-only {
 
   .customer-report {
     font-size: 10.5px;
+  }
+
+  .customer-report,
+  .customer-report p,
+  .customer-report td,
+  .customer-report th,
+  .customer-report span,
+  .customer-report strong,
+  .print-sheet p,
+  .print-sheet td,
+  .print-sheet th,
+  .print-sheet span,
+  .print-sheet strong,
+  .print-footer-text {
+    color: #000 !important;
   }
 
   .customer-report h3 {
