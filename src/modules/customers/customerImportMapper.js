@@ -18,6 +18,8 @@ export const customerImportFields = [
   'postalCode',
   'country',
   'notes',
+  'taxId',
+  'isActive',
   'source',
   'externalRef',
   'importSource',
@@ -40,6 +42,8 @@ export const customerImportAliases = {
   postalCode: ['postal_code', 'zip', 'zip_code'],
   country: ['country'],
   notes: ['note', 'notes'],
+  taxId: ['tax_id', 'taxid', 'vat_id', 'business_id'],
+  isActive: ['is_active', 'active', 'status'],
   source: ['source'],
   externalRef: ['external_ref', 'external_id', 'customer_id', 'legacy_id'],
   importSource: ['import_source'],
@@ -67,6 +71,9 @@ export function mapCustomerImportRow(row = {}, options = {}) {
     emailNormalized: normalizeEmail(customer.email),
     phone: customer.phone || '',
     phoneNormalized: normalizePhone(customer.phone),
+    isActive: customer.isActive !== undefined
+      ? !['false', 'inactive', '0'].includes(String(customer.isActive).trim().toLowerCase())
+      : true,
     source: customer.source || (importSource ? 'import' : ''),
     importSource,
     importBatchId

@@ -1,17 +1,20 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { findDuplicateCustomer } from './customerDuplicateDetection';
 import { addCustomer } from './customerService';
-import { customerSources, customerTypes } from './customerTypes';
+import { customerSources, customerStatusOptions, customerTypes } from './customerTypes';
 import { getCustomerDisplayName, normalizeCustomer } from './customerNormalize';
 import { hasRecommendedContactMethod } from './customerValidation';
 import { getCurrentShopId } from '../shops/shopConfig';
 
 const initialForm = {
+  id: '',
   displayName: '',
   firstName: '',
   lastName: '',
   companyName: '',
   customerType: 'individual',
+  isActive: true,
+  taxId: '',
   email: '',
   phone: '',
   secondaryPhone: '',
@@ -26,17 +29,44 @@ const initialForm = {
   externalRef: ''
 };
 
-export default function CustomerForm({ customers = [], canWrite = true, onCustomerSaved, onNotice }) {
-  const [form, setForm] = useState(initialForm);
+export default function CustomerForm({
+  customers = [],
+  canWrite = true,
+  customer = null,
+  onCustomerSaved,
+  onNotice,
+  onCancel,
+  submitLabel,
+  title
+}) {
+  const [form, setForm] = useState(() => buildFormState(customer));
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    setForm(buildFormState(customer));
+  }, [customer?.id]);
+
+  const customerPool = useMemo(() => {
+    if (!form.id) {
+      return customers;
+    }
+
+    return customers.filter((current) => current.id !== form.id);
+  }, [customers, form.id]);
+
   const draftCustomer = useMemo(() => normalizeCustomer({ ...form, shopId: getCurrentShopId() }), [form]);
-  const duplicateCustomer = useMemo(() => findDuplicateCustomer(customers, draftCustomer), [customers, draftCustomer]);
+  const duplicateCustomer = useMemo(() => findDuplicateCustomer(customerPool, draftCustomer), [customerPool, draftCustomer]);
   const hasContactMethod = hasRecommendedContactMethod(draftCustomer);
+  const isEditing = Boolean(customer?.id);
+  const heading = title || (isEditing ? 'Edit Customer' : 'Add Customer');
+  const buttonLabel = submitLabel || (isEditing ? 'Save Changes' : 'Save Customer');
 
   function handleChange(event) {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
+    setForm((current) => ({
+      ...current,
+      [name]: name === 'isActive' ? value === 'active' : value
+    }));
   }
 
   async function handleSubmit(event) {
@@ -52,9 +82,15 @@ export default function CustomerForm({ customers = [], canWrite = true, onCustom
         ...form,
         displayName: getCustomerDisplayName(form)
       });
-      setForm(initialForm);
+
+      if (!isEditing) {
+        setForm(initialForm);
+      } else {
+        setForm(buildFormState(savedCustomer));
+      }
+
       await onCustomerSaved?.(savedCustomer);
-      onNotice?.({ type: 'success', message: `Saved customer ${savedCustomer.displayName}.` });
+      onNotice?.({ type: 'success', message: `${isEditing ? 'Updated' : 'Saved'} customer ${savedCustomer.displayName}.` });
     } catch (error) {
       onNotice?.({
         type: 'error',
@@ -67,8 +103,13 @@ export default function CustomerForm({ customers = [], canWrite = true, onCustom
 
   return (
     <form className="panel customer-add-form" onSubmit={handleSubmit}>
-      <h2>Add Customer</h2>
+      <h2>{heading}</h2>
       {!canWrite && <p className="muted-text">Your shop role can view customers but cannot create or edit them.</p>}
+      {isEditing && (
+        <div className="mode-actions no-print customer-edit-actions">
+          {onCancel && <button type="button" onClick={onCancel}>Cancel</button>}
+        </div>
+      )}
       <div className="form-grid">
         <label>
           Display Name
@@ -81,6 +122,18 @@ export default function CustomerForm({ customers = [], canWrite = true, onCustom
               <option key={type.value} value={type.value}>{type.label}</option>
             ))}
           </select>
+        </label>
+        <label>
+          Status
+          <select name="isActive" value={form.isActive ? 'active' : 'inactive'} onChange={handleChange} disabled={!canWrite}>
+            {customerStatusOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Tax / VAT ID
+          <input name="taxId" value={form.taxId} onChange={handleChange} placeholder="Optional business tax ID" disabled={!canWrite} />
         </label>
         <label>
           First Name
@@ -155,9 +208,24 @@ export default function CustomerForm({ customers = [], canWrite = true, onCustom
           Possible match: {duplicateCustomer.displayName} | {duplicateCustomer.phone || 'No phone'} | {duplicateCustomer.email || 'No email'}
         </p>
       )}
-      <button type="submit" disabled={isSaving || !canWrite}>{isSaving ? 'Saving...' : 'Save Customer'}</button>
+      <button type="submit" disabled={isSaving || !canWrite}>{isSaving ? 'Saving...' : buttonLabel}</button>
     </form>
   );
+}
+
+function buildFormState(customer) {
+  if (!customer) {
+    return { ...initialForm };
+  }
+
+  const normalized = normalizeCustomer(customer);
+  return {
+    ...initialForm,
+    ...normalized,
+    id: normalized.id || customer.id || '',
+    isActive: normalized.isActive !== false,
+    taxId: normalized.taxId || ''
+  };
 }
 
 function getErrorMessage(error, fallback) {

@@ -16,6 +16,8 @@ Current docs:
 - [Beta operations](BETA_OPERATIONS.md)
 - [Beta tester checklist](BETA_TESTER_CHECKLIST.md)
 - [Domain and email setup](DOMAIN_EMAIL_SETUP.md)
+- [Customer module plan](CUSTOMER_MODULE_PLAN.md)
+- [Release notes](RELEASE_NOTES.md)
 - [Shop provisioning and installer packaging](shop-provisioning-and-installer.md)
 - [Trial readiness checklist](TRIAL_READINESS.md)
 

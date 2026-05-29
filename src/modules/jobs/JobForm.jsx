@@ -43,13 +43,14 @@ function getInitialFormState(jobs = []) {
   };
 }
 
-export default function JobForm({ jobs = [], customers = [], canWrite = true, shopProfile = null, onCreate, onJobSaved, onNotice }) {
+export default function JobForm({ jobs = [], customers = [], canWrite = true, shopProfile = null, initialCustomer = null, onCreate, onJobSaved, onNotice }) {
   const [form, setForm] = useState(() => getInitialFormState(jobs));
   const [isSaving, setIsSaving] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerMatches, setCustomerMatches] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const dateOptions = getShopDateOptions(shopProfile || undefined);
+  const initialCustomerId = initialCustomer?.id || '';
 
   useEffect(() => {
     setForm((current) => ({
@@ -61,6 +62,20 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
   useEffect(() => {
     setCustomerMatches(findCustomerMatches(customers.length ? customers : jobs, customerSearch));
   }, [customers, jobs, customerSearch]);
+
+  useEffect(() => {
+    if (initialCustomer) {
+      setForm(buildCustomerSeededForm(initialCustomer, jobs));
+      setSelectedCustomer(initialCustomer);
+      setCustomerSearch(initialCustomer.displayName || initialCustomer.customerName || initialCustomer.phone || initialCustomer.email);
+      return;
+    }
+
+    setForm(getInitialFormState(jobs));
+    setCustomerSearch('');
+    setCustomerMatches([]);
+    setSelectedCustomer(null);
+  }, [initialCustomerId]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -112,17 +127,47 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
   }
 
   function useCustomer(customer) {
-    setForm((current) => ({
-      ...current,
+    setForm((current) => {
+      const nextForm = {
+        ...current,
+        customerId: customer.id || '',
+        customerFirstName: customer.customerFirstName || customer.firstName || '',
+        customerLastName: customer.customerLastName || customer.lastName || '',
+        customerName: customer.customerName || customer.displayName,
+        phone: customer.phone,
+        email: customer.email
+      };
+
+      if (customer.customerType === 'subcontractor') {
+        nextForm.intakeType = 'Sub-Contract';
+        nextForm.subcontractorName = customer.companyName || customer.displayName || '';
+      }
+
+      return nextForm;
+    });
+    setSelectedCustomer(customer);
+    setCustomerSearch(customer.displayName || customer.customerName || customer.phone || customer.email);
+  }
+
+  function buildCustomerSeededForm(customer, sourceJobs = []) {
+    const baseForm = getInitialFormState(sourceJobs);
+    const customerName = customer.customerName || customer.displayName || '';
+    const nextForm = {
+      ...baseForm,
       customerId: customer.id || '',
       customerFirstName: customer.customerFirstName || customer.firstName || '',
       customerLastName: customer.customerLastName || customer.lastName || '',
-      customerName: customer.customerName || customer.displayName,
-      phone: customer.phone,
-      email: customer.email
-    }));
-    setSelectedCustomer(customer);
-    setCustomerSearch(customer.displayName || customer.customerName || customer.phone || customer.email);
+      customerName,
+      phone: customer.phone || '',
+      email: customer.email || ''
+    };
+
+    if (customer.customerType === 'subcontractor') {
+      nextForm.intakeType = 'Sub-Contract';
+      nextForm.subcontractorName = customer.companyName || customer.displayName || '';
+    }
+
+    return nextForm;
   }
 
   async function handleSubmit(event) {

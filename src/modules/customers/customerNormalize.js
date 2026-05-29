@@ -1,3 +1,5 @@
+import { normalizeCustomerTypeValue } from './customerTypes';
+
 export function normalizeText(value) {
   return String(value || '').trim().toLowerCase();
 }
@@ -50,12 +52,16 @@ export function getCustomerDisplayName(customer = {}) {
 }
 
 export function normalizeCustomerType(value) {
-  return String(value || '').toLowerCase() === 'company' ? 'company' : 'individual';
+  return normalizeCustomerTypeValue(value);
 }
 
 export function normalizeCustomer(customer = {}) {
   const hasEmailField = Object.prototype.hasOwnProperty.call(customer, 'email');
   const hasPhoneField = Object.prototype.hasOwnProperty.call(customer, 'phone');
+  const activeValue = customer.isActive ?? customer.is_active ?? true;
+  const isActive = typeof activeValue === 'string'
+    ? !['false', 'inactive', '0'].includes(activeValue.trim().toLowerCase())
+    : Boolean(activeValue);
   const splitName = splitCustomerName(customer.displayName || customer.display_name || customer.customerName || customer.customer_name || '');
   const firstName = customer.firstName || customer.first_name || customer.customerFirstName || customer.customer_first_name || splitName.firstName;
   const lastName = customer.lastName || customer.last_name || customer.customerLastName || customer.customer_last_name || splitName.lastName;
@@ -80,6 +86,8 @@ export function normalizeCustomer(customer = {}) {
     customerName: displayName,
     companyName: customer.companyName || customer.company_name || '',
     customerType: normalizeCustomerType(customer.customerType || customer.customer_type),
+    isActive,
+    taxId: customer.taxId || customer.tax_id || '',
     email,
     emailNormalized: hasEmailField ? normalizeEmail(email) : customer.emailNormalized || customer.email_normalized || normalizeEmail(email),
     phone,
