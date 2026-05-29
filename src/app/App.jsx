@@ -16,7 +16,7 @@ import { getCurrentSession, onAuthSessionChange, signOut } from '../modules/auth
 import { getJobs, updateJob } from '../modules/jobs/jobService';
 import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService';
 import { calculateTillSummary, sortNewestFirst } from '../modules/jobs/jobSelectors';
-import { clearSelectedShop, getCurrentShopName, getSelectedShop, getShopMoneyOptions, setSelectedShop } from '../modules/shops/shopConfig';
+import { clearSelectedShop, getCurrentShopName, getSelectedShop, getShopDateOptions, getShopMoneyOptions, setSelectedShop } from '../modules/shops/shopConfig';
 import { bootstrapCurrentUserAsOwner, getCurrentUserShopMemberships } from '../modules/shops/shopMembershipService';
 import { getCurrentShopProfile } from '../modules/shops/shopProfileService';
 import { money } from '../shared/utils/money';
@@ -32,7 +32,7 @@ import {
 import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService';
 import { isCurrentOperator } from '../modules/operator/operatorService';
 
-const APP_VERSION = '0.2.6-beta.6';
+const APP_VERSION = '0.2.6-beta.9';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';
@@ -59,6 +59,7 @@ export default function App() {
   const [showOperatorDashboard, setShowOperatorDashboard] = useState(false);
   const [newShopName, setNewShopName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingNewJobCustomer, setPendingNewJobCustomer] = useState(null);
   const [notice, setNotice] = useState(null);
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
@@ -419,6 +420,7 @@ export default function App() {
 
     const loadedJobs = await refreshJobs();
     await refreshCustomers(loadedJobs);
+    setPendingNewJobCustomer(null);
     setSelectedJobId(savedJob.id);
     setMode('new');
     setNotice({
@@ -480,13 +482,15 @@ export default function App() {
     }
   }
 
-  function showNewJob() {
+  function showNewJob(customer = null) {
+    setPendingNewJobCustomer(customer || null);
     setSelectedJobId(null);
     setMode('new');
   }
 
   async function handleCustomerSaved() {
     await refreshCustomers(jobs);
+    setPendingNewJobCustomer(null);
     setMode('customers');
   }
 
@@ -536,6 +540,7 @@ export default function App() {
   const entitlementMessage = getEntitlementMessage(billingAccess);
   const tillSummary = calculateTillSummary(jobs);
   const moneyOptions = getShopMoneyOptions(shopProfile || undefined);
+  const dateOptions = getShopDateOptions(shopProfile || undefined);
   const statusText = {
     checking: 'Supabase Checking',
     connected: 'Supabase Connected',
@@ -802,7 +807,15 @@ export default function App() {
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       <div className="layout app-layout">
         <aside className="no-print">
-          <JobForm jobs={jobs} customers={customers} canWrite={canWrite} shopProfile={shopProfile} onJobSaved={handleJobSaved} onNotice={setNotice} />
+          <JobForm
+            jobs={jobs}
+            customers={customers}
+            canWrite={canWrite}
+            shopProfile={shopProfile}
+            initialCustomer={pendingNewJobCustomer}
+            onJobSaved={handleJobSaved}
+            onNotice={setNotice}
+          />
           <JobList jobs={jobs} selectedJobId={selectedJobId} onSelectJob={handleSelectJob} />
           <section className="panel till-summary">
             <h2>Till Summary</h2>
@@ -854,7 +867,10 @@ export default function App() {
               customers={customers}
               jobs={jobs}
               canWrite={canWrite}
+              dateOptions={dateOptions}
+              moneyOptions={moneyOptions}
               onCustomerSaved={handleCustomerSaved}
+              onCreateJobForCustomer={showNewJob}
               onNotice={setNotice}
             />
           )}
