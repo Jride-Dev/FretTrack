@@ -2504,6 +2504,11 @@ th.internal-only {
 }
 
 @media print {
+  @page {
+    margin: 0.5in;
+    size: auto;
+  }
+
   :root {
     color-scheme: light;
     --bg: var(--print-bg);
@@ -2539,6 +2544,7 @@ th.internal-only {
     background: var(--print-bg);
     color: var(--print-text);
     font-size: 12px;
+    margin: 0;
   }
 
   body,
@@ -2604,6 +2610,12 @@ th.internal-only {
 
   .print-sheet {
     display: block !important;
+    box-sizing: border-box;
+    border: 1px solid #000 !important;
+    margin: 0 auto;
+    max-width: 7.5in;
+    padding: 0.35in;
+    width: 100%;
   }
 
   body.customer-report-printing .print-sheet {
@@ -2612,6 +2624,12 @@ th.internal-only {
 
   body.customer-report-printing .customer-report {
     display: block !important;
+    box-sizing: border-box;
+    border: 1px solid #000 !important;
+    margin: 0 auto;
+    max-width: 7.5in;
+    padding: 0.35in;
+    width: 100%;
   }
 
   body.customer-report-printing .detail > section:not(.customer-report),
