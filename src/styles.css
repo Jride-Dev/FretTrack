@@ -816,11 +816,18 @@ label {
 .customer-module {
   display: grid;
   gap: 14px;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  align-items: start;
 }
 
 .customer-add-form,
 .customer-list-panel {
-  max-width: 980px;
+  max-width: none;
+}
+
+.customer-module-sidebar {
+  display: grid;
+  gap: 14px;
 }
 
 .panel-heading {
@@ -836,6 +843,18 @@ label {
 
 .customer-search {
   width: 100%;
+}
+
+.customer-filter-bar {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 12px;
+}
+
+.customer-filter-bar label {
+  display: grid;
+  gap: 6px;
 }
 
 .form-warning {
@@ -863,6 +882,16 @@ label {
   padding: 10px;
 }
 
+.customer-card-button {
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.customer-card-button:hover {
+  border-color: var(--accent);
+}
+
 .customer-card div {
   display: grid;
   gap: 4px;
@@ -871,6 +900,55 @@ label {
 .customer-card span {
   color: var(--text-muted);
   font-size: 12px;
+}
+
+.customer-detail {
+  display: grid;
+  gap: 14px;
+}
+
+.customer-summary-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-card {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+}
+
+.summary-card span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.customer-contact-grid {
+  margin-top: 0;
+}
+
+.customer-section-title {
+  margin-bottom: 0;
+}
+
+.customer-notes {
+  white-space: pre-wrap;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.customer-history-table {
+  width: 100%;
+}
+
+.customer-history-table th,
+.customer-history-table td {
+  vertical-align: top;
 }
 
 .service-preset {
@@ -2304,6 +2382,15 @@ th.internal-only {
     max-width: none;
   }
 
+  .customer-module {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-filter-bar,
+  .customer-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .job-row {
     grid-template-columns: 70px minmax(0, 1fr) minmax(0, 1fr) 96px 90px;
   }
@@ -2499,6 +2586,11 @@ th.internal-only {
   }
 
   .operator-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-filter-bar,
+  .customer-summary-grid {
     grid-template-columns: 1fr;
   }
 }

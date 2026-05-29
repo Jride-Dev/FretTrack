@@ -152,6 +152,8 @@ function toDbCustomer(customer, shopId = getActiveShopId()) {
     last_name: customer.lastName || null,
     company_name: customer.companyName || null,
     customer_type: customer.customerType || 'individual',
+    is_active: customer.isActive !== false,
+    tax_id: customer.taxId || null,
     email: customer.email || null,
     email_normalized: customer.emailNormalized || null,
     phone: customer.phone || null,
