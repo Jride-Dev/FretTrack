@@ -1,19 +1,14 @@
-import CustomerForm from './CustomerForm.jsx';
-import { getCustomerTypeLabel } from './customerTypes';
 import { money } from '../../shared/utils/money';
 import { formatShopDate } from '../../shared/utils/dateFormat';
+import { getCustomerTypeLabel } from './customerTypes';
 
 export default function CustomerDetail({
   customer,
-  customers = [],
   canWrite = true,
-  isEditing = false,
   dateOptions = {},
   moneyOptions = {},
-  onCancelEdit,
-  onCustomerSaved,
   onCreateJob,
-  onStartEdit
+  onEditCustomer
 }) {
   if (!customer) {
     return (
@@ -24,23 +19,9 @@ export default function CustomerDetail({
     );
   }
 
-  if (isEditing) {
-    return (
-      <CustomerForm
-        customer={customer}
-        customers={customers}
-        canWrite={canWrite}
-        onCancel={onCancelEdit}
-        onCustomerSaved={onCustomerSaved}
-        submitLabel="Save Customer"
-        title={`Edit ${customer.displayName}`}
-      />
-    );
-  }
-
   return (
     <section className="panel customer-detail">
-      <div className="panel-heading">
+      <div className="panel-heading customer-detail-heading">
         <div>
           <h2>{customer.displayName}</h2>
           <p className="muted-text">
@@ -48,7 +29,7 @@ export default function CustomerDetail({
           </p>
         </div>
         <div className="mode-actions no-print customer-detail-actions">
-          {canWrite && <button type="button" onClick={() => onStartEdit?.(customer)}>Edit Profile</button>}
+          {canWrite && onEditCustomer && <button type="button" onClick={() => onEditCustomer(customer)}>Edit Profile</button>}
           {canWrite && onCreateJob && <button type="button" className="primary-action" onClick={() => onCreateJob(customer)}>Create Job</button>}
         </div>
       </div>

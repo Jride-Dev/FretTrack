@@ -816,8 +816,29 @@ label {
 .customer-module {
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
-  align-items: start;
+}
+
+.customer-module-header {
+  align-items: end;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.customer-module-titleblock {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.customer-module-titleblock h2 {
+  margin-bottom: 0;
+}
+
+.customer-module-actions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
 }
 
 .customer-add-form,
@@ -825,9 +846,17 @@ label {
   max-width: none;
 }
 
-.customer-module-sidebar {
+.customer-module-toolbar {
   display: grid;
   gap: 14px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.customer-module-layout {
+  align-items: start;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
 }
 
 .panel-heading {
@@ -848,8 +877,7 @@ label {
 .customer-filter-bar {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 .customer-filter-bar label {
@@ -869,7 +897,6 @@ label {
 .customer-list {
   display: grid;
   gap: 8px;
-  margin-top: 12px;
 }
 
 .customer-card {
@@ -892,6 +919,11 @@ label {
   border-color: var(--accent);
 }
 
+.customer-card-button.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
 .customer-card div {
   display: grid;
   gap: 4px;
@@ -905,6 +937,10 @@ label {
 .customer-detail {
   display: grid;
   gap: 14px;
+}
+
+.customer-detail-heading {
+  align-items: end;
 }
 
 .customer-summary-grid {
@@ -949,6 +985,34 @@ label {
 .customer-history-table th,
 .customer-history-table td {
   vertical-align: top;
+}
+
+.form-error {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--border));
+  color: var(--error-text);
+  margin: 12px 0 0;
+  padding: 10px;
+}
+
+.customer-modal {
+  max-height: 90vh;
+  max-width: 960px;
+  overflow: auto;
+  width: calc(100% - 24px);
+}
+
+.customer-modal .customer-add-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  max-width: none;
+  padding: 0;
+}
+
+.modal-close {
+  background: transparent;
+  border-color: var(--border);
 }
 
 .service-preset {
@@ -2375,18 +2439,21 @@ th.internal-only {
   }
 
   .customer-lookup,
-  .customer-add-form,
   .customer-list-panel,
   .auth-panel,
   .onboarding-panel {
     max-width: none;
   }
 
-  .customer-module {
+  .customer-module-layout {
     grid-template-columns: 1fr;
   }
 
-  .customer-filter-bar,
+  .customer-module-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .customer-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2474,7 +2541,9 @@ th.internal-only {
   .overview-grid,
   .panel-heading,
   .billing-summary-grid,
-  .accounting-summary-grid {
+  .accounting-summary-grid,
+  .customer-filter-bar,
+  .customer-summary-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2528,6 +2597,15 @@ th.internal-only {
 
   .damage-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .customer-module-actions,
+  .customer-module-header {
+    width: 100%;
+  }
+
+  .customer-module-actions button {
+    width: 100%;
   }
 
   .damage-canvas {
@@ -2589,7 +2667,6 @@ th.internal-only {
     grid-template-columns: 1fr;
   }
 
-  .customer-filter-bar,
   .customer-summary-grid {
     grid-template-columns: 1fr;
   }
