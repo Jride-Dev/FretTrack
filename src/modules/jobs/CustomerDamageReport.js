@@ -22,23 +22,26 @@ export default function CustomerDamageReport({
 
   return (
     <section className="customer-report">
-      <div className="print-invoice-header">
+      <div className="print-invoice-header print-section">
         <img src={shopSettings.logoUrl || '/frettrack-wordmark.jpg'} alt={shopSettings.shopName || 'FretTrack Systems'} />
         <div>
           <h2>Customer Damage Acknowledgment</h2>
           <p>{shopSettings.shopName} | Job {draftJob.jobNumber}</p>
         </div>
       </div>
-      <div className="print-grid">
-        <span>Customer</span><strong>{draftJob.customerName}</strong>
-        <span>Phone</span><strong>{draftJob.phone}</strong>
-        <span>Instrument</span><strong>{formatInstrumentLabel ? formatInstrumentLabel(draftJob) : normalizeInstrumentType(draftJob.instrumentType)}</strong>
-        <span>Brand / Model</span><strong>{draftJob.guitarBrand} {draftJob.model}</strong>
-        <span>Serial</span><strong>{draftJob.serial}</strong>
-        <span>Date Received</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions)}</strong>
-      </div>
+      <section className="print-section">
+        <div className="print-grid print-job-summary">
+          <span>Customer</span><strong>{draftJob.customerName}</strong>
+          <span>Phone</span><strong>{draftJob.phone}</strong>
+          <span>Instrument</span><strong>{formatInstrumentLabel ? formatInstrumentLabel(draftJob) : normalizeInstrumentType(draftJob.instrumentType)}</strong>
+          <span>Brand / Model</span><strong>{draftJob.guitarBrand} {draftJob.model}</strong>
+          <span>Serial</span><strong>{draftJob.serial}</strong>
+          <span>Date Received</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions)}</strong>
+        </div>
+      </section>
       {reportDamageView('front')}
       {reportDamageView('back')}
+      <section className="print-section">
       <h3>Neck Measurements</h3>
       <table>
         <tbody>
@@ -76,28 +79,33 @@ export default function CustomerDamageReport({
           </tr>
         </tbody>
       </table>
-      <h3>Work Performed</h3>
-      <table>
-        <tbody>
-          {services.map((row) => (
-            <tr key={row.id}>
-              <td>{row.description}</td>
-              <td>{row.quantity || 1}</td>
-            </tr>
-          ))}
-          {draftJob.workLog.map((entry) => (
-            <tr key={entry.id}>
-              <td>{formatShopDateTime(entry.timestamp, dateOptions)}</td>
-              <td>{entry.text}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <h3>Authorization</h3>
-      <p>{draftJob.techDetails.damageMap?.liabilityText || 'Customer acknowledges documented condition and authorizes repair intake.'}</p>
-      <p>Damage acknowledgment checked: {draftJob.techDetails.damageMap?.liabilityAcknowledged ? 'Yes' : 'No'}</p>
+      </section>
+      <section className="print-section">
+        <h3>Work Performed</h3>
+        <table>
+          <tbody>
+            {services.map((row) => (
+              <tr key={row.id}>
+                <td>{row.description}</td>
+                <td>{row.quantity || 1}</td>
+              </tr>
+            ))}
+            {draftJob.workLog.map((entry) => (
+              <tr key={entry.id}>
+                <td>{formatShopDateTime(entry.timestamp, dateOptions)}</td>
+                <td>{entry.text}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+      <section className="print-section">
+        <h3>Authorization</h3>
+        <p>{draftJob.techDetails.damageMap?.liabilityText || 'Customer acknowledges documented condition and authorizes repair intake.'}</p>
+        <p>Damage acknowledgment checked: {draftJob.techDetails.damageMap?.liabilityAcknowledged ? 'Yes' : 'No'}</p>
+      </section>
       {printableWorkOrderImages.length > 0 && (
-        <section className="work-order-photos">
+        <section className="work-order-photos print-section">
           <h3>Work Order Pictures</h3>
           <div className="work-order-photo-grid">
             {printableWorkOrderImages.map((image) => (
@@ -109,10 +117,10 @@ export default function CustomerDamageReport({
           </div>
         </section>
       )}
-      <div className="signature-grid">
+      <section className="signature-grid print-section">
         <span>Customer Signature</span>
         <span>Date</span>
-      </div>
+      </section>
       {printFooterText && <p className="print-footer-text">{printFooterText}</p>}
     </section>
   );
