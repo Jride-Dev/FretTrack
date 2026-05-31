@@ -36,11 +36,13 @@ export default function CustomerForm({
   onCustomerSaved,
   onNotice,
   onCancel,
+  showHeading = true,
   submitLabel,
   title
 }) {
   const [form, setForm] = useState(() => buildFormState(customer));
   const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     setForm(buildFormState(customer));
@@ -63,6 +65,9 @@ export default function CustomerForm({
 
   function handleChange(event) {
     const { name, value } = event.target;
+    if (errorMessage) {
+      setErrorMessage('');
+    }
     setForm((current) => ({
       ...current,
       [name]: name === 'isActive' ? value === 'active' : value
@@ -77,6 +82,7 @@ export default function CustomerForm({
     }
 
     setIsSaving(true);
+    setErrorMessage('');
     try {
       const savedCustomer = await addCustomer({
         ...form,
@@ -92,9 +98,11 @@ export default function CustomerForm({
       await onCustomerSaved?.(savedCustomer);
       onNotice?.({ type: 'success', message: `${isEditing ? 'Updated' : 'Saved'} customer ${savedCustomer.displayName}.` });
     } catch (error) {
+      const message = getErrorMessage(error, 'Customer save failed.');
+      setErrorMessage(message);
       onNotice?.({
         type: 'error',
-        message: getErrorMessage(error, 'Customer save failed.')
+        message
       });
     } finally {
       setIsSaving(false);
@@ -103,7 +111,7 @@ export default function CustomerForm({
 
   return (
     <form className="panel customer-add-form" onSubmit={handleSubmit}>
-      <h2>{heading}</h2>
+      {showHeading && <h2>{heading}</h2>}
       {!canWrite && <p className="muted-text">Your shop role can view customers but cannot create or edit them.</p>}
       {isEditing && (
         <div className="mode-actions no-print customer-edit-actions">
@@ -112,8 +120,20 @@ export default function CustomerForm({
       )}
       <div className="form-grid">
         <label>
+          First Name
+          <input name="firstName" value={form.firstName} onChange={handleChange} disabled={!canWrite} />
+        </label>
+        <label>
+          Last Name
+          <input name="lastName" value={form.lastName} onChange={handleChange} disabled={!canWrite} />
+        </label>
+        <label>
           Display Name
           <input name="displayName" value={form.displayName} onChange={handleChange} placeholder="Name shown in FretTrack" disabled={!canWrite} />
+        </label>
+        <label>
+          Company
+          <input name="companyName" value={form.companyName} onChange={handleChange} placeholder="School, studio, store..." disabled={!canWrite} />
         </label>
         <label>
           Customer Type
@@ -124,36 +144,24 @@ export default function CustomerForm({
           </select>
         </label>
         <label>
-          Status
-          <select name="isActive" value={form.isActive ? 'active' : 'inactive'} onChange={handleChange} disabled={!canWrite}>
-            {customerStatusOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Tax / VAT ID
-          <input name="taxId" value={form.taxId} onChange={handleChange} placeholder="Optional business tax ID" disabled={!canWrite} />
-        </label>
-        <label>
-          First Name
-          <input name="firstName" value={form.firstName} onChange={handleChange} disabled={!canWrite} />
-        </label>
-        <label>
-          Last Name
-          <input name="lastName" value={form.lastName} onChange={handleChange} disabled={!canWrite} />
-        </label>
-        <label>
-          Company
-          <input name="companyName" value={form.companyName} onChange={handleChange} placeholder="School, studio, store..." disabled={!canWrite} />
+          Phone
+          <input name="phone" value={form.phone} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
           Email
           <input type="email" name="email" value={form.email} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
-          Phone
-          <input name="phone" value={form.phone} onChange={handleChange} disabled={!canWrite} />
+          Tax / VAT / Resale ID
+          <input name="taxId" value={form.taxId} onChange={handleChange} placeholder="Optional tax-exempt or resale identifier" disabled={!canWrite} />
+        </label>
+        <label>
+          Status
+          <select name="isActive" value={form.isActive ? 'active' : 'inactive'} onChange={handleChange} disabled={!canWrite}>
+            {customerStatusOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
         </label>
         <label>
           Secondary Phone
@@ -208,6 +216,7 @@ export default function CustomerForm({
           Possible match: {duplicateCustomer.displayName} | {duplicateCustomer.phone || 'No phone'} | {duplicateCustomer.email || 'No email'}
         </p>
       )}
+      {errorMessage && <p className="form-error">{errorMessage}</p>}
       <button type="submit" disabled={isSaving || !canWrite}>{isSaving ? 'Saving...' : buttonLabel}</button>
     </form>
   );

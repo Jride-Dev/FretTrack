@@ -15,6 +15,7 @@
 - Existing subcontractor names in older jobs are surfaced when the customer type is subcontractor, but the app does not retroactively rewrite old job data.
 - This is not a full CRM replacement yet. No sales pipeline, reminders, or communication timeline has been added.
 - Statement-generation and export tooling still belong to the accounting/export roadmap.
+- Vendor records belong in the future inventory module, not the customer module.
 
 ## Future Import And Merge Work
 
@@ -29,3 +30,4 @@
 - Customer-level CSV/PDF export for jobs and payments.
 - Subcontractor statement/export flows for jobs owed and amounts paid.
 - Optional aging buckets for open balances.
+- Customer-level tax-exempt / resale certificate support for shops that need it later.

@@ -52,6 +52,7 @@ Planned for multi-user paid tiers, especially Shop Pro and above.
 - Add bulk customer insert/update through `customerService` only after rows have already been mapped, normalized, validated, and reviewed.
 - Add duplicate merge/reconciliation behavior before allowing large real-shop imports.
 - Keep customer import UI separate from normal Customer Add so day-to-day customer creation stays simple.
+- Keep Tax/VAT ID on customer records for future resale/tax-exempt handling, but do not gate tax behavior yet.
 
 ## Beta Operations
 

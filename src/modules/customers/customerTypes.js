@@ -1,8 +1,8 @@
+// Vendor records are reserved for the future inventory module.
 export const customerTypes = [
   { value: 'individual', label: 'Individual' },
   { value: 'business', label: 'Business' },
-  { value: 'subcontractor', label: 'Subcontractor' },
-  { value: 'vendor', label: 'Vendor' }
+  { value: 'subcontractor', label: 'Subcontractor' }
 ];
 
 export const customerStatusOptions = [
@@ -26,7 +26,7 @@ export function getCustomerTypeLabel(customerType = '') {
 
 export function normalizeCustomerTypeValue(value) {
   const normalized = String(value || '').toLowerCase();
-  if (normalized === 'company') {
+  if (normalized === 'company' || normalized === 'vendor') {
     return 'business';
   }
 
