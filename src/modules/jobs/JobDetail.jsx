@@ -692,7 +692,7 @@ export default function JobDetail({
     }
 
     return (
-      <div className="report-damage-view">
+      <section className="report-damage-view print-section">
         <h3>{title}</h3>
         {imageUrl ? (
           <div className="report-damage-canvas">
@@ -711,6 +711,8 @@ export default function JobDetail({
           <p className="report-damage-missing">No {title.toLowerCase()} image was available for this report.</p>
         )}
         {marks.length > 0 && (
+          <>
+            <p className="report-damage-caption">Damage items marked on the image are listed below.</p>
           <table>
             <thead>
               <tr>
@@ -733,8 +735,9 @@ export default function JobDetail({
               ))}
             </tbody>
           </table>
+          </>
         )}
-      </div>
+      </section>
     );
   }
 

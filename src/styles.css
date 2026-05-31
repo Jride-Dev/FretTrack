@@ -2674,8 +2674,8 @@ th.internal-only {
 
 @media print {
   @page {
+    size: letter portrait;
     margin: 0.5in;
-    size: auto;
   }
 
   :root {
@@ -2780,10 +2780,9 @@ th.internal-only {
   .print-sheet {
     display: block !important;
     box-sizing: border-box;
-    border: 1px solid #000 !important;
     margin: 0 auto;
-    max-width: 7.5in;
-    padding: 0.35in;
+    max-width: 7.45in;
+    padding: 0.22in 0.24in 0.2in;
     width: 100%;
   }
 
@@ -2794,10 +2793,9 @@ th.internal-only {
   body.customer-report-printing .customer-report {
     display: block !important;
     box-sizing: border-box;
-    border: 1px solid #000 !important;
     margin: 0 auto;
-    max-width: 7.5in;
-    padding: 0.35in;
+    max-width: 7.45in;
+    padding: 0.22in 0.24in 0.2in;
     width: 100%;
   }
 
@@ -2812,13 +2810,44 @@ th.internal-only {
   }
 
   .print-sheet h3 {
-    border-bottom: 1px solid var(--print-text);
+    border-bottom: 1px solid #9a9a9a;
     color: #000 !important;
     margin-top: 18px;
+    padding-bottom: 4px;
   }
 
-  .print-sheet table {
+  .print-invoice-header {
+    border-bottom: 1px solid #b0b0b0;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+  }
+
+  .print-section,
+  .print-job-summary,
+  .print-totals,
+  .print-neck-inspection,
+  .report-damage-view,
+  .report-damage-canvas,
+  .signature-grid,
+  .work-order-photos {
+    break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .print-sheet table,
+  .customer-report table {
+    border-collapse: collapse;
+    margin-bottom: 0;
+  }
+
+  .print-sheet thead,
+  .customer-report thead {
+    display: table-header-group;
+  }
+
+  .print-sheet tbody,
+  .customer-report tbody {
+    display: table-row-group;
   }
 
   .customer-report {
@@ -2843,6 +2872,7 @@ th.internal-only {
   .customer-report h3 {
     break-after: avoid;
     margin: 10px 0 6px;
+    padding-bottom: 4px;
   }
 
   .customer-report table {
@@ -2863,12 +2893,30 @@ th.internal-only {
   }
 
   .report-damage-canvas {
+    background: #fff !important;
+    border: 0;
+    margin: 8px auto 10px;
     max-width: 100%;
+    width: 100%;
   }
 
   .report-damage-canvas img {
-    max-height: 4.7in;
+    max-height: 5.15in;
     max-width: 100%;
+  }
+
+  .report-damage-canvas .damage-marker {
+    background: #000 !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+    color: #fff !important;
+  }
+
+  .report-damage-caption {
+    color: #000 !important;
+    font-size: 9.5px;
+    font-style: italic;
+    margin: 0 0 6px;
   }
 
   .work-order-photo-grid {
@@ -2877,6 +2925,7 @@ th.internal-only {
   }
 
   .work-order-photo img {
+    border: 0.5pt solid #b8b8b8;
     max-height: 2in;
     max-width: 100%;
   }

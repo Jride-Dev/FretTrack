@@ -37,7 +37,7 @@ export default function JobPrintSheet({
 
   return (
     <section className="print-sheet">
-      <div className="print-invoice-header">
+      <div className="print-invoice-header print-section">
         <img src={shopSettings.logoUrl || '/frettrack-wordmark.jpg'} alt={shopSettings.shopName || 'FretTrack Systems'} />
         <div>
           <h2>Job Sheet</h2>
@@ -45,46 +45,52 @@ export default function JobPrintSheet({
           <p>{[shopSettings.phone, shopSettings.email].filter(Boolean).join(' | ')}</p>
         </div>
       </div>
-      <div className="print-grid">
-        <span>Customer</span><strong>{draftJob.customerName}</strong>
-        <span>Phone</span><strong>{draftJob.phone}</strong>
-        <span>Email</span><strong>{draftJob.email}</strong>
-        <span>Instrument</span><strong>{formatInstrumentLabel ? formatInstrumentLabel(draftJob) : normalizeInstrumentType(draftJob.instrumentType)}</strong>
-        <span>Brand / Model</span><strong>{draftJob.guitarBrand} {draftJob.model}</strong>
-        <span>Serial</span><strong>{draftJob.serial}</strong>
-        <span>Color</span><strong>{draftJob.color}</strong>
-        <span>Job Number</span><strong>{draftJob.jobNumber}</strong>
-        <span>Date Received</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions)}</strong>
-        <span>Status</span><strong>{draftJob.status}</strong>
-        <span>Job Source</span><strong>{techDetails.intakeType || 'Walk-In'}</strong>
-        <span>Sub-Contract</span><strong>{techDetails.subcontractorName || '-'}</strong>
-        <span>Reason For Visit</span><strong>{draftJob.reasonForVisit}</strong>
-      </div>
-      <h3>Services</h3>
-      <table>
-        <tbody>
-          {services.map((row) => (
-            <tr key={row.id}>
-              <td>{row.description}</td>
-              <td>{row.quantity || 1}</td>
-              <td>{money((Number(row.retail) || 0) * rowQuantity(row), moneyOptions)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <h3>Parts</h3>
-      <table>
-        <tbody>
-          {parts.map((row) => (
-            <tr key={row.id}>
-              <td>{row.name}</td>
-              <td>{row.quantity || 1}</td>
-              <td>{row.includedInService ? 'Included' : money(retailTotal(row), moneyOptions)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="totals">
+      <section className="print-section">
+        <div className="print-grid print-job-summary">
+          <span>Customer</span><strong>{draftJob.customerName}</strong>
+          <span>Phone</span><strong>{draftJob.phone}</strong>
+          <span>Email</span><strong>{draftJob.email}</strong>
+          <span>Instrument</span><strong>{formatInstrumentLabel ? formatInstrumentLabel(draftJob) : normalizeInstrumentType(draftJob.instrumentType)}</strong>
+          <span>Brand / Model</span><strong>{draftJob.guitarBrand} {draftJob.model}</strong>
+          <span>Serial</span><strong>{draftJob.serial}</strong>
+          <span>Color</span><strong>{draftJob.color}</strong>
+          <span>Job Number</span><strong>{draftJob.jobNumber}</strong>
+          <span>Date Received</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions)}</strong>
+          <span>Status</span><strong>{draftJob.status}</strong>
+          <span>Job Source</span><strong>{techDetails.intakeType || 'Walk-In'}</strong>
+          <span>Sub-Contract</span><strong>{techDetails.subcontractorName || '-'}</strong>
+          <span>Reason For Visit</span><strong>{draftJob.reasonForVisit}</strong>
+        </div>
+      </section>
+      <section className="print-section">
+        <h3>Services</h3>
+        <table>
+          <tbody>
+            {services.map((row) => (
+              <tr key={row.id}>
+                <td>{row.description}</td>
+                <td>{row.quantity || 1}</td>
+                <td>{money((Number(row.retail) || 0) * rowQuantity(row), moneyOptions)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+      <section className="print-section">
+        <h3>Parts</h3>
+        <table>
+          <tbody>
+            {parts.map((row) => (
+              <tr key={row.id}>
+                <td>{row.name}</td>
+                <td>{row.quantity || 1}</td>
+                <td>{row.includedInService ? 'Included' : money(retailTotal(row), moneyOptions)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+      <section className="totals print-section print-totals">
         <span>Services</span>
         <strong>{money(totals.servicesTotal, moneyOptions)}</strong>
         <span>Billable Parts</span>
@@ -103,14 +109,16 @@ export default function JobPrintSheet({
         <strong>{money(totals.paidTotal, moneyOptions)}</strong>
         <span>Balance</span>
         <strong>{money(totals.balanceDue, moneyOptions)}</strong>
-      </div>
-      <h3>Tech Summary</h3>
-      <div className="print-grid">
-        <span>New String Brand</span><strong>{techDetails.newStringBrand || '-'}</strong>
-        <span>New String Gauge</span><strong>{techDetails.newStringGauge || '-'}</strong>
-      </div>
+      </section>
+      <section className="print-section">
+        <h3>Tech Summary</h3>
+        <div className="print-grid">
+          <span>New String Brand</span><strong>{techDetails.newStringBrand || '-'}</strong>
+          <span>New String Gauge</span><strong>{techDetails.newStringGauge || '-'}</strong>
+        </div>
+      </section>
       {techDetails.neckInspection?.final && (
-        <>
+        <section className="print-section print-neck-inspection">
           <h3>Final Neck Inspection</h3>
           <table>
             <tbody>
@@ -152,7 +160,7 @@ export default function JobPrintSheet({
               </tr>
             </tbody>
           </table>
-        </>
+        </section>
       )}
       {printFooterText && <p className="print-footer-text">{printFooterText}</p>}
     </section>
