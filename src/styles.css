@@ -2285,44 +2285,74 @@ th.internal-only {
   display: none;
 }
 
-.report-damage-view {
+.print-damage-view {
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
-.report-damage-canvas {
-  border: 1px solid var(--print-text);
+.print-damage-canvas-wrap {
+  text-align: center;
+}
+
+.print-damage-canvas {
   break-inside: avoid;
   line-height: 0;
   margin: 8px auto 12px;
-  max-width: min(100%, 620px);
-  overflow: hidden;
+  max-width: 100%;
+  overflow: visible;
   page-break-inside: avoid;
   position: relative;
   width: fit-content;
 }
 
-.report-damage-canvas img {
+.print-damage-canvas img {
   display: block;
   height: auto;
   max-height: 540px;
   max-width: 100%;
-  object-fit: contain;
   width: auto;
 }
 
-.report-damage-placeholder {
-  color: var(--print-text);
-  min-height: 72px;
-  padding: 24px 16px;
-  text-align: center;
+.print-damage-marker-layer {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
 }
 
-.report-damage-missing {
-  border: 1px solid var(--print-text);
-  color: var(--print-text);
-  margin: 8px 0 12px;
-  padding: 10px 12px;
+.print-damage-marker {
+  align-items: center;
+  border-radius: 999px;
+  color: #fff;
+  display: flex;
+  font-size: 10px;
+  font-weight: 700;
+  height: 20px;
+  justify-content: center;
+  left: 50%;
+  line-height: 1;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+}
+
+.print-damage-caption {
+  font-style: italic;
+  margin: 0 0 6px;
+}
+
+.print-damage-list {
+  margin: 0 0 10px 18px;
+  padding: 0;
+}
+
+.print-damage-list li {
+  margin: 0 0 4px;
+}
+
+.print-damage-empty,
+.print-damage-missing {
+  margin: 0 0 10px;
 }
 
 .work-order-photo-grid {
@@ -2884,13 +2914,13 @@ th.internal-only {
     page-break-inside: avoid;
   }
 
-  .report-damage-view {
+  .print-damage-view {
     break-inside: avoid;
     margin-top: 10px;
     page-break-inside: avoid;
   }
 
-  .report-damage-canvas {
+  .print-damage-canvas {
     background: #fff !important;
     border: 0 !important;
     display: inline-block;
@@ -2902,25 +2932,32 @@ th.internal-only {
     width: fit-content;
   }
 
-  .report-damage-canvas img {
+  .print-damage-canvas img {
     display: block;
     max-height: 5.15in;
     max-width: 100%;
     width: auto;
   }
 
-  .report-damage-canvas .damage-marker {
+  .print-damage-canvas .print-damage-marker {
     background: #000 !important;
     border-color: #000 !important;
     box-shadow: none !important;
     color: #fff !important;
   }
 
-  .report-damage-caption {
+  .print-damage-caption {
     color: #000 !important;
     font-size: 9.5px;
     font-style: italic;
     margin: 0 0 6px;
+  }
+
+  .print-damage-list,
+  .print-damage-empty,
+  .print-damage-missing {
+    color: #000 !important;
+    font-size: 10px;
   }
 
   .work-order-photo-grid {
