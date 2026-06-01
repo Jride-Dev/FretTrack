@@ -2966,6 +2966,12 @@ th.internal-only {
     box-shadow: none !important;
   }
 
+  /* Emergency safe print mode: hide visual map markers and rely on the damage table below. */
+  .print-damage-marker-layer,
+  .print-damage-marker {
+    display: none !important;
+  }
+
   .report-damage-canvas {
     background: #fff !important;
     border: 0;

@@ -19,12 +19,14 @@ This beta release promotes the new customer and subcontractor CRM workflow to a 
 
 - Customer Damage Report print layout still requires redesign.
 - Damage-map print rendering is inconsistent across print preview/browser flows.
+- Visual damage-map print markers are temporarily disabled in production print output.
 - Dedicated print renderer planned.
 
 ### Roadmap Note
 
 - Replace current damage-map print approach with dedicated print-only renderer.
 - Separate screen interaction rendering from printable report rendering.
+- Rebuild visual print marker rendering behind screenshot checkpoints before re-enabling.
 
 ## v0.2.6-beta.9
 
