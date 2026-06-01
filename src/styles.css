@@ -2840,10 +2840,9 @@ th.internal-only {
   }
 
   .print-sheet h3 {
-    border-bottom: 1px solid #9a9a9a;
     color: #000 !important;
     margin-top: 18px;
-    padding-bottom: 4px;
+    padding-bottom: 0;
   }
 
   .print-invoice-header {
@@ -2905,6 +2904,7 @@ th.internal-only {
 
   .customer-report h2,
   .customer-report h3,
+  .print-damage-view h3,
   .customer-report .section-title,
   .customer-report .print-section-title {
     border: 0 !important;
