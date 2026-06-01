@@ -2870,7 +2870,6 @@ th.internal-only {
   }
 
   .customer-report h3 {
-    border-bottom: 0.5pt solid #d9d9d9;
     break-after: avoid;
     margin: 10px 0 6px;
     padding-bottom: 4px;
@@ -2893,26 +2892,17 @@ th.internal-only {
     page-break-inside: avoid;
   }
 
-  .report-damage-view h3 {
-    margin-bottom: 6px;
-    padding-bottom: 0;
-  }
-
   .report-damage-canvas {
     background: #fff !important;
     border: 0;
-    display: inline-block;
     margin: 8px auto 10px;
     max-width: 100%;
-    overflow: visible;
-    width: fit-content;
+    width: 100%;
   }
 
   .report-damage-canvas img {
-    display: block;
     max-height: 5.15in;
     max-width: 100%;
-    width: auto;
   }
 
   .report-damage-canvas .damage-marker {
