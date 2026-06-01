@@ -35,12 +35,6 @@ import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
 
 const intakeTypes = ['Walk-In', 'Telephone Appt.', 'Referral', 'Sub-Contract'];
 
-function markerColorForReport(severity) {
-  if (severity === 'Critical') return '#b3261e';
-  if (severity === 'Structural') return '#a15c00';
-  return '#255f85';
-}
-
 function buildMeasurementDisplay(job, lengthUnit) {
   const neckInspection = job.techDetails?.neckInspection || {};
   return {
@@ -680,67 +674,6 @@ export default function JobDetail({
     }
   }
 
-  function reportDamageView(viewName) {
-    const damageMap = draftJob.techDetails.damageMap || {};
-    const view = damageMap.views?.[viewName] || { marks: [] };
-    const imageUrl = view.imageUrl || '';
-    const marks = view.marks || [];
-    const title = viewName === 'front' ? 'Front Damage Map' : 'Back Damage Map';
-
-    if (!imageUrl && marks.length === 0) {
-      return null;
-    }
-
-    return (
-      <section className="report-damage-view print-section">
-        <h3>{title}</h3>
-        {imageUrl ? (
-          <div className="report-damage-canvas">
-            <img src={imageUrl} alt={`${viewName} damage map`} />
-            {marks.map((mark, index) => (
-              <span
-                key={mark.id}
-                className="damage-marker"
-                style={{ left: `${mark.x}%`, top: `${mark.y}%`, backgroundColor: markerColorForReport(mark.severity) }}
-              >
-                {index + 1}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="report-damage-missing">No {title.toLowerCase()} image was available for this report.</p>
-        )}
-        {marks.length > 0 && (
-          <>
-            <p className="report-damage-caption">Damage items marked on the image are listed below.</p>
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Area</th>
-                <th>Severity</th>
-                <th>Note</th>
-                <th>Recommended Repair</th>
-              </tr>
-            </thead>
-            <tbody>
-              {marks.map((mark, index) => (
-                <tr key={mark.id}>
-                  <td>{index + 1}</td>
-                  <td>{mark.area}</td>
-                  <td>{mark.severity}</td>
-                  <td>{mark.note}</td>
-                  <td>{mark.recommendedRepair}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </>
-        )}
-      </section>
-    );
-  }
-
   function updateContactPreference(field, value) {
     patchJob({ [field]: value });
   }
@@ -816,7 +749,6 @@ export default function JobDetail({
         lengthUnit={measurementOptions.lengthUnit}
         outerStringLabels={outerStringLabels}
         normalizeInstrumentType={normalizeInstrumentType}
-        reportDamageView={reportDamageView}
         services={services}
         workOrderImages={workOrderImages}
       />
