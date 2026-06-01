@@ -32,7 +32,7 @@ import {
 import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService';
 import { isCurrentOperator } from '../modules/operator/operatorService';
 
-const APP_VERSION = '0.2.6-beta.9';
+const APP_VERSION = '0.2.6-beta.10';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';

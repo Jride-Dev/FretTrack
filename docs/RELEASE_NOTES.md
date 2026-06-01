@@ -1,5 +1,31 @@
 # Release Notes
 
+## v0.2.6-beta.10
+
+This beta release promotes the new customer and subcontractor CRM workflow to a full beta milestone while documenting remaining print-system instability.
+
+### Added
+
+- Customer/Subcontractor management module.
+- Customer profiles.
+- Customer balances and payment history.
+- CRM-style customer workflow.
+- Customer creation modal.
+- Mobile/tablet responsive improvements.
+- Beta access workflow improvements.
+- Email notification workflow.
+
+### Known Issues
+
+- Customer Damage Report print layout still requires redesign.
+- Damage-map print rendering is inconsistent across print preview/browser flows.
+- Dedicated print renderer planned.
+
+### Roadmap Note
+
+- Replace current damage-map print approach with dedicated print-only renderer.
+- Separate screen interaction rendering from printable report rendering.
+
 ## v0.2.6-beta.9
 
 FretTrack beta is getting sturdier for real shop use. This release tightens access, improves operator control, and makes the app friendlier on mobile and in print.
