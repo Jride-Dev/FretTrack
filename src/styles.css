@@ -2285,74 +2285,44 @@ th.internal-only {
   display: none;
 }
 
-.print-damage-view {
+.report-damage-view {
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
-.print-damage-canvas-wrap {
-  text-align: center;
-}
-
-.print-damage-canvas {
+.report-damage-canvas {
+  border: 1px solid var(--print-text);
   break-inside: avoid;
   line-height: 0;
   margin: 8px auto 12px;
-  max-width: 100%;
-  overflow: visible;
+  max-width: min(100%, 620px);
+  overflow: hidden;
   page-break-inside: avoid;
   position: relative;
   width: fit-content;
 }
 
-.print-damage-canvas img {
+.report-damage-canvas img {
   display: block;
   height: auto;
   max-height: 540px;
   max-width: 100%;
+  object-fit: contain;
   width: auto;
 }
 
-.print-damage-marker-layer {
-  inset: 0;
-  pointer-events: none;
-  position: absolute;
+.report-damage-placeholder {
+  color: var(--print-text);
+  min-height: 72px;
+  padding: 24px 16px;
+  text-align: center;
 }
 
-.print-damage-marker {
-  align-items: center;
-  border-radius: 999px;
-  color: #fff;
-  display: flex;
-  font-size: 10px;
-  font-weight: 700;
-  height: 20px;
-  justify-content: center;
-  left: 50%;
-  line-height: 1;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-}
-
-.print-damage-caption {
-  font-style: italic;
-  margin: 0 0 6px;
-}
-
-.print-damage-list {
-  margin: 0 0 10px 18px;
-  padding: 0;
-}
-
-.print-damage-list li {
-  margin: 0 0 4px;
-}
-
-.print-damage-empty,
-.print-damage-missing {
-  margin: 0 0 10px;
+.report-damage-missing {
+  border: 1px solid var(--print-text);
+  color: var(--print-text);
+  margin: 8px 0 12px;
+  padding: 10px 12px;
 }
 
 .work-order-photo-grid {
@@ -2703,13 +2673,6 @@ th.internal-only {
 }
 
 @media print {
-  html,
-  body,
-  #root {
-    background: #fff !important;
-    color: #000 !important;
-  }
-
   @page {
     size: letter portrait;
     margin: 0.5in;
@@ -2751,7 +2714,6 @@ th.internal-only {
     color: var(--print-text);
     font-size: 12px;
     margin: 0;
-    padding: 0;
   }
 
   body,
@@ -2772,14 +2734,9 @@ th.internal-only {
   }
 
   .app-layout,
-  #root,
   .job-detail,
-  .layout,
-  .detail,
-  .job-workspace,
   .card,
   section {
-    background: transparent !important;
     box-shadow: none !important;
     border: none !important;
   }
@@ -2853,9 +2810,10 @@ th.internal-only {
   }
 
   .print-sheet h3 {
+    border-bottom: 1px solid #9a9a9a;
     color: #000 !important;
     margin-top: 18px;
-    padding-bottom: 0;
+    padding-bottom: 4px;
   }
 
   .print-invoice-header {
@@ -2868,6 +2826,8 @@ th.internal-only {
   .print-job-summary,
   .print-totals,
   .print-neck-inspection,
+  .report-damage-view,
+  .report-damage-canvas,
   .signature-grid,
   .work-order-photos {
     break-inside: avoid;
@@ -2912,19 +2872,7 @@ th.internal-only {
   .customer-report h3 {
     break-after: avoid;
     margin: 10px 0 6px;
-    padding-bottom: 0;
-  }
-
-  .customer-report h2,
-  .customer-report h3,
-  .print-damage-view h3,
-  .customer-report .section-title,
-  .customer-report .print-section-title {
-    border: 0 !important;
-    border-top: 0 !important;
-    border-bottom: 0 !important;
-    box-shadow: none !important;
-    text-decoration: none !important;
+    padding-bottom: 4px;
   }
 
   .customer-report table {
@@ -2938,50 +2886,37 @@ th.internal-only {
     page-break-inside: avoid;
   }
 
-  .print-damage-view {
+  .report-damage-view {
     break-inside: avoid;
     margin-top: 10px;
     page-break-inside: avoid;
   }
 
-  .print-damage-canvas {
+  .report-damage-canvas {
     background: #fff !important;
-    border: 0 !important;
-    display: inline-block;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    border: 0;
     margin: 8px auto 10px;
     max-width: 100%;
-    overflow: visible;
-    width: fit-content;
+    width: 100%;
   }
 
-  .print-damage-canvas img {
-    display: block;
+  .report-damage-canvas img {
     max-height: 5.15in;
     max-width: 100%;
-    width: auto;
   }
 
-  .print-damage-canvas .print-damage-marker {
+  .report-damage-canvas .damage-marker {
     background: #000 !important;
     border-color: #000 !important;
     box-shadow: none !important;
     color: #fff !important;
   }
 
-  .print-damage-caption {
+  .report-damage-caption {
     color: #000 !important;
     font-size: 9.5px;
     font-style: italic;
     margin: 0 0 6px;
-  }
-
-  .print-damage-list,
-  .print-damage-empty,
-  .print-damage-missing {
-    color: #000 !important;
-    font-size: 10px;
   }
 
   .work-order-photo-grid {

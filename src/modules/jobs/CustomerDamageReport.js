@@ -1,6 +1,5 @@
 import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat';
 import { getPrintFooterText, getShopDateOptions, getShopSettings } from '../shops/shopConfig';
-import PrintDamageMap from '../damage/PrintDamageMap.jsx';
 
 export default function CustomerDamageReport({
   draftJob,
@@ -9,6 +8,7 @@ export default function CustomerDamageReport({
   lengthUnit = 'in',
   outerStringLabels = { treble: 'High E', bass: 'Low E' },
   normalizeInstrumentType,
+  reportDamageView,
   services,
   workOrderImages
 }) {
@@ -18,9 +18,6 @@ export default function CustomerDamageReport({
     dateFormat: draftJob.techDetails?.tax?.dateFormat || shopSettings.dateFormat,
     locale: draftJob.techDetails?.tax?.locale || shopSettings.locale
   });
-  const damageMap = draftJob.techDetails?.damageMap || {};
-  const damageFrontView = damageMap.views?.front || {};
-  const damageBackView = damageMap.views?.back || {};
   const printableWorkOrderImages = workOrderImages.filter((image) => image.url);
 
   return (
@@ -42,46 +39,46 @@ export default function CustomerDamageReport({
           <span>Date Received</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions)}</strong>
         </div>
       </section>
-      <PrintDamageMap title="Front Damage Map" view={damageFrontView} />
-      <PrintDamageMap title="Back Damage Map" view={damageBackView} />
+      {reportDamageView('front')}
+      {reportDamageView('back')}
       <section className="print-section">
-        <h3>Neck Measurements</h3>
-        <table>
-          <tbody>
-            <tr>
-              <td>Relief</td>
-              <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.relief, draftJob.techDetails.neckInspection?.final?.relief, lengthUnit)}</td>
-            </tr>
-            <tr>
-              <td>Action {outerStringLabels.treble} @ 3rd</td>
-              <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutHighE, draftJob.techDetails.neckInspection?.final?.nutHighE, lengthUnit)}</td>
-            </tr>
-            <tr>
-              <td>Action {outerStringLabels.bass} @ 3rd</td>
-              <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutLowE, draftJob.techDetails.neckInspection?.final?.nutLowE, lengthUnit)}</td>
-            </tr>
-            <tr>
-              <td>Action {outerStringLabels.treble} @ 12th</td>
-              <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionHighE12th, draftJob.techDetails.neckInspection?.final?.actionHighE12th, lengthUnit)}</td>
-            </tr>
-            <tr>
-              <td>Action {outerStringLabels.bass} @ 12th</td>
-              <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionLowE12th, draftJob.techDetails.neckInspection?.final?.actionLowE12th, lengthUnit)}</td>
-            </tr>
-            <tr>
-              <td>Fret Condition</td>
-              <td>{draftJob.techDetails.neckInspection?.initial?.fretCondition} -&gt; {draftJob.techDetails.neckInspection?.final?.fretCondition}</td>
-            </tr>
-            <tr>
-              <td>Neck Condition</td>
-              <td>{draftJob.techDetails.neckInspection?.initial?.neckCondition} -&gt; {draftJob.techDetails.neckInspection?.final?.neckCondition}</td>
-            </tr>
-            <tr>
-              <td>Truss Rod</td>
-              <td>{draftJob.techDetails.neckInspection?.initial?.trussRodStatus} -&gt; {draftJob.techDetails.neckInspection?.final?.trussRodStatus}</td>
-            </tr>
-          </tbody>
-        </table>
+      <h3>Neck Measurements</h3>
+      <table>
+        <tbody>
+          <tr>
+            <td>Relief</td>
+            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.relief, draftJob.techDetails.neckInspection?.final?.relief, lengthUnit)}</td>
+          </tr>
+          <tr>
+            <td>Action {outerStringLabels.treble} @ 3rd</td>
+            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutHighE, draftJob.techDetails.neckInspection?.final?.nutHighE, lengthUnit)}</td>
+          </tr>
+          <tr>
+            <td>Action {outerStringLabels.bass} @ 3rd</td>
+            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutLowE, draftJob.techDetails.neckInspection?.final?.nutLowE, lengthUnit)}</td>
+          </tr>
+          <tr>
+            <td>Action {outerStringLabels.treble} @ 12th</td>
+            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionHighE12th, draftJob.techDetails.neckInspection?.final?.actionHighE12th, lengthUnit)}</td>
+          </tr>
+          <tr>
+            <td>Action {outerStringLabels.bass} @ 12th</td>
+            <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionLowE12th, draftJob.techDetails.neckInspection?.final?.actionLowE12th, lengthUnit)}</td>
+          </tr>
+          <tr>
+            <td>Fret Condition</td>
+            <td>{draftJob.techDetails.neckInspection?.initial?.fretCondition} -&gt; {draftJob.techDetails.neckInspection?.final?.fretCondition}</td>
+          </tr>
+          <tr>
+            <td>Neck Condition</td>
+            <td>{draftJob.techDetails.neckInspection?.initial?.neckCondition} -&gt; {draftJob.techDetails.neckInspection?.final?.neckCondition}</td>
+          </tr>
+          <tr>
+            <td>Truss Rod</td>
+            <td>{draftJob.techDetails.neckInspection?.initial?.trussRodStatus} -&gt; {draftJob.techDetails.neckInspection?.final?.trussRodStatus}</td>
+          </tr>
+        </tbody>
+      </table>
       </section>
       <section className="print-section">
         <h3>Work Performed</h3>
