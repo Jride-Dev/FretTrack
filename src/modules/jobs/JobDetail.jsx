@@ -691,15 +691,17 @@ export default function JobDetail({
         {imageUrl ? (
           <div className="print-damage-image-wrap">
             <img className="print-damage-image" src={imageUrl} alt={`${viewName} damage map`} />
-            {marks.map((mark, index) => (
-              <span
-                key={mark.id}
-                className="print-damage-marker"
-                style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
-              >
-                {index + 1}
-              </span>
-            ))}
+            <span className="print-damage-marker-layer" aria-hidden="true">
+              {marks.map((mark, index) => (
+                <span
+                  key={mark.id}
+                  className="print-damage-marker"
+                  style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
+                >
+                  {index + 1}
+                </span>
+              ))}
+            </span>
           </div>
         ) : (
           <p className="report-damage-missing">No {title.toLowerCase()} image was available for this report.</p>

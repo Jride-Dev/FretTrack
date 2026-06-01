@@ -2291,20 +2291,27 @@ th.internal-only {
 }
 
 .print-damage-image-wrap {
-  display: inline-block;
-  line-height: 0;
+  aspect-ratio: 16 / 9;
+  display: block;
   margin: 8px auto 12px;
-  max-width: 100%;
+  max-width: min(100%, 860px);
+  overflow: hidden;
   position: relative;
-  width: fit-content;
+  width: 100%;
 }
 
 .print-damage-image {
   display: block;
-  height: auto;
-  max-height: 540px;
-  max-width: 100%;
-  width: auto;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  width: 100%;
+}
+
+.print-damage-marker-layer {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
 }
 
 .print-damage-marker {
@@ -2927,19 +2934,23 @@ th.internal-only {
   }
 
   .print-damage-image-wrap {
-    position: relative;
-    display: inline-block;
-    width: fit-content;
-    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    display: block;
+    max-width: 6.5in;
     margin: 8px auto 10px;
     overflow: visible;
+    position: relative;
+    width: 100%;
   }
 
   .print-damage-image {
     display: block;
-    width: auto;
-    max-width: 100%;
-    max-height: 5.5in;
+    height: 100%;
+    max-height: none;
+    max-width: none;
+    object-fit: contain;
+    object-position: center;
+    width: 100%;
   }
 
   .print-damage-marker {
