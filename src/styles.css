@@ -2826,6 +2826,8 @@ th.internal-only {
   .print-job-summary,
   .print-totals,
   .print-neck-inspection,
+  .report-damage-view,
+  .report-damage-canvas,
   .signature-grid,
   .work-order-photos {
     break-inside: avoid;
@@ -2868,9 +2870,10 @@ th.internal-only {
   }
 
   .customer-report h3 {
+    border-bottom: 0.5pt solid #d9d9d9;
     break-after: avoid;
     margin: 10px 0 6px;
-    padding-bottom: 0;
+    padding-bottom: 4px;
   }
 
   .customer-report table {
@@ -2890,12 +2893,15 @@ th.internal-only {
     page-break-inside: avoid;
   }
 
+  .report-damage-view h3 {
+    margin-bottom: 6px;
+    padding-bottom: 0;
+  }
+
   .report-damage-canvas {
     background: #fff !important;
-    border: 0 !important;
+    border: 0;
     display: inline-block;
-    break-inside: avoid;
-    page-break-inside: avoid;
     margin: 8px auto 10px;
     max-width: 100%;
     overflow: visible;
