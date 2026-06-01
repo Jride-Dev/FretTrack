@@ -35,12 +35,6 @@ import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
 
 const intakeTypes = ['Walk-In', 'Telephone Appt.', 'Referral', 'Sub-Contract'];
 
-function markerColorForReport(severity) {
-  if (severity === 'Critical') return '#b3261e';
-  if (severity === 'Structural') return '#a15c00';
-  return '#255f85';
-}
-
 function buildMeasurementDisplay(job, lengthUnit) {
   const neckInspection = job.techDetails?.neckInspection || {};
   return {
@@ -695,13 +689,13 @@ export default function JobDetail({
       <section className="report-damage-view print-section">
         <h3>{title}</h3>
         {imageUrl ? (
-          <div className="report-damage-canvas">
-            <img src={imageUrl} alt={`${viewName} damage map`} />
+          <div className="print-damage-image-wrap">
+            <img className="print-damage-image" src={imageUrl} alt={`${viewName} damage map`} />
             {marks.map((mark, index) => (
               <span
                 key={mark.id}
-                className="damage-marker"
-                style={{ left: `${mark.x}%`, top: `${mark.y}%`, backgroundColor: markerColorForReport(mark.severity) }}
+                className="print-damage-marker"
+                style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
               >
                 {index + 1}
               </span>
