@@ -2903,6 +2903,17 @@ th.internal-only {
     padding-bottom: 0;
   }
 
+  .customer-report h2,
+  .customer-report h3,
+  .customer-report .section-title,
+  .customer-report .print-section-title {
+    border: 0 !important;
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+  }
+
   .customer-report table {
     break-inside: auto;
     font-size: 10px;
