@@ -2290,47 +2290,6 @@ th.internal-only {
   page-break-inside: avoid;
 }
 
-.print-damage-image-wrap {
-  aspect-ratio: 16 / 9;
-  display: block;
-  margin: 8px auto 12px;
-  max-width: min(100%, 860px);
-  overflow: hidden;
-  position: relative;
-  width: 100%;
-}
-
-.print-damage-image {
-  display: block;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  width: 100%;
-}
-
-.print-damage-marker-layer {
-  inset: 0;
-  pointer-events: none;
-  position: absolute;
-}
-
-.print-damage-marker {
-  align-items: center;
-  background: #fff;
-  border: 1px solid #000;
-  border-radius: 999px;
-  color: #000;
-  display: flex;
-  font-size: 8px;
-  font-weight: 700;
-  height: 14px;
-  justify-content: center;
-  line-height: 14px;
-  position: absolute;
-  transform: translate(-50%, -50%);
-  width: 14px;
-}
-
 .report-damage-canvas {
   border: 1px solid var(--print-text);
   break-inside: avoid;
@@ -2933,56 +2892,19 @@ th.internal-only {
     page-break-inside: avoid;
   }
 
-  .print-damage-image-wrap {
-    aspect-ratio: 16 / 9;
-    display: block;
-    max-width: 6.5in;
-    margin: 8px auto 10px;
-    overflow: visible;
-    position: relative;
-    width: 100%;
-  }
-
-  .print-damage-image {
-    display: block;
-    height: 100%;
-    max-height: none;
-    max-width: none;
-    object-fit: contain;
-    object-position: center;
-    width: 100%;
-  }
-
-  .print-damage-marker {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    width: 14px;
-    height: 14px;
-    font-size: 8px;
-    line-height: 14px;
-    background: #fff !important;
-    border: 1px solid #000 !important;
-    color: #000 !important;
-    box-shadow: none !important;
-  }
-
-  /* Emergency safe print mode: hide visual map markers and rely on the damage table below. */
-  .print-damage-marker-layer,
-  .print-damage-marker {
-    display: none !important;
-  }
-
   .report-damage-canvas {
     background: #fff !important;
     border: 0;
     margin: 8px auto 10px;
     max-width: 100%;
-    width: 100%;
+    width: fit-content;
   }
 
   .report-damage-canvas img {
+    display: block;
     max-height: 5.15in;
     max-width: 100%;
+    width: auto;
   }
 
   .report-damage-canvas .damage-marker {
@@ -2990,13 +2912,6 @@ th.internal-only {
     border-color: #000 !important;
     box-shadow: none !important;
     color: #fff !important;
-  }
-
-  .report-damage-caption {
-    color: #000 !important;
-    font-size: 9.5px;
-    font-style: italic;
-    margin: 0 0 6px;
   }
 
   .work-order-photo-grid {
