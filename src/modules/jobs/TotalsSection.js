@@ -5,6 +5,7 @@ import { getShopMoneyOptions } from '../shops/shopConfig';
 export default function TotalsSection({
   addPayment,
   draftJob,
+  emailInvoice,
   payment,
   payments,
   removePayment,
@@ -70,6 +71,9 @@ export default function TotalsSection({
         setPayment={setPayment}
         updatePayment={updatePayment}
       />
+      <div className="mode-actions no-print totals-actions">
+        <button type="button" onClick={emailInvoice}>Email Invoice</button>
+      </div>
       <div className="totals">
         <span>Billable Parts</span>
         <strong>{money(totals.partsTotal, moneyOptions)}</strong>

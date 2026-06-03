@@ -8,6 +8,7 @@ import JobPrintSheet from './JobPrintSheet';
 import JobStatusSelect from './JobStatusSelect';
 import PrintActions from './PrintActions';
 import SubcontractorPickupEmailDialog, { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
+import JobDocumentEmailDialog from './JobDocumentEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
 import TechDetailsSection from './TechDetailsSection';
 import TotalsSection from './TotalsSection';
@@ -18,7 +19,7 @@ import { calculateJobTotals } from '../billing/accounting';
 import MessagesPanel from '../messaging/MessagesPanel';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { formatLength } from '../../shared/utils/measurements';
-import { getShopMeasurementOptions } from '../shops/shopConfig';
+import { getShopDateOptions, getShopMeasurementOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
 import { combineCustomerName } from '../customers';
 import {
   formatInstrumentLabel,
@@ -32,6 +33,7 @@ import {
 import { generateJobNumber } from './jobNumber';
 import { getJobEvents } from './jobEventsService';
 import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
+import { buildInvoiceEmailDraft, buildWorkOrderEmailDraft } from './emailDocuments';
 
 const intakeTypes = ['Walk-In', 'Telephone Appt.', 'Referral', 'Sub-Contract'];
 
@@ -86,6 +88,7 @@ export default function JobDetail({
   const [subcontractorPickupJob, setSubcontractorPickupJob] = useState(null);
   const [isSendingSubcontractorEmail, setIsSendingSubcontractorEmail] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState(job.events || []);
+  const [documentEmailDraft, setDocumentEmailDraft] = useState(null);
   const imageImportInputRef = useRef(null);
   const paymentAutosaveTimeoutRef = useRef(null);
 
@@ -131,6 +134,15 @@ export default function JobDetail({
   });
 
   const totals = useMemo(() => calculateJobTotals(draftJob), [draftJob]);
+  const shopSettings = getShopSettings();
+  const dateOptions = getShopDateOptions({
+    dateFormat: taxSettings.dateFormat || shopSettings.dateFormat,
+    locale: taxSettings.locale || shopSettings.locale
+  });
+  const moneyOptions = getShopMoneyOptions({
+    currencyCode: taxSettings.currencyCode || shopSettings.currencyCode,
+    locale: taxSettings.locale || shopSettings.locale
+  });
 
   function patchJob(patch, saveImmediately = false) {
     setDraftJob((current) => {
@@ -607,6 +619,33 @@ export default function JobDetail({
     window.print();
   }
 
+  function openWorkOrderEmail() {
+    setDocumentEmailDraft({
+      kind: 'work_order',
+      ...buildWorkOrderEmailDraft(draftJob, {
+        shopSettings,
+        dateOptions,
+        moneyOptions,
+        totals,
+        instrumentLabel: formatInstrumentLabel(draftJob)
+      })
+    });
+  }
+
+  function openInvoiceEmail() {
+    setDocumentEmailDraft({
+      kind: 'invoice',
+      ...buildInvoiceEmailDraft(draftJob, {
+        shopSettings,
+        dateOptions,
+        moneyOptions,
+        totals,
+        taxLabel: taxSettings.taxLabel || shopSettings.taxLabel || 'Sales Tax',
+        instrumentLabel: formatInstrumentLabel(draftJob)
+      })
+    });
+  }
+
   function formatMeasurementDelta(initialValue, finalValue, unit = measurementOptions.lengthUnit) {
     if (!initialValue && !finalValue) {
       return '';
@@ -778,16 +817,76 @@ export default function JobDetail({
     return result;
   }
 
+  async function handleSendDocumentEmail({ type, recipient, subject, body }) {
+    if (!canWrite) {
+      return { ok: false, error: 'Your shop role is read-only.' };
+    }
+    if (!canSendEmail) {
+      return { ok: false, error: entitlementMessage || 'Email sending is unavailable for this shop plan or billing state.' };
+    }
+
+    let jobToSend = draftJob;
+    if (isDirty) {
+      try {
+        jobToSend = (await saveDraftNow()) || draftJob;
+      } catch (error) {
+        return { ok: false, error: error?.message || 'Save the job before sending email.' };
+      }
+    }
+
+    const result = await sendCustomerMessage(jobToSend, {
+      channel: 'email',
+      customerId: jobToSend.customerId || null,
+      templateKey: type === 'invoice' ? 'invoice_email' : 'work_order_email',
+      to: recipient,
+      subject,
+      body
+    });
+
+    if (result.message) {
+      setDraftJob((current) => ({
+        ...current,
+        messages: [
+          result.message,
+          ...(current.messages || []).filter((item) => item.id !== result.message.id)
+        ]
+      }));
+    }
+
+    if (!result.ok) {
+      return result;
+    }
+
+    logJobEventSafe({
+      shopId: jobToSend.shopId,
+      jobId: jobToSend.id,
+      eventType: type === 'invoice' ? 'invoice_emailed' : 'work_order_emailed',
+      eventLabel: type === 'invoice' ? 'Invoice emailed' : 'Work order emailed',
+      eventNote: recipient,
+      eventData: {
+        recipient,
+        subject,
+        channel: 'email'
+      }
+    });
+
+    await refreshTimelineEvents();
+    if (onRefresh) {
+      await onRefresh();
+    }
+
+    return { ok: true };
+  }
+
   async function refreshTimelineEvents() {
     const events = await getJobEvents(job.id);
-    if (events.length) {
-      setTimelineEvents(events);
-    }
+    setTimelineEvents(events);
   }
 
   const printActions = (
     <PrintActions
       closeDetail={closeDetail}
+      emailWorkOrder={openWorkOrderEmail}
       exportJobJson={exportJobJson}
       finishJob={finishJob}
       printCustomerReport={printCustomerReport}
@@ -875,6 +974,7 @@ export default function JobDetail({
       <TotalsSection
         addPayment={addPayment}
         draftJob={draftJob}
+        emailInvoice={openInvoiceEmail}
         payment={payment}
         payments={payments}
         removePayment={removePayment}
@@ -919,6 +1019,13 @@ export default function JobDetail({
 
   return (
     <section className="panel detail job-detail">
+      <JobDocumentEmailDialog
+        isOpen={Boolean(documentEmailDraft)}
+        draft={documentEmailDraft}
+        kind={documentEmailDraft?.kind || 'work_order'}
+        onClose={() => setDocumentEmailDraft(null)}
+        onSend={handleSendDocumentEmail}
+      />
       <SubcontractorPickupEmailDialog
         job={subcontractorPickupJob}
         isSending={isSendingSubcontractorEmail}
