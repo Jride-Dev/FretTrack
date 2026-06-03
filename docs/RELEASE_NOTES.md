@@ -1,5 +1,30 @@
 # Release Notes
 
+## v0.2.6-beta.11
+
+This beta adds in-app email workflow for work orders and invoice summaries so shops can send customer-ready documents without leaving FretTrack.
+
+### Added
+
+- Email Work Order action from Job Detail.
+- Email Invoice action from the billing/totals workflow.
+- Email preview modal with editable recipient, subject, and message body.
+- Work order and invoice email summaries using existing Supabase Edge Function and Resend delivery flow.
+- Job event logging for `work_order_emailed` and `invoice_emailed`.
+
+### Notes
+
+- Customer and subcontractor email sending uses the existing authenticated `send-email` Edge Function path.
+- Recipient validation now blocks send when the selected customer or subcontractor has no valid email address.
+- Email Statement remains a future customer-profile follow-up rather than part of this release.
+
+### Known Issues
+
+- Customer Damage Report print layout still requires redesign.
+- Damage-map print rendering is inconsistent across print preview/browser flows.
+- Visual damage-map print markers are temporarily disabled in production print output.
+- Dedicated print renderer planned.
+
 ## v0.2.6-beta.10
 
 This beta release promotes the new customer and subcontractor CRM workflow to a full beta milestone while documenting remaining print-system instability.
