@@ -870,9 +870,13 @@ export default function JobDetail({
       }
     });
 
-    await refreshTimelineEvents();
+    refreshTimelineEvents().catch((error) => {
+      console.warn('Document email timeline refresh failed.', error);
+    });
     if (onRefresh) {
-      await onRefresh();
+      Promise.resolve(onRefresh()).catch((error) => {
+        console.warn('Document email job refresh failed.', error);
+      });
     }
 
     return { ok: true };
