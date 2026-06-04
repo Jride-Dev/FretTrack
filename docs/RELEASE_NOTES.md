@@ -1,5 +1,31 @@
 # Release Notes
 
+## v0.2.6-beta.12
+
+This beta tightens up the day-to-day billing workflow by making job-level parts and services fully editable on the work order while preserving totals, payments, print output, and invoice email summaries.
+
+### Added
+
+- Editable parts rows on work orders.
+- Editable services/labor rows on work orders.
+- Clear add/remove controls for job-level parts and services.
+- Read-only-safe parts/services UI that respects shop role and billing state.
+
+### Notes
+
+- This is still job-level editing only, not the future inventory module.
+- Totals, discounts, tax, balance due, invoice emails, and print sheets now continue reflecting edited part and service values.
+- Payment history behavior is unchanged.
+
+### Not Included
+
+- Inventory catalog
+- Vendor management
+- Stock tracking
+- SKU database
+- Purchase orders
+- Reorder levels
+
 ## v0.2.6-beta.11
 
 This beta adds in-app email workflow for work orders and invoice summaries so shops can send customer-ready documents without leaving FretTrack.
