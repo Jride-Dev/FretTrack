@@ -11,9 +11,12 @@ function retailTotal(row) {
   return (Number(row.retail) || 0) * (Number(row.quantity || 1));
 }
 
-export default function ServicesList({ services, service, setService, onAddService, onUpdateService, onRemoveService }) {
+export default function ServicesList({ services, service, setService, onAddService, onUpdateService, onRemoveService, canWrite = true }) {
   const moneyOptions = getShopMoneyOptions();
   function applyPreset(event) {
+    if (!canWrite) {
+      return;
+    }
     const preset = servicePresets.find((item) => item.name === event.target.value);
     if (!preset) {
       return;
@@ -33,7 +36,7 @@ export default function ServicesList({ services, service, setService, onAddServi
       <h3>Services</h3>
       <label className="service-preset no-print">
         Service Preset
-        <select defaultValue="" onChange={applyPreset}>
+        <select defaultValue="" onChange={applyPreset} disabled={!canWrite}>
           <option value="">Add Service Preset...</option>
           <option value="">Custom Service</option>
           {servicePresets.map((preset) => (
@@ -42,11 +45,11 @@ export default function ServicesList({ services, service, setService, onAddServi
         </select>
       </label>
       <form className="row-form price-form" onSubmit={onAddService}>
-        <input placeholder="Description" value={service.description} onChange={(event) => setService((current) => ({ ...current, description: event.target.value }))} />
-        <input type="number" min="0" step="0.01" placeholder="Qty" value={service.quantity} onChange={(event) => setService((current) => ({ ...current, quantity: event.target.value }))} />
-        <input type="number" min="0" step="0.01" placeholder="Cost" value={service.cost} onChange={(event) => setService((current) => ({ ...current, cost: event.target.value }))} />
-        <input type="number" min="0" step="0.01" placeholder="Retail" value={service.retail} onChange={(event) => setService((current) => ({ ...current, retail: event.target.value }))} />
-        <button type="submit">Add Service</button>
+        <input disabled={!canWrite} placeholder="Service or labor description" value={service.description} onChange={(event) => setService((current) => ({ ...current, description: event.target.value }))} />
+        <input disabled={!canWrite} type="number" min="0" step="0.01" placeholder="Qty / Hours" value={service.quantity} onChange={(event) => setService((current) => ({ ...current, quantity: event.target.value }))} />
+        <input disabled={!canWrite} type="number" min="0" step="0.01" placeholder="Internal cost" value={service.cost} onChange={(event) => setService((current) => ({ ...current, cost: event.target.value }))} />
+        <input disabled={!canWrite} type="number" min="0" step="0.01" placeholder="Price / Rate" value={service.retail} onChange={(event) => setService((current) => ({ ...current, retail: event.target.value }))} />
+        <button type="submit" disabled={!canWrite}>Add Service</button>
       </form>
       <table>
         <thead>
@@ -63,21 +66,21 @@ export default function ServicesList({ services, service, setService, onAddServi
           {services.map((row) => (
             <tr key={row.id}>
               <td>
-                <input value={row.description} onChange={(event) => onUpdateService(row.id, 'description', event.target.value)} />
+                <input disabled={!canWrite} value={row.description} onChange={(event) => onUpdateService(row.id, 'description', event.target.value)} />
               </td>
               <td>
-                <input type="number" min="0" step="0.01" value={row.quantity || 1} onChange={(event) => onUpdateService(row.id, 'quantity', event.target.value)} />
+                <input disabled={!canWrite} type="number" min="0" step="0.01" value={row.quantity || 1} onChange={(event) => onUpdateService(row.id, 'quantity', event.target.value)} />
               </td>
               <td className="internal-only">
-                <input type="number" min="0" step="0.01" value={row.cost} onChange={(event) => onUpdateService(row.id, 'cost', event.target.value)} />
+                <input disabled={!canWrite} type="number" min="0" step="0.01" value={row.cost} onChange={(event) => onUpdateService(row.id, 'cost', event.target.value)} />
               </td>
               <td className="internal-only">{money(margin(row), moneyOptions)}</td>
               <td>
-                <input type="number" min="0" step="0.01" value={row.retail} onChange={(event) => onUpdateService(row.id, 'retail', event.target.value)} />
+                <input disabled={!canWrite} type="number" min="0" step="0.01" value={row.retail} onChange={(event) => onUpdateService(row.id, 'retail', event.target.value)} />
                 <strong>{money(retailTotal(row), moneyOptions)}</strong>
               </td>
               <td className="no-print">
-                <button type="button" className="row-remove" onClick={() => onRemoveService(row.id)}>Remove</button>
+                <button type="button" className="row-remove" onClick={() => onRemoveService(row.id)} disabled={!canWrite}>Remove</button>
               </td>
             </tr>
           ))}

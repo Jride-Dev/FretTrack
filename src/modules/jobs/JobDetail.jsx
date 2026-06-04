@@ -870,9 +870,13 @@ export default function JobDetail({
       }
     });
 
-    await refreshTimelineEvents();
+    refreshTimelineEvents().catch((error) => {
+      console.warn('Document email timeline refresh failed.', error);
+    });
     if (onRefresh) {
-      await onRefresh();
+      Promise.resolve(onRefresh()).catch((error) => {
+        console.warn('Document email job refresh failed.', error);
+      });
     }
 
     return { ok: true };
@@ -963,14 +967,14 @@ export default function JobDetail({
         updateWorkLogEntry={updateWorkLogEntry}
         workLogText={workLogText}
       />
-      <ServicesList services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
+      <ServicesList canWrite={canWrite} services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
     </>
   );
 
   const billingSections = (
     <>
-      <PartsList parts={parts} part={part} setPart={setPart} onAddPart={addPart} onUpdatePart={updatePart} onRemovePart={removePart} />
-      <ServicesList services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
+      <PartsList canWrite={canWrite} parts={parts} part={part} setPart={setPart} onAddPart={addPart} onUpdatePart={updatePart} onRemovePart={removePart} />
+      <ServicesList canWrite={canWrite} services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
       <TotalsSection
         addPayment={addPayment}
         draftJob={draftJob}
