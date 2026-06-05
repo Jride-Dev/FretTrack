@@ -1,5 +1,57 @@
 # Release Notes
 
+## v0.2.6-beta.14
+
+This beta adds the first safe offline continuity layer for intake days when the shop internet or Supabase connection goes sideways. It does not attempt full offline mode yet. Instead, new work orders can be saved as local drafts, reviewed clearly, and synced manually when the connection returns.
+
+### Added
+
+- Offline status chip and banner with clear local-draft messaging.
+- IndexedDB-backed local draft queue for new work orders.
+- Offline fallback for new job saves when network or remote save fails.
+- Pending Local Drafts review screen with sync, discard, and last-error visibility.
+- Manual one-at-a-time draft sync flow to avoid aggressive background syncing.
+
+### Notes
+
+- Beta 14 supports offline continuity for new work orders only.
+- Existing remote job edits are still online-only and are clearly marked as unsupported while offline.
+- Photos are not queued offline yet. Drafts can be synced first and images added after reconnecting.
+- Local drafts are continuity protection for bench workflow, not a backup system.
+
+### Not Included
+
+- Full offline database
+- Automatic background sync
+- Offline edits to existing jobs
+- Offline photo/blob queue
+- Cached authenticated Supabase API data
+
+## v0.2.6-beta.13
+
+This beta makes FretTrack feel much better on phones and tablets without splitting the product into a second app. It adds installable PWA support, touch-friendlier layout behavior, and a faster camera-first photo workflow for bench use.
+
+### Added
+
+- PWA install support with manifest, service worker, and install prompt handling.
+- iPhone/iPad install guidance banner for Add to Home Screen workflow.
+- Mobile-friendly header/action layout and detail-first app layout behavior on smaller screens.
+- Camera-first upload controls for job photos and damage-map view images.
+- Touch-friendlier responsive controls for mobile and tablet use.
+
+### Notes
+
+- This is still the same React app, not a separate mobile site or native mobile app.
+- The service worker is intentionally lightweight and focused on installability and shell caching, not offline job editing yet.
+- Direct camera capture now sits alongside normal device import so shops can work faster at intake without losing the existing file picker flow.
+
+### Not Included
+
+- Separate mobile site
+- React Native app
+- Second codebase
+- Railway backend
+
 ## v0.2.6-beta.12
 
 This beta tightens up the day-to-day billing workflow by making job-level parts and services fully editable on the work order while preserving totals, payments, print output, and invoice email summaries.

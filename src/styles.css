@@ -1256,6 +1256,43 @@ form.panel button {
   gap: 8px;
 }
 
+.header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pwa-install-banner {
+  align-items: center;
+  background: color-mix(in srgb, var(--surface-2) 82%, var(--accent) 18%);
+  border: 1px solid var(--accent);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+}
+
+.pwa-install-banner p {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.offline-banner {
+  align-items: center;
+  background: color-mix(in srgb, var(--surface-2) 78%, var(--warning) 22%);
+  border: 1px solid var(--warning);
+  display: flex;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+}
+
+.offline-banner span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 .totals-actions {
   justify-content: flex-end;
   margin: 12px 0;
@@ -1462,6 +1499,39 @@ form.panel button {
   background: color-mix(in srgb, var(--surface-2) 82%, var(--warning) 18%);
   border-color: var(--warning);
   color: var(--warning);
+}
+
+.connection-status.offline {
+  background: color-mix(in srgb, var(--surface-2) 82%, var(--warning) 18%);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.offline-status-pill {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 28px;
+  padding: 5px 10px;
+}
+
+.offline-status-pill.online {
+  background: color-mix(in srgb, var(--surface-2) 82%, var(--success) 18%);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.offline-status-pill.offline {
+  background: color-mix(in srgb, var(--surface-2) 82%, var(--warning) 18%);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.offline-draft-layout {
+  align-items: start;
 }
 
 .plug-status {
@@ -2028,6 +2098,16 @@ th.internal-only {
   margin-bottom: 12px;
 }
 
+.image-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.damage-import-actions {
+  margin-top: 6px;
+}
+
 .hidden-file-input {
   display: none !important;
 }
@@ -2447,6 +2527,14 @@ th.internal-only {
     grid-template-columns: 1fr;
   }
 
+  .app-layout.detail-active .content {
+    order: 1;
+  }
+
+  .app-layout.detail-active aside {
+    order: 2;
+  }
+
   aside {
     gap: 14px;
   }
@@ -2603,6 +2691,7 @@ th.internal-only {
   .actions,
   .feedback-actions,
   .mode-actions,
+  .image-upload-actions,
   .operator-row-actions,
   .accounting-actions,
   .billing-chips {
@@ -2613,8 +2702,23 @@ th.internal-only {
     width: 100%;
   }
 
+  .header-actions {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .header-actions .connection-status,
+  .header-actions .theme-settings {
+    grid-column: 1 / -1;
+  }
+
   .mode-actions > * {
     flex: 1 1 160px;
+  }
+
+  .header-actions > * {
+    width: 100%;
   }
 
   .image-grid {
@@ -2628,7 +2732,8 @@ th.internal-only {
   .image-upload button,
   .feedback-actions button,
   .auth-panel .primary-action,
-  .auth-panel .button-tertiary {
+  .auth-panel .button-tertiary,
+  .image-upload-actions button {
     width: 100%;
   }
 
@@ -2687,6 +2792,16 @@ th.internal-only {
   .accounting-report,
   .job-workspace {
     gap: 12px;
+  }
+
+  .offline-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pwa-install-banner {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

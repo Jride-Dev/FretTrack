@@ -1,0 +1,26 @@
+{
+  "name": "FretTrack Systems",
+  "short_name": "FretTrack",
+  "description": "Modern workflow for guitar repair shops.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115",
+  "id": "/",
+  "icons": [
+    {
+      "src": "/frettrack-emblem.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/release-icons/frettrack-release-icon-2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
