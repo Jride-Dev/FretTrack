@@ -108,6 +108,7 @@ async function loadHeic2Any() {
 export default function DamageMap({ instrumentType = 'Electric', damageMap = {}, onChange, onViewImageUpload }) {
   const [importError, setImportError] = useState('');
   const viewImageInputRef = useRef(null);
+  const viewCameraInputRef = useRef(null);
   const markerInputRefs = useRef({});
   const selectedView = damageMap.selectedView === 'back' ? 'back' : 'front';
   const selectedArea = damageMap.selectedArea || 'Body';
@@ -288,7 +289,21 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
               event.target.value = '';
             }}
           />
-          <button type="button" onClick={() => viewImageInputRef.current?.click()}>Import from Device</button>
+          <input
+            ref={viewCameraInputRef}
+            type="file"
+            className="hidden-file-input"
+            accept="image/*"
+            capture="environment"
+            onChange={(event) => {
+              updateViewImage(event.target.files[0]);
+              event.target.value = '';
+            }}
+          />
+          <div className="image-upload-actions damage-import-actions">
+            <button type="button" className="primary-action" onClick={() => viewCameraInputRef.current?.click()}>Take Photo</button>
+            <button type="button" onClick={() => viewImageInputRef.current?.click()}>Import from Device</button>
+          </div>
         </label>
       </div>
       {importError && <p className="import-error no-print">{importError}</p>}
@@ -358,6 +373,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
                   type="file"
                   className="hidden-file-input"
                   accept="image/*,.heic,.heif"
+                  capture="environment"
                   onChange={(event) => {
                     attachMarkerPhoto(mark.id, event.target.files[0]);
                     event.target.value = '';

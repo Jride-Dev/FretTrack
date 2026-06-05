@@ -31,11 +31,13 @@ import {
 } from '../modules/billing/entitlementService';
 import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService';
 import { isCurrentOperator } from '../modules/operator/operatorService';
+import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
 
-const APP_VERSION = '0.2.6-beta.12';
+const APP_VERSION = '0.2.6-beta.13';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';
+const PWA_INSTALL_HELP_DISMISSED_KEY = 'frettrack_pwa_install_help_dismissed';
 
 export default function App() {
   const [jobs, setJobs] = useState([]);
@@ -66,6 +68,9 @@ export default function App() {
     return themes.some((themeOption) => themeOption.value === savedTheme) ? savedTheme : defaultTheme;
   });
   const [shopName, setShopName] = useState(() => getCurrentShopName());
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
+  const [isStandalonePwa, setIsStandalonePwa] = useState(() => isStandaloneDisplayMode());
+  const [showInstallHelp, setShowInstallHelp] = useState(() => localStorage.getItem(PWA_INSTALL_HELP_DISMISSED_KEY) !== 'true');
   const manualSignOutRef = useRef(false);
 
   async function refreshJobs() {
@@ -242,6 +247,35 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+
+    function handleBeforeInstallPrompt(event) {
+      event.preventDefault();
+      setDeferredInstallPrompt(event);
+    }
+
+    function handleInstalled() {
+      setDeferredInstallPrompt(null);
+      setIsStandalonePwa(true);
+      setNotice({ type: 'success', message: 'FretTrack was installed on this device.' });
+    }
+
+    function syncStandaloneState() {
+      setIsStandalonePwa(isStandaloneDisplayMode());
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleInstalled);
+    mediaQuery.addEventListener?.('change', syncStandaloneState);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleInstalled);
+      mediaQuery.removeEventListener?.('change', syncStandaloneState);
+    };
+  }, []);
 
   useEffect(() => {
     if (!notice?.message) {
@@ -541,6 +575,8 @@ export default function App() {
   const tillSummary = calculateTillSummary(jobs);
   const moneyOptions = getShopMoneyOptions(shopProfile || undefined);
   const dateOptions = getShopDateOptions(shopProfile || undefined);
+  const shouldShowPwaInstallButton = Boolean(deferredInstallPrompt) && !isStandalonePwa;
+  const shouldShowIosInstallHelp = !isStandalonePwa && showInstallHelp && isIosInstallCandidate();
   const statusText = {
     checking: 'Supabase Checking',
     connected: 'Supabase Connected',
@@ -548,6 +584,24 @@ export default function App() {
     'auth-required': 'Supabase Auth Required',
     error: 'Supabase Error'
   }[supabaseStatus];
+
+  async function handleInstallApp() {
+    if (!deferredInstallPrompt) {
+      return;
+    }
+
+    deferredInstallPrompt.prompt();
+    const choice = await deferredInstallPrompt.userChoice.catch(() => null);
+    if (choice?.outcome === 'accepted') {
+      setNotice({ type: 'success', message: 'Install prompt accepted. FretTrack will finish installing if the browser allows it.' });
+    }
+    setDeferredInstallPrompt(null);
+  }
+
+  function dismissInstallHelp() {
+    localStorage.setItem(PWA_INSTALL_HELP_DISMISSED_KEY, 'true');
+    setShowInstallHelp(false);
+  }
 
   if (hasSupabaseConfig && isAuthLoading) {
     return (
@@ -757,7 +811,7 @@ export default function App() {
             <span className="app-version">Version {APP_VERSION}</span>
           </div>
         </div>
-        <div className="mode-actions no-print">
+        <div className="mode-actions no-print header-actions">
           <span className={`connection-status ${supabaseStatus}`} title={statusText}>
             <span className="plug-status" aria-hidden="true">
               <i className="plug-head" />
@@ -776,6 +830,9 @@ export default function App() {
               </select>
             </label>
           </div>
+          {shouldShowPwaInstallButton && (
+            <button type="button" onClick={handleInstallApp}>Install App</button>
+          )}
           <button type="button" className="primary-action" onClick={saveCurrentJob} disabled={isSaving || !canWrite}>
             {isSaving ? 'Saving...' : 'Save Job'}
           </button>
@@ -797,6 +854,17 @@ export default function App() {
           )}
         </div>
       </header>
+      {shouldShowIosInstallHelp && (
+        <section className="pwa-install-banner no-print">
+          <div>
+            <strong>Install FretTrack on this device</strong>
+            <p>On iPhone or iPad, use Share and then Add to Home Screen for a cleaner bench workflow.</p>
+          </div>
+          <div className="mode-actions">
+            <button type="button" onClick={dismissInstallHelp}>Dismiss</button>
+          </div>
+        </section>
+      )}
       {session && <SystemAnnouncements />}
       {hasSupabaseConfig && membership && (
         <BillingStateBanner
@@ -805,7 +873,7 @@ export default function App() {
         />
       )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
-      <div className="layout app-layout">
+      <div className={`layout app-layout${mode === 'detail' && selectedJob ? ' detail-active' : ''}`}>
         <aside className="no-print">
           <JobForm
             jobs={jobs}
