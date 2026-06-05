@@ -1,134 +1,118 @@
 # Roadmap
 
-This file tracks where FretTrack is headed after the current `0.2.6-beta.6` private beta baseline.
+FretTrack is currently at `v0.2.6-beta.14`.
 
-## Current Release Position
+This roadmap reflects the product as it exists now, not the earlier beta baseline. The goal from here is to harden the repair-shop workflow, close the most painful operational gaps, and prepare the app for a real paid launch without overbuilding too early.
 
-- Invite-only beta release is live.
-- Cloudflare Pages serves the production app at `app.frettrack-app.com`.
-- Supabase Auth, shop memberships, shop-scoped RLS, private Storage, Edge Functions, and onboarding are in place.
-- Email notifications are active. SMS plumbing exists, but SMS remains disabled until carrier registration and pricing are ready.
-- Work orders, standalone customers, damage maps, customer lookup, optimized photo uploads, payments, print sheets, activity timeline, reports, CSV export, shop profile settings, and customer messaging are available.
-- Paid-tier foundations are present without Stripe: plans, entitlements, subscriptions, trial/grace/read-only/beta-bypass states, usage snapshots, and a billing placeholder.
-- The internal Beta Operator Dashboard is available for operator users to inspect beta shops, usage, recent activity, and subscription/trial state.
+## Current Product State
 
-## Near Term
+Already landed:
 
-- Continue real shop testing against the `0.2.6-beta.6` baseline.
-- Watch photo upload optimization, Job Sheet printing, payment autosave, and customer messaging first during beta sessions.
-- For multi-user shops, test adding an existing signed-up user by email, changing their role, and removing them.
-- Keep `npm run check:migrations` quiet before every Supabase push.
-- Keep the Beta Operator Dashboard as the main support surface for beta shops.
-- Keep email-only trial messaging active while SMS remains disabled.
-- Keep `bench-dark` as the default theme for first-time users unless trial feedback says otherwise.
-- Keep print/export views readable regardless of active app theme.
+- beta access approval gate
+- operator dashboard
+- billing and subscription foundation without Stripe
+- customer and subcontractor management module
+- customer and subcontractor balance/history foundation
+- work-order and invoice email flow
+- mobile and PWA readiness
+- offline draft queue foundation for new work orders
+- image optimization before upload
+- job-level parts and services editing
 
-## Member Management
+Current weak spots:
 
-- Keep the new owner/admin member-management panel in Shop Settings focused on current beta needs.
-- Add full email invitation later through a server-side Auth Admin flow, not frontend-only logic.
-- Add member deactivation/suspension if removal proves too destructive for support workflows.
-- Add member activity review once `job_events.created_by` is wired consistently.
-- Keep viewer read-only, tech operational, and owner/admin administrative permissions aligned with existing RLS and helper functions.
-- Confirm role changes, removals, and last-owner protection during beta smoke tests.
+- Customer Damage Report print rendering still needs a proper isolated rebuild
+- offline continuity only supports new-job drafts, not existing job edits
+- SMS remains disabled
+- inventory does not exist yet
+- staff permissions are still broad-role based, not granular
+- public invoice and work-order links are planned but not implemented
 
-## Employee Permissions / Staff Roles
+## Beta 15: Dedicated Print Renderer Rebuild
 
-Planned for multi-user paid tiers, especially Shop Pro and above.
+The next print pass should be treated as a document-rendering project, not a CSS patch cycle.
 
-- Expand the current basic shop membership roles into granular staff permission management for larger shops.
-- Add an Admin or Staff Management page where shop owners/admins can invite/remove employees, assign roles, and manage access.
-- Support roles such as Owner, Admin, Technician, Front Desk / Intake, Accounting / Reports, and Read-only.
-- Add granular permissions for create/edit jobs, delete jobs, manage customers, upload/delete images, manage pricing, manage shop settings, manage billing/subscription, access accounting exports, manage employees, and future inventory management.
-- Restrict sensitive accounting, reporting, billing, inventory, admin, and settings areas by permission instead of relying only on broad role names.
-- Preserve technician-only workflow access for employees who need job/photo/service access without full financial or admin visibility.
-- Add reporting visibility controls and future audit visibility by employee once activity tracking is mature.
-- Keep Solo/basic tiers on simplified role handling where appropriate, while larger paid shops unlock advanced staff management.
+- isolate print rendering from screen UI
+- rebuild Customer Damage Report output from scratch
+- stop using shared interactive map layout for printable documents
+- avoid more global print CSS patching
+- use screenshot checkpoints before merging
+- make work orders, invoices, and customer reports reliable printable documents
+- keep print fixes scoped to dedicated printable components or routes
 
-## Customer Management And Import
+## Beta 16: Advanced Staff Permissions
 
-- Build the customer import workflow in this order: raw spreadsheet row, `customerImportMapper`, normalization, validation, duplicate detection, preview, then bulk insert/update.
-- Add an import preview screen that stages rows, shows validation warnings, and flags same-shop duplicate candidates before writing anything.
-- Add bulk customer insert/update through `customerService` only after rows have already been mapped, normalized, validated, and reviewed.
-- Add duplicate merge/reconciliation behavior before allowing large real-shop imports.
-- Keep customer import UI separate from normal Customer Add so day-to-day customer creation stays simple.
-- Keep Tax/VAT ID on customer records for future resale/tax-exempt handling, but do not gate tax behavior yet.
+FretTrack needs better multi-user operational control for growing shops.
 
-## Beta Operations
+- add advanced employee permissions
+- support owner, admin, tech, front desk, accounting, and read-only style access
+- hide internal cost and sensitive financial controls from non-authorized users
+- improve member management and staff administration flows
+- separate operational permissions from broad role labels where needed
+- add employee audit visibility later once activity attribution is mature
 
-- Add operator notes to beta shops.
-- Add clearer feedback triage for `beta_feedback`: status, priority, owner, last contacted, and follow-up notes.
-- Add operator notifications for new `beta_feedback` reports, likely email first, then optional GitHub issue creation after private data handling is settled.
-- Keep manual beta billing and beta-bypass controls available until Stripe is intentionally introduced.
-- Maintain a short beta smoke checklist for create job, upload photo, print Job Sheet, add payment, export/open report, and send test email.
+## Beta 17: Public Invoice and Work Order Links
 
-## Paid Tier Readiness
+This should be the first premium add-on path rather than a default base-subscription feature.
 
-- Keep Stripe out until entitlement/trial/read-only behavior is stable in real beta use.
-- Add storage quota warnings before upload blocks feel surprising.
-- Tighten usage snapshots and storage accounting as beta shops upload real images.
-- Add billing contact email and support/cancellation copy before paid launch.
-- Add Terms, Privacy, data export, and account deletion policy placeholders before self-serve paid onboarding.
-- Integrate Stripe Checkout, Customer Portal, and webhooks only after the current manual billing flow and entitlement model are proven.
+- public invoice and work-order links
+- website-linked invoice portal
+- secure tokenized customer access
+- public read-only invoice and work-order views
+- later payment links and QR codes
+- future customer portal expansion only after the first public-link model is stable
 
-## Messaging
+## Beta 18: Inventory Foundation
 
-- Add Supabase Realtime delivery for `system_announcements` so maintenance/bug-fix notices appear during an active logged-in session without requiring logout/login.
-- Keep announcement polling as a fallback, but trigger a refetch immediately when Realtime receives a new announcement insert.
-- Continue targeting announcements by shop/user membership first; defer session-id-specific targeting until there is a real need for force-logout, per-device notices, or acknowledgment auditing.
-- Add SMS after carrier registration is ready.
-- Keep SMS buttons visible but disabled in beta builds so the workflow remains discoverable.
-- Keep the existing `send-sms` Edge Function code available for later Twilio/carrier registration work.
-- Continue using Supabase Edge Functions as the only message-sending path.
+Inventory should be the first major post-core workflow module.
 
-## Accounting and Totals
+- add parts records
+- add vendors and suppliers
+- track stock on hand
+- add reorder basics
+- let jobs attach inventory parts while still allowing one-off typed parts
+- preserve historical job pricing even when inventory pricing changes later
+- start with practical repair-shop inventory, not full ERP complexity
 
-- Modularize the accounting/totals code so discounts, taxes, payments, balances, and till reporting have clearer ownership.
-- Change discount handling so applying a discount commits it into the saved work order totals instead of leaving it as an always-editable field.
-- Lock monetary totals after they are saved/applied to protect tax and audit accuracy.
-- Show an `Edit Totals` action only when reopening an existing work order or intentionally entering a totals-editing mode.
-- Tie `Edit Totals` access to organization member roles; regular employees should be able to add payments only.
-- Preserve payment entry as an operational action that does not require full monetary edit permissions.
-- Gradually integrate the commerce event backbone, starting with committed payment or closeout events.
+## Beta 19: Offline Phase 2
 
-## Parts and Inventory
+Beta 14 established the first safe offline continuity layer. The next phase should extend that carefully.
 
-- Add a dedicated parts/inventory module after the first trial baseline is stable.
-- Track common repair parts such as strings, pots, jacks, switches, pickups, tuners, nuts, saddles, screws, batteries, strap buttons, and shop consumables.
-- Support part name, SKU/part number, category, vendor, cost, retail price, quantity on hand, reorder level, storage location, and active/inactive status.
-- Allow work orders to add parts from inventory while preserving free-typed one-off parts for unusual repairs.
-- Decrement inventory when parts are committed to a work order, with clear handling for returns, deleted parts, and corrected quantities.
-- Surface low-stock and out-of-stock states without blocking urgent repair intake.
-- Keep inventory cost/retail changes from rewriting historical work order totals.
-- Add basic vendor and purchase/restock history after the first inventory version is usable.
-- Tie inventory price editing, stock adjustments, and cost visibility to member roles.
-- Keep inventory reporting focused on practical shop needs first: low stock, parts used by date range, value on hand, and job-linked parts usage.
+- queued photo uploads
+- recently-opened job cache
+- conflict handling for existing job edits
+- limited read-only cached job access
+- better retry and recovery flow for failed draft sync
+- keep offline continuity separate from backup/disaster-recovery claims
 
-## Product Direction
+## Beta 20: Launch Hardening
 
-- Continue improving the work order flow for real shop use.
-- Add shop-custom job/status dropdown values after beta testers clarify the statuses they need.
-- Expand Activity Timeline filtering and detail views after beta feedback shows what shops actually need.
-- Expand customer communication around check-in, estimate approval, repair status, pickup reminders, payment reminders, and photo updates.
-- Keep customer history lookup, quick-fill, and repeat-customer workflows central to intake.
-- Keep supporting unusual instruments by allowing free-typed brand/model values even when suggestions exist.
-- Explore a future paid upgrade for AI-assisted 3D JavaScript instrument visualization only after the core repair workflow, member management, storage, and billing foundations are stable.
+Paid launch prep should stay operational and customer-trust focused.
 
-## Build Performance
+- add storage quota warnings before hard limits feel surprising
+- add billing contact, support, and cancellation copy
+- add Terms, Privacy, export, and deletion policy placeholders
+- tighten launch readiness around entitlements, trial state, and support expectations
+- keep Stripe out until entitlement behavior is stable in real use
 
-- Lazy-load HEIC/HEIF photo conversion so the heavy `heic2any` dependency is downloaded only when a shop uploads a HEIC/HEIF image.
-- Review Vite bundle chunks after lazy-loading photo conversion and consider additional code splitting only where it improves first-load time without making the beta workflow brittle.
+## Ongoing Product Direction
 
-## Mobile And Tablet
+These are continuous product themes rather than one release target.
 
-- Keep the browser-based app usable on phones and tablets without turning it into a separate mobile product.
-- Add a tablet intake mode later if real bench use shows the current stacked layout is still too busy on iPad-sized screens.
-- Consider direct camera capture, signature capture, PWA install support, and an offline draft queue only after the current browser workflow is stable on smaller screens.
-- Keep improving touch spacing, responsive grids, and modal behavior as real beta use exposes the remaining rough edges.
+- keep the core repair workflow generous and fast
+- continue real-shop beta testing against daily intake, photos, payments, print, and messaging
+- keep email active as the primary outbound communication path while SMS is still disabled
+- preserve theme-independent readability for print and export views
+- improve repeat-customer and subcontractor workflows as usage patterns become clearer
+- keep odd or unusual instrument support flexible through free-typed values where structured lists are not enough
 
-## Future Polish Candidates
+## Explicitly Not Future Work Anymore
 
-- Tighten trial feedback around the Acoustic / Electric / Bass instrument flow.
-- Review damage-map usability after real repair intake sessions.
-- Consider expanding theme presets only after the current preset system has settled.
-- Improve mobile and tablet density after real bench use exposes the rough edges.
+These are already shipped and should not be described as future roadmap items:
+
+- PWA install support
+- mobile and tablet responsive improvements
+- camera-first photo workflow
+- offline local draft queue for new work orders
+- customer and subcontractor standalone management
+- work-order and invoice email sending

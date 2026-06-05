@@ -1,8 +1,57 @@
 # Changelog
 
-Current version: `0.2.6-beta.6`
+Current version: `0.2.6-beta.14`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
+
+## v0.2.6-beta.14 - Offline New-Job Draft Continuity
+
+- Added an offline status chip and banner for clear local-draft messaging.
+- Added an IndexedDB-backed Pending Local Drafts queue for new work orders.
+- Added offline fallback for new job saves when the network or remote save fails.
+- Added manual one-at-a-time draft sync, discard, and last-error visibility.
+- Kept existing remote job edits, photos, and authenticated Supabase data online-only for this first offline continuity pass.
+
+## v0.2.6-beta.13 - Mobile, Tablet, And PWA Readiness
+
+- Added installable PWA support with manifest, service worker, and install prompt handling.
+- Added iPhone/iPad Add to Home Screen guidance.
+- Improved mobile and tablet header, actions, and detail-first layout behavior.
+- Added camera-first upload controls for job photos and damage-map view images.
+- Improved touch targets and responsive controls across the bench workflow.
+
+## v0.2.6-beta.12 - Editable Work Order Parts And Services
+
+- Added editable parts rows on existing work orders.
+- Added editable services/labor rows on existing work orders.
+- Added add/remove controls for job-level parts and services.
+- Preserved totals, discounts, tax, balance due, invoice emails, and print output when job-level line items are edited.
+- Kept the scope to job-level editing, not inventory, vendors, purchase orders, or stock tracking.
+
+## v0.2.6-beta.11 - Work Order And Invoice Email Flow
+
+- Added Email Work Order from Job Detail.
+- Added Email Invoice from the billing/totals workflow.
+- Added an editable email preview modal for recipient, subject, and body.
+- Added work order and invoice email summaries through the existing authenticated Supabase Edge Function and Resend delivery path.
+- Added job event logging for `work_order_emailed` and `invoice_emailed`.
+- Blocked sends when the selected customer or subcontractor has no valid email address.
+
+## v0.2.6-beta.10 - Customer And Subcontractor CRM Beta
+
+- Promoted the customer and subcontractor management workflow to a full beta milestone.
+- Added customer profiles, customer balances, payment history, and CRM-style customer workflow.
+- Added customer creation modal and beta access workflow improvements.
+- Improved mobile/tablet behavior and email notification workflow around the beta experience.
+- Documented remaining Customer Damage Report and damage-map print rendering instability.
+
+## v0.2.6-beta.9 - Beta Access Approval And Operator Controls
+
+- Added beta access approval gate so new sign-ins do not automatically enter a shop workspace.
+- Added operator approval workflow in the internal dashboard.
+- Added landing page beta application flow that creates real beta access requests.
+- Added email notifications for beta applications.
+- Improved mobile/tablet layout, print readability, and security/access hardening around beta onboarding and workspace bootstrap.
 
 ## v0.2.6-beta.6 - Beta Operations And Storage Hotfix
 

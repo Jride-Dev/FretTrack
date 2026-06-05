@@ -1,16 +1,58 @@
 # FretTrack
 
-Current version: `0.2.6-beta.6`
+Current version: `0.2.6-beta.14`
 
-`v0.2.6-beta.6` is the beta operations and storage hotfix: it adds paid-tier foundations, image optimization, the internal Beta Operator Dashboard, and payment autosave.
+FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
-FretTrack is a guitar and bass repair shop check-in and work order app. It helps repair shops track customer intake, instrument details, inspection notes, damage photos, parts, services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
+FretTrack is a guitar and bass repair shop check-in and work order system for real bench workflow: customer intake, instrument details, inspection notes, damage photos, parts and services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
-## Try Out FretTrack Beta Today
+## Try Out FretTrack Beta
 
-[Try Out FretTrack Beta today!](https://frettrack-app.com)
+[Try Out FretTrack Beta](https://frettrack-app.com)
 
-By invite only. Applications are being taken on the website. Click the link and fill out the form.
+The beta is invite-only. Applications are handled on the live FretTrack site.
+
+## Current Beta
+
+`v0.2.6-beta.14` is the current live beta baseline. It includes the beta access approval gate, internal operator dashboard, customer and subcontractor management, work-order and invoice email flow, editable job-level parts and services, PWA/mobile improvements, image optimization, and an offline local draft queue for new work orders.
+
+## What Is Live Now
+
+- Live hosted app at [frettrack-app.com](https://frettrack-app.com).
+- Cloudflare Pages frontend backed by Supabase Auth, database, storage, and Edge Functions.
+- Invite-only beta application and approval flow.
+- Internal operator dashboard for beta approvals, shop/member visibility, usage review, beta-bypass handling, trial extension, and status control.
+- Shop login with owner/admin/tech/viewer membership foundation.
+- Work order intake for acoustic, electric, bass, extended-range, and custom string-count instruments.
+- Standalone customer and subcontractor management with profiles, balances, payment history, and CRM-style lookup.
+- Damage map with view/area/severity markers and photo attachment support.
+- Photo upload and gallery flow with HEIC/HEIF support and client-side image optimization.
+- Parts, services, discounts, tax/VAT, payments, balance, and lightweight accounting/report summaries.
+- Editable job-level parts and services after work order creation.
+- Shop settings for GBP/USD, VAT/sales tax labels, localized date formats, and imperial/metric measurement preferences.
+- Work logs, activity timeline, in-app announcements, and issue reporting.
+- Email templates plus in-app work-order and invoice email sending through Supabase Edge Functions and Resend.
+- PWA install support, mobile/tablet layout improvements, and camera-first photo capture.
+- Offline local draft queue for new work orders when the connection fails.
+- Job print sheet and customer damage report.
+
+## Recent Beta Updates Since beta6
+
+- Beta access now uses a public application and operator approval flow.
+- Customer and subcontractor records are now first-class workflows, not just fields on work orders.
+- Work orders and invoices can now be emailed from inside the app.
+- Existing work orders now support editable job-level parts and services.
+- The app now has mobile/tablet readiness improvements and PWA install support.
+- New work orders can be saved as local offline drafts and synced manually after reconnecting.
+- Print output has been improved for beta use, with a dedicated beta15 print renderer rebuild planned for the Customer Damage Report and damage-map output.
+
+## Not Included Yet
+
+- Stripe billing or live payment automation.
+- Inventory, vendors, SKUs, purchase orders, or stock tracking.
+- Full offline mode for existing job edits, queued photo uploads, or cached authenticated Supabase data.
+- Production SMS messaging.
+- Public invoice or work-order links.
 
 ## Screenshots
 
@@ -26,132 +68,26 @@ By invite only. Applications are being taken on the website. Click the link and 
 
 ![FretTrack beta screenshot 6](<Screenshots/Screenshot 2026-05-18 103844.jpg>)
 
-## Current Position
-
-- Invite ONLY beta is live at [frettrack-app.com](https://frettrack-app.com).
-- The app is deployed through Cloudflare Pages and backed by Supabase Auth, database, storage, and Edge Functions.
-- Email notifications are active through Supabase Edge Functions and Resend.
-- SMS plumbing exists, but SMS is disabled in beta builds until carrier registration is ready.
-- Work orders, standalone customer records, damage maps, customer lookup, photo handling, payments, print sheets, activity timeline, and customer messaging are available.
-- Simon's Beta Release adds UK-ready shop settings for GBP, VAT labels, DD/MM/YYYY dates, millimeter measurements, and accounting/report exports.
-
-## Features
-
-- Shop login with Supabase Auth.
-- Shop membership foundation for owner/admin/tech/viewer roles.
-- Job intake for acoustic, electric, and bass work.
-- Standalone customer add/list/search and repeat-customer quick fill.
-- Structured first and last name fields while preserving full-name display.
-- Inspection fields for string gauges, neck relief, action, fret condition, neck condition, and notes.
-- Damage map with view/area/severity markers and photo attachment support.
-- Parts, labor/services, discounts, sales tax/VAT, payments, balance, and till summary handling.
-- Lightweight accounting/reports tab with daily/monthly/yearly summaries and CSV export helpers.
-- Shop-level currency, locale, tax/VAT label, date format, and measurement unit preferences.
-- Work log entries that persist immediately.
-- Email templates for check-in, estimate, approval, work started, repair complete, pickup reminder, payment reminder, and photo updates.
-- Photo upload/gallery flow with HEIC/HEIF conversion support.
-- Job print sheet and customer damage report.
-- In-app beta announcements and issue reporting backed by Supabase.
-
-## Development
-
-Install dependencies:
-
-```powershell
-npm install
-```
-
-Start the Vite dev server:
-
-```powershell
-npm run dev
-```
-
-Open FretTrack in the browser:
-
-```text
-http://127.0.0.1:5173/
-```
-
-Build the production bundle:
-
-```powershell
-npm run build
-```
-
-Apply pending migrations to the local safe database:
-
-```powershell
-npm run db:local:apply
-```
-
-Seed five local-only test shops with fake customers, tickets, instruments, damage-map data, work logs, and report output:
-
-```powershell
-npm run seed:local-test-shops
-```
-
-The seed script refuses non-local database URLs unless explicitly overridden.
-
-If `npm run dev` says port `5173` is already in use, close the old dev server first and run it again. The app is configured with `strictPort: true` so Vite fails clearly instead of silently moving to another port.
-
-## Environment
-
-Copy `.env.example` to `.env` for local development and fill in your own values.
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Important:
-
-- `.env` and `.env.*` are intentionally ignored by git.
-- Do not commit Supabase service role keys, Resend keys, Twilio tokens, database URLs, JWT secrets, or shop-specific function keys.
-- Browser-facing `VITE_*` values are public in built frontend code. Do not put provider secrets or service role keys in `VITE_*` variables.
-- `VITE_SUPABASE_ANON_KEY` is public by design. Use Supabase Row Level Security and Edge Function authorization before using real shop data.
-
 ## Documentation
 
-- [Changelog](CHANGELOG.md) tracks release-by-release changes.
-- [Roadmap](ROADMAP.md) tracks planned product and security work.
-- [Known Issues](KNOWN_ISSUES.md) tracks trial limitations, setup traps, and historical fixes.
-- [Trial Readiness Checklist](docs/TRIAL_READINESS.md) covers first-shop testing.
-- [Architecture Overview](ARCHITECTURE_OVERVIEW.md) explains the main modules and data flow.
-- [Supabase Migration Workflow](docs/supabase-migrations.md) explains the migration-history preflight and recovery rules.
-- [Docs Home](docs/README.md) links deeper setup and deployment notes.
+- [Changelog](CHANGELOG.md)
+- [Roadmap](ROADMAP.md)
+- [Release notes](docs/RELEASE_NOTES.md)
+- [Architecture review beta 14](docs/ARCHITECTURE_REVIEW_BETA14.md)
+- [Print renderer rebuild plan](docs/PRINT_RENDERER_REBUILD_PLAN.md)
+- [Security review checklist](docs/SECURITY_REVIEW_CHECKLIST.md)
+- [Supabase migration workflow](docs/supabase-migrations.md)
+- [Docs home](docs/README.md)
 
 ## Security
 
-Read [SECURITY.md](SECURITY.md) before making the repository public or connecting real services.
+Read [SECURITY.md](SECURITY.md) before making repository, deployment, or service-credential changes.
 
 Short version:
 
-- Keep `.env` files private.
-- Rotate any Supabase service role key, Resend key, Twilio token, database URL password, JWT secret, or FretTrack function key immediately if it is ever exposed.
-- Treat beta data carefully and keep RLS enabled for shop-scoped tables.
-
-## Security Automation
-
-This repo includes:
-
-- Dependabot npm updates in `.github/dependabot.yml`.
-- A GitHub Actions `npm audit` workflow in `.github/workflows/security.yml`.
-
-Run this locally before publishing or cutting a release:
-
-```powershell
-npm audit --audit-level=moderate
-npm run check:migrations
-npm run build
-```
-
-Before creating or applying Supabase migrations, run:
-
-```powershell
-npm run check:migrations
-```
-
-This fails when the remote database has migration versions missing from `supabase/migrations`, which means local history needs to be recovered before any new migration is pushed.
+- Keep environment files and service credentials private.
+- Rotate any exposed Supabase service role key, Resend key, Twilio token, database URL password, JWT secret, or FretTrack function key immediately.
+- Treat beta data carefully and keep Supabase Row Level Security enabled for shop-scoped tables.
 
 ## License
 
