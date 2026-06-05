@@ -43,7 +43,17 @@ function getInitialFormState(jobs = []) {
   };
 }
 
-export default function JobForm({ jobs = [], customers = [], canWrite = true, shopProfile = null, initialCustomer = null, onCreate, onJobSaved, onNotice }) {
+export default function JobForm({
+  jobs = [],
+  customers = [],
+  canWrite = true,
+  shopProfile = null,
+  initialCustomer = null,
+  onCreate,
+  onJobSaved,
+  onNotice,
+  onOfflineDraftSaved
+}) {
   const [form, setForm] = useState(() => getInitialFormState(jobs));
   const [isSaving, setIsSaving] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
@@ -276,6 +286,15 @@ export default function JobForm({ jobs = [], customers = [], canWrite = true, sh
         await onCreate(savedJob || newJob);
       }
     } catch (error) {
+      const handledOfflineDraft = await onOfflineDraftSaved?.(newJob, error);
+      if (handledOfflineDraft) {
+        setForm(getInitialFormState(jobs));
+        setCustomerSearch('');
+        setCustomerMatches([]);
+        setSelectedCustomer(null);
+        return;
+      }
+
       onNotice?.({
         type: 'error',
         message: getErrorMessage(error, 'Job save failed.')

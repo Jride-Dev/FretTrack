@@ -279,6 +279,32 @@ export async function addJob(job) {
   return savedJob;
 }
 
+export async function findRemoteJobByNumber(jobNumber, shopId = '') {
+  if (!hasSupabaseConfig || !supabase || !jobNumber) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('id, job_number, created_at')
+    .eq('shop_id', getActiveShopId(shopId))
+    .eq('job_number', jobNumber)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('Remote job lookup by number failed.', error);
+    return null;
+  }
+
+  return data || null;
+}
+
+export function isDuplicateWorkOrderError(error) {
+  const message = String(error?.message || error || '');
+  return message.includes(duplicateWorkOrderPrefix);
+}
+
 export async function sendCustomerMessage(job, message) {
   const normalizedJob = normalizeJob(job);
   const channel = message.channel;

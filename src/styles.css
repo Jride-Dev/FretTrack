@@ -1278,6 +1278,21 @@ form.panel button {
   margin-top: 4px;
 }
 
+.offline-banner {
+  align-items: center;
+  background: color-mix(in srgb, var(--surface-2) 78%, var(--warning) 22%);
+  border: 1px solid var(--warning);
+  display: flex;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+}
+
+.offline-banner span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 .totals-actions {
   justify-content: flex-end;
   margin: 12px 0;
@@ -1484,6 +1499,39 @@ form.panel button {
   background: color-mix(in srgb, var(--surface-2) 82%, var(--warning) 18%);
   border-color: var(--warning);
   color: var(--warning);
+}
+
+.connection-status.offline {
+  background: color-mix(in srgb, var(--surface-2) 82%, var(--warning) 18%);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.offline-status-pill {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 28px;
+  padding: 5px 10px;
+}
+
+.offline-status-pill.online {
+  background: color-mix(in srgb, var(--surface-2) 82%, var(--success) 18%);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.offline-status-pill.offline {
+  background: color-mix(in srgb, var(--surface-2) 82%, var(--warning) 18%);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.offline-draft-layout {
+  align-items: start;
 }
 
 .plug-status {
@@ -2744,6 +2792,11 @@ th.internal-only {
   .accounting-report,
   .job-workspace {
     gap: 12px;
+  }
+
+  .offline-banner {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .pwa-install-banner {
