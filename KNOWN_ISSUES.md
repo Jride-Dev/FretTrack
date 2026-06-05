@@ -1,6 +1,6 @@
 # Known Issues
 
-Current version: `0.2.6-beta.6`
+Current version: `0.2.6-beta.14`
 
 This file tracks active bugs, setup traps, beta limitations, and historical break/fix notes that are useful when debugging regressions.
 

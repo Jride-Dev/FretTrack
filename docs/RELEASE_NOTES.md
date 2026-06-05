@@ -1,5 +1,28 @@
 # Release Notes
 
+## GitHub Release Summary: v0.2.6-beta.14 Updates Since beta6
+
+FretTrack has moved from the beta6 operations/storage baseline to a broader real-shop beta focused on access control, customer workflow, email documents, mobile readiness, editable billing details, and first-pass offline continuity.
+
+### Highlights Since beta6
+
+- Beta access is now gated by an application and operator approval flow instead of automatically opening a shop workspace for every new sign-in.
+- The internal operator dashboard now supports approval workflows, shop/member/usage visibility, beta-bypass handling, trial extension, and status controls.
+- Customer and subcontractor management are now first-class beta workflows, including profiles, balances, payment history, customer creation, and CRM-style lookup.
+- Work orders and invoices can now be emailed from inside FretTrack through the authenticated Supabase Edge Function and Resend path.
+- Existing work orders now support editable job-level parts and services while preserving totals, discounts, tax/VAT, payments, invoice summaries, and print output.
+- Mobile and tablet readiness improved with responsive layout work, touch-friendlier controls, camera-first photo capture, and installable PWA support.
+- Offline continuity now covers new work order drafts with an IndexedDB-backed local queue, manual sync, discard, and last-error visibility.
+- Print readability improved, but the Customer Damage Report and damage-map print system are still scheduled for a dedicated renderer rebuild.
+
+### Still Not Included
+
+- Stripe billing or live payment automation.
+- Full inventory, vendor, SKU, purchase-order, or stock tracking.
+- Full offline mode for existing job edits, photo queues, or cached authenticated Supabase data.
+- SMS production messaging.
+- Public invoice/work-order links.
+
 ## v0.2.6-beta.14
 
 This beta adds the first safe offline continuity layer for intake days when the shop internet or Supabase connection goes sideways. It does not attempt full offline mode yet. Instead, new work orders can be saved as local drafts, reviewed clearly, and synced manually when the connection returns.
