@@ -28,7 +28,7 @@ Current weak spots:
 - staff permissions are still broad-role based, not granular
 - public invoice and work-order links are planned but not implemented
 
-## Priority Track 1: Beta 15 Print Renderer Rebuild
+## Beta 15: Dedicated Print Renderer Rebuild
 
 The next print pass should be treated as a document-rendering project, not a CSS patch cycle.
 
@@ -40,9 +40,9 @@ The next print pass should be treated as a document-rendering project, not a CSS
 - make work orders, invoices, and customer reports reliable printable documents
 - keep print fixes scoped to dedicated printable components or routes
 
-## Priority Track 2: Staff and Shop Operations
+## Beta 16: Advanced Staff Permissions
 
-FretTrack now needs better multi-user operational control for growing shops.
+FretTrack needs better multi-user operational control for growing shops.
 
 - add advanced employee permissions
 - support owner, admin, tech, front desk, accounting, and read-only style access
@@ -51,7 +51,18 @@ FretTrack now needs better multi-user operational control for growing shops.
 - separate operational permissions from broad role labels where needed
 - add employee audit visibility later once activity attribution is mature
 
-## Priority Track 3: Inventory Foundation
+## Beta 17: Public Invoice and Work Order Links
+
+This should be the first premium add-on path rather than a default base-subscription feature.
+
+- public invoice and work-order links
+- website-linked invoice portal
+- secure tokenized customer access
+- public read-only invoice and work-order views
+- later payment links and QR codes
+- future customer portal expansion only after the first public-link model is stable
+
+## Beta 18: Inventory Foundation
 
 Inventory should be the first major post-core workflow module.
 
@@ -63,28 +74,7 @@ Inventory should be the first major post-core workflow module.
 - preserve historical job pricing even when inventory pricing changes later
 - start with practical repair-shop inventory, not full ERP complexity
 
-## Priority Track 4: Paid Features and Launch Prep
-
-Paid launch prep should stay operational and customer-trust focused.
-
-- add storage quota warnings before hard limits feel surprising
-- add billing contact, support, and cancellation copy
-- add Terms, Privacy, export, and deletion policy placeholders
-- tighten launch readiness around entitlements, trial state, and support expectations
-- keep Stripe out until entitlement behavior is stable in real use
-
-## Priority Track 5: Premium Add-On Path
-
-Some features belong in a paid add-on path instead of the base subscription.
-
-- public invoice and work-order links
-- website-linked invoice portal
-- secure tokenized customer access
-- public read-only invoice and work-order views
-- later payment links and QR codes
-- future customer portal expansion only after the first public-link model is stable
-
-## Priority Track 6: Offline Phase 2
+## Beta 19: Offline Phase 2
 
 Beta 14 established the first safe offline continuity layer. The next phase should extend that carefully.
 
@@ -94,6 +84,16 @@ Beta 14 established the first safe offline continuity layer. The next phase shou
 - limited read-only cached job access
 - better retry and recovery flow for failed draft sync
 - keep offline continuity separate from backup/disaster-recovery claims
+
+## Beta 20: Launch Hardening
+
+Paid launch prep should stay operational and customer-trust focused.
+
+- add storage quota warnings before hard limits feel surprising
+- add billing contact, support, and cancellation copy
+- add Terms, Privacy, export, and deletion policy placeholders
+- tighten launch readiness around entitlements, trial state, and support expectations
+- keep Stripe out until entitlement behavior is stable in real use
 
 ## Ongoing Product Direction
 

@@ -1,8 +1,8 @@
 # FretTrack
 
-Current version: `0.2.6-beta.6`
+Current version: `0.2.6-beta.14`
 
-`v0.2.6-beta.6` is the beta operations and storage hotfix: it adds paid-tier foundations, image optimization, the internal Beta Operator Dashboard, and payment autosave.
+`v0.2.6-beta.14` is the current beta continuity and mobile-readiness baseline. It includes the beta access gate, operator dashboard, paid-tier foundation without Stripe, customer and subcontractor management, work-order and invoice email flow, PWA/mobile improvements, offline new-job draft queue, image optimization, and editable job-level parts and services.
 
 FretTrack is a guitar and bass repair shop check-in and work order app. It helps repair shops track customer intake, instrument details, inspection notes, damage photos, parts, services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
@@ -32,8 +32,9 @@ By invite only. Applications are being taken on the website. Click the link and 
 - The app is deployed through Cloudflare Pages and backed by Supabase Auth, database, storage, and Edge Functions.
 - Email notifications are active through Supabase Edge Functions and Resend.
 - SMS plumbing exists, but SMS is disabled in beta builds until carrier registration is ready.
-- Work orders, standalone customer records, damage maps, customer lookup, photo handling, payments, print sheets, activity timeline, and customer messaging are available.
-- Simon's Beta Release adds UK-ready shop settings for GBP, VAT labels, DD/MM/YYYY dates, millimeter measurements, and accounting/report exports.
+- Work orders, standalone customer and subcontractor records, balance/history review, damage maps, customer lookup, photo handling, payments, print sheets, activity timeline, and customer messaging are available.
+- Work-order and invoice email flow, PWA install support, camera-first photo workflow, and offline local draft queue for new work orders are now part of the shipped beta.
+- Shop settings support GBP/USD currency handling, VAT/sales tax labeling, localized dates, and measurement preferences.
 
 ## Features
 
@@ -45,11 +46,15 @@ By invite only. Applications are being taken on the website. Click the link and 
 - Inspection fields for string gauges, neck relief, action, fret condition, neck condition, and notes.
 - Damage map with view/area/severity markers and photo attachment support.
 - Parts, labor/services, discounts, sales tax/VAT, payments, balance, and till summary handling.
+- Editable job-level parts and services after work order creation.
 - Lightweight accounting/reports tab with daily/monthly/yearly summaries and CSV export helpers.
 - Shop-level currency, locale, tax/VAT label, date format, and measurement unit preferences.
 - Work log entries that persist immediately.
 - Email templates for check-in, estimate, approval, work started, repair complete, pickup reminder, payment reminder, and photo updates.
+- In-app work-order and invoice email sending through Supabase Edge Functions and Resend.
 - Photo upload/gallery flow with HEIC/HEIF conversion support.
+- PWA install support and touch-friendly mobile/tablet layout improvements.
+- Offline local draft queue for new work orders when the connection fails.
 - Job print sheet and customer damage report.
 - In-app beta announcements and issue reporting backed by Supabase.
 
@@ -114,9 +119,11 @@ Important:
 
 - [Changelog](CHANGELOG.md) tracks release-by-release changes.
 - [Roadmap](ROADMAP.md) tracks planned product and security work.
-- [Known Issues](KNOWN_ISSUES.md) tracks trial limitations, setup traps, and historical fixes.
 - [Trial Readiness Checklist](docs/TRIAL_READINESS.md) covers first-shop testing.
-- [Architecture Overview](ARCHITECTURE_OVERVIEW.md) explains the main modules and data flow.
+- [Release Notes](docs/RELEASE_NOTES.md) track the current beta milestones.
+- [Architecture review notes](docs/ARCHITECTURE_REVIEW_BETA14.md) summarize current structural concerns and hosting boundaries.
+- [Print renderer rebuild plan](docs/PRINT_RENDERER_REBUILD_PLAN.md) defines the isolated beta 15 print strategy.
+- [Security review checklist](docs/SECURITY_REVIEW_CHECKLIST.md) tracks the next review pass before paid launch.
 - [Supabase Migration Workflow](docs/supabase-migrations.md) explains the migration-history preflight and recovery rules.
 - [Docs Home](docs/README.md) links deeper setup and deployment notes.
 
