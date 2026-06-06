@@ -587,6 +587,9 @@ export async function addPart(jobId, part) {
   const cleanPart = {
     id: crypto.randomUUID(),
     jobId,
+    shopId: getActiveShopId(part.shopId),
+    partId: part.partId || '',
+    sku: part.sku || '',
     name: part.name,
     quantity: Number(part.quantity || 1),
     cost: Number(part.cost || 0),
@@ -597,11 +600,16 @@ export async function addPart(jobId, part) {
   if (hasSupabaseConfig && supabase) {
     const { error } = await supabase.from('job_parts').insert({
       id: cleanPart.id,
+      shop_id: cleanPart.shopId,
       job_id: jobId,
+      part_id: cleanPart.partId || null,
       name: cleanPart.name,
+      sku: cleanPart.sku || null,
       quantity: cleanPart.quantity,
       cost: cleanPart.cost,
       retail: cleanPart.retail,
+      unit_cost: cleanPart.cost,
+      retail_price: cleanPart.retail,
       created_at: cleanPart.createdAt
     });
 
@@ -843,11 +851,14 @@ function normalizeIntakeType(intakeType) {
 function normalizePart(part) {
   return {
     id: part.id || crypto.randomUUID(),
+    shopId: getActiveShopId(part.shopId || part.shop_id),
     jobId: part.jobId || part.job_id || '',
+    partId: part.partId || part.part_id || '',
+    sku: part.sku || '',
     name: part.name || '',
     quantity: Number(part.quantity || 1),
-    cost: Number(part.cost || 0),
-    retail: Number(part.retail || 0),
+    cost: Number(part.cost ?? part.unit_cost ?? 0),
+    retail: Number(part.retail ?? part.retail_price ?? 0),
     includedInService: Boolean(part.includedInService),
     createdAt: part.createdAt || part.created_at || new Date().toISOString()
   };
@@ -997,11 +1008,14 @@ function fromDbJob(job) {
     })),
     parts: (job.job_parts || []).map((part) => ({
       id: part.id,
+      shopId: getActiveShopId(part.shop_id || job.shop_id),
       jobId: part.job_id,
+      partId: part.part_id || '',
+      sku: part.sku || '',
       name: part.name,
       quantity: Number(part.quantity || 1),
-      cost: Number(part.cost || 0),
-      retail: Number(part.retail || 0),
+      cost: Number(part.cost ?? part.unit_cost ?? 0),
+      retail: Number(part.retail ?? part.retail_price ?? 0),
       createdAt: part.created_at
     })),
     services: (job.job_services || []).map((service) => ({
@@ -1184,11 +1198,16 @@ async function syncJobChildren(job) {
     const { error } = await supabase.from('job_parts').insert(
       job.parts.map((part) => ({
         id: part.id,
+        shop_id: getActiveShopId(part.shopId || job.shopId),
         job_id: job.id,
+        part_id: part.partId || null,
         name: part.name,
+        sku: part.sku || null,
         quantity: Number(part.quantity || 1),
         cost: Number(part.cost || 0),
         retail: Number(part.retail || 0),
+        unit_cost: Number(part.cost || 0),
+        retail_price: Number(part.retail || 0),
         created_at: part.createdAt
       }))
     );

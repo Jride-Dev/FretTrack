@@ -34,6 +34,7 @@ import { generateJobNumber } from './jobNumber';
 import { getJobEvents } from './jobEventsService';
 import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
 import { buildInvoiceEmailDraft, buildWorkOrderEmailDraft } from './emailDocuments';
+import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 
 const intakeTypes = ['Walk-In', 'Telephone Appt.', 'Referral', 'Sub-Contract'];
 
@@ -89,6 +90,9 @@ export default function JobDetail({
   const [isSendingSubcontractorEmail, setIsSendingSubcontractorEmail] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState(job.events || []);
   const [documentEmailDraft, setDocumentEmailDraft] = useState(null);
+  const [inventorySearch, setInventorySearch] = useState('');
+  const [inventoryParts, setInventoryParts] = useState([]);
+  const [isInventoryLoading, setIsInventoryLoading] = useState(false);
   const imageImportInputRef = useRef(null);
   const paymentAutosaveTimeoutRef = useRef(null);
 
@@ -469,13 +473,119 @@ export default function JobDetail({
       return;
     }
     const nextJob = {
-      parts: [...parts, { id: crypto.randomUUID(), jobId: draftJob.id, name: part.name, quantity: part.quantity || '1', cost: part.cost, retail: part.retail }]
+      parts: [...parts, { id: crypto.randomUUID(), shopId: draftJob.shopId, jobId: draftJob.id, partId: '', sku: '', name: part.name, quantity: part.quantity || '1', cost: part.cost, retail: part.retail }]
     };
     patchJob(nextJob);
     setPart({ name: '', quantity: '1', cost: '', retail: '' });
   }
 
-  function updatePart(partId, field, value) {
+  async function searchInventoryParts(event) {
+    event.preventDefault();
+    setIsInventoryLoading(true);
+    try {
+      const loadedParts = await listInventoryParts(draftJob.shopId, {
+        search: inventorySearch,
+        activeOnly: true
+      });
+      setInventoryParts(loadedParts);
+    } catch (error) {
+      console.error('Inventory search failed.', error);
+      window.alert(error.message || 'Inventory search failed.');
+    } finally {
+      setIsInventoryLoading(false);
+    }
+  }
+
+  async function addInventoryPart(inventoryPart, quantity = 1) {
+    const requestedQuantity = Math.max(Number(quantity || 1), 1);
+    if (inventoryPart.quantityOnHand < requestedQuantity) {
+      const confirmed = window.confirm(`${inventoryPart.name} only has ${inventoryPart.quantityOnHand} on hand. Add ${requestedQuantity} anyway?`);
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    let jobForInventory = draftJob;
+    if (isDirty) {
+      try {
+        jobForInventory = (await saveDraftNow()) || draftJob;
+      } catch (error) {
+        window.alert(error.message || 'Save the job before adding inventory.');
+        return;
+      }
+    }
+
+    try {
+      const jobPart = await addPartToJob(jobForInventory.id, inventoryPart.id, requestedQuantity);
+      const nextJob = {
+        ...jobForInventory,
+        parts: [...(jobForInventory.parts || []), jobPart]
+      };
+      setDraftJob(nextJob);
+      setIsDirty(false);
+      refreshTimelineEvents();
+      if (onRefresh) {
+        await onRefresh();
+      }
+      setInventoryParts((current) => current.map((partRow) => (
+        partRow.id === inventoryPart.id
+          ? { ...partRow, quantityOnHand: partRow.quantityOnHand - requestedQuantity }
+          : partRow
+      )));
+    } catch (error) {
+      console.error('Add inventory part failed.', error);
+      window.alert(error.message || 'Unable to add inventory part.');
+    }
+  }
+
+  async function updatePart(partId, field, value) {
+    const editedPart = parts.find((row) => row.id === partId);
+    if (field === 'quantity' && editedPart?.partId) {
+      const requestedQuantity = Math.max(Number(value || 1), 1);
+      if (requestedQuantity > Number(editedPart.quantity || 1)) {
+        const additionalQuantity = requestedQuantity - Number(editedPart.quantity || 1);
+        const inventoryPart = inventoryParts.find((row) => row.id === editedPart.partId);
+        if (inventoryPart && inventoryPart.quantityOnHand < additionalQuantity) {
+          const confirmed = window.confirm(`${editedPart.name} only has ${inventoryPart.quantityOnHand} additional on hand. Save quantity ${requestedQuantity} anyway?`);
+          if (!confirmed) {
+            return;
+          }
+        }
+      }
+
+      if (isDirty) {
+        try {
+          await saveDraftNow();
+        } catch (error) {
+          window.alert(error.message || 'Save the job before changing inventory quantity.');
+          return;
+        }
+      }
+
+      try {
+        const updatedJobPart = await updateInventoryJobPartQuantity(partId, requestedQuantity);
+        const nextParts = parts.map((row) => (row.id === partId ? { ...row, ...updatedJobPart } : row));
+        setDraftJob((current) => ({
+          ...current,
+          parts: nextParts
+        }));
+        setIsDirty(false);
+        setInventoryParts((current) => current.map((row) => (
+          row.id === editedPart.partId
+            ? { ...row, quantityOnHand: row.quantityOnHand - (requestedQuantity - Number(editedPart.quantity || 1)) }
+            : row
+        )));
+        refreshTimelineEvents();
+        if (onRefresh) {
+          await onRefresh();
+        }
+      } catch (error) {
+        console.error('Inventory quantity update failed.', error);
+        window.alert(error.message || 'Unable to update inventory quantity.');
+      }
+      return;
+    }
+
     const nextParts = parts.map((row) => (row.id === partId ? { ...row, [field]: value } : row));
     patchJob({
       parts: nextParts,
@@ -486,7 +596,40 @@ export default function JobDetail({
     });
   }
 
-  function removePart(partId) {
+  async function removePart(partId) {
+    const removedPart = parts.find((row) => row.id === partId);
+    if (removedPart?.partId) {
+      const confirmed = window.confirm(`Remove ${removedPart.name} from this job and return it to inventory?`);
+      if (!confirmed) {
+        return;
+      }
+      if (isDirty) {
+        try {
+          await saveDraftNow();
+        } catch (error) {
+          window.alert(error.message || 'Save the job before removing inventory.');
+          return;
+        }
+      }
+      try {
+        await removeJobPart(partId);
+        const nextJob = {
+          ...draftJob,
+          parts: parts.filter((row) => row.id !== partId)
+        };
+        setDraftJob(nextJob);
+        setIsDirty(false);
+        refreshTimelineEvents();
+        if (onRefresh) {
+          await onRefresh();
+        }
+      } catch (error) {
+        console.error('Remove inventory part failed.', error);
+        window.alert(error.message || 'Unable to remove inventory part.');
+      }
+      return;
+    }
+
     const nextParts = parts.filter((row) => row.id !== partId);
     patchJob({
       parts: nextParts,
@@ -916,6 +1059,7 @@ export default function JobDetail({
         lengthUnit={measurementOptions.lengthUnit}
         outerStringLabels={outerStringLabels}
         normalizeInstrumentType={normalizeInstrumentType}
+        parts={parts}
         reportDamageView={reportDamageView}
         services={services}
         workOrderImages={workOrderImages}
@@ -973,7 +1117,21 @@ export default function JobDetail({
 
   const billingSections = (
     <>
-      <PartsList canWrite={canWrite} parts={parts} part={part} setPart={setPart} onAddPart={addPart} onUpdatePart={updatePart} onRemovePart={removePart} />
+      <PartsList
+        canWrite={canWrite}
+        inventoryParts={inventoryParts}
+        inventorySearch={inventorySearch}
+        isInventoryLoading={isInventoryLoading}
+        part={part}
+        parts={parts}
+        setInventorySearch={setInventorySearch}
+        setPart={setPart}
+        onAddInventoryPart={addInventoryPart}
+        onAddPart={addPart}
+        onRemovePart={removePart}
+        onSearchInventoryParts={searchInventoryParts}
+        onUpdatePart={updatePart}
+      />
       <ServicesList canWrite={canWrite} services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
       <TotalsSection
         addPayment={addPayment}

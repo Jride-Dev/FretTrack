@@ -79,11 +79,20 @@ export default function JobPrintSheet({
       <section className="print-section">
         <h3>Parts</h3>
         <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Line Total</th>
+            </tr>
+          </thead>
           <tbody>
             {parts.map((row) => (
               <tr key={row.id}>
-                <td>{row.name}</td>
+                <td>{row.sku ? `${row.sku} - ${row.name}` : row.name}</td>
                 <td>{row.quantity || 1}</td>
+                <td>{money(Number(row.retail) || 0, moneyOptions)}</td>
                 <td>{row.includedInService ? 'Included' : money(retailTotal(row), moneyOptions)}</td>
               </tr>
             ))}

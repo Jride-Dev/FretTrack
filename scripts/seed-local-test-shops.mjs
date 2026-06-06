@@ -303,7 +303,7 @@ async function seedJobChildren(tx, shop, job, customerNumber) {
   const imageRows = buildImageMetadata(shop, job, customerNumber);
   const eventRows = buildEvents(shop, job, customerNumber);
 
-  await tx`insert into job_parts ${tx(partRows, 'id', 'job_id', 'name', 'quantity', 'cost', 'retail', 'created_at')} on conflict (id) do nothing`;
+  await tx`insert into job_parts ${tx(partRows, 'id', 'shop_id', 'job_id', 'sku', 'name', 'quantity', 'cost', 'retail', 'unit_cost', 'retail_price', 'created_at')} on conflict (id) do nothing`;
   await tx`insert into job_services ${tx(serviceRows, 'id', 'job_id', 'description', 'quantity', 'cost', 'retail', 'created_at')} on conflict (id) do nothing`;
   await tx`insert into work_logs ${tx(workLogRows, 'id', 'job_id', 'entry', 'text', 'created_at')} on conflict (id) do nothing`;
   await tx`insert into job_images ${tx(imageRows, 'id', 'job_id', 'url', 'public_url', 'storage_path', 'file_name', 'original_filename', 'uploaded_at', 'category', 'created_at')} on conflict (id) do nothing`;
@@ -322,20 +322,28 @@ function buildParts(shop, job, customerNumber) {
   return [
     {
       id: deterministicUuid(`${shop.id}-${job.id}-strings`),
+      shop_id: shop.id,
       job_id: job.id,
+      sku: customerNumber % 3 === 0 ? 'SEED-BASS-STRINGS' : 'SEED-STRING-SET',
       name: customerNumber % 3 === 0 ? 'Bass strings' : 'String set',
       quantity: 1,
       cost: 6 + (customerNumber % 5),
       retail: 12 + (customerNumber % 8),
+      unit_cost: 6 + (customerNumber % 5),
+      retail_price: 12 + (customerNumber % 8),
       created_at: new Date().toISOString()
     },
     {
       id: deterministicUuid(`${shop.id}-${job.id}-jack`),
+      shop_id: shop.id,
       job_id: job.id,
+      sku: customerNumber % 4 === 0 ? 'SEED-OUTPUT-JACK' : 'SEED-CONSUMABLES',
       name: customerNumber % 4 === 0 ? 'Output jack' : 'Shop consumables',
       quantity: 1,
       cost: 2 + (customerNumber % 4),
       retail: 5 + (customerNumber % 6),
+      unit_cost: 2 + (customerNumber % 4),
+      retail_price: 5 + (customerNumber % 6),
       created_at: new Date().toISOString()
     }
   ];

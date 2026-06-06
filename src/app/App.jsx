@@ -4,6 +4,7 @@ import AuthGate from '../modules/auth/AuthGate.jsx';
 import AccountingReports from '../modules/accounting/AccountingReports.jsx';
 import BillingPage from '../modules/billing/BillingPage.jsx';
 import { CustomerManager, getCustomers } from '../modules/customers';
+import InventoryPage from '../modules/inventory/InventoryPage.jsx';
 import JobDetail from '../modules/jobs/JobDetail.jsx';
 import JobForm from '../modules/jobs/JobForm.jsx';
 import JobList from '../modules/jobs/JobList.jsx';
@@ -1015,6 +1016,7 @@ export default function App() {
           <button type="button" onClick={showNewJob}>New Job</button>
           <button type="button" onClick={() => setMode('list')}>Current Jobs</button>
           <button type="button" onClick={() => setMode('customers')}>Customers</button>
+          <button type="button" onClick={() => setMode('inventory')}>Inventory</button>
           <button type="button" onClick={() => setMode('accounting')}>Accounting / Reports</button>
           {(canWrite || offlineDraftCount > 0) && (
             <button type="button" onClick={() => setMode('drafts')}>Local Drafts{offlineDraftCount ? ` (${offlineDraftCount})` : ''}</button>
@@ -1131,6 +1133,14 @@ export default function App() {
 
           {mode === 'accounting' && (
             <AccountingReports jobs={jobs} shopId={membership?.shopId || getSelectedShop().shopId} shopProfile={shopProfile} />
+          )}
+
+          {mode === 'inventory' && (
+            <InventoryPage
+              canWrite={canWrite}
+              shopId={membership?.shopId || getSelectedShop().shopId}
+              onNotice={setNotice}
+            />
           )}
 
           {mode === 'drafts' && (
