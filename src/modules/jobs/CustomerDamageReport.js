@@ -1,5 +1,7 @@
 import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat';
 import { getPrintFooterText, getShopDateOptions, getShopSettings } from '../shops/shopConfig';
+import { retailTotal } from '../billing/accounting';
+import { money } from '../../shared/utils/money';
 
 export default function CustomerDamageReport({
   draftJob,
@@ -9,6 +11,7 @@ export default function CustomerDamageReport({
   outerStringLabels = { treble: 'High E', bass: 'Low E' },
   normalizeInstrumentType,
   reportDamageView,
+  parts = [],
   services,
   workOrderImages
 }) {
@@ -99,6 +102,31 @@ export default function CustomerDamageReport({
           </tbody>
         </table>
       </section>
+      {parts.length > 0 && (
+        <section className="print-section">
+          <h3>Parts</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Part</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Line Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {parts.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.sku ? `${row.sku} - ${row.name}` : row.name}</td>
+                  <td>{row.quantity || 1}</td>
+                  <td>{money(Number(row.retail) || 0, { currency: shopSettings.currencyCode, locale: shopSettings.locale })}</td>
+                  <td>{row.includedInService ? 'Included' : money(retailTotal(row), { currency: shopSettings.currencyCode, locale: shopSettings.locale })}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
       <section className="print-section">
         <h3>Authorization</h3>
         <p>{draftJob.techDetails.damageMap?.liabilityText || 'Customer acknowledges documented condition and authorizes repair intake.'}</p>

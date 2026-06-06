@@ -13,7 +13,7 @@ export function buildWorkOrderEmailDraft(job, context = {}) {
   const base = buildBaseContext(job, context);
   const requestedWork = cleanText(job.reasonForVisit) || 'Requested work is listed in the shop record.';
   const serviceSummary = summarizeRows(job.services || job.labor || [], (row) => `${row.description || 'Service'} x${row.quantity || 1}`);
-  const partSummary = summarizeRows(job.parts || [], (row) => `${row.name || 'Part'} x${row.quantity || 1}`);
+  const partSummary = summarizeRows(job.parts || [], (row) => `${row.sku ? `${row.sku} - ` : ''}${row.name || 'Part'} x${row.quantity || 1}`);
   const authorizationNote = cleanText(job.techDetails?.damageMap?.liabilityText);
   const pickupNote = cleanText(job.techDetails?.notes);
   const intakeSource = cleanText(job.techDetails?.intakeType) || 'Walk-In';
@@ -68,13 +68,13 @@ export function buildInvoiceEmailDraft(job, context = {}) {
   const totals = context.totals || {};
   const taxLabel = context.taxLabel || 'Sales Tax';
   const services = summarizeRows(job.services || job.labor || [], (row) => (
-    `${row.description || 'Service'} x${row.quantity || 1} - ${money((Number(row.retail) || 0) * Number(row.quantity || 1), base.moneyOptions)}`
+    `${row.description || 'Service'} x${row.quantity || 1} @ ${money(row.retail || 0, base.moneyOptions)} - ${money((Number(row.retail) || 0) * Number(row.quantity || 1), base.moneyOptions)}`
   ));
   const parts = summarizeRows(job.parts || [], (row) => {
     const amount = row.includedInService
       ? 'Included'
       : money((Number(row.retail) || 0) * Number(row.quantity || 1), base.moneyOptions);
-    return `${row.name || 'Part'} x${row.quantity || 1} - ${amount}`;
+    return `${row.sku ? `${row.sku} - ` : ''}${row.name || 'Part'} x${row.quantity || 1} @ ${money(row.retail || 0, base.moneyOptions)} - ${amount}`;
   });
   const paymentSummary = summarizeRows(job.techDetails?.payments || [], (row) => (
     `${formatShopDate(row.date, base.dateOptions)} - ${row.method || 'Payment'} - ${money(row.amount || 0, base.moneyOptions)}${row.note ? ` (${row.note})` : ''}`
