@@ -1,5 +1,7 @@
 # FretTrack
 
+![FretTrack logo and wordmark](images/logo_name.png)
+
 Current version: `0.2.6-beta.14`
 
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
