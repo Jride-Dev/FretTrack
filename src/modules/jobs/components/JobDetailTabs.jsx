@@ -14,6 +14,7 @@ const tabs = [
   { key: 'inspection', label: 'Inspection' },
   { key: 'work', label: 'Work' },
   { key: 'billing', label: 'Parts & Billing' },
+  { key: 'scheduling', label: 'Scheduling' },
   { key: 'photos', label: 'Photos' },
   { key: 'print', label: 'Print' },
   { key: 'timeline', label: 'Timeline' }
@@ -30,6 +31,7 @@ export default function JobDetailTabs({
   messagesPanel,
   printActions,
   printSections,
+  schedulingSection,
   updateField,
   workSections
 }) {
@@ -59,6 +61,7 @@ export default function JobDetailTabs({
       {activeTab === 'inspection' && <InspectionTab>{inspectionSections}</InspectionTab>}
       {activeTab === 'work' && <WorkTab>{workSections}</WorkTab>}
       {activeTab === 'billing' && <PartsBillingTab>{billingSections}</PartsBillingTab>}
+      {activeTab === 'scheduling' && <TimelineTab>{schedulingSection}</TimelineTab>}
       {activeTab === 'photos' && <PhotosTab>{imagesSection}</PhotosTab>}
       {activeTab === 'print' && <PrintCustomerTab>{printActions}{messagesPanel}</PrintCustomerTab>}
       {activeTab === 'timeline' && <TimelineTab>{activityTimeline}</TimelineTab>}

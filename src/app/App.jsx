@@ -10,6 +10,8 @@ import JobForm from '../modules/jobs/JobForm.jsx';
 import JobList from '../modules/jobs/JobList.jsx';
 import OfflineDraftQueue from '../modules/jobs/OfflineDraftQueue.jsx';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
+import SchedulingPage from '../modules/scheduling/SchedulingPage.jsx';
+import UpcomingSchedulePanel from '../modules/scheduling/UpcomingSchedulePanel.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import FeedbackReporter from '../modules/system/FeedbackReporter.jsx';
 import SystemAnnouncements from '../modules/system/SystemAnnouncements.jsx';
@@ -1017,6 +1019,7 @@ export default function App() {
           <button type="button" onClick={() => setMode('list')}>Current Jobs</button>
           <button type="button" onClick={() => setMode('customers')}>Customers</button>
           <button type="button" onClick={() => setMode('inventory')}>Inventory</button>
+          <button type="button" onClick={() => setMode('scheduling')}>Scheduling</button>
           <button type="button" onClick={() => setMode('accounting')}>Accounting / Reports</button>
           {(canWrite || offlineDraftCount > 0) && (
             <button type="button" onClick={() => setMode('drafts')}>Local Drafts{offlineDraftCount ? ` (${offlineDraftCount})` : ''}</button>
@@ -1090,6 +1093,12 @@ export default function App() {
               ))}
             </div>
           </section>
+          {membership?.shopId && (
+            <UpcomingSchedulePanel
+              shopId={membership.shopId}
+              onOpenSchedule={() => setMode('scheduling')}
+            />
+          )}
         </aside>
         <div className="content">
           {mode === 'new' && (
@@ -1143,6 +1152,16 @@ export default function App() {
             />
           )}
 
+          {mode === 'scheduling' && (
+            <SchedulingPage
+              canWrite={canWrite}
+              customers={customers}
+              jobs={jobs}
+              shopId={membership?.shopId || getSelectedShop().shopId}
+              onNotice={setNotice}
+            />
+          )}
+
           {mode === 'drafts' && (
             <OfflineDraftQueue
               drafts={offlineDrafts}
@@ -1179,6 +1198,7 @@ export default function App() {
               onImageDelete={handleImageDelete}
               onRefresh={refreshJobs}
               onClose={showNewJob}
+              onNotice={setNotice}
               canWrite={canWrite}
               canSendEmail={canSendEmail}
               canSendSms={canSendSms}
