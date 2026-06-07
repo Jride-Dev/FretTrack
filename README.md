@@ -2,8 +2,6 @@
 
 ![FretTrack logo and wordmark](images/logo_name.png)
 
-Live baseline: `v0.2.6-beta.14`
-
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
 FretTrack is a guitar and bass repair shop check-in and work order system for real bench workflow: customer intake, instrument details, inspection notes, damage photos, parts and services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
@@ -14,31 +12,27 @@ FretTrack is a guitar and bass repair shop check-in and work order system for re
 
 The beta is invite-only. Applications are handled on the live FretTrack site.
 
-## Current Beta Direction
+## Current Status
 
-`v0.2.6-beta.14` is the old live beta baseline. The current branch is organized around product milestones: `v0.2.61 beta` for customers complete, `v0.2.62 beta` for inventory complete, `v0.2.63 beta` for scheduling complete, and `v0.3.0 beta` for the Operational Shop Release.
+Current milestone branch: `v0.2.63 beta candidate`
 
-## What Is Available In This Branch
+This includes:
 
-- Live hosted app at [frettrack-app.com](https://frettrack-app.com).
-- Cloudflare Pages frontend backed by Supabase Auth, database, storage, and Edge Functions.
-- Invite-only beta application and approval flow.
-- Internal operator dashboard for beta approvals, shop/member visibility, usage review, beta-bypass handling, trial extension, and status control.
-- Shop login with owner/admin/tech/viewer membership foundation.
-- Work order intake for acoustic, electric, bass, extended-range, and custom string-count instruments.
-- Standalone customer and subcontractor management with profiles, balances, payment history, and CRM-style lookup.
-- Damage map with view/area/severity markers and photo attachment support.
-- Photo upload and gallery flow with HEIC/HEIF support and client-side image optimization.
-- Parts, services, discounts, tax/VAT, payments, balance, and lightweight accounting/report summaries.
-- Editable job-level parts and services after work order creation.
-- Inventory parts foundation with stock counts, low-stock visibility, inventory movements, and job attachment.
-- Shop settings for GBP/USD, VAT/sales tax labels, localized date formats, and imperial/metric measurement preferences.
-- Work logs, activity timeline, in-app announcements, and issue reporting.
-- Email templates plus in-app work-order and invoice email sending through Supabase Edge Functions and Resend.
-- PWA install support, mobile/tablet layout improvements, and camera-first photo capture.
-- Offline local draft queue for new work orders when the connection fails.
-- Job print sheet and customer damage report.
-- Scheduling / Calendar Phase 1 with week view, internal schedule events, job/customer links, Job Detail scheduling, and an upcoming schedule panel.
+- Customers foundation
+- Inventory parts foundation
+- Scheduling / Calendar Phase 1
+- Jobs, photos, damage map, work logs, accounting foundation, auth/RLS, and multi-shop architecture
+
+Old live baseline:
+
+- `v0.2.6-beta.14` remains the last older live beta baseline before the milestone version ladder.
+
+Product milestone ladder:
+
+- `v0.2.61 beta`: Customers complete
+- `v0.2.62 beta`: Inventory complete
+- `v0.2.63 beta`: Scheduling complete
+- `v0.3.0 beta`: Operational Shop Release
 
 ## Recent Beta Updates Since beta6
 
