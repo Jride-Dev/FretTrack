@@ -2919,8 +2919,132 @@ th.internal-only {
   margin-bottom: 12px;
 }
 
+.scheduling-page {
+  display: grid;
+  gap: 16px;
+}
+
+.section-header.compact {
+  align-items: center;
+}
+
+.schedule-toolbar {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.schedule-toolbar label {
+  min-width: 150px;
+}
+
+.schedule-layout {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+}
+
+.week-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(7, minmax(140px, 1fr));
+  overflow-x: auto;
+}
+
+.schedule-day {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 140px;
+  padding: 10px;
+}
+
+.schedule-day-heading {
+  align-items: flex-start;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--text);
+  display: grid;
+  justify-content: stretch;
+  min-height: 0;
+  padding: 0 0 8px;
+  text-align: left;
+  width: 100%;
+}
+
+.schedule-day-heading:hover {
+  background: transparent;
+  box-shadow: none;
+}
+
+.schedule-day-heading span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.schedule-event-list {
+  display: grid;
+  gap: 8px;
+}
+
+.schedule-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 9px;
+}
+
+.schedule-card h3 {
+  font-size: 14px;
+}
+
+.schedule-card.cancelled,
+.schedule-card.completed {
+  opacity: 0.65;
+}
+
+.schedule-editor {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.schedule-quick-form {
+  margin-bottom: 12px;
+}
+
+.upcoming-list {
+  display: grid;
+  gap: 8px;
+}
+
+.upcoming-list article {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 3px;
+  padding-top: 8px;
+}
+
+.upcoming-list span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 @media (max-width: 980px) {
   .inventory-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-layout {
     grid-template-columns: 1fr;
   }
 

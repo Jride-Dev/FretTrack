@@ -4,6 +4,13 @@ This folder is the home for product and technical documentation that does not be
 
 FretTrack is currently at `v0.2.6-beta.14`.
 
+Roadmap planning now uses product milestone versions:
+
+- `v0.2.61 beta`: Customers complete
+- `v0.2.62 beta`: Inventory complete
+- `v0.2.63 beta`: Scheduling complete
+- `v0.3.0 beta`: Operational Shop Release
+
 Start here for the current product path:
 
 - [Release notes](RELEASE_NOTES.md)
@@ -23,6 +30,7 @@ Core shipped beta areas now include:
 - mobile and PWA readiness
 - offline new-job draft queue
 - editable job-level parts and services
+- inventory parts foundation
 
 Additional documentation areas:
 
