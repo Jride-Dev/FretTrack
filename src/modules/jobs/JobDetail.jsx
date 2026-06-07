@@ -35,6 +35,7 @@ import { getJobEvents } from './jobEventsService';
 import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
 import { buildInvoiceEmailDraft, buildWorkOrderEmailDraft } from './emailDocuments';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
+import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
 
 const intakeTypes = ['Walk-In', 'Telephone Appt.', 'Referral', 'Sub-Contract'];
 
@@ -72,6 +73,7 @@ export default function JobDetail({
   onImageDelete,
   onRefresh,
   onClose,
+  onNotice,
   canWrite = true,
   canSendEmail = true,
   canSendSms = true,
@@ -1178,6 +1180,13 @@ export default function JobDetail({
   );
 
   const activityTimeline = <ActivityTimeline events={timelineEvents} />;
+  const schedulingSection = (
+    <JobScheduleSection
+      canWrite={canWrite}
+      job={draftJob}
+      onNotice={onNotice}
+    />
+  );
 
   return (
     <section className="panel detail job-detail">
@@ -1216,6 +1225,7 @@ export default function JobDetail({
         messagesPanel={messagesPanel}
         printActions={printActions}
         printSections={printSections}
+        schedulingSection={schedulingSection}
         updateField={updateField}
         workSections={workSections}
       />
