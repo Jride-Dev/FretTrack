@@ -1,5 +1,7 @@
 # FretTrack
 
+![FretTrack logo and wordmark](images/logo_name.png)
+
 Current version: `0.2.6-beta.14`
 
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
@@ -14,7 +16,7 @@ The beta is invite-only. Applications are handled on the live FretTrack site.
 
 ## Current Beta
 
-`v0.2.6-beta.14` is the current live beta baseline. It includes the beta access approval gate, internal operator dashboard, customer and subcontractor management, work-order and invoice email flow, editable job-level parts and services, PWA/mobile improvements, image optimization, and an offline local draft queue for new work orders.
+`v0.2.6-beta.14` is the current live beta baseline. The current working branch also contains the first inventory parts foundation. Version numbering is being reorganized around product milestones: `v0.2.61 beta` for customers complete, `v0.2.62 beta` for inventory complete, `v0.2.63 beta` for scheduling complete, and `v0.3.0 beta` for the Operational Shop Release.
 
 ## What Is Live Now
 
@@ -29,6 +31,7 @@ The beta is invite-only. Applications are handled on the live FretTrack site.
 - Photo upload and gallery flow with HEIC/HEIF support and client-side image optimization.
 - Parts, services, discounts, tax/VAT, payments, balance, and lightweight accounting/report summaries.
 - Editable job-level parts and services after work order creation.
+- Inventory parts foundation with stock counts, low-stock visibility, inventory movements, and job attachment.
 - Shop settings for GBP/USD, VAT/sales tax labels, localized date formats, and imperial/metric measurement preferences.
 - Work logs, activity timeline, in-app announcements, and issue reporting.
 - Email templates plus in-app work-order and invoice email sending through Supabase Edge Functions and Resend.
@@ -49,7 +52,7 @@ The beta is invite-only. Applications are handled on the live FretTrack site.
 ## Not Included Yet
 
 - Stripe billing or live payment automation.
-- Inventory, vendors, SKUs, purchase orders, or stock tracking.
+- Full inventory receiving workflow, barcode labels, purchase history, vendors, purchase orders, and deeper stock management.
 - Full offline mode for existing job edits, queued photo uploads, or cached authenticated Supabase data.
 - Production SMS messaging.
 - Public invoice or work-order links.

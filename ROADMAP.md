@@ -1,12 +1,21 @@
 # Roadmap
 
-FretTrack is currently at `v0.2.6-beta.14`.
+FretTrack is currently in the `v0.2.x beta` product-hardening series.
 
-This roadmap reflects the product as it exists now, not the earlier beta baseline. The goal from here is to harden the repair-shop workflow, close the most painful operational gaps, and prepare the app for a real paid launch without overbuilding too early.
+This roadmap uses product milestone versions rather than the older numbered-beta planning labels. Version bumps should be intentional: if a task does not explicitly ask for a version bump, ask first before changing package/app/docs version numbers.
+
+## Version Meaning
+
+| Version | Meaning |
+| --- | --- |
+| `v0.2.61 beta` | Customers complete |
+| `v0.2.62 beta` | Inventory complete |
+| `v0.2.63 beta` | Scheduling complete |
+| `v0.3.0 beta` | Operational Shop Release |
 
 ## Current Product State
 
-Already landed:
+Already landed or in the current branch:
 
 - beta access approval gate
 - operator dashboard
@@ -18,89 +27,71 @@ Already landed:
 - offline draft queue foundation for new work orders
 - image optimization before upload
 - job-level parts and services editing
+- inventory parts foundation with stock counts, movements, low-stock visibility, and job attachment
 
 Current weak spots:
 
 - Customer Damage Report print rendering still needs a proper isolated rebuild
 - offline continuity only supports new-job drafts, not existing job edits
 - SMS remains disabled
-- inventory does not exist yet
+- scheduling/calendar workflow is not built yet
 - staff permissions are still broad-role based, not granular
 - public invoice and work-order links are planned but not implemented
+- inventory still needs deeper receiving, low-stock management, barcode labels, and purchase history after the first parts foundation
 
-## Beta 15: Dedicated Print Renderer Rebuild
+## v0.2.63 Beta: Scheduling / Calendar
 
-The next print pass should be treated as a document-rendering project, not a CSS patch cycle.
+Scheduling should be a practical shop calendar, not a full external-calendar replacement.
 
-- isolate print rendering from screen UI
-- rebuild Customer Damage Report output from scratch
-- stop using shared interactive map layout for printable documents
-- avoid more global print CSS patching
-- use screenshot checkpoints before merging
-- make work orders, invoices, and customer reports reliable printable documents
-- keep print fixes scoped to dedicated printable components or routes
+- job due dates
+- intake appointments
+- pickup appointments
+- follow-up reminders
+- daily and weekly schedule visibility
+- shop-scoped `schedule_events`
+- job/customer-linked schedule events
+- week view with type/status filters
+- Job Detail scheduling section
+- internal-only scheduling in the first pass, with no customer-facing appointment confirmations yet
 
-## Beta 16: Advanced Staff Permissions
+## v0.3.x Beta Series: Commerce Foundation
 
-FretTrack needs better multi-user operational control for growing shops.
+This series turns the operational workflow into a more complete shop commerce flow while staying focused on repair-shop needs.
 
-- add advanced employee permissions
-- support owner, admin, tech, front desk, accounting, and read-only style access
-- hide internal cost and sensitive financial controls from non-authorized users
-- improve member management and staff administration flows
-- separate operational permissions from broad role labels where needed
-- add employee audit visibility later once activity attribution is mature
+- estimates
+- invoices
+- payments
+- taxes
+- transaction numbering
+- sales history
 
-## Beta 17: Public Invoice and Work Order Links
+## v0.4.x Beta Series: Operations
 
-This should be the first premium add-on path rather than a default base-subscription feature.
+This series deepens the back-office and repeat-workflow tools after the core shop release is stable.
 
-- public invoice and work-order links
-- website-linked invoice portal
-- secure tokenized customer access
-- public read-only invoice and work-order views
-- later payment links and QR codes
-- future customer portal expansion only after the first public-link model is stable
+- customer import
+- reporting
+- inventory receiving workflow
+- low stock management
+- barcode labels
+- purchase history
 
-## Beta 18: Inventory Foundation
+## v0.5.x Beta Series: Commercial Release Preparation
 
-Inventory should be the first major post-core workflow module.
+This series prepares FretTrack for paid production use.
 
-- add parts records
-- add vendors and suppliers
-- track stock on hand
-- add reorder basics
-- let jobs attach inventory parts while still allowing one-off typed parts
-- preserve historical job pricing even when inventory pricing changes later
-- start with practical repair-shop inventory, not full ERP complexity
-
-## Beta 19: Offline Phase 2
-
-Beta 14 established the first safe offline continuity layer. The next phase should extend that carefully.
-
-- queued photo uploads
-- recently-opened job cache
-- conflict handling for existing job edits
-- limited read-only cached job access
-- better retry and recovery flow for failed draft sync
-- keep offline continuity separate from backup/disaster-recovery claims
-
-## Beta 20: Launch Hardening
-
-Paid launch prep should stay operational and customer-trust focused.
-
-- add storage quota warnings before hard limits feel surprising
-- add billing contact, support, and cancellation copy
-- add Terms, Privacy, export, and deletion policy placeholders
-- tighten launch readiness around entitlements, trial state, and support expectations
-- keep Stripe out until entitlement behavior is stable in real use
+- subscription licensing
+- Stripe integration
+- trial management
+- multi-tenant billing
+- production deployment
+- backups
+- monitoring
 
 ## Ongoing Product Direction
 
-These are continuous product themes rather than one release target.
-
 - keep the core repair workflow generous and fast
-- continue real-shop beta testing against daily intake, photos, payments, print, and messaging
+- continue real-shop beta testing against daily intake, photos, payments, print, inventory, scheduling, and messaging
 - keep email active as the primary outbound communication path while SMS is still disabled
 - preserve theme-independent readability for print and export views
 - improve repeat-customer and subcontractor workflows as usage patterns become clearer
@@ -108,7 +99,7 @@ These are continuous product themes rather than one release target.
 
 ## Explicitly Not Future Work Anymore
 
-These are already shipped and should not be described as future roadmap items:
+These are already shipped or have a first foundation in place and should not be described as future-only roadmap items:
 
 - PWA install support
 - mobile and tablet responsive improvements
@@ -116,3 +107,4 @@ These are already shipped and should not be described as future roadmap items:
 - offline local draft queue for new work orders
 - customer and subcontractor standalone management
 - work-order and invoice email sending
+- inventory parts foundation
