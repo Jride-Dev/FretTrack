@@ -2,9 +2,7 @@
 
 This folder is the home for product and technical documentation that does not belong in the root README.
 
-FretTrack is currently at `v0.2.6-beta.14`.
-
-Roadmap planning now uses product milestone versions:
+FretTrack's old live baseline is `v0.2.6-beta.14`. Current branch planning uses product milestone versions:
 
 - `v0.2.61 beta`: Customers complete
 - `v0.2.62 beta`: Inventory complete
@@ -31,6 +29,7 @@ Core shipped beta areas now include:
 - offline new-job draft queue
 - editable job-level parts and services
 - inventory parts foundation
+- Scheduling / Calendar Phase 1
 
 Additional documentation areas:
 

@@ -2,7 +2,7 @@
 
 ![FretTrack logo and wordmark](images/logo_name.png)
 
-Current version: `0.2.6-beta.14`
+Live baseline: `v0.2.6-beta.14`
 
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
@@ -14,11 +14,11 @@ FretTrack is a guitar and bass repair shop check-in and work order system for re
 
 The beta is invite-only. Applications are handled on the live FretTrack site.
 
-## Current Beta
+## Current Beta Direction
 
-`v0.2.6-beta.14` is the current live beta baseline. The current working branch also contains the first inventory parts foundation. Version numbering is being reorganized around product milestones: `v0.2.61 beta` for customers complete, `v0.2.62 beta` for inventory complete, `v0.2.63 beta` for scheduling complete, and `v0.3.0 beta` for the Operational Shop Release.
+`v0.2.6-beta.14` is the old live beta baseline. The current branch is organized around product milestones: `v0.2.61 beta` for customers complete, `v0.2.62 beta` for inventory complete, `v0.2.63 beta` for scheduling complete, and `v0.3.0 beta` for the Operational Shop Release.
 
-## What Is Live Now
+## What Is Available In This Branch
 
 - Live hosted app at [frettrack-app.com](https://frettrack-app.com).
 - Cloudflare Pages frontend backed by Supabase Auth, database, storage, and Edge Functions.
@@ -38,6 +38,7 @@ The beta is invite-only. Applications are handled on the live FretTrack site.
 - PWA install support, mobile/tablet layout improvements, and camera-first photo capture.
 - Offline local draft queue for new work orders when the connection fails.
 - Job print sheet and customer damage report.
+- Scheduling / Calendar Phase 1 with week view, internal schedule events, job/customer links, Job Detail scheduling, and an upcoming schedule panel.
 
 ## Recent Beta Updates Since beta6
 
@@ -47,7 +48,9 @@ The beta is invite-only. Applications are handled on the live FretTrack site.
 - Existing work orders now support editable job-level parts and services.
 - The app now has mobile/tablet readiness improvements and PWA install support.
 - New work orders can be saved as local offline drafts and synced manually after reconnecting.
-- Print output has been improved for beta use, with a dedicated beta15 print renderer rebuild planned for the Customer Damage Report and damage-map output.
+- Inventory parts foundation adds stock counts, movements, low-stock visibility, and job attachment.
+- Scheduling Phase 1 adds internal shop scheduling for due dates, intake appointments, pickups, follow-ups, and shop blocks.
+- Print output has been improved for beta use, with a dedicated print renderer rebuild still planned for the Customer Damage Report and damage-map output.
 
 ## Not Included Yet
 
@@ -56,6 +59,7 @@ The beta is invite-only. Applications are handled on the live FretTrack site.
 - Full offline mode for existing job edits, queued photo uploads, or cached authenticated Supabase data.
 - Production SMS messaging.
 - Public invoice or work-order links.
+- Customer-facing appointment confirmations and external calendar sync.
 
 ## Screenshots
 
