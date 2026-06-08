@@ -43,6 +43,7 @@ const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';
 const PWA_INSTALL_HELP_DISMISSED_KEY = 'frettrack_pwa_install_help_dismissed';
+const UNSAVED_CHANGES_MESSAGE = 'You have unsaved changes. Leave without saving?';
 
 export default function App() {
   const [jobs, setJobs] = useState([]);
@@ -80,6 +81,7 @@ export default function App() {
   const [offlineDrafts, setOfflineDrafts] = useState([]);
   const [selectedOfflineDraftId, setSelectedOfflineDraftId] = useState('');
   const [syncingDraftId, setSyncingDraftId] = useState('');
+  const [hasUnsavedPageChanges, setHasUnsavedPageChanges] = useState(false);
   const manualSignOutRef = useRef(false);
 
   async function refreshJobs() {
@@ -451,6 +453,10 @@ export default function App() {
   }
 
   async function handleSignOut() {
+    if (!confirmUnsavedNavigation()) {
+      return;
+    }
+
     manualSignOutRef.current = true;
     setJobs([]);
     setCustomers([]);
@@ -535,6 +541,11 @@ export default function App() {
   }
 
   function handleSelectJob(jobId) {
+    if (!confirmUnsavedNavigation()) {
+      return;
+    }
+
+    setHasUnsavedPageChanges(false);
     setSelectedJobId(jobId);
     setMode('detail');
   }
@@ -591,7 +602,12 @@ export default function App() {
     }
   }
 
-  function showNewJob(customer = null) {
+  function showNewJob(customer = null, options = {}) {
+    if (!options.skipDirtyGuard && !confirmUnsavedNavigation()) {
+      return;
+    }
+
+    setHasUnsavedPageChanges(false);
     setPendingNewJobCustomer(customer || null);
     setSelectedJobId(null);
     setMode('new');
@@ -628,6 +644,11 @@ export default function App() {
   }
 
   function showShopPicker() {
+    if (!confirmUnsavedNavigation()) {
+      return;
+    }
+
+    setHasUnsavedPageChanges(false);
     setJobs([]);
     setCustomers([]);
     setSelectedJobId(null);
@@ -638,6 +659,23 @@ export default function App() {
     setOfflineDrafts([]);
     setSelectedOfflineDraftId('');
     clearSelectedShop();
+  }
+
+  function confirmUnsavedNavigation() {
+    if (!hasUnsavedPageChanges) {
+      return true;
+    }
+
+    return window.confirm(UNSAVED_CHANGES_MESSAGE);
+  }
+
+  function navigateTo(nextMode) {
+    if (!confirmUnsavedNavigation()) {
+      return;
+    }
+
+    setHasUnsavedPageChanges(false);
+    setMode(nextMode);
   }
 
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
@@ -1015,18 +1053,18 @@ export default function App() {
           <button type="button" className="primary-action" onClick={saveCurrentJob} disabled={isSaving || !canWrite}>
             {isSaving ? 'Saving...' : 'Save Job'}
           </button>
-          <button type="button" onClick={showNewJob}>New Job</button>
-          <button type="button" onClick={() => setMode('list')}>Current Jobs</button>
-          <button type="button" onClick={() => setMode('customers')}>Customers</button>
-          <button type="button" onClick={() => setMode('inventory')}>Inventory</button>
-          <button type="button" onClick={() => setMode('scheduling')}>Scheduling</button>
-          <button type="button" onClick={() => setMode('accounting')}>Accounting / Reports</button>
+          <button type="button" onClick={() => showNewJob()}>New Job</button>
+          <button type="button" onClick={() => navigateTo('list')}>Current Jobs</button>
+          <button type="button" onClick={() => navigateTo('customers')}>Customers</button>
+          <button type="button" onClick={() => navigateTo('inventory')}>Inventory</button>
+          <button type="button" onClick={() => navigateTo('scheduling')}>Scheduling</button>
+          <button type="button" onClick={() => navigateTo('accounting')}>Accounting / Reports</button>
           {(canWrite || offlineDraftCount > 0) && (
-            <button type="button" onClick={() => setMode('drafts')}>Local Drafts{offlineDraftCount ? ` (${offlineDraftCount})` : ''}</button>
+            <button type="button" onClick={() => navigateTo('drafts')}>Local Drafts{offlineDraftCount ? ` (${offlineDraftCount})` : ''}</button>
           )}
-          <button type="button" onClick={() => setMode('settings')}>Shop Settings</button>
-          {canManageShop && <button type="button" onClick={() => setMode('billing')}>Billing</button>}
-          {isOperator && <button type="button" onClick={() => setMode('operator')}>Operator</button>}
+          <button type="button" onClick={() => navigateTo('settings')}>Shop Settings</button>
+          {canManageShop && <button type="button" onClick={() => navigateTo('billing')}>Billing</button>}
+          {isOperator && <button type="button" onClick={() => navigateTo('operator')}>Operator</button>}
           {session && (
             <FeedbackReporter selectedJob={selectedJob} onNotice={setNotice} />
           )}
@@ -1096,7 +1134,7 @@ export default function App() {
           {membership?.shopId && (
             <UpcomingSchedulePanel
               shopId={membership.shopId}
-              onOpenSchedule={() => setMode('scheduling')}
+              onOpenSchedule={() => navigateTo('scheduling')}
             />
           )}
         </aside>
@@ -1137,6 +1175,7 @@ export default function App() {
               onCustomerSaved={handleCustomerSaved}
               onCreateJobForCustomer={showNewJob}
               onNotice={setNotice}
+              onDirtyChange={setHasUnsavedPageChanges}
             />
           )}
 
@@ -1149,6 +1188,7 @@ export default function App() {
               canWrite={canWrite}
               shopId={membership?.shopId || getSelectedShop().shopId}
               onNotice={setNotice}
+              onDirtyChange={setHasUnsavedPageChanges}
             />
           )}
 
@@ -1159,6 +1199,7 @@ export default function App() {
               jobs={jobs}
               shopId={membership?.shopId || getSelectedShop().shopId}
               onNotice={setNotice}
+              onDirtyChange={setHasUnsavedPageChanges}
             />
           )}
 
@@ -1197,12 +1238,13 @@ export default function App() {
               onImageUpload={handleImageUpload}
               onImageDelete={handleImageDelete}
               onRefresh={refreshJobs}
-              onClose={showNewJob}
+              onClose={() => showNewJob(null, { skipDirtyGuard: true })}
               onNotice={setNotice}
               canWrite={canWrite}
               canSendEmail={canSendEmail}
               canSendSms={canSendSms}
               entitlementMessage={entitlementMessage}
+              onDirtyChange={setHasUnsavedPageChanges}
             />
           )}
 

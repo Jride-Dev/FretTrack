@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PartsList from '../../components/PartsList';
 import ServicesList from '../../components/ServicesList';
 import DamageMapSection from './DamageMapSection';
@@ -36,6 +36,8 @@ import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
 import { buildInvoiceEmailDraft, buildWorkOrderEmailDraft } from './emailDocuments';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
+import useUnsavedChanges from '../../hooks/useUnsavedChanges';
+import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
 
 const intakeTypes = ['Walk-In', 'Telephone Appt.', 'Referral', 'Sub-Contract'];
 
@@ -77,10 +79,12 @@ export default function JobDetail({
   canWrite = true,
   canSendEmail = true,
   canSendSms = true,
-  entitlementMessage = ''
+  entitlementMessage = '',
+  onDirtyChange
 }) {
   const [draftJob, setDraftJob] = useState(job);
-  const [isDirty, setIsDirty] = useState(false);
+  const { isDirty, setDirty, confirmIfDirty } = useUnsavedChanges();
+  const [saveStatus, setSaveStatus] = useState('saved');
   const [workLogText, setWorkLogText] = useState('');
   const [part, setPart] = useState({ name: '', quantity: '1', cost: '', retail: '' });
   const [service, setService] = useState({ description: '', quantity: '1', cost: '', retail: '' });
@@ -98,11 +102,21 @@ export default function JobDetail({
   const imageImportInputRef = useRef(null);
   const paymentAutosaveTimeoutRef = useRef(null);
 
+  const setIsDirty = useCallback((value) => {
+    setDirty(value);
+    setSaveStatus(value ? 'unsaved' : 'saved');
+  }, [setDirty]);
+
   useEffect(() => {
     setDraftJob(job);
     setTimelineEvents(job.events || []);
     setIsDirty(false);
-  }, [job]);
+  }, [job, setIsDirty]);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+    return () => onDirtyChange?.(false);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
     refreshTimelineEvents();
@@ -286,6 +300,7 @@ export default function JobDetail({
   }
 
   async function saveDraftNow(jobToSave = draftJob) {
+    setSaveStatus('saving');
     try {
       const savedJob = await onUpdate(jobToSave);
       setDraftJob(savedJob || jobToSave);
@@ -293,6 +308,8 @@ export default function JobDetail({
       refreshTimelineEvents();
       return savedJob;
     } catch (error) {
+      setDirty(true);
+      setSaveStatus('error');
       throw error;
     }
   }
@@ -751,6 +768,11 @@ export default function JobDetail({
   }
 
   function closeDetail() {
+    if (!confirmIfDirty()) {
+      return;
+    }
+
+    onDirtyChange?.(false);
     onClose();
   }
 
@@ -1213,7 +1235,12 @@ export default function JobDetail({
         <JobStatusSelect value={draftJob.status} onChange={updateField} />
       </div>
 
-      {isDirty && <p className="dirty-state no-print">Unsaved changes</p>}
+      {(isDirty || saveStatus === 'saving' || saveStatus === 'error') && (
+        <UnsavedChangesBadge
+          state={saveStatus}
+          reminder={isDirty ? 'Remember to save before leaving.' : ''}
+        />
+      )}
       <JobDetailTabs
         activityTimeline={activityTimeline}
         billingSections={billingSections}
