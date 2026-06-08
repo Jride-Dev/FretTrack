@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat';
 import { getCurrentShopId, getShopDateOptions } from '../shops/shopConfig';
+import useUnsavedChanges from '../../hooks/useUnsavedChanges';
+import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
 import {
   cancelScheduleEvent,
   completeScheduleEvent,
@@ -70,6 +72,7 @@ export default function SchedulingPage({
   canWrite = true,
   customers = [],
   jobs = [],
+  onDirtyChange,
   onNotice,
   shopId = getCurrentShopId()
 }) {
@@ -80,6 +83,8 @@ export default function SchedulingPage({
   const [editingEventId, setEditingEventId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { isDirty, markDirty, markClean, confirmIfDirty } = useUnsavedChanges();
+  const [saveStatus, setSaveStatus] = useState('saved');
   const dateOptions = getShopDateOptions();
   const weekEnd = useMemo(() => addDays(weekStart, 7), [weekStart]);
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)), [weekStart]);
@@ -90,6 +95,11 @@ export default function SchedulingPage({
       onNotice?.({ type: 'error', message: error.message || 'Unable to load schedule.' });
     });
   }, [shopId, weekStart, filters.eventType, filters.status]);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+    return () => onDirtyChange?.(false);
+  }, [isDirty, onDirtyChange]);
 
   async function loadEvents() {
     setIsLoading(true);
@@ -104,14 +114,26 @@ export default function SchedulingPage({
 
   function updateForm(field, value) {
     setEventForm((current) => ({ ...current, [field]: value }));
+    markDirty();
+    setSaveStatus('unsaved');
   }
 
-  function startNewEvent(date = new Date()) {
+  function startNewEvent(date = new Date(), options = {}) {
+    if (!options.skipDirtyGuard && !confirmIfDirty()) {
+      return;
+    }
+
     setEditingEventId('');
     setEventForm({ ...emptyEventForm, startsAt: defaultStartDateTime(date) });
+    markClean();
+    setSaveStatus('saved');
   }
 
-  function editEvent(scheduleEvent) {
+  function editEvent(scheduleEvent, options = {}) {
+    if (!options.skipDirtyGuard && !confirmIfDirty()) {
+      return;
+    }
+
     setEditingEventId(scheduleEvent.id);
     setEventForm({
       title: scheduleEvent.title || '',
@@ -125,6 +147,8 @@ export default function SchedulingPage({
       customerId: scheduleEvent.customerId || '',
       location: scheduleEvent.location || ''
     });
+    markClean();
+    setSaveStatus('saved');
   }
 
   async function saveEvent(event) {
@@ -133,6 +157,7 @@ export default function SchedulingPage({
       return;
     }
     setIsSaving(true);
+    setSaveStatus('saving');
     try {
       if (editingEventId) {
         await updateScheduleEvent(editingEventId, eventForm);
@@ -141,10 +166,14 @@ export default function SchedulingPage({
         await createScheduleEvent(shopId, eventForm);
         onNotice?.({ type: 'success', message: 'Schedule event created.' });
       }
-      startNewEvent();
+      markClean();
+      setSaveStatus('saved');
+      startNewEvent(new Date(), { skipDirtyGuard: true });
       await loadEvents();
     } catch (error) {
       console.error('Schedule save failed.', error);
+      markDirty();
+      setSaveStatus('error');
       onNotice?.({ type: 'error', message: error.message || 'Unable to save schedule event.' });
     } finally {
       setIsSaving(false);
@@ -285,7 +314,15 @@ export default function SchedulingPage({
         </div>
 
         <form className="schedule-editor" onSubmit={saveEvent}>
-          <h3>{editingEventId ? 'Edit Event' : 'Add Event'}</h3>
+          <div className="editor-heading">
+            <h3>{editingEventId ? 'Edit Event' : 'Add Event'}</h3>
+            {(isDirty || saveStatus === 'saving' || saveStatus === 'error') && (
+              <UnsavedChangesBadge
+                state={saveStatus}
+                reminder={isDirty ? 'Remember to save before leaving.' : ''}
+              />
+            )}
+          </div>
           {!canWrite && <p className="muted-text">Your shop role can view schedule events but cannot change them.</p>}
           <div className="form-grid">
             <label>Title<input value={eventForm.title} onChange={(event) => updateForm('title', event.target.value)} disabled={!canWrite} required /></label>

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { money } from '../../shared/utils/money';
 import { getCurrentShopId, getShopMoneyOptions } from '../shops/shopConfig';
 import { adjustPart, createPart, deactivatePart, listParts, receivePart, updatePart } from './inventoryService';
+import useUnsavedChanges from '../../hooks/useUnsavedChanges';
+import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
 
 const emptyPartForm = {
   sku: '',
@@ -19,7 +21,7 @@ const emptyPartForm = {
   isActive: true
 };
 
-export default function InventoryPage({ canWrite = true, shopId = getCurrentShopId(), onNotice }) {
+export default function InventoryPage({ canWrite = true, shopId = getCurrentShopId(), onNotice, onDirtyChange }) {
   const [parts, setParts] = useState([]);
   const [search, setSearch] = useState('');
   const [showInactive, setShowInactive] = useState(false);
@@ -30,6 +32,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
   const [adjustForm, setAdjustForm] = useState({ quantityDelta: '0', note: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { isDirty, markDirty, markClean, confirmIfDirty } = useUnsavedChanges();
+  const [saveStatus, setSaveStatus] = useState('saved');
   const moneyOptions = getShopMoneyOptions();
 
   const selectedPart = useMemo(
@@ -43,6 +47,11 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       onNotice?.({ type: 'error', message: error.message || 'Unable to load inventory.' });
     });
   }, [shopId]);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+    return () => onDirtyChange?.(false);
+  }, [isDirty, onDirtyChange]);
 
   async function loadParts(filters = { search, activeOnly: !showInactive, lowStockOnly }) {
     setIsLoading(true);
@@ -62,9 +71,11 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
 
   function updatePartForm(field, value) {
     setPartForm((current) => ({ ...current, [field]: value }));
+    markDirty();
+    setSaveStatus('unsaved');
   }
 
-  function selectPart(part) {
+  function loadPartIntoForm(part) {
     setSelectedPartId(part.id);
     setPartForm({
       sku: part.sku || '',
@@ -83,13 +94,29 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     });
     setReceiveForm({ quantity: '1', cost: String(part.unitCost ?? ''), note: '' });
     setAdjustForm({ quantityDelta: '0', note: '' });
+    markClean();
+    setSaveStatus('saved');
   }
 
-  function resetForm() {
+  function selectPart(part, options = {}) {
+    if (!options.skipDirtyGuard && !confirmIfDirty()) {
+      return;
+    }
+
+    loadPartIntoForm(part);
+  }
+
+  function resetForm(options = {}) {
+    if (!options.skipDirtyGuard && !confirmIfDirty()) {
+      return;
+    }
+
     setSelectedPartId('');
     setPartForm(emptyPartForm);
     setReceiveForm({ quantity: '1', cost: '', note: '' });
     setAdjustForm({ quantityDelta: '0', note: '' });
+    markClean();
+    setSaveStatus('saved');
   }
 
   async function savePart(event) {
@@ -103,19 +130,24 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     }
 
     setIsSaving(true);
+    setSaveStatus('saving');
     try {
       const savedPart = selectedPart
         ? await updatePart(selectedPart.id, partForm)
         : await createPart(shopId, partForm);
       onNotice?.({ type: 'success', message: selectedPart ? 'Part updated.' : 'Part created.' });
-      resetForm();
+      markClean();
+      setSaveStatus('saved');
+      resetForm({ skipDirtyGuard: true });
       const loadedParts = await loadParts({ search, activeOnly: !showInactive, lowStockOnly });
       const nextPart = loadedParts.find((part) => part.id === savedPart.id);
       if (nextPart) {
-        selectPart(nextPart);
+        selectPart(nextPart, { skipDirtyGuard: true });
       }
     } catch (error) {
       console.error('Inventory save failed.', error);
+      markDirty();
+      setSaveStatus('error');
       onNotice?.({ type: 'error', message: error.message || 'Unable to save part.' });
     } finally {
       setIsSaving(false);
@@ -172,7 +204,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     try {
       await deactivatePart(selectedPart.id);
       onNotice?.({ type: 'success', message: 'Part deactivated.' });
-      resetForm();
+      resetForm({ skipDirtyGuard: true });
       await loadParts({ search, activeOnly: !showInactive, lowStockOnly });
     } catch (error) {
       console.error('Deactivate part failed.', error);
@@ -189,7 +221,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
           <h2>Inventory</h2>
           <p className="muted-text">Shop-scoped parts catalog, stock counts, receiving, and job-ready retail pricing.</p>
         </div>
-        {canWrite && <button type="button" onClick={resetForm}>Add Part</button>}
+        {canWrite && <button type="button" onClick={() => resetForm()}>Add Part</button>}
       </div>
 
       <form className="row-form inventory-search" onSubmit={handleSearch}>
@@ -267,7 +299,15 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
 
         <div className="inventory-editor">
           <form onSubmit={savePart}>
-            <h3>{selectedPart ? 'Edit Part' : 'Add Part'}</h3>
+            <div className="editor-heading">
+              <h3>{selectedPart ? 'Edit Part' : 'Add Part'}</h3>
+              {(isDirty || saveStatus === 'saving' || saveStatus === 'error') && (
+                <UnsavedChangesBadge
+                  state={saveStatus}
+                  reminder={isDirty ? 'Remember to save before leaving.' : ''}
+                />
+              )}
+            </div>
             <div className="form-grid">
               <label>SKU<input disabled={!canWrite} value={partForm.sku} onChange={(event) => updatePartForm('sku', event.target.value)} /></label>
               <label>Name<input disabled={!canWrite} value={partForm.name} onChange={(event) => updatePartForm('name', event.target.value)} required /></label>

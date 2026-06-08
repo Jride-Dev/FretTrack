@@ -5,6 +5,8 @@ import { customerSources, customerStatusOptions, customerTypes } from './custome
 import { getCustomerDisplayName, normalizeCustomer } from './customerNormalize';
 import { hasRecommendedContactMethod } from './customerValidation';
 import { getCurrentShopId } from '../shops/shopConfig';
+import useUnsavedChanges from '../../hooks/useUnsavedChanges';
+import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
 
 const initialForm = {
   id: '',
@@ -36,6 +38,7 @@ export default function CustomerForm({
   onCustomerSaved,
   onNotice,
   onCancel,
+  onDirtyChange,
   showHeading = true,
   submitLabel,
   title
@@ -43,10 +46,19 @@ export default function CustomerForm({
   const [form, setForm] = useState(() => buildFormState(customer));
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const { isDirty, markDirty, markClean } = useUnsavedChanges();
+  const [saveStatus, setSaveStatus] = useState('saved');
 
   useEffect(() => {
     setForm(buildFormState(customer));
-  }, [customer?.id]);
+    markClean();
+    setSaveStatus('saved');
+  }, [customer?.id, markClean]);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+    return () => onDirtyChange?.(false);
+  }, [isDirty, onDirtyChange]);
 
   const customerPool = useMemo(() => {
     if (!form.id) {
@@ -68,6 +80,8 @@ export default function CustomerForm({
     if (errorMessage) {
       setErrorMessage('');
     }
+    markDirty();
+    setSaveStatus('unsaved');
     setForm((current) => ({
       ...current,
       [name]: name === 'isActive' ? value === 'active' : value
@@ -82,6 +96,7 @@ export default function CustomerForm({
     }
 
     setIsSaving(true);
+    setSaveStatus('saving');
     setErrorMessage('');
     try {
       const savedCustomer = await addCustomer({
@@ -95,11 +110,15 @@ export default function CustomerForm({
         setForm(buildFormState(savedCustomer));
       }
 
+      markClean();
+      setSaveStatus('saved');
       await onCustomerSaved?.(savedCustomer);
       onNotice?.({ type: 'success', message: `${isEditing ? 'Updated' : 'Saved'} customer ${savedCustomer.displayName}.` });
     } catch (error) {
       const message = getErrorMessage(error, 'Customer save failed.');
       setErrorMessage(message);
+      markDirty();
+      setSaveStatus('error');
       onNotice?.({
         type: 'error',
         message
@@ -112,6 +131,12 @@ export default function CustomerForm({
   return (
     <form className="panel customer-add-form" onSubmit={handleSubmit}>
       {showHeading && <h2>{heading}</h2>}
+      {(isDirty || saveStatus === 'saving' || saveStatus === 'error') && (
+        <UnsavedChangesBadge
+          state={saveStatus}
+          reminder={isDirty ? 'Remember to save before leaving.' : ''}
+        />
+      )}
       {!canWrite && <p className="muted-text">Your shop role can view customers but cannot create or edit them.</p>}
       {isEditing && (
         <div className="mode-actions no-print customer-edit-actions">

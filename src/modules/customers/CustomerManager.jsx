@@ -19,12 +19,14 @@ export default function CustomerManager({
   moneyOptions = {},
   onCustomerSaved,
   onCreateJobForCustomer,
+  onDirtyChange,
   onNotice
 }) {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState(initialFilters);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [customerModalCustomer, setCustomerModalCustomer] = useState(undefined);
+  const [isCustomerFormDirty, setIsCustomerFormDirty] = useState(false);
 
   const directoryCustomers = useMemo(() => buildCustomerDirectory(customers, jobs), [customers, jobs]);
 
@@ -86,18 +88,36 @@ export default function CustomerManager({
   }
 
   function openNewCustomerModal() {
+    if (isCustomerFormDirty && !window.confirm('You have unsaved changes. Leave without saving?')) {
+      return;
+    }
+
+    setIsCustomerFormDirty(false);
     setCustomerModalCustomer(null);
   }
 
   function openEditCustomerModal(customer) {
+    if (isCustomerFormDirty && !window.confirm('You have unsaved changes. Leave without saving?')) {
+      return;
+    }
+
+    setIsCustomerFormDirty(false);
     setCustomerModalCustomer(customer);
   }
 
   function closeCustomerModal() {
+    if (isCustomerFormDirty && !window.confirm('You have unsaved changes. Leave without saving?')) {
+      return;
+    }
+
+    setIsCustomerFormDirty(false);
+    onDirtyChange?.(false);
     setCustomerModalCustomer(undefined);
   }
 
   async function handleCustomerSaved(savedCustomer) {
+    setIsCustomerFormDirty(false);
+    onDirtyChange?.(false);
     setSelectedCustomerId(savedCustomer.id);
     setCustomerModalCustomer(undefined);
     await onCustomerSaved?.(savedCustomer);
@@ -203,6 +223,10 @@ export default function CustomerManager({
               canWrite={canWrite}
               onCustomerSaved={handleCustomerSaved}
               onNotice={onNotice}
+              onDirtyChange={(isDirty) => {
+                setIsCustomerFormDirty(isDirty);
+                onDirtyChange?.(isDirty);
+              }}
               showHeading={false}
               submitLabel={modalCustomer ? 'Save Changes' : 'Save Customer'}
               title={modalCustomer ? 'Edit Customer' : 'Add Customer'}
