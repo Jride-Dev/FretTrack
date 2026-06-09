@@ -57,11 +57,13 @@ export async function updateBetaShopSubscription(shopId, updates = {}) {
   return data;
 }
 
-export async function updateBetaAccessRequest(requestId, status, notes = null) {
+export async function updateBetaAccessRequest(accessRequest, status, notes = null) {
+  const requestId = typeof accessRequest === 'object' ? accessRequest?.id : accessRequest;
   if (!hasSupabaseConfig || !supabase || !requestId) {
     return null;
   }
 
+  const previousStatus = typeof accessRequest === 'object' ? accessRequest?.status : '';
   const { data, error } = await supabase.rpc('update_beta_access_request', {
     target_request_id: requestId,
     next_status: status,
@@ -72,7 +74,33 @@ export async function updateBetaAccessRequest(requestId, status, notes = null) {
     throw error;
   }
 
-  return data;
+  const updatedRequest = normalizeBetaAccessRequest(data);
+  if (status === 'approved' && previousStatus !== 'approved') {
+    await notifyBetaApprovalRequest(updatedRequest);
+  }
+
+  return updatedRequest;
+}
+
+export async function notifyBetaApprovalRequest(accessRequest) {
+  if (!hasSupabaseConfig || !supabase || !accessRequest?.id || accessRequest.approvedNotifiedAt) {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('notify-beta-approval', {
+      body: { requestId: accessRequest.id }
+    });
+
+    if (error || data?.ok === false) {
+      console.warn('Beta approval notification did not complete.', error || data?.error || 'Unknown notification error.');
+    }
+
+    return data || null;
+  } catch (error) {
+    console.warn('Beta approval notification failed.', error);
+    return null;
+  }
 }
 
 function normalizeDashboard(dashboard = {}) {
