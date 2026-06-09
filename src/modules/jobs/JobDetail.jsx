@@ -3,6 +3,7 @@ import PartsList from '../../components/PartsList';
 import ServicesList from '../../components/ServicesList';
 import DamageMapSection from './DamageMapSection';
 import ImagesSection from '../images/ImagesSection';
+import PhotoEditorModal from '../photos/PhotoEditorModal.jsx';
 import JobInfoSection from './JobInfoSection';
 import JobPrintSheet from './JobPrintSheet';
 import JobStatusSelect from './JobStatusSelect';
@@ -35,6 +36,7 @@ import { getJobEvents } from './jobEventsService';
 import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
 import { buildInvoiceEmailDraft, buildWorkOrderEmailDraft } from './emailDocuments';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
+import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
 import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
@@ -96,6 +98,8 @@ export default function JobDetail({
   const [isSendingSubcontractorEmail, setIsSendingSubcontractorEmail] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState(job.events || []);
   const [documentEmailDraft, setDocumentEmailDraft] = useState(null);
+  const [photoEditorImage, setPhotoEditorImage] = useState(null);
+  const [isSavingEditedPhoto, setIsSavingEditedPhoto] = useState(false);
   const [inventorySearch, setInventorySearch] = useState('');
   const [inventoryParts, setInventoryParts] = useState([]);
   const [isInventoryLoading, setIsInventoryLoading] = useState(false);
@@ -754,6 +758,48 @@ export default function JobDetail({
     onImageDelete(draftJob, image);
   }
 
+  async function saveEditedPhotoCopy(file, editMetadata) {
+    setIsSavingEditedPhoto(true);
+    try {
+      const result = await saveEditedJobImageCopy(draftJob, photoEditorImage, file, editMetadata);
+      if (result?.job) {
+        setDraftJob(result.job);
+        setIsDirty(false);
+      }
+      setPhotoEditorImage(null);
+      onNotice?.({ type: 'success', message: 'Edited photo saved as a copy.' });
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (error) {
+      console.error('Edited photo save failed.', error);
+      onNotice?.({ type: 'error', message: error instanceof Error ? error.message : 'Edited photo save failed.' });
+    } finally {
+      setIsSavingEditedPhoto(false);
+    }
+  }
+
+  async function overwriteEditedPhoto(file, editMetadata) {
+    setIsSavingEditedPhoto(true);
+    try {
+      const result = await overwriteJobImage(draftJob, photoEditorImage, file, editMetadata);
+      if (result?.job) {
+        setDraftJob(result.job);
+        setIsDirty(false);
+      }
+      setPhotoEditorImage(null);
+      onNotice?.({ type: 'success', message: 'Original photo was overwritten with the edited PNG.' });
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (error) {
+      console.error('Edited photo overwrite failed.', error);
+      onNotice?.({ type: 'error', message: error instanceof Error ? error.message : 'Edited photo overwrite failed.' });
+    } finally {
+      setIsSavingEditedPhoto(false);
+    }
+  }
+
   function updateWorkOrderImage(imageId, checked) {
     const nextImageIds = checked
       ? [...new Set([...workOrderImageIds, imageId])]
@@ -1176,8 +1222,10 @@ export default function JobDetail({
 
   const imagesSection = (
     <ImagesSection
+      canWrite={canWrite}
       handleImageChange={handleImageChange}
       handleImageDelete={handleImageDelete}
+      handleImageEdit={setPhotoEditorImage}
       imageImportErrors={imageImportErrors}
       imageOptimizationNotices={imageOptimizationNotices}
       imageImportInputRef={imageImportInputRef}
@@ -1224,6 +1272,14 @@ export default function JobDetail({
         isSending={isSendingSubcontractorEmail}
         onCancel={() => setSubcontractorPickupJob(null)}
         onSend={sendSubcontractorPickupEmail}
+      />
+      <PhotoEditorModal
+        image={photoEditorImage}
+        isOpen={Boolean(photoEditorImage)}
+        isSaving={isSavingEditedPhoto}
+        onClose={() => setPhotoEditorImage(null)}
+        onSaveCopy={saveEditedPhotoCopy}
+        onOverwrite={overwriteEditedPhoto}
       />
       <div className="detail-header">
         <div>

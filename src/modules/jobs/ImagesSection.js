@@ -2,8 +2,10 @@ import PhotoGallery from '../photos/PhotoGallery.jsx';
 import PhotoUploader from '../photos/PhotoUploader.jsx';
 
 export default function ImagesSection({
+  canWrite = true,
   handleImageChange,
   handleImageDelete,
+  handleImageEdit,
   imageImportErrors,
   imageOptimizationNotices = [],
   imageImportInputRef,
@@ -15,7 +17,11 @@ export default function ImagesSection({
   return (
     <section>
       <h3>Images</h3>
-      <PhotoUploader inputRef={imageImportInputRef} onChange={handleImageChange} isImporting={isImportingImages} />
+      {canWrite ? (
+        <PhotoUploader inputRef={imageImportInputRef} onChange={handleImageChange} isImporting={isImportingImages} />
+      ) : (
+        <p className="muted-text no-print">Viewer role can view photos but cannot upload, edit, overwrite, or delete them.</p>
+      )}
       {imageOptimizationNotices.length > 0 && (
         <div className="import-notices no-print">
           {imageOptimizationNotices.map((notice) => (
@@ -31,9 +37,11 @@ export default function ImagesSection({
         </div>
       )}
       <PhotoGallery
+        canWrite={canWrite}
         images={images}
         workOrderImageIds={workOrderImageIds}
         onDelete={handleImageDelete}
+        onEdit={handleImageEdit}
         onWorkOrderToggle={updateWorkOrderImage}
       />
     </section>

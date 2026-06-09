@@ -229,6 +229,216 @@ function normalizeImage(image) {
   };
 }
 
+export async function saveEditedJobImageCopy(job, sourceImage, editedFile, editMetadata = {}) {
+  if (!job || !sourceImage || !editedFile) {
+    return null;
+  }
+
+  const normalizedJob = normalizePhotoJob(job);
+  const savedAt = new Date().toISOString();
+
+  if (!hasSupabaseConfig || !supabase) {
+    const image = {
+      id: crypto.randomUUID(),
+      jobId: normalizedJob.id,
+      url: await readFileAsDataUrl(editedFile),
+      fileName: editedFile.name,
+      name: editedFile.name,
+      originalFileName: editedFile.name,
+      uploadedAt: savedAt,
+      category: 'edited',
+      createdAt: savedAt,
+      originalSizeBytes: editedFile.size || 0,
+      optimizedSizeBytes: editedFile.size || 0,
+      mimeType: editedFile.type || 'image/png',
+      width: Number(editMetadata.width || 0),
+      height: Number(editMetadata.height || 0),
+      optimizationVersion: 'photo-editor-v1'
+    };
+    const savedJob = await updateJob({ ...normalizedJob, images: [...(normalizedJob.images || []), image] });
+    logImageUploaded(savedJob || normalizedJob, image);
+    return { job: savedJob, image };
+  }
+
+  const jobId = normalizedJob.id;
+  const fileName = makeEditedImageFileName(sourceImage, 'edited');
+  const filePath = `${jobId}/edited/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('job-images')
+    .upload(filePath, editedFile, {
+      contentType: editedFile.type || 'image/png',
+      cacheControl: '31536000'
+    });
+
+  if (uploadError) {
+    throw new Error(`Edited image upload failed: ${uploadError.message}`);
+  }
+
+  const objectUrl = await createJobImageObjectUrl(filePath);
+  const image = {
+    id: crypto.randomUUID(),
+    jobId,
+    url: objectUrl,
+    fileName,
+    name: fileName,
+    storagePath: filePath,
+    originalFileName: fileName,
+    storedFileName: fileName,
+    uploadedAt: savedAt,
+    category: 'edited',
+    createdAt: savedAt,
+    originalSizeBytes: editedFile.size || 0,
+    optimizedSizeBytes: editedFile.size || 0,
+    mimeType: editedFile.type || 'image/png',
+    width: Number(editMetadata.width || 0),
+    height: Number(editMetadata.height || 0),
+    optimizationVersion: 'photo-editor-v1'
+  };
+
+  const { error: dbError } = await supabase.from('job_images').insert({
+    id: image.id,
+    job_id: jobId,
+    url: '',
+    public_url: '',
+    storage_path: image.storagePath,
+    file_name: image.fileName,
+    stored_filename: image.storedFileName,
+    original_filename: image.originalFileName,
+    original_size_bytes: image.originalSizeBytes,
+    optimized_size_bytes: image.optimizedSizeBytes,
+    mime_type: image.mimeType,
+    width: image.width,
+    height: image.height,
+    optimization_version: image.optimizationVersion,
+    uploaded_at: image.uploadedAt,
+    category: image.category,
+    created_at: image.createdAt
+  });
+
+  if (dbError) {
+    throw new Error(`Edited image record failed: ${dbError.message}`);
+  }
+
+  await insertPhotoDerivativeSafe({
+    shopId: normalizedJob.shopId || getCurrentShopId(),
+    jobId,
+    sourcePhotoId: sourceImage.id,
+    derivativeType: derivePhotoDerivativeType(editMetadata),
+    storagePath: filePath,
+    editMetadata
+  });
+
+  const savedJob = await updateJob({ ...normalizedJob, images: [...(normalizedJob.images || []), image] });
+  logImageUploaded(savedJob || normalizedJob, image);
+  return { job: savedJob, image };
+}
+
+export async function overwriteJobImage(job, sourceImage, editedFile, editMetadata = {}) {
+  if (!job || !sourceImage || !editedFile) {
+    return null;
+  }
+
+  const normalizedJob = normalizePhotoJob(job);
+  const savedAt = new Date().toISOString();
+
+  if (!hasSupabaseConfig || !supabase) {
+    const updatedImage = {
+      ...sourceImage,
+      url: await readFileAsDataUrl(editedFile),
+      fileName: editedFile.name,
+      name: editedFile.name,
+      originalFileName: sourceImage.originalFileName || sourceImage.fileName || editedFile.name,
+      uploadedAt: savedAt,
+      updatedAt: savedAt,
+      originalSizeBytes: editedFile.size || 0,
+      optimizedSizeBytes: editedFile.size || 0,
+      mimeType: editedFile.type || 'image/png',
+      width: Number(editMetadata.width || sourceImage.width || 0),
+      height: Number(editMetadata.height || sourceImage.height || 0),
+      optimizationVersion: 'photo-editor-v1'
+    };
+    const savedJob = await updateJob({
+      ...normalizedJob,
+      images: (normalizedJob.images || []).map((image) => (image.id === sourceImage.id ? updatedImage : image))
+    });
+    return { job: savedJob, image: updatedImage };
+  }
+
+  const jobId = normalizedJob.id;
+  const backupStoragePath = sourceImage.storagePath || '';
+  const fileName = makeEditedImageFileName(sourceImage, 'overwrite');
+  const filePath = `${jobId}/edited/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('job-images')
+    .upload(filePath, editedFile, {
+      contentType: editedFile.type || 'image/png',
+      cacheControl: '31536000'
+    });
+
+  if (uploadError) {
+    throw new Error(`Edited image upload failed: ${uploadError.message}`);
+  }
+
+  const objectUrl = await createJobImageObjectUrl(filePath);
+  const updatedImage = {
+    ...sourceImage,
+    url: objectUrl,
+    storagePath: filePath,
+    fileName,
+    name: fileName,
+    storedFileName: fileName,
+    uploadedAt: savedAt,
+    originalSizeBytes: editedFile.size || 0,
+    optimizedSizeBytes: editedFile.size || 0,
+    mimeType: editedFile.type || 'image/png',
+    width: Number(editMetadata.width || sourceImage.width || 0),
+    height: Number(editMetadata.height || sourceImage.height || 0),
+    optimizationVersion: 'photo-editor-v1'
+  };
+
+  const { error: dbError } = await supabase
+    .from('job_images')
+    .update({
+      storage_path: updatedImage.storagePath,
+      file_name: updatedImage.fileName,
+      stored_filename: updatedImage.storedFileName,
+      original_size_bytes: updatedImage.originalSizeBytes,
+      optimized_size_bytes: updatedImage.optimizedSizeBytes,
+      mime_type: updatedImage.mimeType,
+      width: updatedImage.width,
+      height: updatedImage.height,
+      optimization_version: updatedImage.optimizationVersion,
+      uploaded_at: updatedImage.uploadedAt
+    })
+    .eq('id', sourceImage.id)
+    .eq('job_id', jobId);
+
+  if (dbError) {
+    throw new Error(`Edited image record failed: ${dbError.message}`);
+  }
+
+  await insertPhotoDerivativeSafe({
+    shopId: normalizedJob.shopId || getCurrentShopId(),
+    jobId,
+    sourcePhotoId: sourceImage.id,
+    derivativeType: 'edited',
+    storagePath: filePath,
+    editMetadata: {
+      ...editMetadata,
+      saveMode: 'overwrite',
+      backupStoragePath
+    }
+  });
+
+  const savedJob = await updateJob({
+    ...normalizedJob,
+    images: (normalizedJob.images || []).map((image) => (image.id === sourceImage.id ? updatedImage : image))
+  });
+  return { job: savedJob, image: updatedImage };
+}
+
 function imageMetadataToObject(metadata = {}) {
   return {
     storedFileName: metadata.storedFileName || '',
@@ -307,6 +517,12 @@ function logImageUploaded(job, image) {
   });
 }
 
+function makeEditedImageFileName(sourceImage, prefix = 'edited') {
+  const timestamp = compactTimestamp(new Date());
+  const baseName = safeStorageFileName(sourceImage?.fileName || sourceImage?.name || sourceImage?.id || 'photo').replace(/\.[^.]+$/, '');
+  return `${prefix}-${baseName}-${timestamp}.png`;
+}
+
 function logImageDeleted(job, image) {
   logJobEventSafe({
     shopId: job.shopId || getCurrentShopId(),
@@ -321,4 +537,48 @@ function logImageDeleted(job, image) {
       storagePath: image.storagePath || ''
     }
   });
+}
+
+async function insertPhotoDerivativeSafe({
+  shopId,
+  jobId,
+  sourcePhotoId,
+  derivativeType,
+  storagePath,
+  editMetadata
+}) {
+  if (!hasSupabaseConfig || !supabase) {
+    return;
+  }
+
+  try {
+    const { error } = await supabase.from('photo_derivatives').insert({
+      shop_id: shopId || '',
+      job_id: jobId,
+      source_photo_id: sourcePhotoId || null,
+      derivative_type: derivativeType || 'edited',
+      storage_path: storagePath || '',
+      public_url: '',
+      edit_metadata: editMetadata || {},
+    });
+    if (error) {
+      console.warn('Photo derivative metadata insert failed.', error);
+    }
+  } catch (error) {
+    console.warn('Photo derivative metadata insert failed.', error);
+  }
+}
+
+function derivePhotoDerivativeType(editMetadata = {}) {
+  const tools = new Set(editMetadata.toolsUsed || []);
+  if (tools.has('background')) {
+    return 'background_removed';
+  }
+  if (tools.has('crop')) {
+    return 'cropped';
+  }
+  if (tools.has('pen') || tools.has('arrow') || tools.has('circle') || tools.has('rectangle') || tools.has('text')) {
+    return 'annotated';
+  }
+  return 'edited';
 }
