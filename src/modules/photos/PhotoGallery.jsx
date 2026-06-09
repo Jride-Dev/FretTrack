@@ -1,4 +1,11 @@
-export default function PhotoGallery({ images = [], workOrderImageIds = [], onDelete, onWorkOrderToggle }) {
+export default function PhotoGallery({
+  canWrite = true,
+  images = [],
+  workOrderImageIds = [],
+  onDelete,
+  onEdit,
+  onWorkOrderToggle
+}) {
   return (
     <div className="image-grid">
       {images.map((image) => (
@@ -6,6 +13,22 @@ export default function PhotoGallery({ images = [], workOrderImageIds = [], onDe
           <a href={image.url} target="_blank" rel="noreferrer">
             <img src={image.url} alt={image.name || 'Job upload'} />
           </a>
+          <div className="image-actions no-print">
+            {canWrite && (
+              <button type="button" onClick={() => onEdit?.(image)}>
+                Edit Photo
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => onWorkOrderToggle(image.id, !workOrderImageIds.includes(image.id))}
+            >
+              {workOrderImageIds.includes(image.id) ? 'Remove from Customer Report' : 'Use in Customer Report'}
+            </button>
+            <a href={image.url} download={image.fileName || image.name || 'job-photo'}>
+              Download
+            </a>
+          </div>
           <label className="image-print-toggle no-print">
               <input
                 type="checkbox"
@@ -14,15 +37,17 @@ export default function PhotoGallery({ images = [], workOrderImageIds = [], onDe
               />
               Add Pictures to Work Order
           </label>
-          <button
-            type="button"
-            className="image-delete no-print"
-            onClick={() => onDelete(image)}
-            aria-label={`Delete ${image.name || 'job image'}`}
-            title="Delete image"
-          >
-            Delete
-          </button>
+          {canWrite && (
+            <button
+              type="button"
+              className="image-delete no-print"
+              onClick={() => onDelete(image)}
+              aria-label={`Delete ${image.name || 'job image'}`}
+              title="Delete image"
+            >
+              Delete
+            </button>
+          )}
         </div>
       ))}
     </div>
