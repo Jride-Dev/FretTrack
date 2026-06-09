@@ -29,6 +29,7 @@ export function normalizeBetaAccessRequest(request = {}) {
     lastSignInAt: request.last_sign_in_at || request.lastSignInAt || '',
     emailConfirmedAt: request.email_confirmed_at || request.emailConfirmedAt || '',
     operatorNotifiedAt: request.operator_notified_at || request.operatorNotifiedAt || '',
+    approvedNotifiedAt: request.approved_notified_at || request.approvedNotifiedAt || '',
     updatedAt: request.updated_at || request.updatedAt || ''
   };
 }

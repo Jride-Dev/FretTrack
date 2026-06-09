@@ -56,7 +56,7 @@ export default function BetaOperatorDashboard({ onNotice }) {
   async function updateBetaAccess(accessRequest, status) {
     setIsSavingAccessUserId(accessRequest.id);
     try {
-      await updateBetaAccessRequest(accessRequest.id, status, accessRequest.notes || null);
+      await updateBetaAccessRequest(accessRequest, status, accessRequest.notes || null);
       await loadDashboard();
       onNotice?.({ type: 'success', message: `${accessRequest.email || accessRequest.userId || accessRequest.id} beta access updated.` });
     } catch (error) {
