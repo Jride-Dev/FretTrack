@@ -2176,6 +2176,58 @@ th.internal-only {
   font-size: 13px;
 }
 
+.advanced-reports-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.premium-placeholder {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.premium-placeholder h3 {
+  margin: 0;
+}
+
+.report-card-section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.report-card-section h3 {
+  margin: 0;
+}
+
+.report-card-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.report-metric-card {
+  background: var(--surface-muted);
+  border: 1px solid var(--border-soft);
+  display: grid;
+  gap: 0.35rem;
+  min-height: 88px;
+  padding: 1rem;
+}
+
+.report-metric-card span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.report-metric-card strong {
+  font-size: 1.35rem;
+}
+
 .empty,
 .empty-state {
   color: var(--text-subtle);
@@ -2633,6 +2685,7 @@ th.internal-only {
   .message-form,
   .billing-summary-grid,
   .accounting-summary-grid,
+  .report-card-grid,
   .image-grid,
   .discount-controls,
   .payment-form,
@@ -2754,6 +2807,7 @@ th.internal-only {
   .panel-heading,
   .billing-summary-grid,
   .accounting-summary-grid,
+  .report-card-grid,
   .customer-filter-bar,
   .customer-summary-grid {
     grid-template-columns: 1fr;
