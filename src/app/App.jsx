@@ -10,6 +10,7 @@ import JobForm from '../modules/jobs/JobForm.jsx';
 import JobList from '../modules/jobs/JobList.jsx';
 import OfflineDraftQueue from '../modules/jobs/OfflineDraftQueue.jsx';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
+import AdvancedReportsPage from '../modules/reports/AdvancedReportsPage.jsx';
 import SchedulingPage from '../modules/scheduling/SchedulingPage.jsx';
 import UpcomingSchedulePanel from '../modules/scheduling/UpcomingSchedulePanel.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
@@ -1059,6 +1060,7 @@ export default function App() {
           <button type="button" onClick={() => navigateTo('customers')}>Customers</button>
           <button type="button" onClick={() => navigateTo('inventory')}>Inventory</button>
           <button type="button" onClick={() => navigateTo('scheduling')}>Scheduling</button>
+          <button type="button" onClick={() => navigateTo('reports')}>Reports</button>
           <button type="button" onClick={() => navigateTo('accounting')}>Accounting / Reports</button>
           {(canWrite || offlineDraftCount > 0) && (
             <button type="button" onClick={() => navigateTo('drafts')}>Local Drafts{offlineDraftCount ? ` (${offlineDraftCount})` : ''}</button>
@@ -1183,6 +1185,17 @@ export default function App() {
 
           {mode === 'accounting' && (
             <AccountingReports jobs={jobs} shopId={membership?.shopId || getSelectedShop().shopId} shopProfile={shopProfile} />
+          )}
+
+          {mode === 'reports' && (
+            <AdvancedReportsPage
+              customers={customers}
+              entitlementSnapshot={billingAccess}
+              jobs={jobs}
+              shopId={membership?.shopId || getSelectedShop().shopId}
+              shopProfile={shopProfile}
+              onNotice={setNotice}
+            />
           )}
 
           {mode === 'inventory' && (
