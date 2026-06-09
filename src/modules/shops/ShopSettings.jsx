@@ -6,11 +6,13 @@ import { SUPPORTED_CURRENCIES, getDefaultLocaleForCurrency, getSupportedCurrency
 import { getShopSettings, saveShopSettings } from './shopConfig';
 import { saveShopProfile, uploadShopLogo } from './shopProfileService';
 import ShopMembersPanel from './ShopMembersPanel.jsx';
+import SubscriptionSettingsSection from './SubscriptionSettingsSection.jsx';
 
 export default function ShopSettings({
   canManageShop = true,
   currentUserId = '',
   initialSettings = null,
+  entitlementSnapshot = null,
   requireCompletion = false,
   onSave,
   onNotice
@@ -212,6 +214,12 @@ export default function ShopSettings({
           <button type="submit" disabled={!canManageShop || isSaving}>{isSaving ? 'Saving...' : requireCompletion ? 'Finish Shop Setup' : 'Save Shop Settings'}</button>
         </form>
       </section>
+      {!requireCompletion && (
+        <SubscriptionSettingsSection
+          entitlementSnapshot={entitlementSnapshot}
+          shopProfile={settings}
+        />
+      )}
       {!requireCompletion && (
         <ShopMembersPanel
           canManageShop={canManageShop}

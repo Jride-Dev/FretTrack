@@ -145,7 +145,11 @@ function normalizeShopSettings(settings = {}) {
       ? ''
       : String(Number(settings.salesTaxRate)),
     taxablePartsDefault: settings.taxablePartsDefault !== false,
-    taxableServicesDefault: Boolean(settings.taxableServicesDefault)
+    taxableServicesDefault: Boolean(settings.taxableServicesDefault),
+    subscriptionTier: String(settings.subscriptionTier || settings.subscription_tier || currentSettings.subscriptionTier || 'free').toLowerCase(),
+    subscriptionStatus: String(settings.subscriptionStatus || settings.subscription_status || currentSettings.subscriptionStatus || 'active').toLowerCase(),
+    trialEndsAt: settings.trialEndsAt || settings.trial_ends_at || currentSettings.trialEndsAt || '',
+    featureOverrides: normalizeFeatureOverrides(settings.featureOverrides || settings.feature_overrides || currentSettings.featureOverrides)
   };
 }
 
@@ -185,6 +189,10 @@ async function fromDbProfile(dbProfile) {
     salesTaxRate: profile.sales_tax_rate == null ? '' : String(Number(profile.sales_tax_rate)),
     taxablePartsDefault: profile.taxable_parts_default !== false,
     taxableServicesDefault: Boolean(profile.taxable_services_default),
+    subscriptionTier: profile.subscription_tier || 'free',
+    subscriptionStatus: profile.subscription_status || 'active',
+    trialEndsAt: profile.trial_ends_at || '',
+    featureOverrides: normalizeFeatureOverrides(profile.feature_overrides),
     onboardedAt: profile.onboarded_at || '',
     createdAt: profile.created_at,
     updatedAt: profile.updated_at
@@ -214,6 +222,16 @@ function toDbProfile(settings, userId) {
     onboarded_at: new Date().toISOString(),
     created_by: userId || null
   };
+}
+
+function normalizeFeatureOverrides(value) {
+  if (!value || Array.isArray(value) || typeof value !== 'object') {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).filter(([, featureValue]) => typeof featureValue === 'boolean')
+  );
 }
 
 function inferCurrencySettings(settings = {}, currentSettings = {}) {

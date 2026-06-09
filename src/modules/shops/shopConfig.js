@@ -30,7 +30,11 @@ export const defaultShopSettings = {
   taxState: '',
   salesTaxRate: '',
   taxablePartsDefault: true,
-  taxableServicesDefault: false
+  taxableServicesDefault: false,
+  subscriptionTier: 'free',
+  subscriptionStatus: 'active',
+  trialEndsAt: '',
+  featureOverrides: {}
 };
 
 export function getShopSettings() {
@@ -73,7 +77,11 @@ export function getShopSettings() {
     taxState: savedSettingsMatchShop ? savedSettings.taxState || '' : '',
     salesTaxRate: savedSettingsMatchShop ? savedSettings.salesTaxRate || '' : '',
     taxablePartsDefault: savedSettingsMatchShop ? savedSettings.taxablePartsDefault !== false : true,
-    taxableServicesDefault: savedSettingsMatchShop ? Boolean(savedSettings.taxableServicesDefault) : false
+    taxableServicesDefault: savedSettingsMatchShop ? Boolean(savedSettings.taxableServicesDefault) : false,
+    subscriptionTier: savedSettingsMatchShop ? savedSettings.subscriptionTier || 'free' : 'free',
+    subscriptionStatus: savedSettingsMatchShop ? savedSettings.subscriptionStatus || 'active' : 'active',
+    trialEndsAt: savedSettingsMatchShop ? savedSettings.trialEndsAt || '' : '',
+    featureOverrides: savedSettingsMatchShop ? savedSettings.featureOverrides || {} : {}
   };
 }
 
