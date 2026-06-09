@@ -998,6 +998,7 @@ export default function App() {
               canManageShop={canManageShop}
               currentUserId={session?.user?.id || ''}
               initialSettings={{ ...getCurrentShopProfileFallback(), shopId: membership.shopId }}
+              entitlementSnapshot={billingAccess}
               requireCompletion
               onSave={handleShopProfileSaved}
               onNotice={setNotice}
@@ -1157,6 +1158,7 @@ export default function App() {
               canManageShop={canManageShop}
               currentUserId={session?.user?.id || ''}
               initialSettings={shopProfile}
+              entitlementSnapshot={billingAccess}
               onSave={(settings) => {
                 setShopProfile(settings);
                 setShopName(settings.shopName);

@@ -2105,6 +2105,53 @@ th.internal-only {
   padding: 6px 10px;
 }
 
+.subscription-settings {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.subscription-feature-groups {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.subscription-feature-group {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.subscription-feature-group h4 {
+  margin: 0 0 0.75rem;
+}
+
+.subscription-feature-group ul {
+  display: grid;
+  gap: 0.55rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.subscription-feature-group li {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.feature-enabled {
+  color: var(--success);
+}
+
+.feature-disabled {
+  color: var(--text-muted);
+}
+
 .billing-state-banner {
   border: 1px solid var(--border);
   display: grid;
