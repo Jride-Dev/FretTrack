@@ -818,9 +818,14 @@ async function submitBetaAccessRequest(application, env) {
 async function sendBetaApplicationEmails(application, env) {
   const resendApiKey = cleanText(env.RESEND_API_KEY || '', 300);
   const fromEmail = cleanText(env.SHOP_EMAIL_FROM || '', 180) || 'FretTrack <noreply@frettrack-app.com>';
-  const notifyTo = cleanText(env.BETA_APPLICATION_NOTIFY_TO || SUPPORT_EMAIL, 180);
+  const notifyRecipients = parseEmailRecipients(env.BETA_APPLICATION_NOTIFY_TO || SUPPORT_EMAIL);
 
-  if (!resendApiKey || !fromEmail) {
+  if (!resendApiKey || !fromEmail || !notifyRecipients.length) {
+    console.error('beta application email not configured', {
+      hasResendApiKey: Boolean(resendApiKey),
+      hasFromEmail: Boolean(fromEmail),
+      hasNotifyRecipients: notifyRecipients.length > 0
+    });
     return {
       warning: 'Application saved, but email delivery is not configured on the landing-page Worker yet.'
     };
@@ -854,33 +859,62 @@ async function sendBetaApplicationEmails(application, env) {
     details
   ].join('\n');
 
-  const results = await Promise.allSettled([
-    sendResendEmail({
-      apiKey: resendApiKey,
-      from: fromEmail,
+  const emailJobs = [
+    {
+      kind: 'applicant',
       to: application.email,
       subject: 'FretTrack beta application received',
       text: applicantText
-    }),
+    },
+    ...notifyRecipients.map((recipient) => ({
+      kind: 'operator',
+      to: recipient,
+      subject: `New FretTrack beta application: ${application.shopName || application.email}`,
+      text: operatorText
+    }))
+  ];
+
+  const results = await Promise.allSettled(emailJobs.map((emailJob) => (
     sendResendEmail({
       apiKey: resendApiKey,
       from: fromEmail,
-      to: notifyTo,
-      subject: `New FretTrack beta application: ${application.shopName || application.email}`,
-      text: operatorText
+      to: emailJob.to,
+      subject: emailJob.subject,
+      text: emailJob.text
     })
-  ]);
+  )));
 
-  const failures = results
-    .filter((result) => result.status === 'rejected' || result.value?.ok === false)
-    .map((result) => result.reason?.message || result.value?.error || 'Email send failed.');
+  const failures = results.reduce((accumulator, result, index) => {
+    if (result.status === 'rejected' || result.value?.ok === false) {
+      const emailJob = emailJobs[index];
+      const message = result.reason?.message || result.value?.error || 'Email send failed.';
+      console.error('beta application email failed', {
+        kind: emailJob.kind,
+        recipientDomain: getEmailDomain(emailJob.to),
+        error: message
+      });
+      accumulator.push({ kind: emailJob.kind, message });
+    }
+    return accumulator;
+  }, []);
 
   if (failures.length) {
+    const operatorFailure = failures.find((failure) => failure.kind === 'operator');
+    const applicantFailure = failures.find((failure) => failure.kind === 'applicant');
+    const warning = operatorFailure
+      ? 'Application saved, but the operator notification email failed. Check Worker and Resend logs.'
+      : applicantFailure
+        ? 'Application saved, but the applicant confirmation email failed. Check Worker and Resend logs.'
+        : `Application saved, but email delivery had an issue: ${failures[0].message}`;
     return {
-      warning: `Application saved, but email delivery had an issue: ${failures[0]}`
+      warning
     };
   }
 
+  console.log('beta application emails sent', {
+    applicantConfirmationSent: true,
+    operatorNotificationCount: notifyRecipients.length
+  });
   return { warning: '' };
 }
 
@@ -939,6 +973,22 @@ async function serveAsset(pathname, env) {
 
 function cleanText(value, maxLength) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, maxLength);
+}
+
+function parseEmailRecipients(value) {
+  return String(value || '')
+    .split(/[,\s;]+/)
+    .map((recipient) => String(recipient || '').trim().toLowerCase().slice(0, 180))
+    .filter((recipient, index, recipients) => (
+      recipient
+      && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(recipient)
+      && recipients.indexOf(recipient) === index
+    ));
+}
+
+function getEmailDomain(value) {
+  const [, domain = 'unknown'] = String(value || '').split('@');
+  return domain || 'unknown';
 }
 
 function jsonResponse(body, status = 200) {
