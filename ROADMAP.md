@@ -4,7 +4,7 @@ FretTrack is moving from the old `v0.2.6-beta.14` live baseline into product mil
 
 ## Current Product State
 
-The old live baseline is `v0.2.6-beta.14`. The current branch builds on that baseline with inventory foundation work and Scheduling / Calendar Phase 1.
+The old live baseline is `v0.2.6-beta.14`. The current branch builds on that baseline with inventory foundation work, Scheduling / Calendar Phase 1, premium entitlement/reporting foundations, beta approval notifications, and Photo Editor Phase 1.
 
 Shipped or current-branch foundations:
 
@@ -20,6 +20,11 @@ Shipped or current-branch foundations:
 - editable job-level parts and services
 - inventory parts foundation with stock counts, movements, low-stock visibility, and job attachment
 - Scheduling / Calendar Phase 1 with week view, schedule events, job/customer links, and Job Detail scheduling
+- reusable unsaved-changes protection for high-risk manual-edit screens
+- premium entitlement architecture for future feature gating
+- Advanced Reporting Phase 1 with premium-gated dashboard metric cards
+- beta approval applicant email notifications through `notify-beta-approval`
+- Photo Editor Phase 1 with freehand markup, shapes, arrows, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup
 
 Known weak spots:
 
@@ -30,6 +35,7 @@ Known weak spots:
 - public invoice and work-order links are planned but not implemented
 - deeper inventory operations are still future work
 - commerce, licensing, billing automation, production backups, and monitoring are later release tracks
+- Photo Editor Phase 1 is practical canvas editing, not a full Photoshop-style editor or AI cutout tool
 
 ## Milestone Version Ladder
 
@@ -66,6 +72,8 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - stable intake-to-pickup job workflow
 - customers, inventory foundation, and scheduling working together
 - reliable work-order and invoice email summaries
+- reliable beta application and approval notification flow
+- practical photo documentation editor for annotated customer/shop records
 - dependable basic print output
 - clean operator/admin workflow for beta shops
 - practical shop settings for currency, tax labels, date formats, and measurement preferences
@@ -81,6 +89,7 @@ This series turns the operational workflow into a more complete shop commerce fl
 - taxes
 - transaction numbering
 - sales history
+- entitlement checks for premium commerce/reporting boundaries
 
 ## v0.4.x: Operations
 
@@ -93,6 +102,7 @@ This series deepens back-office and repeat-workflow tools after the core operati
 - barcode labels
 - vendors
 - purchase history
+- deeper photo/document workflows if real-shop testing shows gaps
 
 ## v0.5.x: Commercial Release Preparation
 
@@ -119,3 +129,8 @@ These are already shipped or have a first foundation in place and should not be 
 - editable job-level parts and services
 - inventory parts foundation
 - Scheduling / Calendar Phase 1
+- unsaved-changes protection foundation
+- premium entitlement foundation
+- Advanced Reporting Phase 1
+- beta approval applicant email notification foundation
+- Photo Editor Phase 1

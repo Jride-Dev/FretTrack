@@ -2,15 +2,21 @@
 
 ## GitHub Release Summary: v0.2.6-beta.14 Updates Since beta6
 
-FretTrack has moved from the beta6 operations/storage baseline to a broader real-shop beta focused on access control, customer workflow, email documents, mobile readiness, editable billing details, and first-pass offline continuity.
+FretTrack has moved from the beta6 operations/storage baseline to a broader real-shop beta focused on access control, customer workflow, email documents, mobile readiness, editable billing details, inventory, scheduling, reporting foundations, safer editing, photo documentation, and first-pass offline continuity.
 
 ### Highlights Since beta6
 
 - Beta access is now gated by an application and operator approval flow instead of automatically opening a shop workspace for every new sign-in.
+- Approved beta users can now receive an approval email with the app login URL through the `notify-beta-approval` Supabase Edge Function.
 - The internal operator dashboard now supports approval workflows, shop/member/usage visibility, beta-bypass handling, trial extension, and status controls.
 - Customer and subcontractor management are now first-class beta workflows, including profiles, balances, payment history, customer creation, and CRM-style lookup.
 - Work orders and invoices can now be emailed from inside FretTrack through the authenticated Supabase Edge Function and Resend path.
 - Existing work orders now support editable job-level parts and services while preserving totals, discounts, tax/VAT, payments, invoice summaries, and print output.
+- Inventory parts foundation now covers shop-scoped parts, stock counts, job attachment, stock movement rows, low-stock indicators, and viewer-safe write controls.
+- Scheduling / Calendar Phase 1 now covers internal schedule events, job due dates, intake appointments, pickup appointments, follow-ups, shop blocks, filters, and Job Detail scheduling.
+- Premium entitlement architecture and Advanced Reporting Phase 1 are in place without enabling Stripe, billing collection, subscriptions, charts, exports, or PDFs.
+- Unsaved-changes protection now warns before losing manual edits in the first high-risk areas.
+- Photo Editor Phase 1 now supports repair-shop image markup, text captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
 - Mobile and tablet readiness improved with responsive layout work, touch-friendlier controls, camera-first photo capture, and installable PWA support.
 - Offline continuity now covers new work order drafts with an IndexedDB-backed local queue, manual sync, discard, and last-error visibility.
 - Print readability improved, but the Customer Damage Report and damage-map print system are still scheduled for a dedicated renderer rebuild.
@@ -18,10 +24,15 @@ FretTrack has moved from the beta6 operations/storage baseline to a broader real
 ### Still Not Included
 
 - Stripe billing or live payment automation.
-- Full inventory, vendor, SKU, purchase-order, or stock tracking.
+- Inventory receiving workflow, barcode labels, vendors, purchase orders, and purchase history.
 - Full offline mode for existing job edits, photo queues, or cached authenticated Supabase data.
 - SMS production messaging.
 - Public invoice/work-order links.
+- AI background removal or third-party image cutout APIs.
+
+### Screenshots
+
+![FretTrack Photo Editor Phase 1](screenshots/photo_editor.jpg)
 
 ## v0.2.6-beta.14
 

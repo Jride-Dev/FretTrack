@@ -13,6 +13,8 @@ Start here for the current product path:
 
 - [Release notes](RELEASE_NOTES.md)
 - [Roadmap](../ROADMAP.md)
+- [Deployment notes](DEPLOYMENT_NOTES.md)
+- [Photo editor](PHOTO_EDITOR.md)
 - [Architecture review beta 14](ARCHITECTURE_REVIEW_BETA14.md)
 - [Print renderer rebuild plan](PRINT_RENDERER_REBUILD_PLAN.md)
 - [Security review checklist](SECURITY_REVIEW_CHECKLIST.md)
@@ -30,6 +32,11 @@ Core shipped beta areas now include:
 - editable job-level parts and services
 - inventory parts foundation
 - Scheduling / Calendar Phase 1
+- unsaved-changes protection foundation
+- premium entitlement foundation
+- Advanced Reporting Phase 1
+- beta approval applicant notifications
+- Photo Editor Phase 1
 
 Additional documentation areas:
 
@@ -42,6 +49,7 @@ Additional documentation areas:
 
 Current docs:
 
+- [Deployment notes](DEPLOYMENT_NOTES.md)
 - [Beta operations](BETA_OPERATIONS.md)
 - [Beta tester checklist](BETA_TESTER_CHECKLIST.md)
 - [Beta access approval](BETA_ACCESS_APPROVAL.md)
@@ -50,6 +58,7 @@ Current docs:
 - [Domain and email setup](DOMAIN_EMAIL_SETUP.md)
 - [Customer module plan](CUSTOMER_MODULE_PLAN.md)
 - [Image optimization](IMAGE_OPTIMIZATION.md)
+- [Photo editor](PHOTO_EDITOR.md)
 - [Mobile/tablet readiness audit](MOBILE_TABLET_READINESS_AUDIT.md)
 - [Release notes](RELEASE_NOTES.md)
 - [Shop provisioning and installer packaging](shop-provisioning-and-installer.md)

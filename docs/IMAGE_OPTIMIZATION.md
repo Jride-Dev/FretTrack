@@ -36,6 +36,18 @@ If browser decoding or HEIC conversion fails, the upload is rejected with a clea
 
 The storage path and private authenticated download flow remain unchanged.
 
+## Photo Editor Phase 1
+
+Photo Editor Phase 1 builds on the same private job-photo storage model.
+
+- Edited photos render client-side through browser canvas and save as PNG.
+- Save Copy is the default and creates a new `job_images` record so the edited image appears in the gallery and can be selected for customer-facing output.
+- Overwrite Original requires explicit confirmation and updates the existing `job_images` record to point at the edited PNG.
+- `photo_derivatives` stores source-photo/edit metadata for provenance when Supabase is configured.
+- Manual background cleanup uses canvas pixel operations only. It does not use ML models or third-party image cutout APIs.
+
+![FretTrack Photo Editor Phase 1](screenshots/photo_editor.jpg)
+
 ## Smoke Checklist
 
 - 12MP phone JPEG becomes smaller and the longest side is no more than 1600px.
@@ -46,6 +58,8 @@ The storage path and private authenticated download flow remain unchanged.
 - Private authenticated image download still works.
 - Storage paths and RLS behavior remain unchanged.
 - Failed compression shows a clear error and does not upload the original.
+- Edited-photo Save Copy preserves the original image and adds a new PNG copy.
+- Overwrite Original shows the warning confirmation before replacing the image record.
 
 ## Future Paid-Tier Option
 
