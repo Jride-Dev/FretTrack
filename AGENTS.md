@@ -14,10 +14,8 @@ README.md
 CHANGELOG.md
 RELEASE_NOTES.md
 ROADMAP.md
-relevant feature documentation
-
-before merge.
-
+ALL relevant feature documentation before merge.
+GITHUB README
 Documentation Requirement
 
 Features are not considered complete until documentation is updated.
