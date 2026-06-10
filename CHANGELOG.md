@@ -14,6 +14,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added `photo_derivatives` metadata for edited-photo provenance.
 - Added deployment notes as the permanent place for migration caveats, manual deploy notes, pending checks, and production verification.
 - Added the new photo editor screenshot at `docs/screenshots/photo_editor.jpg`.
+- Fixed operator UI access guards so non-operator shop users cannot restore, navigate to, or render the internal Operator Dashboard from persisted workspace mode.
 
 ## v0.2.6-beta.14 - Offline New-Job Draft Continuity
 

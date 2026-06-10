@@ -84,6 +84,20 @@ export default function App() {
   const [syncingDraftId, setSyncingDraftId] = useState('');
   const [hasUnsavedPageChanges, setHasUnsavedPageChanges] = useState(false);
   const manualSignOutRef = useRef(false);
+  const selectedJob = jobs.find((job) => job.id === selectedJobId);
+  const billingAccess = entitlementSnapshot || getDefaultEntitlementSnapshot(membership?.shopId);
+  const isBillingReadOnly = hasSupabaseConfig && isReadOnlyStatus(billingAccess);
+  const canWrite = (!hasSupabaseConfig || ['owner', 'admin', 'tech'].includes(membership?.role)) && !isBillingReadOnly;
+  const canManageShop = !hasSupabaseConfig || ['owner', 'admin'].includes(membership?.role);
+  const canUploadPhotos = canWrite && billingAccess.access?.canUploadPhotos !== false;
+  const canSendEmail = canWrite && billingAccess.access?.canSendEmail !== false;
+  const canSendSms = canWrite && billingAccess.access?.canSendSms === true;
+  const entitlementMessage = getEntitlementMessage(billingAccess);
+  const tillSummary = calculateTillSummary(jobs);
+  const moneyOptions = getShopMoneyOptions(shopProfile || undefined);
+  const dateOptions = getShopDateOptions(shopProfile || undefined);
+  const shouldShowPwaInstallButton = Boolean(deferredInstallPrompt) && !isStandalonePwa;
+  const shouldShowIosInstallHelp = !isStandalonePwa && showInstallHelp && isIosInstallCandidate();
 
   async function refreshJobs() {
     const loadedJobs = await getJobs();
@@ -259,10 +273,10 @@ export default function App() {
     if (workspaceState.mode === 'detail' && jobs.some((job) => job.id === workspaceState.selectedJobId)) {
       setSelectedJobId(workspaceState.selectedJobId);
       setMode('detail');
-    } else if (workspaceState.mode && workspaceState.mode !== 'detail') {
+    } else if (workspaceState.mode && workspaceState.mode !== 'detail' && isAllowedWorkspaceMode(workspaceState.mode, { isOperator, canManageShop, canWrite })) {
       setMode(workspaceState.mode);
     }
-  }, [membership?.shopId, jobs, selectedJobId]);
+  }, [canManageShop, canWrite, isOperator, membership?.shopId, jobs, selectedJobId]);
 
   useEffect(() => {
     if (!membership?.shopId) {
@@ -671,6 +685,12 @@ export default function App() {
   }
 
   function navigateTo(nextMode) {
+    if (!isAllowedWorkspaceMode(nextMode, { isOperator, canManageShop, canWrite })) {
+      setNotice({ type: 'error', message: 'This area is not available for your account.' });
+      setMode('new');
+      return;
+    }
+
     if (!confirmUnsavedNavigation()) {
       return;
     }
@@ -679,20 +699,6 @@ export default function App() {
     setMode(nextMode);
   }
 
-  const selectedJob = jobs.find((job) => job.id === selectedJobId);
-  const billingAccess = entitlementSnapshot || getDefaultEntitlementSnapshot(membership?.shopId);
-  const isBillingReadOnly = hasSupabaseConfig && isReadOnlyStatus(billingAccess);
-  const canWrite = (!hasSupabaseConfig || ['owner', 'admin', 'tech'].includes(membership?.role)) && !isBillingReadOnly;
-  const canManageShop = !hasSupabaseConfig || ['owner', 'admin'].includes(membership?.role);
-  const canUploadPhotos = canWrite && billingAccess.access?.canUploadPhotos !== false;
-  const canSendEmail = canWrite && billingAccess.access?.canSendEmail !== false;
-  const canSendSms = canWrite && billingAccess.access?.canSendSms === true;
-  const entitlementMessage = getEntitlementMessage(billingAccess);
-  const tillSummary = calculateTillSummary(jobs);
-  const moneyOptions = getShopMoneyOptions(shopProfile || undefined);
-  const dateOptions = getShopDateOptions(shopProfile || undefined);
-  const shouldShowPwaInstallButton = Boolean(deferredInstallPrompt) && !isStandalonePwa;
-  const shouldShowIosInstallHelp = !isStandalonePwa && showInstallHelp && isIosInstallCandidate();
   const offlineDraftCount = offlineDrafts.filter((draft) => draft.status !== 'synced').length;
   const statusText = {
     checking: 'Supabase Checking',
@@ -1241,8 +1247,15 @@ export default function App() {
             />
           )}
 
-          {mode === 'operator' && (
+          {mode === 'operator' && isOperator && (
             <BetaOperatorDashboard onNotice={setNotice} />
+          )}
+
+          {mode === 'operator' && !isOperator && (
+            <section className="panel empty-state">
+              <h2>Operator Access Required</h2>
+              <p>This internal area is not available for your account.</p>
+            </section>
           )}
 
           {mode === 'detail' && selectedJob && (
@@ -1290,6 +1303,32 @@ function saveWorkspaceState(shopId, state) {
   } catch {
     // Non-critical: workspace restore should never block normal app use.
   }
+}
+
+function isAllowedWorkspaceMode(mode, { isOperator = false, canManageShop = false, canWrite = false } = {}) {
+  if (mode === 'operator') {
+    return Boolean(isOperator);
+  }
+
+  if (mode === 'billing') {
+    return Boolean(canManageShop);
+  }
+
+  if (mode === 'drafts') {
+    return Boolean(canWrite);
+  }
+
+  return [
+    'new',
+    'list',
+    'detail',
+    'settings',
+    'customers',
+    'accounting',
+    'reports',
+    'inventory',
+    'scheduling'
+  ].includes(mode);
 }
 
 function getCurrentShopProfileFallback() {
