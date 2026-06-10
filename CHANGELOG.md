@@ -4,6 +4,17 @@ Current version: `0.2.6-beta.14`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
+## Documentation Catch-Up - Current Beta Candidate
+
+- Added premium entitlement architecture for future paid-feature checks without gating core free shop workflow.
+- Added Advanced Reporting Phase 1 with premium-gated dashboard cards for revenue, job, customer, and inventory metrics.
+- Added unsaved-changes protection foundation with reusable dirty-state handling and visible save status.
+- Added beta approval applicant notifications through the `notify-beta-approval` Supabase Edge Function.
+- Added Photo Editor Phase 1 for job photos: freehand markup, shapes, arrows, text captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
+- Added `photo_derivatives` metadata for edited-photo provenance.
+- Added deployment notes as the permanent place for migration caveats, manual deploy notes, pending checks, and production verification.
+- Added the new photo editor screenshot at `docs/screenshots/photo_editor.jpg`.
+
 ## v0.2.6-beta.14 - Offline New-Job Draft Continuity
 
 - Added an offline status chip and banner for clear local-draft messaging.

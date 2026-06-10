@@ -21,6 +21,9 @@ This includes:
 - Customers foundation
 - Inventory parts foundation
 - Scheduling / Calendar Phase 1
+- Premium entitlement foundation and Advanced Reporting Phase 1
+- Photo Editor Phase 1 for job-photo markup and manual background cleanup
+- Beta approval applicant email notifications
 - Jobs, photos, damage map, work logs, accounting foundation, auth/RLS, and multi-shop architecture
 
 Old live baseline:
@@ -37,6 +40,7 @@ Product milestone ladder:
 ## Recent Beta Updates Since beta6
 
 - Beta access now uses a public application and operator approval flow.
+- Approved beta users can now receive an access-approved email with the app login URL through the `notify-beta-approval` Supabase Edge Function.
 - Customer and subcontractor records are now first-class workflows, not just fields on work orders.
 - Work orders and invoices can now be emailed from inside the app.
 - Existing work orders now support editable job-level parts and services.
@@ -44,6 +48,10 @@ Product milestone ladder:
 - New work orders can be saved as local offline drafts and synced manually after reconnecting.
 - Inventory parts foundation adds stock counts, movements, low-stock visibility, and job attachment.
 - Scheduling Phase 1 adds internal shop scheduling for due dates, intake appointments, pickups, follow-ups, and shop blocks.
+- Unsaved-changes protection now warns before losing manual edits on high-risk forms.
+- Premium entitlement checks now centralize future paid-feature gating without blocking core shop workflow.
+- Advanced Reporting Phase 1 adds premium-gated dashboard metrics for revenue, jobs, customers, and inventory.
+- Photo Editor Phase 1 adds repair-shop photo markup, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
 - Print output has been improved for beta use, with a dedicated print renderer rebuild still planned for the Customer Damage Report and damage-map output.
 
 ## Not Included Yet
@@ -54,8 +62,11 @@ Product milestone ladder:
 - Production SMS messaging.
 - Public invoice or work-order links.
 - Customer-facing appointment confirmations and external calendar sync.
+- AI background removal or third-party image cutout APIs.
 
 ## Screenshots
+
+![FretTrack photo editor with markup tools](docs/screenshots/photo_editor.jpg)
 
 ![FretTrack beta screenshot 1](<Screenshots/Screenshot 2026-05-18 103335.jpg>)
 
@@ -74,6 +85,8 @@ Product milestone ladder:
 - [Changelog](CHANGELOG.md)
 - [Roadmap](ROADMAP.md)
 - [Release notes](docs/RELEASE_NOTES.md)
+- [Photo editor](docs/PHOTO_EDITOR.md)
+- [Deployment notes](docs/DEPLOYMENT_NOTES.md)
 - [Architecture review beta 14](docs/ARCHITECTURE_REVIEW_BETA14.md)
 - [Print renderer rebuild plan](docs/PRINT_RENDERER_REBUILD_PLAN.md)
 - [Security review checklist](docs/SECURITY_REVIEW_CHECKLIST.md)

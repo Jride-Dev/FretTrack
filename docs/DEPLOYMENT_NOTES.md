@@ -36,6 +36,7 @@ Do not use a blanket production migration push while unrelated local migrations 
 - Beta access operator notification fix
 - Beta approval notification function
 - Photo Editor Phase 1 frontend
+- Photo Editor Phase 1 documentation and screenshot: `docs/screenshots/photo_editor.jpg`
 - `notify-beta-access-request` Supabase Edge Function
 - `notify-beta-approval` Supabase Edge Function
 - Cloudflare landing Worker beta application email path
