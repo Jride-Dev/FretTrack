@@ -22,6 +22,8 @@ This includes:
 - Inventory parts foundation
 - Scheduling / Calendar Phase 1
 - Premium entitlement foundation and Advanced Reporting Phase 1
+- Permission hardening with centralized role checks and granular photo controls
+- Operator-managed Pro premium trials for 7, 14, or 30 days
 - Photo Editor Phase 1 for job-photo markup and manual background cleanup
 - Beta approval applicant email notifications
 - Jobs, photos, damage map, work logs, accounting foundation, auth/RLS, and multi-shop architecture
@@ -50,6 +52,10 @@ Product milestone ladder:
 - Scheduling Phase 1 adds internal shop scheduling for due dates, intake appointments, pickups, follow-ups, and shop blocks.
 - Unsaved-changes protection now warns before losing manual edits on high-risk forms.
 - Premium entitlement checks now centralize future paid-feature gating without blocking core shop workflow.
+- Permission checks now centralize operator, owner/admin, tech, viewer, inventory, customer, scheduling, photo, and premium-reporting behavior.
+- Photo controls now separate upload, edit, overwrite, delete, and customer-report selection permissions.
+- Operators can start, extend, and end 7/14/30-day Pro premium trials while beta approval remains separate from premium access.
+- Expired premium trials fall back to writable Free-tier core workflow with premium features locked.
 - Advanced Reporting Phase 1 adds premium-gated dashboard metrics for revenue, jobs, customers, and inventory.
 - Photo Editor Phase 1 adds repair-shop photo markup, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
 - Print output has been improved for beta use, with a dedicated print renderer rebuild still planned for the Customer Damage Report and damage-map output.
@@ -57,6 +63,7 @@ Product milestone ladder:
 ## Not Included Yet
 
 - Stripe billing or live payment automation.
+- Customer self-service subscription management or Stripe-powered billing portal.
 - Full inventory receiving workflow, barcode labels, purchase history, vendors, purchase orders, and deeper stock management.
 - Full offline mode for existing job edits, queued photo uploads, or cached authenticated Supabase data.
 - Production SMS messaging.
@@ -87,6 +94,10 @@ Product milestone ladder:
 - [Release notes](docs/RELEASE_NOTES.md)
 - [Photo editor](docs/PHOTO_EDITOR.md)
 - [Deployment notes](docs/DEPLOYMENT_NOTES.md)
+- [Beta operator dashboard](docs/BETA_OPERATOR_DASHBOARD.md)
+- [Subscription foundation](docs/SUBSCRIPTION_FOUNDATION.md)
+- [Pricing and tiers](docs/PRICING_AND_TIERS.md)
+- [Trial readiness checklist](docs/TRIAL_READINESS.md)
 - [Architecture review beta 14](docs/ARCHITECTURE_REVIEW_BETA14.md)
 - [Print renderer rebuild plan](docs/PRINT_RENDERER_REBUILD_PLAN.md)
 - [Security review checklist](docs/SECURITY_REVIEW_CHECKLIST.md)

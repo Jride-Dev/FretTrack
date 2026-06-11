@@ -22,6 +22,8 @@ Start here for the current product path:
 - [Public invoice links plan](PUBLIC_INVOICE_LINKS_PLAN.md)
 - [Paid tier readiness audit](PAID_TIER_READINESS_AUDIT.md)
 - [Subscription foundation](SUBSCRIPTION_FOUNDATION.md)
+- [Beta operator dashboard](BETA_OPERATOR_DASHBOARD.md)
+- [Trial readiness checklist](TRIAL_READINESS.md)
 
 Core shipped beta areas now include:
 
@@ -34,9 +36,19 @@ Core shipped beta areas now include:
 - Scheduling / Calendar Phase 1
 - unsaved-changes protection foundation
 - premium entitlement foundation
+- permission hardening with centralized role checks
+- operator-managed Pro premium trial controls
 - Advanced Reporting Phase 1
 - beta approval applicant notifications
 - Photo Editor Phase 1
+
+Current permission and premium-trial behavior:
+
+- Beta access approval and premium trial access are separate systems.
+- Operators can start, extend, and end 7/14/30-day Pro premium trials.
+- Expired premium trials fall back to writable Free-tier core workflow while premium features lock.
+- Photo permissions are split across upload, edit, overwrite, delete, and customer-report selection.
+- Shop owners/admins can view subscription status but cannot manage premium trials unless they are also platform operators.
 
 Additional documentation areas:
 

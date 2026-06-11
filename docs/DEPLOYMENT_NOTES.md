@@ -5,13 +5,12 @@ Review this file before every production deploy and after every manual database/
 ## Current Deployment Status
 
 - Current branch checked during this review: `main`.
-- `main` was synced with `origin/main` at the latest deploy verification.
-- The working tree was clean after the latest deploy verification. This file may be edited afterward for deployment-note maintenance.
-- App domain returned `200 OK`: https://app.frettrack-app.com/
-- Landing domain returned `200 OK`: https://frettrack-app.com/
+- `main` was pushed and deployed after Permission Hardening + Premium Trial Management Phase 1.
+- App domain returned `200 OK` on 2026-06-11: https://app.frettrack-app.com/
+- Landing domain returned `200 OK` on 2026-06-11: https://frettrack-app.com/
 - Current app assets served by Cloudflare Pages:
-  - `index-Dmb4BCoV.js`
-  - `index-8tAQrezA.css`
+  - `assets/index-BcktOB5k.js`
+  - `assets/index-BCAqPMbL.css`
 
 ## Current Migration Note
 
@@ -24,7 +23,7 @@ Review this file before every production deploy and after every manual database/
 - `20260609113000`
 - `20260611120000`
 
-These should be treated as deployment-history alignment items before future production migration work. Verify whether they are already manually applied in production or still need to be applied and recorded.
+These should be treated as deployment-history alignment items before future production migration work. Some may have already been manually applied or deployment-tested; verify remote migration history before future production migration work.
 
 Do not use a blanket production migration push while unrelated local migrations are still pending.
 
@@ -38,7 +37,9 @@ Do not use a blanket production migration push while unrelated local migrations 
 - Beta approval notification function
 - Photo Editor Phase 1 frontend
 - Photo Editor Phase 1 documentation and screenshot: `docs/screenshots/photo_editor.jpg`
-- Permission hardening and Premium Trial Management Phase 1 are local/current-branch work until the migration is applied.
+- Permission hardening with centralized role checks and granular photo controls
+- Premium Trial Management Phase 1 with operator-managed 7/14/30-day Pro trials
+- Expired premium trials fall back to writable Free-tier core workflow while premium features lock
 - `notify-beta-access-request` Supabase Edge Function
 - `notify-beta-approval` Supabase Edge Function
 - Cloudflare landing Worker beta application email path
@@ -61,7 +62,7 @@ curl.exe -I https://frettrack-app.com/
 ## Manual Deployment Caveats
 
 - Do not use a blanket production migration push when unrelated local migrations are still pending.
-- Premium Trial Management Phase 1 adds `20260611120000_premium_trial_management_phase_1.sql`. It replaces entitlement snapshot behavior and adds operator-only trial RPCs; verify migration-history alignment before applying it to production.
+- Premium Trial Management Phase 1 adds `20260611120000_premium_trial_management_phase_1.sql`. It replaces entitlement snapshot behavior and adds operator-only trial RPCs; verify migration-history alignment before future production migration work.
 - Beta access approval and premium trial state are separate. Do not use premium trial expiry as a reason to remove beta approval.
 - Premium trial expiry should return the shop to Free-tier entitlements while keeping core shop operations writable.
 - Stripe, billing webhooks, and payment collection are still not connected.

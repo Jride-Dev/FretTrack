@@ -8,6 +8,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 - Added centralized permission helpers for operator, owner/admin, tech, viewer, photo, inventory, scheduling, customer, and premium-reporting checks.
 - Added Premium Trial Management Phase 1 with operator-only 7/14/30-day trial start, extension, and end RPCs.
+- Deployed Permission Hardening + Premium Trial Management Phase 1 and refreshed README/release/deployment documentation for the live state.
 - Separated beta access approval from premium trial entitlement state so approved Free-tier shops remain writable after premium trial expiry.
 - Added an operator-only current access panel showing the signed-in user's shop role, beta status, operator status, subscription/trial state, effective tier, enabled premium features, and write access.
 - Hardened photo upload, edit, overwrite, delete, and customer-report toggle permissions with granular photo guards.
