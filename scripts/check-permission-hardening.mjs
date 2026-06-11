@@ -17,7 +17,7 @@ function assertMatches(source, pattern, message) {
 }
 
 function functionBody(sql, name) {
-  const pattern = new RegExp(`create or replace function public\\.${name}[\\s\\S]*?\\nend;\\n\\$\\$;`, 'i');
+  const pattern = new RegExp(`create or replace function public\\.${name}[\\s\\S]*?\\r?\\nend;\\r?\\n\\$\\$;`, 'i');
   const match = sql.match(pattern);
   assert.ok(match, `Missing SQL function ${name}`);
   return match[0];
