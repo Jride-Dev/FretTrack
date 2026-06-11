@@ -18,6 +18,15 @@ import FeedbackReporter from '../modules/system/FeedbackReporter.jsx';
 import SystemAnnouncements from '../modules/system/SystemAnnouncements.jsx';
 import { checkSupabaseJobsConnection, hasSupabaseConfig } from '../shared/lib/supabaseClient';
 import { getCurrentSession, onAuthSessionChange, signOut } from '../modules/auth/authService';
+import {
+  canAccessOperatorDashboard,
+  canDeletePhotos as canDeletePhotosForRole,
+  canEditPhotos as canEditPhotosForRole,
+  canManageShopSettings,
+  canOverwritePhotos as canOverwritePhotosForRole,
+  canUploadPhotos as canUploadPhotosForRole,
+  getShopWriteAccess
+} from '../modules/auth/permissionService';
 import { addJob, findRemoteJobByNumber, getJobs, isDuplicateWorkOrderError, updateJob } from '../modules/jobs/jobService';
 import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService';
 import { calculateTillSummary, sortNewestFirst } from '../modules/jobs/jobSelectors';
@@ -31,6 +40,7 @@ import {
   getBillingStatusLabel,
   getDefaultEntitlementSnapshot,
   getEffectiveStatus,
+  getPremiumFeatureAvailability,
   getShopEntitlementSnapshot,
   isGraceStatus,
   isReadOnlyStatus
@@ -86,10 +96,16 @@ export default function App() {
   const manualSignOutRef = useRef(false);
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
   const billingAccess = entitlementSnapshot || getDefaultEntitlementSnapshot(membership?.shopId);
-  const isBillingReadOnly = hasSupabaseConfig && isReadOnlyStatus(billingAccess);
-  const canWrite = (!hasSupabaseConfig || ['owner', 'admin', 'tech'].includes(membership?.role)) && !isBillingReadOnly;
-  const canManageShop = !hasSupabaseConfig || ['owner', 'admin'].includes(membership?.role);
-  const canUploadPhotos = canWrite && billingAccess.access?.canUploadPhotos !== false;
+  const canWrite = getShopWriteAccess({
+    role: membership?.role,
+    entitlementSnapshot: billingAccess,
+    hasSupabaseConfig
+  });
+  const canManageShop = !hasSupabaseConfig || canManageShopSettings({ role: membership?.role });
+  const canUploadPhotos = !hasSupabaseConfig || canUploadPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
+  const canEditPhotos = !hasSupabaseConfig || canEditPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
+  const canOverwritePhotos = !hasSupabaseConfig || canOverwritePhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
+  const canDeletePhotos = !hasSupabaseConfig || canDeletePhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canSendEmail = canWrite && billingAccess.access?.canSendEmail !== false;
   const canSendSms = canWrite && billingAccess.access?.canSendSms === true;
   const entitlementMessage = getEntitlementMessage(billingAccess);
@@ -1073,7 +1089,7 @@ export default function App() {
           )}
           <button type="button" onClick={() => navigateTo('settings')}>Shop Settings</button>
           {canManageShop && <button type="button" onClick={() => navigateTo('billing')}>Billing</button>}
-          {isOperator && <button type="button" onClick={() => navigateTo('operator')}>Operator</button>}
+          {canAccessOperatorDashboard({ isOperator }) && <button type="button" onClick={() => navigateTo('operator')}>Operator</button>}
           {session && (
             <FeedbackReporter selectedJob={selectedJob} onNotice={setNotice} />
           )}
@@ -1103,6 +1119,16 @@ export default function App() {
         </section>
       )}
       {session && <SystemAnnouncements />}
+      {hasSupabaseConfig && membership && (
+        <InternalCurrentAccessPanel
+          betaAccess={betaAccess}
+          canWrite={canWrite}
+          entitlementSnapshot={billingAccess}
+          isOperator={isOperator}
+          membership={membership}
+          session={session}
+        />
+      )}
       {hasSupabaseConfig && membership && (
         <BillingStateBanner
           canManageShop={canManageShop}
@@ -1247,11 +1273,11 @@ export default function App() {
             />
           )}
 
-          {mode === 'operator' && isOperator && (
+          {mode === 'operator' && canAccessOperatorDashboard({ isOperator }) && (
             <BetaOperatorDashboard onNotice={setNotice} />
           )}
 
-          {mode === 'operator' && !isOperator && (
+          {mode === 'operator' && !canAccessOperatorDashboard({ isOperator }) && (
             <section className="panel empty-state">
               <h2>Operator Access Required</h2>
               <p>This internal area is not available for your account.</p>
@@ -1269,6 +1295,10 @@ export default function App() {
               onClose={() => showNewJob(null, { skipDirtyGuard: true })}
               onNotice={setNotice}
               canWrite={canWrite}
+              canUploadPhotos={canUploadPhotos}
+              canEditPhotos={canEditPhotos}
+              canOverwritePhotos={canOverwritePhotos}
+              canDeletePhotos={canDeletePhotos}
               canSendEmail={canSendEmail}
               canSendSms={canSendSms}
               entitlementMessage={entitlementMessage}
@@ -1307,7 +1337,7 @@ function saveWorkspaceState(shopId, state) {
 
 function isAllowedWorkspaceMode(mode, { isOperator = false, canManageShop = false, canWrite = false } = {}) {
   if (mode === 'operator') {
-    return Boolean(isOperator);
+    return canAccessOperatorDashboard({ isOperator });
   }
 
   if (mode === 'billing') {
@@ -1409,6 +1439,68 @@ function PendingApprovalScreen({ betaAccess, email, onRetry, onSignOut }) {
         </div>
       </section>
     </main>
+  );
+}
+
+function InternalCurrentAccessPanel({ betaAccess, canWrite, entitlementSnapshot, isOperator, membership, session }) {
+  if (!canAccessOperatorDashboard({ isOperator })) {
+    return null;
+  }
+
+  const subscription = entitlementSnapshot?.subscription || {};
+  const premiumFeatures = getPremiumFeatureAvailability(entitlementSnapshot)
+    .filter((feature) => feature.enabled)
+    .map((feature) => feature.label);
+  return (
+    <section className="internal-access-panel no-print" aria-label="Internal current access">
+      <div>
+        <strong>Internal Access</strong>
+        <span>{session?.user?.email || 'Unknown user'}</span>
+      </div>
+      <dl>
+        <div>
+          <dt>User ID</dt>
+          <dd>{session?.user?.id || '-'}</dd>
+        </div>
+        <div>
+          <dt>Active Shop</dt>
+          <dd>{membership?.shopId || '-'}</dd>
+        </div>
+        <div>
+          <dt>Shop Role</dt>
+          <dd>{membership?.role || '-'}</dd>
+        </div>
+        <div>
+          <dt>Beta Access</dt>
+          <dd>{betaAccess?.status || '-'}</dd>
+        </div>
+        <div>
+          <dt>Operator</dt>
+          <dd>{isOperator ? 'Yes' : 'No'}</dd>
+        </div>
+        <div>
+          <dt>Tier</dt>
+          <dd>{subscription.tier || '-'}</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>{subscription.effectiveStatus || subscription.status || '-'}</dd>
+        </div>
+        <div>
+          <dt>Premium Trial Ends</dt>
+          <dd>{formatDate(subscription.trialEndsAt)}</dd>
+        </div>
+        <div>
+          <dt>Effective Tier</dt>
+          <dd>{subscription.effectiveTier || subscription.tier || entitlementSnapshot?.plan?.id || '-'}</dd>
+        </div>
+        <div>
+          <dt>Can Write</dt>
+          <dd>{canWrite ? 'Yes' : 'No'}</dd>
+        </div>
+      </dl>
+      <p>{premiumFeatures.length ? premiumFeatures.join(', ') : 'No premium features enabled'}</p>
+    </section>
   );
 }
 

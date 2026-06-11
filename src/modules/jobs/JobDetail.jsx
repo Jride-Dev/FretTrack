@@ -79,6 +79,10 @@ export default function JobDetail({
   onClose,
   onNotice,
   canWrite = true,
+  canUploadPhotos = canWrite,
+  canEditPhotos = canWrite,
+  canOverwritePhotos = canWrite,
+  canDeletePhotos = canWrite,
   canSendEmail = true,
   canSendSms = true,
   entitlementMessage = '',
@@ -690,6 +694,11 @@ export default function JobDetail({
     const files = Array.from(event.target.files || []);
     event.target.value = '';
 
+    if (!canUploadPhotos) {
+      onNotice?.({ type: 'error', message: 'Your shop role cannot upload photos.' });
+      return;
+    }
+
     if (!files.length) {
       return;
     }
@@ -730,6 +739,11 @@ export default function JobDetail({
   }
 
   async function handleDamageViewImageUpload(viewName, file, uploadOptions = {}) {
+    if (!canUploadPhotos) {
+      onNotice?.({ type: 'error', message: 'Your shop role cannot upload photos.' });
+      return null;
+    }
+
     const category = uploadOptions.category || `damage-map-${viewName}`;
     const existingImageIds = new Set((draftJob.images || []).map((image) => image.id));
     const result = await onImageUpload(draftJob, [file], { category, skipRefresh: true });
@@ -745,6 +759,11 @@ export default function JobDetail({
   }
 
   function handleImageDelete(image) {
+    if (!canDeletePhotos) {
+      onNotice?.({ type: 'error', message: 'Your shop role cannot delete photos.' });
+      return;
+    }
+
     const confirmed = window.confirm('Delete this image from the job?');
     if (!confirmed) {
       return;
@@ -759,6 +778,11 @@ export default function JobDetail({
   }
 
   async function saveEditedPhotoCopy(file, editMetadata) {
+    if (!canEditPhotos) {
+      onNotice?.({ type: 'error', message: 'Your shop role cannot edit photos.' });
+      return;
+    }
+
     setIsSavingEditedPhoto(true);
     try {
       const result = await saveEditedJobImageCopy(draftJob, photoEditorImage, file, editMetadata);
@@ -780,6 +804,11 @@ export default function JobDetail({
   }
 
   async function overwriteEditedPhoto(file, editMetadata) {
+    if (!canOverwritePhotos) {
+      onNotice?.({ type: 'error', message: 'Your shop role cannot overwrite photos.' });
+      return;
+    }
+
     setIsSavingEditedPhoto(true);
     try {
       const result = await overwriteJobImage(draftJob, photoEditorImage, file, editMetadata);
@@ -1223,6 +1252,9 @@ export default function JobDetail({
   const imagesSection = (
     <ImagesSection
       canWrite={canWrite}
+      canUploadPhotos={canUploadPhotos}
+      canEditPhotos={canEditPhotos}
+      canDeletePhotos={canDeletePhotos}
       handleImageChange={handleImageChange}
       handleImageDelete={handleImageDelete}
       handleImageEdit={setPhotoEditorImage}
@@ -1279,7 +1311,7 @@ export default function JobDetail({
         isSaving={isSavingEditedPhoto}
         onClose={() => setPhotoEditorImage(null)}
         onSaveCopy={saveEditedPhotoCopy}
-        onOverwrite={overwriteEditedPhoto}
+        onOverwrite={canOverwritePhotos ? overwriteEditedPhoto : null}
       />
       <div className="detail-header">
         <div>

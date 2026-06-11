@@ -1,5 +1,7 @@
 export default function PhotoGallery({
-  canWrite = true,
+  canDelete = true,
+  canEdit = true,
+  canToggleCustomerReport = true,
   images = [],
   workOrderImageIds = [],
   onDelete,
@@ -14,30 +16,34 @@ export default function PhotoGallery({
             <img src={image.url} alt={image.name || 'Job upload'} />
           </a>
           <div className="image-actions no-print">
-            {canWrite && (
+            {canEdit && (
               <button type="button" onClick={() => onEdit?.(image)}>
                 Edit Photo
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => onWorkOrderToggle(image.id, !workOrderImageIds.includes(image.id))}
-            >
-              {workOrderImageIds.includes(image.id) ? 'Remove from Customer Report' : 'Use in Customer Report'}
-            </button>
+            {canToggleCustomerReport && (
+              <button
+                type="button"
+                onClick={() => onWorkOrderToggle(image.id, !workOrderImageIds.includes(image.id))}
+              >
+                {workOrderImageIds.includes(image.id) ? 'Remove from Customer Report' : 'Use in Customer Report'}
+              </button>
+            )}
             <a href={image.url} download={image.fileName || image.name || 'job-photo'}>
               Download
             </a>
           </div>
-          <label className="image-print-toggle no-print">
+          {canToggleCustomerReport && (
+            <label className="image-print-toggle no-print">
               <input
                 type="checkbox"
                 checked={workOrderImageIds.includes(image.id)}
                 onChange={(event) => onWorkOrderToggle(image.id, event.target.checked)}
               />
               Add Pictures to Work Order
-          </label>
-          {canWrite && (
+            </label>
+          )}
+          {canDelete && (
             <button
               type="button"
               className="image-delete no-print"

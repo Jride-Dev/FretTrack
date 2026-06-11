@@ -22,6 +22,7 @@ Review this file before every production deploy and after every manual database/
 - `20260608120000`
 - `20260609100000`
 - `20260609113000`
+- `20260611120000`
 
 These should be treated as deployment-history alignment items before future production migration work. Verify whether they are already manually applied in production or still need to be applied and recorded.
 
@@ -37,6 +38,7 @@ Do not use a blanket production migration push while unrelated local migrations 
 - Beta approval notification function
 - Photo Editor Phase 1 frontend
 - Photo Editor Phase 1 documentation and screenshot: `docs/screenshots/photo_editor.jpg`
+- Permission hardening and Premium Trial Management Phase 1 are local/current-branch work until the migration is applied.
 - `notify-beta-access-request` Supabase Edge Function
 - `notify-beta-approval` Supabase Edge Function
 - Cloudflare landing Worker beta application email path
@@ -59,6 +61,10 @@ curl.exe -I https://frettrack-app.com/
 ## Manual Deployment Caveats
 
 - Do not use a blanket production migration push when unrelated local migrations are still pending.
+- Premium Trial Management Phase 1 adds `20260611120000_premium_trial_management_phase_1.sql`. It replaces entitlement snapshot behavior and adds operator-only trial RPCs; verify migration-history alignment before applying it to production.
+- Beta access approval and premium trial state are separate. Do not use premium trial expiry as a reason to remove beta approval.
+- Premium trial expiry should return the shop to Free-tier entitlements while keeping core shop operations writable.
+- Stripe, billing webhooks, and payment collection are still not connected.
 - If a migration is manually applied with `supabase db query --linked --file`, confirm the schema change and then align remote migration history intentionally.
 - Confirm Supabase Edge Function secrets by name only; never print secret values.
 - Confirm Cloudflare Worker secrets by name only; never print secret values.

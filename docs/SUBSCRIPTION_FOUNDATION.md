@@ -4,6 +4,18 @@ Date: 2026-05-25
 
 This sprint added paid-readiness infrastructure only. Stripe, Checkout, webhooks, real payments, and billing portal actions are intentionally not implemented yet.
 
+## Current Premium Trial Rule
+
+Beta access approval and premium trial entitlement are separate systems.
+
+- Beta access controls whether a user may enter the beta application workspace.
+- Premium trial state controls premium feature availability for an approved shop.
+- Free-tier shops remain writable after a premium trial expires.
+- Expired premium trials fall back to Free-tier entitlements instead of making the shop read-only.
+- Expired premium trials ignore feature overrides until the premium lifecycle is started, extended, or otherwise restored by an operator.
+- Explicit administrative `read_only` or cancellation states can still pause core write operations.
+- Stripe, billing webhooks, and payment collection are still not connected.
+
 ## Implemented
 
 ### Database
@@ -22,9 +34,11 @@ New tables:
 
 Seeded plans:
 
+- `free`
 - `trial`
 - `solo`
 - `pro`
+- `enterprise`
 
 Seeded entitlement keys:
 
@@ -52,6 +66,14 @@ Supported subscription states:
 - `read_only`
 - `canceled`
 - `beta_bypass`
+
+Premium trial management now adds operator-only RPCs in `20260611120000_premium_trial_management_phase_1.sql`:
+
+- `public.set_shop_premium_trial(target_shop_id text, trial_days integer, trial_tier text default 'pro')`
+- `public.extend_shop_premium_trial(target_shop_id text, extend_days integer)`
+- `public.end_shop_premium_trial(target_shop_id text)`
+
+The start/extend durations are limited to 7, 14, or 30 days. Premium trial start and extension are currently limited to the `pro` tier. These RPCs update authoritative `shop_subscriptions` rows and mirror tier/status/trial end into `shop_profiles`.
 
 RLS is enabled on all new tables. Authenticated owners/admins can read billing tables for their own shops. Normal authenticated users cannot update plan, subscription, Stripe ID, entitlement override, or authoritative usage state.
 
@@ -89,7 +111,7 @@ The Billing page is owner/admin only and shows:
 - Enabled features
 - Upgrade/contact support placeholder
 
-The app shell now fetches an entitlement snapshot when shop access loads and shows a banner for `grace`, `read_only`, and `canceled` states.
+The app shell now fetches an entitlement snapshot when shop access loads and shows a banner for `grace`, `read_only`, and `canceled` states. Premium trial expiry alone should not trigger the read-only banner.
 
 ### Gating
 
@@ -131,23 +153,25 @@ After applying the migration:
 3. Open `Billing`.
 4. Confirm plan/status/usage/features render without errors.
 5. Confirm `trialing`, `active`, `grace`, and `beta_bypass` shops can create jobs and upload photos.
-6. Set a test shop subscription to `grace`; reload and confirm the warning banner appears while normal work remains available.
-7. Set a test shop subscription to `read_only`; reload and confirm:
+6. Start a 7-day, 14-day, or 30-day Pro trial from the operator dashboard and confirm the shop receives Pro premium features.
+7. End the premium trial from the operator dashboard and confirm the shop falls back to Free-tier entitlements while jobs, customers, inventory, scheduling, photos, printing, and email documents remain writable for write-role users.
+8. Set a test shop subscription to `grace`; reload and confirm the warning banner appears while normal work remains available.
+9. Set a test shop subscription to `read_only`; reload and confirm:
    - Existing jobs and customers are visible.
    - New jobs are disabled.
    - Save Job is disabled.
    - Photo upload is blocked.
    - Email/SMS send returns a billing/read-only message.
    - Print/export actions remain available from an existing job.
-8. Set a test shop subscription to `canceled`; confirm it behaves like read-only.
-9. Create a brand-new shop profile; confirm a `shop_subscriptions` row is created automatically with `trialing`.
-10. Confirm non-owner/non-admin users do not see the Billing nav item.
+10. Set a test shop subscription to `canceled`; confirm it behaves like read-only.
+11. Create a brand-new shop profile; confirm a `shop_subscriptions` row is created automatically with `trialing`.
+12. Confirm non-owner/non-admin users do not see the Billing nav item.
 
 ## Next Steps
 
 1. Add member management and enforce `max_users` before inserts.
 2. Add trusted storage usage reconciliation and quota warnings.
 3. Add Edge Function entitlement checks for email/SMS so provider-cost actions are server-gated too.
-4. Add operator tools for setting plan/status/overrides.
+4. Keep operator tools for trial/status support separate from future customer self-service billing.
 5. Add data export and account deletion/cancellation policy screens.
 6. Integrate Stripe only after the entitlement/trial/read-only behavior is stable.

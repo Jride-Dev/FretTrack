@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "check:permissions": "node scripts/check-permission-hardening.mjs",
     "check:migrations": "node scripts/check-supabase-migrations.mjs",
     "migration:check": "node scripts/check-supabase-migrations.mjs",
     "migration:check:strict": "node scripts/check-supabase-migrations.mjs --strict",
