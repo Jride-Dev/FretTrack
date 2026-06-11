@@ -1488,7 +1488,7 @@ function InternalCurrentAccessPanel({ betaAccess, canWrite, entitlementSnapshot,
         </div>
         <div>
           <dt>Premium Trial Ends</dt>
-          <dd>{formatDate(subscription.trialEndsAt)}</dd>
+          <dd>{subscription.trialEndsAt ? new Date(subscription.trialEndsAt).toLocaleString() : '-'}</dd>
         </div>
         <div>
           <dt>Effective Tier</dt>
