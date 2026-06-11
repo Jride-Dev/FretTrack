@@ -58,6 +58,30 @@ Apply all current schema changes, including:
 7. If the signed-in user has more than one shop, confirm the shop picker appears and only the selected shop opens.
 8. Sign out and confirm the app returns to the sign-in screen.
 
+## Premium Trial / Free Tier Test
+
+Beta access approval is separate from premium trial access. A user may be approved for the beta and still be on the Free tier.
+
+1. Sign in as a platform operator.
+2. Open the internal Operator Dashboard.
+3. Confirm normal shop owners/admins/techs/viewers do not see the Operator Dashboard unless they are also listed in `public.operator_users`.
+4. Start a 7-day Pro trial for a test shop and confirm premium features such as Advanced Reporting become available.
+5. Start a 14-day and 30-day Pro trial on the same test shop and confirm the trial end date is reset from now, not extended from the old date.
+6. Extend the trial by 7, 14, and 30 days and confirm each extension starts from the greater of the existing trial end or now.
+7. End the premium trial and confirm the shop returns to Free-tier entitlements.
+8. Confirm core Free-tier workflow remains writable for owner/admin/tech users after premium trial expiry/end:
+   - customers
+   - jobs
+   - photos
+   - damage maps
+   - work logs
+   - scheduling
+   - inventory basics
+   - printing
+   - email documents
+9. Confirm viewer users remain read-only.
+10. Confirm Stripe, billing webhooks, and payment collection are not shown as connected.
+
 ## Test Job Creation Flow
 
 1. Confirm the header shows the onboarded shop name.

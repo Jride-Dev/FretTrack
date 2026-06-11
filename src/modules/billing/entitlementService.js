@@ -288,6 +288,7 @@ export function isWritableBillingStatus(status) {
     BILLING_STATUSES.TRIALING,
     BILLING_STATUSES.ACTIVE,
     BILLING_STATUSES.GRACE,
+    BILLING_STATUSES.EXPIRED,
     BILLING_STATUSES.BETA_BYPASS
   ].includes(status);
 }

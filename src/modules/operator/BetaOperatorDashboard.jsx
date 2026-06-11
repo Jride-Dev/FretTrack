@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { formatStorage, getBillingStatusLabel } from '../billing/entitlementService';
-import { getBetaOperatorDashboard, updateBetaAccessRequest, updateBetaShopSubscription } from './operatorService';
+import {
+  endShopPremiumTrial,
+  extendShopPremiumTrial,
+  getBetaOperatorDashboard,
+  setShopPremiumTrial,
+  updateBetaAccessRequest,
+  updateBetaShopSubscription
+} from './operatorService';
 
 const statusFilters = ['all', 'trialing', 'beta_bypass', 'active', 'grace', 'read_only', 'canceled'];
 const editableStatuses = ['trialing', 'active', 'grace', 'read_only', 'canceled', 'beta_bypass'];
@@ -47,6 +54,61 @@ export default function BetaOperatorDashboard({ onNotice }) {
       onNotice?.({
         type: 'error',
         message: error instanceof Error ? error.message : 'Shop access update failed.'
+      });
+    } finally {
+      setIsSavingShopId('');
+    }
+  }
+
+  async function startPremiumTrial(shop, trialDays, trialTier = 'pro') {
+    setIsSavingShopId(shop.shopId);
+    try {
+      await setShopPremiumTrial(shop.shopId, trialDays, trialTier);
+      await loadDashboard();
+      onNotice?.({ type: 'success', message: `${shop.shopName || shop.shopId} ${trialDays}-day ${trialTier} trial started.` });
+    } catch (error) {
+      console.error('Operator premium trial start failed.', error);
+      onNotice?.({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Premium trial start failed.'
+      });
+    } finally {
+      setIsSavingShopId('');
+    }
+  }
+
+  async function extendPremiumTrial(shop, extendDays) {
+    setIsSavingShopId(shop.shopId);
+    try {
+      await extendShopPremiumTrial(shop.shopId, extendDays);
+      await loadDashboard();
+      onNotice?.({ type: 'success', message: `${shop.shopName || shop.shopId} trial extended ${extendDays} days.` });
+    } catch (error) {
+      console.error('Operator premium trial extension failed.', error);
+      onNotice?.({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Premium trial extension failed.'
+      });
+    } finally {
+      setIsSavingShopId('');
+    }
+  }
+
+  async function endPremiumTrial(shop) {
+    if (!window.confirm(`End premium trial for ${shop.shopName || shop.shopId}? Core Free tier operations will remain writable.`)) {
+      return;
+    }
+
+    setIsSavingShopId(shop.shopId);
+    try {
+      await endShopPremiumTrial(shop.shopId);
+      await loadDashboard();
+      onNotice?.({ type: 'success', message: `${shop.shopName || shop.shopId} premium trial ended.` });
+    } catch (error) {
+      console.error('Operator premium trial end failed.', error);
+      onNotice?.({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Premium trial end failed.'
       });
     } finally {
       setIsSavingShopId('');
@@ -168,6 +230,9 @@ export default function BetaOperatorDashboard({ onNotice }) {
           selectedShopId={selectedShop?.shopId || ''}
           isSavingShopId={isSavingShopId}
           onSelectShop={setSelectedShopId}
+          onEndPremiumTrial={endPremiumTrial}
+          onExtendPremiumTrial={extendPremiumTrial}
+          onStartPremiumTrial={startPremiumTrial}
           onUpdateShop={updateShopAccess}
         />
       )}
@@ -286,7 +351,16 @@ function BetaAccessTable({ requests, isSavingAccessUserId, onUpdateAccess }) {
   );
 }
 
-function ShopsTable({ shops, selectedShopId, isSavingShopId, onSelectShop, onUpdateShop }) {
+function ShopsTable({
+  shops,
+  selectedShopId,
+  isSavingShopId,
+  onEndPremiumTrial,
+  onExtendPremiumTrial,
+  onSelectShop,
+  onStartPremiumTrial,
+  onUpdateShop
+}) {
   return (
     <div className="operator-table-wrap">
       <table className="operator-table">
@@ -295,6 +369,7 @@ function ShopsTable({ shops, selectedShopId, isSavingShopId, onSelectShop, onUpd
             <th>Shop</th>
             <th>Plan</th>
             <th>Status</th>
+            <th>Access</th>
             <th>Users</th>
             <th>Storage</th>
             <th>Jobs</th>
@@ -313,7 +388,14 @@ function ShopsTable({ shops, selectedShopId, isSavingShopId, onSelectShop, onUpd
                 <small>{shop.shopId}</small>
               </td>
               <td>{shop.planName || shop.planId}</td>
-              <td><StatusBadge status={shop.subscriptionStatus} /></td>
+              <td>
+                <StatusBadge status={shop.subscriptionStatus} />
+                <small>Effective: {shop.effectiveTier || 'free'}</small>
+              </td>
+              <td>
+                <strong>{shop.effectiveStatus || shop.subscriptionStatus}</strong>
+                <small>{formatDaysRemaining(shop)}</small>
+              </td>
               <td>{shop.userCount}</td>
               <td className={isNearQuota(shop) ? 'quota-warning' : ''}>{formatStorage(shop.storageBytes)}</td>
               <td>{shop.jobCount}</td>
@@ -328,12 +410,32 @@ function ShopsTable({ shops, selectedShopId, isSavingShopId, onSelectShop, onUpd
                   >
                     {shop.subscriptionStatus === 'beta_bypass' ? 'Unset beta' : 'Beta bypass'}
                   </button>
+                  {[7, 14, 30].map((days) => (
+                    <button
+                      key={`start-${days}`}
+                      type="button"
+                      disabled={isSavingShopId === shop.shopId}
+                      onClick={() => onStartPremiumTrial(shop, days, 'pro')}
+                    >
+                      Start {days}-day Pro trial
+                    </button>
+                  ))}
+                  {[7, 14, 30].map((days) => (
+                    <button
+                      key={`extend-${days}`}
+                      type="button"
+                      disabled={isSavingShopId === shop.shopId}
+                      onClick={() => onExtendPremiumTrial(shop, days)}
+                    >
+                      Extend +{days}
+                    </button>
+                  ))}
                   <button
                     type="button"
                     disabled={isSavingShopId === shop.shopId}
-                    onClick={() => onUpdateShop(shop, { extendTrialDays: 14 })}
+                    onClick={() => onEndPremiumTrial(shop)}
                   >
-                    +14 days
+                    End premium trial
                   </button>
                   <select
                     value={shop.subscriptionStatus}
@@ -496,6 +598,31 @@ function getStorageSafetyLabel(shop) {
 function isNearQuota(shop) {
   const trialQuota = 1024 * 1024 * 1024;
   return shop.subscriptionStatus === 'trialing' && shop.storageBytes >= trialQuota * 0.8;
+}
+
+function formatDaysRemaining(shop) {
+  if (Number.isFinite(shop.daysRemaining) && shop.trialEndsAt) {
+    if (shop.daysRemaining <= 0) {
+      return 'Trial expired';
+    }
+    return `${shop.daysRemaining} day${shop.daysRemaining === 1 ? '' : 's'} remaining`;
+  }
+
+  if (!shop.trialEndsAt) {
+    return 'No premium trial date';
+  }
+
+  const end = new Date(shop.trialEndsAt).getTime();
+  if (!Number.isFinite(end)) {
+    return 'Trial date unknown';
+  }
+
+  const days = Math.ceil((end - Date.now()) / 86400000);
+  if (days <= 0) {
+    return 'Trial expired';
+  }
+
+  return `${days} day${days === 1 ? '' : 's'} remaining`;
 }
 
 function formatDate(value) {

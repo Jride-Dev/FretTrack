@@ -6,6 +6,11 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## Documentation Catch-Up - Current Beta Candidate
 
+- Added centralized permission helpers for operator, owner/admin, tech, viewer, photo, inventory, scheduling, customer, and premium-reporting checks.
+- Added Premium Trial Management Phase 1 with operator-only 7/14/30-day trial start, extension, and end RPCs.
+- Separated beta access approval from premium trial entitlement state so approved Free-tier shops remain writable after premium trial expiry.
+- Added an operator-only current access panel showing the signed-in user's shop role, beta status, operator status, subscription/trial state, effective tier, enabled premium features, and write access.
+- Hardened photo upload, edit, overwrite, delete, and customer-report toggle permissions with granular photo guards.
 - Added premium entitlement architecture for future paid-feature checks without gating core free shop workflow.
 - Added Advanced Reporting Phase 1 with premium-gated dashboard cards for revenue, job, customer, and inventory metrics.
 - Added unsaved-changes protection foundation with reusable dirty-state handling and visible save status.

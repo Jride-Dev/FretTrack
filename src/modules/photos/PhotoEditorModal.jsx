@@ -588,9 +588,11 @@ export default function PhotoEditorModal({
             <button type="button" className="primary-action" onClick={() => handleSave('copy')} disabled={!canSave}>
               {isSaving ? 'Saving...' : 'Save Copy'}
             </button>
-            <button type="button" className="danger-action" onClick={() => handleSave('overwrite')} disabled={!canSave}>
-              Overwrite Original
-            </button>
+            {onOverwrite && (
+              <button type="button" className="danger-action" onClick={() => handleSave('overwrite')} disabled={!canSave}>
+                Overwrite Original
+              </button>
+            )}
           </div>
         </footer>
       </div>

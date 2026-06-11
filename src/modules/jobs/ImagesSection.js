@@ -3,6 +3,9 @@ import PhotoUploader from '../photos/PhotoUploader.jsx';
 
 export default function ImagesSection({
   canWrite = true,
+  canUploadPhotos = canWrite,
+  canEditPhotos = canWrite,
+  canDeletePhotos = canWrite,
   handleImageChange,
   handleImageDelete,
   handleImageEdit,
@@ -17,7 +20,7 @@ export default function ImagesSection({
   return (
     <section>
       <h3>Images</h3>
-      {canWrite ? (
+      {canUploadPhotos ? (
         <PhotoUploader inputRef={imageImportInputRef} onChange={handleImageChange} isImporting={isImportingImages} />
       ) : (
         <p className="muted-text no-print">Viewer role can view photos but cannot upload, edit, overwrite, or delete them.</p>
@@ -37,7 +40,9 @@ export default function ImagesSection({
         </div>
       )}
       <PhotoGallery
-        canWrite={canWrite}
+        canDelete={canDeletePhotos}
+        canEdit={canEditPhotos}
+        canToggleCustomerReport={canWrite}
         images={images}
         workOrderImageIds={workOrderImageIds}
         onDelete={handleImageDelete}

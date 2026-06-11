@@ -4,7 +4,7 @@ FretTrack is moving from the old `v0.2.6-beta.14` live baseline into product mil
 
 ## Current Product State
 
-The old live baseline is `v0.2.6-beta.14`. The current branch builds on that baseline with inventory foundation work, Scheduling / Calendar Phase 1, premium entitlement/reporting foundations, beta approval notifications, and Photo Editor Phase 1.
+The old live baseline is `v0.2.6-beta.14`. The current branch builds on that baseline with inventory foundation work, Scheduling / Calendar Phase 1, premium entitlement/reporting foundations, operator-controlled premium trial management, beta approval notifications, and Photo Editor Phase 1.
 
 Shipped or current-branch foundations:
 
@@ -22,6 +22,8 @@ Shipped or current-branch foundations:
 - Scheduling / Calendar Phase 1 with week view, schedule events, job/customer links, and Job Detail scheduling
 - reusable unsaved-changes protection for high-risk manual-edit screens
 - premium entitlement architecture for future feature gating
+- centralized role/permission helpers for operator, owner/admin, tech, and viewer behavior
+- operator-controlled premium trials with 7/14/30-day start and extension controls
 - Advanced Reporting Phase 1 with premium-gated dashboard metric cards
 - beta approval applicant email notifications through `notify-beta-approval`
 - Photo Editor Phase 1 with freehand markup, shapes, arrows, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup
@@ -31,7 +33,7 @@ Known weak spots:
 - Customer Damage Report print rendering still needs a proper isolated rebuild
 - offline continuity only supports new-job drafts, not existing job edits
 - SMS remains disabled
-- staff permissions are still broad-role based, not granular
+- staff permissions are centralized but still broad-role based, not task-by-task custom ACLs
 - public invoice and work-order links are planned but not implemented
 - deeper inventory operations are still future work
 - commerce, licensing, billing automation, production backups, and monitoring are later release tracks
@@ -76,6 +78,8 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - practical photo documentation editor for annotated customer/shop records
 - dependable basic print output
 - clean operator/admin workflow for beta shops
+- beta access approval and premium trial access kept as separate systems
+- Free tier remains operational after premium trial expiry, with premium features locked
 - practical shop settings for currency, tax labels, date formats, and measurement preferences
 - known launch limitations documented clearly
 
@@ -110,7 +114,7 @@ This series prepares FretTrack for paid production use.
 
 - subscription licensing
 - Stripe integration
-- trial management
+- billing automation around trial management
 - multi-tenant billing
 - production deployment
 - backups
@@ -131,6 +135,7 @@ These are already shipped or have a first foundation in place and should not be 
 - Scheduling / Calendar Phase 1
 - unsaved-changes protection foundation
 - premium entitlement foundation
+- premium trial management foundation
 - Advanced Reporting Phase 1
 - beta approval applicant email notification foundation
 - Photo Editor Phase 1

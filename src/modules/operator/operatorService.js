@@ -57,6 +57,57 @@ export async function updateBetaShopSubscription(shopId, updates = {}) {
   return data;
 }
 
+export async function setShopPremiumTrial(shopId, trialDays, trialTier = 'pro') {
+  if (!hasSupabaseConfig || !supabase || !shopId) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc('set_shop_premium_trial', {
+    target_shop_id: shopId,
+    trial_days: trialDays,
+    trial_tier: trialTier
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function extendShopPremiumTrial(shopId, extendDays) {
+  if (!hasSupabaseConfig || !supabase || !shopId) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc('extend_shop_premium_trial', {
+    target_shop_id: shopId,
+    extend_days: extendDays
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function endShopPremiumTrial(shopId) {
+  if (!hasSupabaseConfig || !supabase || !shopId) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc('end_shop_premium_trial', {
+    target_shop_id: shopId
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 export async function updateBetaAccessRequest(accessRequest, status, notes = null) {
   const requestId = typeof accessRequest === 'object' ? accessRequest?.id : accessRequest;
   if (!hasSupabaseConfig || !supabase || !requestId) {
@@ -137,7 +188,10 @@ function normalizeShopRow(shop = {}) {
     planId: shop.plan_id || shop.planId || 'trial',
     planName: shop.plan_name || shop.planName || '',
     subscriptionStatus: shop.subscription_status || shop.subscriptionStatus || 'trialing',
+    effectiveTier: shop.effective_tier || shop.effectiveTier || shop.plan_id || shop.planId || 'free',
+    effectiveStatus: shop.effective_status || shop.effectiveStatus || shop.subscription_status || shop.subscriptionStatus || 'trialing',
     trialEndsAt: shop.trial_ends_at || shop.trialEndsAt || '',
+    daysRemaining: Number(shop.days_remaining ?? shop.daysRemaining ?? 0),
     graceEndsAt: shop.grace_ends_at || shop.graceEndsAt || '',
     currentPeriodEndsAt: shop.current_period_ends_at || shop.currentPeriodEndsAt || '',
     billingEmail: shop.billing_email || shop.billingEmail || '',

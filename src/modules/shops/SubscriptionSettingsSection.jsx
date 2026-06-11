@@ -19,6 +19,7 @@ export default function SubscriptionSettingsSection({ entitlementSnapshot = null
   }, shopProfile?.shopId || '');
   const subscription = snapshot.subscription || {};
   const featureAvailability = getPremiumFeatureAvailability(snapshot);
+  const lockedPremiumFeatures = featureAvailability.filter((feature) => !feature.enabled);
   const enabledOverrides = Object.entries(shopProfile?.featureOverrides || snapshot.featureOverrides || {})
     .filter(([, value]) => value === true);
 
@@ -27,14 +28,17 @@ export default function SubscriptionSettingsSection({ entitlementSnapshot = null
       <div className="section-header compact">
         <div>
           <h3>Subscription & Feature Access</h3>
-          <p className="muted-text">Entitlement foundation only. Billing, payment collection, and upgrades are not connected.</p>
+          <p className="muted-text">Beta access and premium trials are separate. Billing, payment collection, and Stripe are not connected.</p>
         </div>
       </div>
 
       <div className="billing-summary-grid">
         <SubscriptionCard label="Current Tier" value={getSubscriptionTierLabel(subscription.tier || snapshot.plan?.id)} />
-        <SubscriptionCard label="Status" value={subscription.profileStatus || subscription.effectiveStatus || subscription.status || 'active'} />
+        <SubscriptionCard label="Trial Status" value={subscription.effectiveStatus || subscription.status || 'active'} />
         <SubscriptionCard label="Trial Ends" value={formatDate(subscription.trialEndsAt)} />
+        <SubscriptionCard label="Days Remaining" value={formatDaysRemaining(subscription.trialEndsAt)} />
+        <SubscriptionCard label="Effective Tier" value={getSubscriptionTierLabel(subscription.effectiveTier || subscription.tier || snapshot.plan?.id)} />
+        <SubscriptionCard label="Locked Premium Features" value={String(lockedPremiumFeatures.length)} />
         <SubscriptionCard label="Feature Overrides" value={String(enabledOverrides.length)} />
       </div>
 
@@ -76,4 +80,22 @@ function formatDate(value) {
   }
 
   return formatShopDate(value, undefined) || '-';
+}
+
+function formatDaysRemaining(value) {
+  if (!value) {
+    return '-';
+  }
+
+  const end = new Date(value).getTime();
+  if (!Number.isFinite(end)) {
+    return '-';
+  }
+
+  const days = Math.ceil((end - Date.now()) / 86400000);
+  if (days <= 0) {
+    return 'Expired';
+  }
+
+  return `${days} day${days === 1 ? '' : 's'}`;
 }

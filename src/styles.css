@@ -2176,6 +2176,54 @@ th.internal-only {
   font-size: 13px;
 }
 
+.internal-access-panel {
+  background: var(--surface-muted);
+  border: 1px dashed var(--border);
+  display: grid;
+  gap: 10px;
+  margin: 0 24px 16px;
+  padding: 12px 14px;
+}
+
+.internal-access-panel > div:first-child {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.internal-access-panel > div:first-child span,
+.internal-access-panel dt,
+.internal-access-panel p {
+  color: var(--text-subtle);
+  font-size: 12px;
+}
+
+.internal-access-panel dl {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin: 0;
+}
+
+.internal-access-panel dl div {
+  min-width: 0;
+}
+
+.internal-access-panel dt {
+  font-weight: 800;
+}
+
+.internal-access-panel dd {
+  font-weight: 700;
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.internal-access-panel p {
+  margin: 0;
+}
+
 .advanced-reports-page {
   display: grid;
   gap: 1.25rem;
@@ -2463,6 +2511,7 @@ th.internal-only {
 }
 
 .status-badge.grace,
+.status-badge.expired,
 .status-badge.pending,
 .quota-warning {
   color: #a15c00;
