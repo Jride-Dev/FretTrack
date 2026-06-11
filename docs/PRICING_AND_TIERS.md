@@ -14,7 +14,17 @@ The core repair workflow should remain generous. Pricing should mostly gate infr
 
 FretTrack is in a controlled beta rollout.
 
-During beta, access can be managed manually through trial or beta bypass states. Billing during beta can also be handled manually while real subscription automation is planned and tested.
+During beta, beta access approval and premium trial access are separate systems. Beta approval controls whether a tester can enter the product. Premium trial state controls premium feature access for an approved shop.
+
+Operators can currently manage Pro premium trials manually:
+
+- Start a 7-day, 14-day, or 30-day Pro trial.
+- Extend an active Pro trial by 7, 14, or 30 days.
+- End a premium trial and return the shop to Free-tier entitlements.
+
+Free-tier core workflow remains operational after a premium trial expires. Premium features lock, and explicit administrative read-only/canceled states remain available when intentionally configured.
+
+Billing during beta can still be handled manually while real subscription automation is planned and tested.
 
 Stripe and automated subscription management are planned later. The current goal is to validate the product, pricing assumptions, storage behavior, reporting needs, and real shop workflows before locking in automated billing.
 
@@ -30,6 +40,10 @@ Expected access states:
 
 - `beta_bypass`
 - `trialing`
+- `active`
+- `expired`
+- `read_only`
+- `canceled`
 
 Beta testers should be expected to provide practical feedback on intake, job tracking, photo upload, job sheets, payments, reports, and day-to-day shop fit.
 
@@ -80,7 +94,7 @@ Included:
 
 Shop Pro should fit busier shops with multiple staff, heavier photo usage, higher message volume, and stronger reporting needs.
 
-Advanced staff management is intended primarily for larger or multi-user paid shops. The current system already has basic shop membership roles; future work should expand this into granular permissions managed by owners/admins from an Admin or Staff Management page.
+Advanced staff management is intended primarily for larger or multi-user paid shops. The current system now centralizes baseline role checks for operator, owner, admin, tech, and viewer behavior. Future work should expand this into owner/admin-managed granular permissions from an Admin or Staff Management page.
 
 Planned capabilities include:
 
@@ -108,6 +122,8 @@ Possible permissions:
 - Delete jobs
 - Manage customers
 - Upload/delete images
+- Edit or overwrite images
+- Select photos for customer-facing reports
 - Manage pricing
 - Manage shop settings
 - Manage billing/subscription
