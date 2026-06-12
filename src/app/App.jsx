@@ -516,6 +516,12 @@ export default function App() {
     }
   }
 
+  function handleAuthCompleted(nextSession) {
+    if (nextSession) {
+      setSession(nextSession);
+    }
+  }
+
   async function saveCurrentJob() {
     if (!canWrite) {
       setNotice({ type: 'error', message: 'Your shop role is read-only.' });
@@ -849,7 +855,7 @@ export default function App() {
   if (hasSupabaseConfig && !session) {
     return (
       <>
-        <AuthGate onNotice={setNotice} />
+        <AuthGate onAuthCompleted={handleAuthCompleted} onNotice={setNotice} />
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       </>
     );
@@ -1421,13 +1427,18 @@ function PendingApprovalScreen({ betaAccess, email, onRetry, onSignOut }) {
   const isRejected = betaAccess?.status === 'rejected';
   const message = isRejected
     ? 'Your FretTrack beta access request is not active. Contact support if you believe this is a mistake.'
-    : 'Your FretTrack beta access request has been received. An operator must approve your account before you can create or access a shop workspace.';
+    : 'Your FretTrack beta access request has been received. An operator must approve your account before shop setup unlocks.';
 
   return (
     <main className="app auth-shell">
       <section className="panel auth-panel">
         <h1>{isRejected ? 'Beta Access Not Active' : 'Pending Approval'}</h1>
         <p>{message}</p>
+        {!isRejected && (
+          <p className="muted-text">
+            You do not need to create a shop yet. Watch your email for the approval message, and check your spam or junk folder if it does not arrive.
+          </p>
+        )}
         <p className="muted-text">{email || betaAccess?.email}</p>
         <div className="mode-actions">
           <button type="button" className="primary-action" onClick={onRetry}>

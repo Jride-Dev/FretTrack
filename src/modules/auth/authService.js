@@ -48,12 +48,36 @@ export async function signInWithPassword({ email, password }) {
 }
 
 export async function signUpWithPassword({ email, password }) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: window.location.origin
+    }
+  });
   if (error) {
     throw error;
   }
 
-  return data.session || null;
+  return {
+    session: data.session || null,
+    user: data.user || null,
+    mayAlreadyExist:
+      Array.isArray(data.user?.identities) && data.user.identities.length === 0
+  };
+}
+
+export async function resendSignupConfirmation(email) {
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: window.location.origin
+    }
+  });
+  if (error) {
+    throw error;
+  }
 }
 
 export async function sendPasswordResetEmail(email) {

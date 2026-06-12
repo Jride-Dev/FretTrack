@@ -6,6 +6,9 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## Documentation Catch-Up - Current Beta Candidate
 
+- Improved Auth sign-up confirmation handling with an explicit redirect target, clearer existing-account messaging, and a resend-confirmation action.
+- Hardened the public beta application Worker so database saves stay authoritative, archive failures do not make saved requests look failed, success messages include the saved email/status, applicant confirmation delivery is reported separately, spam/junk-folder guidance is shown to applicants, and regression checks cover save, confirmation email, email-failure, archive-failure, validation, and invalid JSON behavior.
+- Clarified the tester-facing app auth flow so beta applicants create a login account, then see pending-approval guidance instead of assuming they should create a shop before approval.
 - Added centralized permission helpers for operator, owner/admin, tech, viewer, photo, inventory, scheduling, customer, and premium-reporting checks.
 - Added Premium Trial Management Phase 1 with operator-only 7/14/30-day trial start, extension, and end RPCs.
 - Deployed Permission Hardening + Premium Trial Management Phase 1 and refreshed README/release/deployment documentation for the live state.

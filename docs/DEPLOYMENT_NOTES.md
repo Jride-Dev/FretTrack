@@ -43,6 +43,7 @@ Do not use a blanket production migration push while unrelated local migrations 
 - `notify-beta-access-request` Supabase Edge Function
 - `notify-beta-approval` Supabase Edge Function
 - Cloudflare landing Worker beta application email path
+- Cloudflare landing Worker beta application hardening deployed on 2026-06-12: Supabase request creation is authoritative, email/R2 archive failures return warnings after save, and `npm run check:landing-worker` covers the request lifecycle.
 
 ## Verification Reminders
 
@@ -53,6 +54,7 @@ git status
 git branch --show-current
 git pull origin main
 npm run check:migrations
+npm run check:landing-worker
 npm run build
 git diff --check
 curl.exe -I https://app.frettrack-app.com/
@@ -69,4 +71,5 @@ curl.exe -I https://frettrack-app.com/
 - If a migration is manually applied with `supabase db query --linked --file`, confirm the schema change and then align remote migration history intentionally.
 - Confirm Supabase Edge Function secrets by name only; never print secret values.
 - Confirm Cloudflare Worker secrets by name only; never print secret values.
+- For public beta application issues, run `npm run check:landing-worker`, submit a live test through `https://frettrack-app.com/api/beta-application`, and confirm the saved row in `public.beta_access_requests`.
 - If frontend asset hashes are used to confirm a deployment, compare the current app HTML against the most recent local build output.

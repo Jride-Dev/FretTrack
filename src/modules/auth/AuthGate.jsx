@@ -1,22 +1,44 @@
 import { useState } from 'react';
 import {
+  resendSignupConfirmation,
   sendPasswordResetEmail,
   signInWithPassword,
   signUpWithPassword,
   updateCurrentUserPassword
 } from './authService';
 
-export default function AuthGate({ initialMode = 'sign-in', onPasswordUpdated, onNotice }) {
+export default function AuthGate({ initialMode = 'sign-in', onAuthCompleted, onPasswordUpdated, onNotice }) {
   const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
 
   function switchMode(nextMode) {
     setMode(nextMode);
     setPassword('');
     setConfirmPassword('');
+  }
+
+  async function handleResendConfirmation() {
+    setIsResendingConfirmation(true);
+    onNotice?.(null);
+
+    try {
+      await resendSignupConfirmation(email);
+      onNotice?.({
+        type: 'success',
+        message: 'Confirmation email requested. If the account is still unconfirmed, check your inbox and spam folder.'
+      });
+    } catch (error) {
+      onNotice?.({
+        type: 'error',
+        message: getErrorMessage(error, 'Unable to resend the confirmation email.')
+      });
+    } finally {
+      setIsResendingConfirmation(false);
+    }
   }
 
   async function handleSubmit(event) {
@@ -41,14 +63,20 @@ export default function AuthGate({ initialMode = 'sign-in', onPasswordUpdated, o
         onPasswordUpdated?.();
       } else if (mode === 'sign-up') {
         validateNewPassword(password, confirmPassword);
-        const session = await signUpWithPassword({ email, password });
+        const result = await signUpWithPassword({ email, password });
         onNotice?.({
           type: 'success',
-          message: session ? 'Account created.' : 'Check your email to confirm your account, then sign in.'
+          message: signupNoticeForResult(result)
         });
+        if (result?.session) {
+          onAuthCompleted?.(result.session);
+        } else {
+          switchMode('sign-in');
+        }
       } else {
-        await signInWithPassword({ email, password });
+        const session = await signInWithPassword({ email, password });
         onNotice?.({ type: 'success', message: 'Signed in.' });
+        onAuthCompleted?.(session);
       }
     } catch (error) {
       onNotice?.({
@@ -125,10 +153,10 @@ export default function AuthGate({ initialMode = 'sign-in', onPasswordUpdated, o
             <button
               type="button"
               className="button-tertiary auth-mode-toggle"
-              onClick={() => switchMode('sign-up')}
-            >
-              Create a shop user account
-            </button>
+            onClick={() => switchMode('sign-up')}
+          >
+              Create beta login account
+          </button>
           </>
         )}
 
@@ -139,6 +167,17 @@ export default function AuthGate({ initialMode = 'sign-in', onPasswordUpdated, o
             onClick={() => switchMode('sign-in')}
           >
             Back to sign in
+          </button>
+        )}
+
+        {mode === 'sign-up' && (
+          <button
+            type="button"
+            className="button-tertiary auth-mode-toggle"
+            onClick={handleResendConfirmation}
+            disabled={isSubmitting || isResendingConfirmation || !email}
+          >
+            {isResendingConfirmation ? 'Requesting...' : 'Resend confirmation email'}
           </button>
         )}
       </section>
@@ -163,8 +202,8 @@ function copyForMode(mode) {
 
   if (mode === 'sign-up') {
     return {
-      description: 'Create a shop user account.',
-      submit: 'Create Account'
+      description: 'Create a beta login account. Shop workspace access starts after operator approval.',
+      submit: 'Create Login Account'
     };
   }
 
@@ -182,6 +221,18 @@ function validateNewPassword(password, confirmPassword) {
   if (password !== confirmPassword) {
     throw new Error('Passwords do not match.');
   }
+}
+
+function signupNoticeForResult(result) {
+  if (result?.session) {
+    return 'Account created. You are signed in.';
+  }
+
+  if (result?.mayAlreadyExist) {
+    return 'If this email already has a FretTrack account, sign in or reset your password. If it is new and still unconfirmed, check your email.';
+  }
+
+  return 'Check your email to confirm your account, then sign in. If it does not arrive, use Resend confirmation email.';
 }
 
 function getErrorMessage(error, fallback) {
