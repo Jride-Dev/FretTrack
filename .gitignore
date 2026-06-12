@@ -32,3 +32,5 @@ Thumbs.db
 # Supabase local runtime state
 supabase/.temp
 supabase/.branches
+
+backups/
