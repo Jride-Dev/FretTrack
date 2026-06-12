@@ -88,26 +88,9 @@ export async function bootstrapCurrentUserAsOwner(shopId = getCurrentShopId()) {
     return null;
   }
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError) {
-    throw userError;
-  }
-
-  const user = userData.user;
-  if (!user) {
-    return null;
-  }
-
-  const { data, error } = await supabase
-    .from('shop_members')
-    .insert({
-      shop_id: shopId,
-      user_id: user.id,
-      role: 'owner',
-      display_name: user.email || ''
-    })
-    .select('id, shop_id, user_id, role, display_name, created_at, updated_at')
-    .single();
+  const { data, error } = await supabase.rpc('bootstrap_current_user_as_owner', {
+    target_shop_id: shopId
+  });
 
   if (error) {
     throw error;

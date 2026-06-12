@@ -26,6 +26,7 @@ const membershipService = read('src/modules/shops/shopMembershipService.js');
 const sendEmailFunction = read('supabase/functions/send-email/index.ts');
 const sendSmsFunction = read('supabase/functions/send-sms/index.ts');
 const migration = read('supabase/migrations/20260611133000_free_pro_tier_split_phase_1.sql');
+const bootstrapMigration = read('supabase/migrations/20260612043000_verified_shop_bootstrap_rpc.sql');
 
 for (const key of ['photo_editor', 'advanced_reporting', 'team_members']) {
   assertIncludes(entitlementService, `${key}: false`, `${key} must default to false.`);
@@ -50,6 +51,7 @@ assertIncludes(app, 'const canEditShopSettings = canManageShop && canWrite;', 'S
 assertIncludes(app, 'canManageShop={canEditShopSettings}', 'Shop settings should receive write-aware manage permission.');
 
 assertIncludes(membershipService, "supabase.rpc('get_current_user_shop_memberships')", 'Membership loading must use effective-access RPC.');
+assertIncludes(membershipService, "supabase.rpc('bootstrap_current_user_as_owner'", 'Shop bootstrap must use server-side RPC.');
 assertIncludes(app, 'effectiveMemberAccess === false', 'App must detect locked memberships.');
 assertIncludes(app, 'Shop Access Locked', 'Locked staff accounts must get a clear screen.');
 assertIncludes(app, 'canManageTeamMembersForRole', 'App must derive team management permission centrally.');
@@ -69,10 +71,13 @@ assertIncludes(migration, 'private.shop_lifecycle_allows_write((storage.folderna
 assertIncludes(migration, 'drop policy if exists "parts_delete_admin"', 'Inventory admin deletes must be re-hardened.');
 assertIncludes(migration, "raise exception 'Team member management is available on Pro.'", 'RPCs must reject Free team management.');
 assertIncludes(migration, 'create or replace function public.get_current_user_shop_memberships()', 'Effective membership RPC must exist.');
+assertIncludes(bootstrapMigration, 'create or replace function public.bootstrap_current_user_as_owner(target_shop_id text)', 'Shop bootstrap RPC must exist.');
+assertIncludes(bootstrapMigration, "raise exception 'Confirm your email before creating a shop workspace.'", 'Shop bootstrap must require confirmed email.');
+assertIncludes(bootstrapMigration, "and status = 'approved'", 'Shop bootstrap must require approved beta access.');
 assertIncludes(migration, "'canUsePhotoEditor'", 'Snapshot must expose photo editor access.');
 assertIncludes(migration, "'canManageTeamMembers'", 'Snapshot must expose team member access.');
-assertIncludes(migration, "if trial_expired then\n    effective_entitlements := entitlement_values;", 'Expired trials must ignore overrides and use Free entitlements.');
-assertIncludes(migration, "effective_status := 'expired';\n    effective_tier := 'free';\n    entitlement_plan_id := 'free';", 'Expired Pro trials must resolve to Free.');
+assertMatches(migration, /if trial_expired then\r?\n\s+effective_entitlements := entitlement_values;/, 'Expired trials must ignore overrides and use Free entitlements.');
+assertMatches(migration, /effective_status := 'expired';\r?\n\s+effective_tier := 'free';\r?\n\s+entitlement_plan_id := 'free';/, 'Expired Pro trials must resolve to Free.');
 
 for (const [name, source] of [
   ['send-email', sendEmailFunction],
