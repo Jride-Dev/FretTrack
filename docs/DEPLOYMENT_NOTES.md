@@ -64,6 +64,16 @@ curl.exe -I https://app.frettrack-app.com/
 curl.exe -I https://frettrack-app.com/
 ```
 
+## Backup Automation
+
+- Daily hosted Supabase snapshots are managed by `scripts/backup-hosted-supabase.ps1`.
+- The npm wrapper is `npm run backup:supabase`.
+- The Windows Scheduled Task is `FretTrack Daily Supabase Backup`, scheduled for `02:30` local time.
+- Each snapshot writes SQL dumps, checksums, migration versions, row counts, and a compare report under `backups/hosted-supabase-*`.
+- Each scheduled run also archives the existing local Docker volume `supabase_db_FretTrack` under `backups/docker-volume-*`.
+- Local Docker database refresh is intentionally separate and manual through `npm run db:local:refresh-from-backup`.
+- Backup workflow details live in `docs/DATABASE_BACKUPS.md`.
+
 ## Manual Deployment Caveats
 
 - Do not use a blanket production migration push when unrelated local migrations are still pending.
