@@ -69,18 +69,25 @@ Beta access approval is separate from premium trial access. A user may be approv
 5. Start a 14-day and 30-day Pro trial on the same test shop and confirm the trial end date is reset from now, not extended from the old date.
 6. Extend the trial by 7, 14, and 30 days and confirm each extension starts from the greater of the existing trial end or now.
 7. End the premium trial and confirm the shop returns to Free-tier entitlements.
-8. Confirm core Free-tier workflow remains writable for owner/admin/tech users after premium trial expiry/end:
+8. Confirm core Free-tier workflow remains writable for the owner account after premium trial expiry/end:
    - customers
    - jobs
    - photos
+   - photo gallery and customer-report photo selection
    - damage maps
    - work logs
    - scheduling
    - inventory basics
    - printing
    - email documents
-9. Confirm viewer users remain read-only.
-10. Confirm Stripe, billing webhooks, and payment collection are not shown as connected.
+9. Confirm Pro-only features lock on Free:
+   - Photo Editor shows `Available on Pro`
+   - Advanced Reporting shows a Pro placeholder
+   - Team Members shows a Pro lock in Shop Settings
+10. Confirm existing non-owner staff memberships are preserved but cannot access the shop while the shop is on Free.
+11. Restore a Pro trial and confirm preserved staff memberships regain access without recreating them.
+12. Confirm viewer users remain read-only.
+13. Confirm Stripe, billing webhooks, and payment collection are not shown as connected.
 
 ## Test Job Creation Flow
 
@@ -128,3 +135,4 @@ For single-job debugging, use `Export Job JSON` from Job Detail.
 - Monetary controls are not permission-gated yet.
 - Negative parts/services prices are blocked unless explicitly allowed in job data.
 - Supabase migrations must be applied manually in the current workspace because the CLI/database credentials are not available here.
+- Free vs Pro Tier Split Phase 1 does not enforce pricing, storage caps, SMS limits, or Stripe billing.

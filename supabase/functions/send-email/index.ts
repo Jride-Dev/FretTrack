@@ -239,7 +239,82 @@ async function validateJobWriteAccess(request: Request, jobId: string) {
     return json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403);
   }
 
+  const hasEffectiveAccess = await canUseShopWriteRole(supabase, job.shop_id, membership.role);
+  if (!hasEffectiveAccess) {
+    return json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403);
+  }
+
   return null;
+}
+
+async function canUseShopWriteRole(supabase: ReturnType<typeof createClient>, shopId: string, role: string) {
+  if (role === 'owner') {
+    return await shopLifecycleAllowsWrite(supabase, shopId);
+  }
+
+  if (!['admin', 'tech'].includes(role)) {
+    return false;
+  }
+
+  const lifecycleAllowsWrite = await shopLifecycleAllowsWrite(supabase, shopId);
+  if (!lifecycleAllowsWrite) {
+    return false;
+  }
+
+  return await shopHasTeamMembers(supabase, shopId);
+}
+
+async function shopLifecycleAllowsWrite(supabase: ReturnType<typeof createClient>, shopId: string) {
+  const { profile, subscription } = await loadShopAccessState(supabase, shopId);
+  const status = subscription?.status || profile?.subscription_status || 'active';
+  return !['read_only', 'canceled', 'cancelled'].includes(status);
+}
+
+async function shopHasTeamMembers(supabase: ReturnType<typeof createClient>, shopId: string) {
+  const { profile, subscription } = await loadShopAccessState(supabase, shopId);
+  const status = subscription?.status || profile?.subscription_status || 'active';
+  const trialEndsAt = subscription?.trial_ends_at || profile?.trial_ends_at || '';
+  const trialExpired = status === 'trialing' && trialEndsAt && new Date(trialEndsAt).getTime() < Date.now();
+  const planId = trialExpired ? 'free' : subscription?.plan_id || profile?.subscription_tier || 'free';
+
+  const { data: entitlement } = await supabase
+    .from('plan_entitlements')
+    .select('value')
+    .eq('plan_id', planId)
+    .eq('key', 'team_members')
+    .maybeSingle();
+
+  if (trialExpired) {
+    return Boolean(entitlement?.value);
+  }
+
+  const profileOverride = profile?.feature_overrides?.team_members;
+  const { data: override } = await supabase
+    .from('shop_entitlement_overrides')
+    .select('value')
+    .eq('shop_id', shopId)
+    .eq('key', 'team_members')
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+    .maybeSingle();
+
+  return Boolean(override?.value ?? profileOverride ?? entitlement?.value);
+}
+
+async function loadShopAccessState(supabase: ReturnType<typeof createClient>, shopId: string) {
+  const [{ data: profile }, { data: subscription }] = await Promise.all([
+    supabase
+      .from('shop_profiles')
+      .select('subscription_tier, subscription_status, trial_ends_at, feature_overrides')
+      .eq('shop_id', shopId)
+      .maybeSingle(),
+    supabase
+      .from('shop_subscriptions')
+      .select('plan_id, status, trial_ends_at')
+      .eq('shop_id', shopId)
+      .maybeSingle()
+  ]);
+
+  return { profile, subscription };
 }
 
 async function checkRateLimit(channel: 'email', maxPerHour: number) {

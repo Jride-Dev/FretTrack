@@ -43,7 +43,7 @@ export default function SubscriptionSettingsSection({ entitlementSnapshot = null
       </div>
 
       <div className="subscription-feature-groups">
-        {['Solo', 'Pro', 'Enterprise'].map((tierLabel) => (
+        {['Pro'].map((tierLabel) => (
           <div className="subscription-feature-group" key={tierLabel}>
             <h4>{tierLabel}</h4>
             <ul>

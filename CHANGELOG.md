@@ -6,6 +6,14 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## Documentation Catch-Up - Current Beta Candidate
 
+- Added Free vs Pro Tier Split Phase 1: Free keeps writable owner-led core shop workflow, while Pro now gates Photo Editor, Advanced Reporting, and Team Members.
+- Added backend enforcement for Pro team-member access so preserved staff memberships cannot access shop data or mutate member records while a shop is on Free.
+- Hardened customer email/SMS Edge Function access checks so preserved Free-tier staff rows cannot bypass effective team-member access.
+- Added visible Pro lock states for Photo Editor, Advanced Reporting, and Team Members without adding Stripe, billing forms, pricing, caps, or payment automation.
+- Added `npm run check:tiers` to statically verify the Free/Pro entitlement split and guard wiring.
+- Improved Auth sign-up confirmation handling with an explicit redirect target, clearer existing-account messaging, and a resend-confirmation action.
+- Hardened the public beta application Worker so database saves stay authoritative, archive failures do not make saved requests look failed, success messages include the saved email/status, applicant confirmation delivery is reported separately, spam/junk-folder guidance is shown to applicants, and regression checks cover save, confirmation email, email-failure, archive-failure, validation, and invalid JSON behavior.
+- Clarified the tester-facing app auth flow so beta applicants create a login account, then see pending-approval guidance instead of assuming they should create a shop before approval.
 - Added centralized permission helpers for operator, owner/admin, tech, viewer, photo, inventory, scheduling, customer, and premium-reporting checks.
 - Added Premium Trial Management Phase 1 with operator-only 7/14/30-day trial start, extension, and end RPCs.
 - Deployed Permission Hardening + Premium Trial Management Phase 1 and refreshed README/release/deployment documentation for the live state.

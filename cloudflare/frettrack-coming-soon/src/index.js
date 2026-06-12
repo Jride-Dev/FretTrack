@@ -656,14 +656,19 @@ function landingPage() {
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(payload)
           });
-          const result = await response.json();
+          const result = await parseApplicationResponse(response);
           if (!response.ok || !result.ok) {
             throw new Error(result.error || 'Unable to submit right now.');
           }
           form.reset();
+          const applicantEmailStatus = result.emailDelivery?.applicant === 'sent'
+            ? ' Confirmation email sent. If you do not see it, check your spam or junk folder.'
+            : result.emailDelivery?.applicant === 'failed'
+              ? ' Confirmation email failed; your application was still saved.'
+              : '';
           status.textContent = result.warning
-            ? result.message + ' ' + result.warning
-            : (result.message || 'Application received. You\'ll be contacted or approved before workspace access is enabled.');
+            ? result.message + applicantEmailStatus + ' ' + result.warning
+            : (result.message || 'Application received. You\'ll be contacted or approved before workspace access is enabled.') + applicantEmailStatus;
           status.className = 'form-status success';
         } catch (error) {
           status.textContent = error.message || 'Unable to submit right now.';
@@ -672,6 +677,19 @@ function landingPage() {
           submitButton.disabled = false;
         }
       });
+
+      async function parseApplicationResponse(response) {
+        try {
+          return await response.json();
+        } catch (error) {
+          return {
+            ok: false,
+            error: response.ok
+              ? 'The application response was unreadable. Please contact support.'
+              : 'The application service is temporarily unavailable. Please try again.'
+          };
+        }
+      }
     </script>
   </body>
 </html>`;
@@ -749,23 +767,34 @@ async function saveBetaApplication(request, env) {
   try {
     const applicationResult = await submitBetaAccessRequest(application, env);
     const emailResult = await sendBetaApplicationEmails(application, env);
-    await archiveBetaApplication(application, env);
+    const archiveResult = await archiveBetaApplication(application, env);
 
     const responseBody = {
       ok: true,
-      message: 'Application received. You\'ll be contacted or approved before workspace access is enabled.'
+      message: `Application received for ${application.email}. Status: ${applicationResult?.status || 'pending'}.`,
+      email: applicationResult?.email || application.email,
+      status: applicationResult?.status || 'pending',
+      requestedAt: applicationResult?.requestedAt || application.submittedAt,
+      emailDelivery: emailResult.delivery
     };
 
-    if (emailResult.warning) {
-      responseBody.warning = emailResult.warning;
+    const warnings = [emailResult.warning, archiveResult.warning].filter(Boolean);
+    if (warnings.length) {
+      responseBody.warning = warnings.join(' ');
     }
 
-    if (applicationResult?.status) {
-      responseBody.status = applicationResult.status;
-    }
-
+    console.log('beta application saved', {
+      applicantDomain: getEmailDomain(application.email),
+      status: responseBody.status,
+      emailWarning: Boolean(emailResult.warning),
+      archiveWarning: Boolean(archiveResult.warning)
+    });
     return jsonResponse(responseBody);
   } catch (error) {
+    console.error('beta application save failed', {
+      applicantDomain: getEmailDomain(application.email),
+      error: error.message || 'Unknown beta application error.'
+    });
     return jsonResponse({ ok: false, error: error.message || 'Unable to submit right now.' }, 500);
   }
 }
@@ -827,7 +856,11 @@ async function sendBetaApplicationEmails(application, env) {
       hasNotifyRecipients: notifyRecipients.length > 0
     });
     return {
-      warning: 'Application saved, but email delivery is not configured on the landing-page Worker yet.'
+      warning: 'Application saved, but email delivery is not configured on the landing-page Worker yet.',
+      delivery: {
+        applicant: 'not_configured',
+        operator: 'not_configured'
+      }
     };
   }
 
@@ -843,15 +876,7 @@ async function sendBetaApplicationEmails(application, env) {
     application.userAgent ? `User Agent: ${application.userAgent}` : ''
   ].filter(Boolean).join('\n');
 
-  const applicantText = [
-    'Thanks for applying for the FretTrack beta.',
-    '',
-    'Your application has been received and is waiting on operator review.',
-    'You will be contacted or approved before workspace access is enabled.',
-    '',
-    'Application summary:',
-    details
-  ].join('\n');
+  const applicantEmail = buildApplicantConfirmationEmail(application, details);
 
   const operatorText = [
     'New FretTrack beta application received.',
@@ -863,8 +888,9 @@ async function sendBetaApplicationEmails(application, env) {
     {
       kind: 'applicant',
       to: application.email,
-      subject: 'FretTrack beta application received',
-      text: applicantText
+      subject: 'Thank you for signing up for the FretTrack Beta',
+      text: applicantEmail.text,
+      html: applicantEmail.html
     },
     ...notifyRecipients.map((recipient) => ({
       kind: 'operator',
@@ -880,7 +906,8 @@ async function sendBetaApplicationEmails(application, env) {
       from: fromEmail,
       to: emailJob.to,
       subject: emailJob.subject,
-      text: emailJob.text
+      text: emailJob.text,
+      html: emailJob.html || ''
     })
   )));
 
@@ -907,7 +934,11 @@ async function sendBetaApplicationEmails(application, env) {
         ? 'Application saved, but the applicant confirmation email failed. Check Worker and Resend logs.'
         : `Application saved, but email delivery had an issue: ${failures[0].message}`;
     return {
-      warning
+      warning,
+      delivery: {
+        applicant: applicantFailure ? 'failed' : 'sent',
+        operator: operatorFailure ? 'failed' : 'sent'
+      }
     };
   }
 
@@ -915,17 +946,82 @@ async function sendBetaApplicationEmails(application, env) {
     applicantConfirmationSent: true,
     operatorNotificationCount: notifyRecipients.length
   });
-  return { warning: '' };
+  return {
+    warning: '',
+    delivery: {
+      applicant: 'sent',
+      operator: 'sent'
+    }
+  };
 }
 
-async function sendResendEmail({ apiKey, from, to, subject, text }) {
+function buildApplicantConfirmationEmail(application, details) {
+  const safeName = escapeHtml(application.name || 'there');
+  const safeShopName = escapeHtml(application.shopName || 'your shop');
+  const safeEmail = escapeHtml(application.email);
+  const safeSubmittedAt = escapeHtml(application.submittedAt);
+  const safeDetails = escapeHtml(details);
+
+  const text = [
+    'Thank you for signing up for the FretTrack Beta!',
+    '',
+    `Hi ${application.name || 'there'},`,
+    '',
+    'We received your FretTrack beta access application and it is now waiting for operator review.',
+    '',
+    'You do not need to submit another application. If approved, you will receive a follow-up email with access instructions.',
+    'If you do not see the confirmation or approval emails, please check your spam or junk folder.',
+    '',
+    'Application summary:',
+    details,
+    '',
+    'FretTrack beta login:',
+    APP_URL,
+    '',
+    'Thanks for your patience while we review beta access requests.',
+    '',
+    'Best regards,',
+    'Jeffrey Russell',
+    'FretTrack',
+    'https://frettrack-app.com/'
+  ].join('\n');
+
+  const html = `<!doctype html>
+<html>
+  <body style="margin:0;background:#f4f1ea;color:#111827;font-family:Arial,sans-serif;line-height:1.5;">
+    <div style="max-width:640px;margin:0 auto;padding:28px 18px;">
+      <div style="background:#ffffff;border:1px solid #d9d1c2;border-radius:8px;padding:24px;">
+        <h1 style="font-size:24px;line-height:1.2;margin:0 0 14px;">Thank you for signing up for the FretTrack Beta!</h1>
+        <p style="margin:0 0 14px;">Hi ${safeName},</p>
+        <p style="margin:0 0 14px;">We received your beta access application for <strong>${safeShopName}</strong>, and it is now waiting for operator review.</p>
+        <p style="margin:0 0 14px;">You do not need to submit another application. If approved, you will receive a follow-up email with access instructions.</p>
+        <p style="margin:0 0 14px;"><strong>Please check your spam or junk folder</strong> if you do not see FretTrack beta emails in your inbox.</p>
+        <p style="margin:0 0 14px;"><a href="${APP_URL}" style="color:#9a4d14;font-weight:700;">FretTrack beta login</a></p>
+        <h2 style="font-size:16px;margin:22px 0 8px;">Application summary</h2>
+        <pre style="white-space:pre-wrap;background:#f8f6f1;border:1px solid #d9d1c2;border-radius:6px;color:#374151;font-family:Arial,sans-serif;font-size:14px;margin:0 0 18px;padding:12px;">${safeDetails}</pre>
+        <p style="color:#4b5563;font-size:13px;margin:0 0 18px;">Submitted as ${safeEmail} on ${safeSubmittedAt}.</p>
+        <p style="margin:0;">Best regards,<br>Jeffrey Russell<br>FretTrack<br><a href="https://frettrack-app.com/" style="color:#9a4d14;">frettrack-app.com</a></p>
+      </div>
+    </div>
+  </body>
+</html>`;
+
+  return { text, html };
+}
+
+async function sendResendEmail({ apiKey, from, to, subject, text, html }) {
+  const body = { from, to, subject, text };
+  if (html) {
+    body.html = html;
+  }
+
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ from, to, subject, text })
+    body: JSON.stringify(body)
   });
 
   const result = await response.json().catch(() => ({}));
@@ -938,21 +1034,32 @@ async function sendResendEmail({ apiKey, from, to, subject, text }) {
 
 async function archiveBetaApplication(application, env) {
   if (!env.FRETTRACK_APP_ASSETS) {
-    return;
+    return { warning: '' };
   }
 
-  const id = crypto.randomUUID();
-  const datePath = application.submittedAt.slice(0, 10);
-  await env.FRETTRACK_APP_ASSETS.put(
-    `beta-applications/${datePath}/${id}.json`,
-    JSON.stringify(application, null, 2),
-    {
-      httpMetadata: {
-        contentType: 'application/json',
-        cacheControl: 'private, max-age=0'
+  try {
+    const id = crypto.randomUUID();
+    const datePath = application.submittedAt.slice(0, 10);
+    await env.FRETTRACK_APP_ASSETS.put(
+      `beta-applications/${datePath}/${id}.json`,
+      JSON.stringify(application, null, 2),
+      {
+        httpMetadata: {
+          contentType: 'application/json',
+          cacheControl: 'private, max-age=0'
+        }
       }
-    }
-  );
+    );
+    return { warning: '' };
+  } catch (error) {
+    console.error('beta application archive failed', {
+      applicantDomain: getEmailDomain(application.email),
+      error: error.message || 'Unknown archive error.'
+    });
+    return {
+      warning: 'Application saved, but the backup archive step failed. Check Worker logs.'
+    };
+  }
 }
 
 async function serveAsset(pathname, env) {
@@ -989,6 +1096,15 @@ function parseEmailRecipients(value) {
 function getEmailDomain(value) {
   const [, domain = 'unknown'] = String(value || '').split('@');
   return domain || 'unknown';
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function jsonResponse(body, status = 200) {

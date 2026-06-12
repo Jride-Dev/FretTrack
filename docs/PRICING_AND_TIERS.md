@@ -30,7 +30,65 @@ Stripe and automated subscription management are planned later. The current goal
 
 Beta tester feedback should directly shape pricing, included features, limits, and the order of future modules.
 
-## Planned Initial Tiers
+## Current Free vs Pro Split
+
+Phase 1 defines the product boundary without adding pricing, plan caps, Stripe, billing webhooks, payment forms, SMS limits, storage enforcement, or multi-shop restrictions.
+
+### Free
+
+Free is a permanent usable solo-shop tier. It keeps an owner-led shop writable for the core workflow:
+
+- one owner account
+- customers
+- jobs and status workflow
+- Damage Map and neck inspection
+- job parts and services
+- work logs
+- basic events
+- basic inventory
+- basic scheduling
+- photo uploads, gallery, and customer-report toggles
+- job sheets and customer reports
+- totals, tax/VAT, and manual payments
+- manual customer email/document sending
+- mobile/PWA access
+
+Free remains operational after a premium trial expires or is ended. Premium trial expiry must not make the core shop workflow read-only.
+
+### Pro
+
+Pro is the working-shop plan. Phase 1 currently unlocks:
+
+- Photo Editor
+- Advanced Reporting
+- Team Members
+
+Team Members is backend-enforced. Existing staff memberships are preserved on downgrade, but non-owner staff access is inactive while the shop is on Free. Restoring Pro restores those preserved memberships without deleting customer-owned data.
+
+Future Pro candidates are documented only and are not implemented in this phase:
+
+- CSV export boundary
+- custom branding
+- inventory alerts
+- scheduling reminders
+- message templates
+- automated email
+- SMS messaging
+- larger photo storage
+
+### Business
+
+Business is deferred. It is not part of the current app behavior.
+
+Future Business candidates:
+
+- multi-shop support
+- cross-shop reporting
+- inventory transfer between shops
+- location-level permissions
+- higher staff limits
+
+## Older Planning Notes
 
 ### Beta
 
@@ -51,7 +109,7 @@ Beta should not be treated as a permanent free production tier. It exists to imp
 
 ### Solo Shop
 
-Suggested target price: around `$20-30/month`.
+Older planning used a Solo Shop tier. The active Phase 1 product model is now Free, Pro, and deferred Business; keep this section as historical pricing research until pricing is finalized.
 
 Included:
 
@@ -79,7 +137,7 @@ Solo Shop should cover the needs of an independent repair tech or very small sho
 
 ### Shop Pro
 
-Suggested target price: around `$50-75/month`.
+Older pricing research treated Shop Pro as a higher-capacity paid tier. Current Phase 1 behavior defines Pro by feature entitlements, not price, storage cap, SMS allowance, or billing automation.
 
 Included:
 

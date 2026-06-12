@@ -56,6 +56,7 @@ Product milestone ladder:
 - Photo controls now separate upload, edit, overwrite, delete, and customer-report selection permissions.
 - Operators can start, extend, and end 7/14/30-day Pro premium trials while beta approval remains separate from premium access.
 - Expired premium trials fall back to writable Free-tier core workflow with premium features locked.
+- Free vs Pro Tier Split Phase 1 keeps core Free workflow writable while gating Photo Editor, Advanced Reporting, and Team Members behind Pro entitlements.
 - Advanced Reporting Phase 1 adds premium-gated dashboard metrics for revenue, jobs, customers, and inventory.
 - Photo Editor Phase 1 adds repair-shop photo markup, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
 - Print output has been improved for beta use, with a dedicated print renderer rebuild still planned for the Customer Damage Report and damage-map output.
@@ -70,6 +71,7 @@ Product milestone ladder:
 - Public invoice or work-order links.
 - Customer-facing appointment confirmations and external calendar sync.
 - AI background removal or third-party image cutout APIs.
+- Pricing, plan caps, automated billing, or storage enforcement for the Free/Pro split.
 
 ## Screenshots
 

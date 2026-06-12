@@ -16,11 +16,7 @@ export async function getCurrentUserShopMemberships() {
     return [];
   }
 
-  const { data, error } = await supabase
-    .from('shop_members')
-    .select('id, shop_id, user_id, role, display_name, created_at, updated_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: true });
+  const { data, error } = await supabase.rpc('get_current_user_shop_memberships');
 
   if (error) {
     throw error;
@@ -48,13 +44,19 @@ export async function getCurrentUserShopMemberships() {
   const profileNamesByShopId = new Map((profiles || []).map((profile) => [profile.shop_id, profile.shop_name]));
   return memberships.map((membership) => ({
     ...membership,
-    shopName: profileNamesByShopId.get(membership.shopId) || titleFromShopId(membership.shopId)
+    shopName: profileNamesByShopId.get(membership.shopId) || membership.shopName || titleFromShopId(membership.shopId)
   }));
 }
 
 export async function getCurrentShopMembership(shopId = getCurrentShopId()) {
   if (!hasSupabaseConfig || !supabase) {
     return null;
+  }
+
+  const memberships = await getCurrentUserShopMemberships();
+  const rpcMembership = memberships.find((membership) => membership.shopId === shopId);
+  if (rpcMembership) {
+    return rpcMembership;
   }
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -189,8 +191,13 @@ function fromDbMembership(membership) {
     userId: membership.user_id,
     role: membership.role,
     displayName: membership.display_name || '',
+    shopName: membership.shop_name || membership.shopName || '',
     createdAt: membership.created_at,
     updatedAt: membership.updated_at
+      || membership.updatedAt,
+    effectiveMemberAccess: membership.effective_member_access
+      ?? membership.effectiveMemberAccess
+      ?? true
   };
 }
 
@@ -205,7 +212,8 @@ function fromDbMemberDetail(member) {
     status: member.status || '',
     lastSignInAt: member.last_sign_in_at || member.lastSignInAt || '',
     createdAt: member.created_at || member.createdAt || '',
-    updatedAt: member.updated_at || member.updatedAt || ''
+    updatedAt: member.updated_at || member.updatedAt || '',
+    effectiveMemberAccess: member.effective_member_access ?? member.effectiveMemberAccess ?? true
   };
 }
 

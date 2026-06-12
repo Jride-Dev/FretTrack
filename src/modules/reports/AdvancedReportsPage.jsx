@@ -60,13 +60,13 @@ export default function AdvancedReportsPage({
         <div className="panel-heading">
           <div>
             <h2>Reports</h2>
-            <p className="muted-text">Advanced Reporting is a premium feature. Core shop workflows remain available on the free tier.</p>
+            <p className="muted-text">Advanced Reporting is available on Pro. Core shop workflows remain available on the free tier.</p>
           </div>
-          <span className="billing-status">Premium</span>
+          <span className="billing-status">Pro</span>
         </div>
         <section className="premium-placeholder">
           <h3>Advanced Reporting</h3>
-          <p>Revenue, customer, completion-time, and inventory analytics will unlock here when Advanced Reporting is enabled for this shop.</p>
+          <p>Revenue, customer, completion-time, and inventory analytics unlock here when Pro reporting is enabled for this shop.</p>
         </section>
       </section>
     );
