@@ -11,6 +11,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Hardened customer email/SMS Edge Function access checks so preserved Free-tier staff rows cannot bypass effective team-member access.
 - Added visible Pro lock states for Photo Editor, Advanced Reporting, and Team Members without adding Stripe, billing forms, pricing, caps, or payment automation.
 - Added `npm run check:tiers` to statically verify the Free/Pro entitlement split and guard wiring.
+- Moved first-owner shop creation behind an approved-beta, confirmed-email bootstrap RPC so new shop creation no longer depends on direct `shop_members` inserts through RLS.
 - Improved Auth sign-up confirmation handling with an explicit redirect target, clearer existing-account messaging, and a resend-confirmation action.
 - Hardened the public beta application Worker so database saves stay authoritative, archive failures do not make saved requests look failed, success messages include the saved email/status, applicant confirmation delivery is reported separately, spam/junk-folder guidance is shown to applicants, and regression checks cover save, confirmation email, email-failure, archive-failure, validation, and invalid JSON behavior.
 - Clarified the tester-facing app auth flow so beta applicants create a login account, then see pending-approval guidance instead of assuming they should create a shop before approval.
