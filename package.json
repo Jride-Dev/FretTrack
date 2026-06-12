@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "check:permissions": "node scripts/check-permission-hardening.mjs",
+    "check:tiers": "node scripts/check-tier-split.mjs",
     "check:landing-worker": "node scripts/check-landing-worker.mjs",
     "check:migrations": "node scripts/check-supabase-migrations.mjs",
     "migration:check": "node scripts/check-supabase-migrations.mjs",

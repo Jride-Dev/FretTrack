@@ -1,4 +1,9 @@
-import { canUseAdvancedReporting, isReadOnlyStatus } from '../billing/entitlementService';
+import {
+  canManageTeamMembers as hasTeamMembersEntitlement,
+  canUseAdvancedReporting,
+  canUsePhotoEditor as hasPhotoEditorEntitlement,
+  isReadOnlyStatus
+} from '../billing/entitlementService';
 
 const SHOP_WRITE_ROLES = new Set(['owner', 'admin', 'tech']);
 const SHOP_MANAGE_ROLES = new Set(['owner', 'admin']);
@@ -21,6 +26,19 @@ export function canAccessOperatorDashboard({ isOperator } = {}) {
 
 export function canManageShopSettings({ role } = {}) {
   return SHOP_MANAGE_ROLES.has(normalizeRole(role));
+}
+
+export function canAccessShopAsMember({ role, entitlementSnapshot } = {}) {
+  const normalizedRole = normalizeRole(role);
+  if (!normalizedRole) {
+    return false;
+  }
+
+  if (normalizedRole === 'owner') {
+    return true;
+  }
+
+  return hasTeamMembersEntitlement(entitlementSnapshot);
 }
 
 export function canManageSubscriptionSettings({ isOperator } = {}) {
@@ -47,12 +65,16 @@ export function canUploadPhotos({ role, entitlementSnapshot } = {}) {
   return canWriteShop({ role, entitlementSnapshot }) && entitlementSnapshot?.access?.canUploadPhotos !== false;
 }
 
+export function canUsePhotoEditor({ role, entitlementSnapshot } = {}) {
+  return canUploadPhotos({ role, entitlementSnapshot }) && hasPhotoEditorEntitlement(entitlementSnapshot);
+}
+
 export function canEditPhotos({ role, entitlementSnapshot } = {}) {
-  return canUploadPhotos({ role, entitlementSnapshot });
+  return canUsePhotoEditor({ role, entitlementSnapshot });
 }
 
 export function canOverwritePhotos({ role, entitlementSnapshot } = {}) {
-  return canUploadPhotos({ role, entitlementSnapshot });
+  return canUsePhotoEditor({ role, entitlementSnapshot });
 }
 
 export function canDeletePhotos({ role, entitlementSnapshot } = {}) {
@@ -61,6 +83,12 @@ export function canDeletePhotos({ role, entitlementSnapshot } = {}) {
 
 export function canViewAdvancedReporting({ entitlementSnapshot } = {}) {
   return canUseAdvancedReporting(entitlementSnapshot);
+}
+
+export function canManageTeamMembers({ role, entitlementSnapshot } = {}) {
+  return canWriteShop({ role, entitlementSnapshot })
+    && SHOP_MANAGE_ROLES.has(normalizeRole(role))
+    && hasTeamMembersEntitlement(entitlementSnapshot);
 }
 
 export function getShopWriteAccess({ role, entitlementSnapshot, hasSupabaseConfig = true } = {}) {

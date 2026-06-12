@@ -21,6 +21,9 @@ export default function PhotoGallery({
                 Edit Photo
               </button>
             )}
+            {!canEdit && (
+              <span className="locked-feature-chip">Photo Editor - Available on Pro</span>
+            )}
             {canToggleCustomerReport && (
               <button
                 type="button"

@@ -10,6 +10,7 @@ import SubscriptionSettingsSection from './SubscriptionSettingsSection.jsx';
 
 export default function ShopSettings({
   canManageShop = true,
+  canManageTeamMembers = false,
   currentUserId = '',
   initialSettings = null,
   entitlementSnapshot = null,
@@ -223,6 +224,7 @@ export default function ShopSettings({
       {!requireCompletion && (
         <ShopMembersPanel
           canManageShop={canManageShop}
+          canManageTeamMembers={canManageTeamMembers}
           shopId={settings.shopId}
           currentUserId={currentUserId}
           onNotice={onNotice}

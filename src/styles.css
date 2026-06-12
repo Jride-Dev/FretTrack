@@ -1272,6 +1272,24 @@ form.panel button {
   min-width: 110px;
 }
 
+.locked-feature-panel {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.locked-feature-panel strong {
+  color: var(--text);
+}
+
+.locked-feature-panel p {
+  margin: 0;
+}
+
 .danger-link {
   color: var(--error-text);
 }
@@ -1719,6 +1737,13 @@ form.panel button {
   color: var(--text-muted);
   font-size: 12px;
   text-transform: capitalize;
+}
+
+.shop-picker-button.locked {
+  background: var(--surface-muted);
+  border-color: var(--border);
+  color: var(--text-muted);
+  cursor: not-allowed;
 }
 
 .muted-text {
@@ -2365,6 +2390,21 @@ th.internal-only {
   padding: 6px 8px;
   text-align: center;
   text-decoration: none;
+}
+
+.locked-feature-chip {
+  align-items: center;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 8px;
+  text-align: center;
 }
 
 .operator-only-shell {

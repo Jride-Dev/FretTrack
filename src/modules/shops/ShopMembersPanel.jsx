@@ -13,7 +13,13 @@ const memberRoles = [
   { value: 'viewer', label: 'Viewer' }
 ];
 
-export default function ShopMembersPanel({ canManageShop = false, shopId = '', currentUserId = '', onNotice }) {
+export default function ShopMembersPanel({
+  canManageShop = false,
+  canManageTeamMembers = false,
+  shopId = '',
+  currentUserId = '',
+  onNotice
+}) {
   const [members, setMembers] = useState([]);
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -128,39 +134,48 @@ export default function ShopMembersPanel({ canManageShop = false, shopId = '', c
         </button>
       </div>
 
-      <form className="form-grid member-add-form" onSubmit={handleAddMember}>
-        <label>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            disabled={Boolean(busyMemberId)}
-            placeholder="tech@example.com"
-            required
-          />
-        </label>
-        <label>
-          Display Name
-          <input
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            disabled={Boolean(busyMemberId)}
-            placeholder="Optional"
-          />
-        </label>
-        <label>
-          Role
-          <select value={role} onChange={(event) => setRole(event.target.value)} disabled={Boolean(busyMemberId)}>
-            {memberRoles.map((roleOption) => (
-              <option key={roleOption.value} value={roleOption.value}>{roleOption.label}</option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" disabled={Boolean(busyMemberId)}>
-          {busyMemberId === 'new' ? 'Saving...' : 'Add / Update Member'}
-        </button>
-      </form>
+      {!canManageTeamMembers && (
+        <section className="locked-feature-panel">
+          <strong>Team Members - Available on Pro</strong>
+          <p>Free shops keep the owner account active. Existing staff memberships are preserved, but staff access and member changes unlock on Pro.</p>
+        </section>
+      )}
+
+      {canManageTeamMembers && (
+        <form className="form-grid member-add-form" onSubmit={handleAddMember}>
+          <label>
+            Email
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              disabled={Boolean(busyMemberId)}
+              placeholder="tech@example.com"
+              required
+            />
+          </label>
+          <label>
+            Display Name
+            <input
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              disabled={Boolean(busyMemberId)}
+              placeholder="Optional"
+            />
+          </label>
+          <label>
+            Role
+            <select value={role} onChange={(event) => setRole(event.target.value)} disabled={Boolean(busyMemberId)}>
+              {memberRoles.map((roleOption) => (
+                <option key={roleOption.value} value={roleOption.value}>{roleOption.label}</option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" disabled={Boolean(busyMemberId)}>
+            {busyMemberId === 'new' ? 'Saving...' : 'Add / Update Member'}
+          </button>
+        </form>
+      )}
 
       <div className="operator-table-wrap shop-members-table-wrap">
         <table className="operator-table shop-members-table">
@@ -188,7 +203,7 @@ export default function ShopMembersPanel({ canManageShop = false, shopId = '', c
                     <select
                       value={member.role}
                       onChange={(event) => handleRoleChange(member, event.target.value)}
-                      disabled={isBusy || isLastOwner}
+                      disabled={!canManageTeamMembers || isBusy || isLastOwner}
                     >
                       {memberRoles.map((roleOption) => (
                         <option key={roleOption.value} value={roleOption.value}>{roleOption.label}</option>
@@ -203,7 +218,7 @@ export default function ShopMembersPanel({ canManageShop = false, shopId = '', c
                       type="button"
                       className="table-link danger-link"
                       onClick={() => handleRemove(member)}
-                      disabled={isBusy || isLastOwner}
+                      disabled={!canManageTeamMembers || isBusy || isLastOwner}
                     >
                       {isBusy ? 'Working...' : isCurrentUser ? 'Remove Self' : 'Remove'}
                     </button>

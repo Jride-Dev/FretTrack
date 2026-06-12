@@ -20,8 +20,10 @@ import { checkSupabaseJobsConnection, hasSupabaseConfig } from '../shared/lib/su
 import { getCurrentSession, onAuthSessionChange, signOut } from '../modules/auth/authService';
 import {
   canAccessOperatorDashboard,
+  canAccessShopAsMember,
   canDeletePhotos as canDeletePhotosForRole,
   canEditPhotos as canEditPhotosForRole,
+  canManageTeamMembers as canManageTeamMembersForRole,
   canManageShopSettings,
   canOverwritePhotos as canOverwritePhotosForRole,
   canUploadPhotos as canUploadPhotosForRole,
@@ -102,6 +104,8 @@ export default function App() {
     hasSupabaseConfig
   });
   const canManageShop = !hasSupabaseConfig || canManageShopSettings({ role: membership?.role });
+  const canEditShopSettings = canManageShop && canWrite;
+  const canManageTeamMembers = !hasSupabaseConfig || canManageTeamMembersForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canUploadPhotos = !hasSupabaseConfig || canUploadPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canEditPhotos = !hasSupabaseConfig || canEditPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canOverwritePhotos = !hasSupabaseConfig || canOverwritePhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
@@ -668,6 +672,11 @@ export default function App() {
   }
 
   async function handleShopSelected(selectedMembership) {
+    if (selectedMembership?.effectiveMemberAccess === false) {
+      setNotice({ type: 'error', message: 'Staff access for this shop is available on Pro.' });
+      return;
+    }
+
     setJobs([]);
     setCustomers([]);
     setSelectedJobId(null);
@@ -932,11 +941,12 @@ export default function App() {
               <button
                 type="button"
                 key={shopMembership.id}
-                className="shop-picker-button"
+                className={`shop-picker-button${shopMembership.effectiveMemberAccess === false ? ' locked' : ''}`}
                 onClick={() => handleShopSelected(shopMembership)}
+                disabled={shopMembership.effectiveMemberAccess === false}
               >
                 <strong>{shopMembership.shopName || shopMembership.shopId}</strong>
-                <span>{shopMembership.role}</span>
+                <span>{shopMembership.role}{shopMembership.effectiveMemberAccess === false ? ' - Pro team access required' : ''}</span>
               </button>
             ))}
           </div>
@@ -985,6 +995,33 @@ export default function App() {
       );
     }
 
+    if (memberships.length) {
+      return (
+        <main className="app auth-shell">
+          <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+          <section className="panel auth-panel">
+            <h1>Shop Access Locked</h1>
+            <p>Free shops keep the owner account active. Staff access is available on Pro.</p>
+            <p className="muted-text">{session.user?.email}</p>
+            <div className="shop-picker-list">
+              {memberships.map((shopMembership) => (
+                <div key={shopMembership.id} className="shop-picker-button locked">
+                  <strong>{shopMembership.shopName || shopMembership.shopId}</strong>
+                  <span>{shopMembership.role} - preserved membership</span>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="button-tertiary" onClick={() => loadShopAccess()} disabled={isMembershipLoading}>
+              Retry Access Check
+            </button>
+            <button type="button" className="button-tertiary" onClick={handleSignOut}>
+              Sign Out
+            </button>
+          </section>
+        </main>
+      );
+    }
+
     return (
       <main className="app auth-shell">
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
@@ -1024,7 +1061,7 @@ export default function App() {
             <p>Loading shop setup...</p>
           ) : (
             <ShopSettings
-              canManageShop={canManageShop}
+              canManageShop={canEditShopSettings}
               currentUserId={session?.user?.id || ''}
               initialSettings={{ ...getCurrentShopProfileFallback(), shopId: membership.shopId }}
               entitlementSnapshot={billingAccess}
@@ -1195,7 +1232,8 @@ export default function App() {
 
           {mode === 'settings' && (
             <ShopSettings
-              canManageShop={canManageShop}
+              canManageShop={canEditShopSettings}
+              canManageTeamMembers={canManageTeamMembers}
               currentUserId={session?.user?.id || ''}
               initialSettings={shopProfile}
               entitlementSnapshot={billingAccess}
@@ -1394,19 +1432,20 @@ function getCurrentShopProfileFallback() {
 }
 
 function resolveMembership(availableMemberships = [], preferredShopId = '') {
-  if (!availableMemberships.length) {
+  const effectiveMemberships = availableMemberships.filter((item) => item.effectiveMemberAccess !== false);
+  if (!effectiveMemberships.length) {
     return null;
   }
 
   if (preferredShopId) {
-    const preferredMembership = availableMemberships.find((item) => item.shopId === preferredShopId);
+    const preferredMembership = effectiveMemberships.find((item) => item.shopId === preferredShopId);
     if (preferredMembership) {
       return preferredMembership;
     }
   }
 
-  if (availableMemberships.length === 1) {
-    return availableMemberships[0];
+  if (effectiveMemberships.length === 1) {
+    return effectiveMemberships[0];
   }
 
   return null;
@@ -1482,6 +1521,10 @@ function InternalCurrentAccessPanel({ betaAccess, canWrite, entitlementSnapshot,
           <dd>{membership?.role || '-'}</dd>
         </div>
         <div>
+          <dt>Effective Member Access</dt>
+          <dd>{canAccessShopAsMember({ role: membership?.role, entitlementSnapshot }) ? 'Yes' : 'No'}</dd>
+        </div>
+        <div>
           <dt>Beta Access</dt>
           <dd>{betaAccess?.status || '-'}</dd>
         </div>
@@ -1490,12 +1533,12 @@ function InternalCurrentAccessPanel({ betaAccess, canWrite, entitlementSnapshot,
           <dd>{isOperator ? 'Yes' : 'No'}</dd>
         </div>
         <div>
-          <dt>Tier</dt>
+          <dt>Raw Tier</dt>
           <dd>{subscription.tier || '-'}</dd>
         </div>
         <div>
-          <dt>Status</dt>
-          <dd>{subscription.effectiveStatus || subscription.status || '-'}</dd>
+          <dt>Raw Status</dt>
+          <dd>{subscription.status || '-'}</dd>
         </div>
         <div>
           <dt>Premium Trial Ends</dt>
@@ -1506,8 +1549,24 @@ function InternalCurrentAccessPanel({ betaAccess, canWrite, entitlementSnapshot,
           <dd>{subscription.effectiveTier || subscription.tier || entitlementSnapshot?.plan?.id || '-'}</dd>
         </div>
         <div>
+          <dt>Effective Status</dt>
+          <dd>{subscription.effectiveStatus || subscription.status || '-'}</dd>
+        </div>
+        <div>
           <dt>Can Write</dt>
           <dd>{canWrite ? 'Yes' : 'No'}</dd>
+        </div>
+        <div>
+          <dt>Photo Editor</dt>
+          <dd>{entitlementSnapshot?.access?.canUsePhotoEditor ? 'Yes' : 'No'}</dd>
+        </div>
+        <div>
+          <dt>Advanced Reporting</dt>
+          <dd>{entitlementSnapshot?.access?.canUseAdvancedReporting ? 'Yes' : 'No'}</dd>
+        </div>
+        <div>
+          <dt>Team Members</dt>
+          <dd>{entitlementSnapshot?.access?.canManageTeamMembers ? 'Yes' : 'No'}</dd>
         </div>
       </dl>
       <p>{premiumFeatures.length ? premiumFeatures.join(', ') : 'No premium features enabled'}</p>

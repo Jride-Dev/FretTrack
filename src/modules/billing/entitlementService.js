@@ -19,7 +19,9 @@ export const SUBSCRIPTION_TIERS = {
 };
 
 export const PREMIUM_FEATURES = {
+  PHOTO_EDITOR: 'photo_editor',
   ADVANCED_REPORTING: 'advanced_reporting',
+  TEAM_MEMBERS: 'team_members',
   BUSINESS_ANALYTICS: 'business_analytics',
   INVENTORY_ANALYTICS: 'inventory_analytics',
   REVENUE_DASHBOARDS: 'revenue_dashboards',
@@ -54,7 +56,9 @@ const defaultEntitlements = {
   inventory: true,
   advanced_accounting: false,
   advanced_branding: false,
+  photo_editor: false,
   advanced_reporting: false,
+  team_members: false,
   business_analytics: false,
   inventory_analytics: false,
   revenue_dashboards: false,
@@ -91,26 +95,16 @@ const tierEntitlements = {
     max_storage_bytes: 25 * 1024 * 1024 * 1024
   },
   [SUBSCRIPTION_TIERS.PRO]: {
+    photo_editor: true,
     advanced_reporting: true,
-    business_analytics: true,
-    inventory_analytics: true,
-    revenue_dashboards: true,
-    backup_tools: true,
-    additional_storage: true,
-    customer_portal: true,
-    sms_messages: true,
-    public_job_status_links: true,
-    public_invoice_links: true,
-    api_access: true,
-    custom_branding: true,
-    advanced_branding: true,
-    advanced_inventory_workflows: true,
+    team_members: true,
     max_users: 10,
-    max_storage_bytes: 100 * 1024 * 1024 * 1024,
-    monthly_sms_limit: 500
+    max_storage_bytes: 100 * 1024 * 1024 * 1024
   },
   [SUBSCRIPTION_TIERS.ENTERPRISE]: {
+    photo_editor: true,
     advanced_reporting: true,
+    team_members: true,
     business_analytics: true,
     inventory_analytics: true,
     revenue_dashboards: true,
@@ -136,38 +130,12 @@ const tierEntitlements = {
 
 export const premiumFeatureGroups = [
   {
-    tier: SUBSCRIPTION_TIERS.SOLO,
-    label: 'Solo',
-    features: [
-      [PREMIUM_FEATURES.ADVANCED_REPORTING, 'Advanced Reporting'],
-      [PREMIUM_FEATURES.BUSINESS_ANALYTICS, 'Business Analytics'],
-      [PREMIUM_FEATURES.INVENTORY_ANALYTICS, 'Inventory Analytics'],
-      [PREMIUM_FEATURES.REVENUE_DASHBOARDS, 'Revenue Dashboards'],
-      [PREMIUM_FEATURES.BACKUP_TOOLS, 'Backup Tools'],
-      [PREMIUM_FEATURES.ADDITIONAL_STORAGE, 'Additional Storage']
-    ]
-  },
-  {
     tier: SUBSCRIPTION_TIERS.PRO,
     label: 'Pro',
     features: [
-      [PREMIUM_FEATURES.CUSTOMER_PORTAL, 'Customer Portal'],
-      [PREMIUM_FEATURES.SMS_MESSAGES, 'SMS Messaging'],
-      [PREMIUM_FEATURES.PUBLIC_JOB_STATUS_LINKS, 'Public Job Status Links'],
-      [PREMIUM_FEATURES.PUBLIC_INVOICE_LINKS, 'Public Invoice Links'],
-      [PREMIUM_FEATURES.API_ACCESS, 'API Access'],
-      [PREMIUM_FEATURES.CUSTOM_BRANDING, 'Custom Branding'],
-      [PREMIUM_FEATURES.ADVANCED_INVENTORY_WORKFLOWS, 'Advanced Inventory Workflows']
-    ]
-  },
-  {
-    tier: SUBSCRIPTION_TIERS.ENTERPRISE,
-    label: 'Enterprise',
-    features: [
-      [PREMIUM_FEATURES.MULTI_LOCATION, 'Multi-location Shops'],
-      [PREMIUM_FEATURES.CROSS_LOCATION_INVENTORY, 'Cross-location Inventory'],
-      [PREMIUM_FEATURES.CENTRALIZED_REPORTING, 'Centralized Reporting'],
-      [PREMIUM_FEATURES.ENTERPRISE_ADMINISTRATION, 'Enterprise Administration']
+      [PREMIUM_FEATURES.PHOTO_EDITOR, 'Photo Editor'],
+      [PREMIUM_FEATURES.ADVANCED_REPORTING, 'Advanced Reporting'],
+      [PREMIUM_FEATURES.TEAM_MEMBERS, 'Team Members']
     ]
   }
 ];
@@ -274,7 +242,9 @@ export function normalizeEntitlementSnapshot(snapshot = {}, shopId = '') {
       canSendSms: canWrite && Boolean(entitlements.sms_messages),
       canUseReports: Boolean(entitlements.reports),
       canExportCsv: Boolean(entitlements.csv_export),
+      canUsePhotoEditor: Boolean(entitlements.photo_editor),
       canUseAdvancedReporting: Boolean(entitlements.advanced_reporting),
+      canManageTeamMembers: Boolean(entitlements.team_members),
       canUseCustomerPortal: Boolean(entitlements.customer_portal),
       canUseApi: Boolean(entitlements.api_access),
       canUseCustomBranding: Boolean(entitlements.custom_branding || entitlements.advanced_branding),
@@ -340,6 +310,14 @@ export function canUseAdvancedReporting(snapshot) {
   return getShopFeatureValue(snapshot, PREMIUM_FEATURES.ADVANCED_REPORTING);
 }
 
+export function canUsePhotoEditor(snapshot) {
+  return getShopFeatureValue(snapshot, PREMIUM_FEATURES.PHOTO_EDITOR);
+}
+
+export function canManageTeamMembers(snapshot) {
+  return getShopFeatureValue(snapshot, PREMIUM_FEATURES.TEAM_MEMBERS);
+}
+
 export function canUseCustomerPortal(snapshot) {
   return getShopFeatureValue(snapshot, PREMIUM_FEATURES.CUSTOMER_PORTAL);
 }
@@ -384,7 +362,9 @@ export function getEnabledFeatureLabels(snapshot) {
     ['sms_messages', 'SMS messages'],
     ['inventory', 'Inventory'],
     ['advanced_accounting', 'Advanced accounting'],
+    ['photo_editor', 'Photo editor'],
     ['advanced_reporting', 'Advanced reporting'],
+    ['team_members', 'Team members'],
     ['business_analytics', 'Business analytics'],
     ['inventory_analytics', 'Inventory analytics'],
     ['customer_portal', 'Customer portal'],

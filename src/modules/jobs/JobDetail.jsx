@@ -777,6 +777,15 @@ export default function JobDetail({
     onImageDelete(draftJob, image);
   }
 
+  function handleImageEdit(image) {
+    if (!canEditPhotos) {
+      onNotice?.({ type: 'error', message: 'Photo Editor is available on Pro.' });
+      return;
+    }
+
+    setPhotoEditorImage(image);
+  }
+
   async function saveEditedPhotoCopy(file, editMetadata) {
     if (!canEditPhotos) {
       onNotice?.({ type: 'error', message: 'Your shop role cannot edit photos.' });
@@ -1257,7 +1266,7 @@ export default function JobDetail({
       canDeletePhotos={canDeletePhotos}
       handleImageChange={handleImageChange}
       handleImageDelete={handleImageDelete}
-      handleImageEdit={setPhotoEditorImage}
+      handleImageEdit={handleImageEdit}
       imageImportErrors={imageImportErrors}
       imageOptimizationNotices={imageOptimizationNotices}
       imageImportInputRef={imageImportInputRef}
