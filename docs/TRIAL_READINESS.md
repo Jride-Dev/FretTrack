@@ -81,9 +81,9 @@ Beta access approval is separate from premium trial access. A user may be approv
    - printing
    - email documents
 9. Confirm Pro-only features lock on Free:
-   - Photo Editor shows `Available on Pro`
+   - Photo Editor shows `Available on Shop`
    - Advanced Reporting shows a Pro placeholder
-   - Team Members shows a Pro lock in Shop Settings
+   - Team Members shows a Shop lock in Shop Settings
 10. Confirm existing non-owner staff memberships are preserved but cannot access the shop while the shop is on Free.
 11. Restore a Pro trial and confirm preserved staff memberships regain access without recreating them.
 12. Confirm viewer users remain read-only.
@@ -135,4 +135,4 @@ For single-job debugging, use `Export Job JSON` from Job Detail.
 - Monetary controls are not permission-gated yet.
 - Negative parts/services prices are blocked unless explicitly allowed in job data.
 - Supabase migrations must be applied manually in the current workspace because the CLI/database credentials are not available here.
-- Free vs Pro Tier Split Phase 1 does not enforce pricing, storage caps, SMS limits, or Stripe billing.
+- Shop Tier Foundation Phase 1 does not enforce pricing, storage caps, SMS limits, or Stripe billing.

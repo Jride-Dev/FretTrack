@@ -19,6 +19,7 @@ export default function SubscriptionSettingsSection({ entitlementSnapshot = null
   }, shopProfile?.shopId || '');
   const subscription = snapshot.subscription || {};
   const featureAvailability = getPremiumFeatureAvailability(snapshot);
+  const premiumTierLabels = [...new Set(featureAvailability.map((feature) => feature.tierLabel))];
   const lockedPremiumFeatures = featureAvailability.filter((feature) => !feature.enabled);
   const enabledOverrides = Object.entries(shopProfile?.featureOverrides || snapshot.featureOverrides || {})
     .filter(([, value]) => value === true);
@@ -43,7 +44,7 @@ export default function SubscriptionSettingsSection({ entitlementSnapshot = null
       </div>
 
       <div className="subscription-feature-groups">
-        {['Pro'].map((tierLabel) => (
+        {premiumTierLabels.map((tierLabel) => (
           <div className="subscription-feature-group" key={tierLabel}>
             <h4>{tierLabel}</h4>
             <ul>

@@ -27,15 +27,48 @@ const sendEmailFunction = read('supabase/functions/send-email/index.ts');
 const sendSmsFunction = read('supabase/functions/send-sms/index.ts');
 const migration = read('supabase/migrations/20260611133000_free_pro_tier_split_phase_1.sql');
 const bootstrapMigration = read('supabase/migrations/20260612043000_verified_shop_bootstrap_rpc.sql');
+const shopTierMigration = read('supabase/migrations/20260612233321_shop_tier_foundation_phase_1.sql');
+const tierMigrations = `${migration}\n${shopTierMigration}`;
+
+assertIncludes(entitlementService, "SHOP: 'shop'", 'Shop tier key must be centralized.');
+assertIncludes(
+  entitlementService,
+  'CURRENT_SUBSCRIPTION_TIER_ORDER',
+  'Current tier ladder must be explicit.'
+);
+assertIncludes(
+  entitlementService,
+  'SUBSCRIPTION_TIERS.SHOP',
+  'Shop tier must be included in current entitlement groups.'
+);
+assertIncludes(entitlementService, "ENTERPRISE: 'enterprise'", 'Enterprise compatibility key must remain normalized.');
+assertIncludes(entitlementService, "[SUBSCRIPTION_TIERS.ENTERPRISE]: 'Enterprise'", 'Enterprise compatibility label must remain safe.');
+assertMatches(entitlementService, /\[SUBSCRIPTION_TIERS\.SOLO\]: \{\r?\n\s+\.\.\.defaultEntitlements/, 'Legacy Solo must fall back to Free-equivalent frontend defaults.');
+assertIncludes(entitlementService, "[SUBSCRIPTION_TIERS.SOLO]: 'Free'", 'Legacy Solo must display as Free.');
+assertMatches(entitlementService, /\[SUBSCRIPTION_TIERS\.SHOP\]: \{\r?\n\s+photo_editor: true,\r?\n\s+team_members: true/, 'Shop must unlock Photo Editor and Team Members in frontend defaults.');
+assertMatches(entitlementService, /\[SUBSCRIPTION_TIERS\.PRO\]: \{\r?\n\s+photo_editor: true,\r?\n\s+advanced_reporting: true,\r?\n\s+team_members: true/, 'Pro must unlock Photo Editor, Advanced Reporting, and Team Members in frontend defaults.');
 
 for (const key of ['photo_editor', 'advanced_reporting', 'team_members']) {
   assertIncludes(entitlementService, `${key}: false`, `${key} must default to false.`);
-  assertMatches(migration, new RegExp(`\\('free', '${key}', 'false'::jsonb\\)`, 'i'), `${key} must be false for Free.`);
-  assertMatches(migration, new RegExp(`\\('pro', '${key}', 'true'::jsonb\\)`, 'i'), `${key} must be true for Pro.`);
+  assertMatches(tierMigrations, new RegExp(`\\('free', '${key}', 'false'::jsonb\\)`, 'i'), `${key} must be false for Free.`);
+  assertMatches(tierMigrations, new RegExp(`\\('pro', '${key}', 'true'::jsonb\\)`, 'i'), `${key} must be true for Pro.`);
 }
 
+assertMatches(shopTierMigration, /\('shop', 'photo_editor', 'true'::jsonb\)/i, 'Photo Editor must be true for Shop.');
+assertMatches(shopTierMigration, /\('shop', 'team_members', 'true'::jsonb\)/i, 'Team Members must be true for Shop.');
+assertMatches(shopTierMigration, /\('shop', 'advanced_reporting', 'false'::jsonb\)/i, 'Advanced Reporting must remain false for Shop.');
+assertMatches(shopTierMigration, /\('solo', 'photo_editor', 'false'::jsonb\)/i, 'Legacy Solo must not unlock Photo Editor.');
+assertMatches(shopTierMigration, /\('solo', 'team_members', 'false'::jsonb\)/i, 'Legacy Solo must not unlock Team Members.');
+assertMatches(shopTierMigration, /\('solo', 'advanced_reporting', 'false'::jsonb\)/i, 'Legacy Solo must not unlock Advanced Reporting.');
+assertMatches(shopTierMigration, /subscription_tier in \('free', 'solo', 'shop', 'pro', 'enterprise'\)/i, 'Shop profile tier constraint must allow Shop.');
+assertIncludes(shopTierMigration, "stored_tier in ('free', 'solo', 'shop', 'pro', 'enterprise', 'trial')", 'Entitlement helper must resolve Shop.');
+assertIncludes(shopTierMigration, "effective_tier not in ('free', 'solo', 'shop', 'pro', 'enterprise')", 'Snapshot effective tier allow-list must include Shop.');
+assertIncludes(shopTierMigration, "entitlement_plan_id not in ('free', 'solo', 'shop', 'pro', 'enterprise', 'trial')", 'Snapshot entitlement plan allow-list must include Shop.');
+assert.ok(!/\('enterprise',\s*'[^']+'/i.test(shopTierMigration), 'Shop tier migration must not seed new Enterprise entitlements.');
+
 for (const key of ['customer_portal', 'sms_messages', 'api_access', 'custom_branding', 'advanced_inventory_workflows', 'multi_location']) {
-  assertMatches(migration, new RegExp(`\\('pro', '${key}', 'false'::jsonb\\)`, 'i'), `${key} must remain false for Pro Phase 1.`);
+  assertMatches(tierMigrations, new RegExp(`\\('pro', '${key}', 'false'::jsonb\\)`, 'i'), `${key} must remain false for Pro Phase 1.`);
+  assertMatches(shopTierMigration, new RegExp(`\\('shop', '${key}', 'false'::jsonb\\)`, 'i'), `${key} must remain false for Shop Phase 1.`);
 }
 
 assertIncludes(entitlementService, "PHOTO_EDITOR: 'photo_editor'", 'Photo editor entitlement key must be centralized.');
@@ -46,7 +79,9 @@ assertIncludes(entitlementService, 'canManageTeamMembers(snapshot)', 'Team membe
 assertIncludes(permissionService, 'canAccessShopAsMember', 'Effective membership helper must exist.');
 assertIncludes(permissionService, 'canUsePhotoEditor({ role, entitlementSnapshot }', 'Photo editor permission helper must exist.');
 assertIncludes(permissionService, 'hasPhotoEditorEntitlement(entitlementSnapshot)', 'Photo editing must require entitlement.');
+assertIncludes(permissionService, 'return canUploadPhotos({ role, entitlementSnapshot }) && hasPhotoEditorEntitlement(entitlementSnapshot);', 'Photo editor must require writable photo access and entitlement.');
 assertIncludes(permissionService, 'hasTeamMembersEntitlement(entitlementSnapshot)', 'Team member management must require entitlement.');
+assertIncludes(permissionService, 'return canWriteShop({ role, entitlementSnapshot })', 'Team member management must require writable shop access.');
 assertIncludes(app, 'const canEditShopSettings = canManageShop && canWrite;', 'Shop settings edits must respect read-only lifecycle while billing remains viewable.');
 assertIncludes(app, 'canManageShop={canEditShopSettings}', 'Shop settings should receive write-aware manage permission.');
 
@@ -56,10 +91,10 @@ assertIncludes(app, 'effectiveMemberAccess === false', 'App must detect locked m
 assertIncludes(app, 'Shop Access Locked', 'Locked staff accounts must get a clear screen.');
 assertIncludes(app, 'canManageTeamMembersForRole', 'App must derive team management permission centrally.');
 
-assertIncludes(jobDetail, "message: 'Photo Editor is available on Pro.'", 'Photo editor launch must be guarded.');
-assertIncludes(photoGallery, 'Photo Editor - Available on Pro', 'Photo gallery must show Pro lock state.');
-assertIncludes(shopMembersPanel, 'Team Members - Available on Pro', 'Team member settings must show Pro lock state.');
-assertIncludes(shopMembersPanel, 'canManageTeamMembers', 'Team member controls must use Pro gate.');
+assertIncludes(jobDetail, "message: 'Photo Editor is available on Shop.'", 'Photo editor launch must be guarded.');
+assertIncludes(photoGallery, 'Photo Editor - Available on Shop', 'Photo gallery must show Shop lock state.');
+assertIncludes(shopMembersPanel, 'Team Members - Available on Shop', 'Team member settings must show Shop lock state.');
+assertIncludes(shopMembersPanel, 'canManageTeamMembers', 'Team member controls must use the entitlement gate.');
 
 assertIncludes(migration, 'create or replace function private.shop_has_entitlement', 'Backend entitlement helper must exist.');
 assertIncludes(migration, "role = 'owner'", 'Owner access must remain valid on Free.');
@@ -69,7 +104,7 @@ assertIncludes(migration, 'and private.is_shop_member(jobs.shop_id)', 'Child-rec
 assertIncludes(migration, 'private.shop_lifecycle_allows_write(shop_id)', 'Admin write policies must respect lifecycle write blocking.');
 assertIncludes(migration, 'private.shop_lifecycle_allows_write((storage.foldername(name))[1])', 'Shop asset writes must respect lifecycle write blocking.');
 assertIncludes(migration, 'drop policy if exists "parts_delete_admin"', 'Inventory admin deletes must be re-hardened.');
-assertIncludes(migration, "raise exception 'Team member management is available on Pro.'", 'RPCs must reject Free team management.');
+assertIncludes(shopTierMigration, "raise exception 'Team member management is available on Shop.'", 'RPCs must reject Free team management with current Shop wording.');
 assertIncludes(migration, 'create or replace function public.get_current_user_shop_memberships()', 'Effective membership RPC must exist.');
 assertIncludes(bootstrapMigration, 'create or replace function public.bootstrap_current_user_as_owner(target_shop_id text)', 'Shop bootstrap RPC must exist.');
 assertIncludes(bootstrapMigration, "raise exception 'Confirm your email before creating a shop workspace.'", 'Shop bootstrap must require confirmed email.');
@@ -90,4 +125,4 @@ for (const [name, source] of [
   assertIncludes(source, "return !['read_only', 'canceled', 'cancelled'].includes(status);", `${name} must block explicit read-only/canceled lifecycle.`);
 }
 
-console.log('Free vs Pro tier split checks passed.');
+console.log('Free, Shop, and Pro tier split checks passed.');

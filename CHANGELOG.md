@@ -6,11 +6,11 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## Documentation Catch-Up - Current Beta Candidate
 
-- Added Free vs Pro Tier Split Phase 1: Free keeps writable owner-led core shop workflow, while Pro now gates Photo Editor, Advanced Reporting, and Team Members.
-- Added backend enforcement for Pro team-member access so preserved staff memberships cannot access shop data or mutate member records while a shop is on Free.
+- Added Shop Tier Foundation Phase 1: Free remains the solo starter workflow, Shop unlocks Photo Editor and Team Members, and Pro remains the advanced reporting/automation tier.
+- Added backend enforcement for Shop team-member access so preserved staff memberships cannot access shop data or mutate member records while a shop is on Free.
 - Hardened customer email/SMS Edge Function access checks so preserved Free-tier staff rows cannot bypass effective team-member access.
-- Added visible Pro lock states for Photo Editor, Advanced Reporting, and Team Members without adding Stripe, billing forms, pricing, caps, or payment automation.
-- Added `npm run check:tiers` to statically verify the Free/Pro entitlement split and guard wiring.
+- Added visible Shop lock states for Photo Editor and Team Members plus Pro lock states for Advanced Reporting without adding Stripe, billing forms, pricing, caps, or payment automation.
+- Added `npm run check:tiers` coverage for the Free/Shop/Pro entitlement split and guard wiring.
 - Moved first-owner shop creation behind an approved-beta, confirmed-email bootstrap RPC so new shop creation no longer depends on direct `shop_members` inserts through RLS.
 - Improved Auth sign-up confirmation handling with an explicit redirect target, clearer existing-account messaging, and a resend-confirmation action.
 - Hardened the public beta application Worker so database saves stay authoritative, archive failures do not make saved requests look failed, success messages include the saved email/status, applicant confirmation delivery is reported separately, spam/junk-folder guidance is shown to applicants, and regression checks cover save, confirmation email, email-failure, archive-failure, validation, and invalid JSON behavior.
