@@ -30,7 +30,7 @@ Stripe and automated subscription management are planned later. The current goal
 
 Beta tester feedback should directly shape pricing, included features, limits, and the order of future modules.
 
-## Current Free vs Pro Split
+## Current Free / Shop / Pro Split
 
 Phase 1 defines the product boundary without adding pricing, plan caps, Stripe, billing webhooks, payment forms, SMS limits, storage enforcement, or multi-shop restrictions.
 
@@ -55,15 +55,20 @@ Free is a permanent usable solo-shop tier. It keeps an owner-led shop writable f
 
 Free remains operational after a premium trial expires or is ended. Premium trial expiry must not make the core shop workflow read-only.
 
-### Pro
+### Shop
 
-Pro is the working-shop plan. Phase 1 currently unlocks:
+Shop is the normal paid operating plan for repair shops. Phase 1 currently unlocks:
 
 - Photo Editor
-- Advanced Reporting
 - Team Members
 
-Team Members is backend-enforced. Existing staff memberships are preserved on downgrade, but non-owner staff access is inactive while the shop is on Free. Restoring Pro restores those preserved memberships without deleting customer-owned data.
+Team Members is backend-enforced. Existing staff memberships are preserved on downgrade, but non-owner staff access is inactive while the shop is on Free. Restoring Shop restores those preserved memberships without deleting customer-owned data.
+
+### Pro
+
+Pro is the advanced reporting and automation tier. Phase 1 currently unlocks:
+
+- Advanced Reporting
 
 Future Pro candidates are documented only and are not implemented in this phase:
 
@@ -79,6 +84,8 @@ Future Pro candidates are documented only and are not implemented in this phase:
 ### Business
 
 Business is deferred. It is not part of the current app behavior.
+
+The database still accepts the previously seeded `enterprise` plan identifier for compatibility with earlier premium-foundation work. That is not a new Business tier in this phase, and no pricing, billing, or self-service upgrade path is attached to it.
 
 Future Business candidates:
 
@@ -109,12 +116,12 @@ Beta should not be treated as a permanent free production tier. It exists to imp
 
 ### Solo Shop
 
-Older planning used a Solo Shop tier. The active Phase 1 product model is now Free, Pro, and deferred Business; keep this section as historical pricing research until pricing is finalized.
+Older planning used a Solo Shop tier. The active Phase 1 product model is now Free, Shop, Pro, and deferred Business; keep this section as historical pricing research until pricing is finalized.
 
 Included:
 
 - Unlimited jobs and customers
-- Job photos with a storage cap
+- Job photos with a future storage policy
 - Parts and services
 - Measurements and setup details
 - Print sheets
@@ -137,7 +144,7 @@ Solo Shop should cover the needs of an independent repair tech or very small sho
 
 ### Shop Pro
 
-Older pricing research treated Shop Pro as a higher-capacity paid tier. Current Phase 1 behavior defines Pro by feature entitlements, not price, storage cap, SMS allowance, or billing automation.
+Older pricing research treated Shop Pro as a higher-capacity paid tier. Current Phase 1 behavior defines Shop and Pro by feature entitlements, not price, storage cap, SMS allowance, or billing automation.
 
 Included:
 
@@ -230,7 +237,7 @@ Current strategy:
 - Strip most metadata through canvas-based processing
 - Store optimized files instead of giant phone-camera originals
 - Track useful image metadata where available
-- Enforce storage quotas by plan
+- Track storage by plan without enforcing hard quotas until pricing and limits are finalized
 
 Future options:
 

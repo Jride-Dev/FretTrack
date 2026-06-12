@@ -14,9 +14,16 @@ export const BILLING_STATUSES = {
 export const SUBSCRIPTION_TIERS = {
   FREE: 'free',
   SOLO: 'solo',
+  SHOP: 'shop',
   PRO: 'pro',
   ENTERPRISE: 'enterprise'
 };
+
+export const CURRENT_SUBSCRIPTION_TIER_ORDER = [
+  SUBSCRIPTION_TIERS.FREE,
+  SUBSCRIPTION_TIERS.SHOP,
+  SUBSCRIPTION_TIERS.PRO
+];
 
 export const PREMIUM_FEATURES = {
   PHOTO_EDITOR: 'photo_editor',
@@ -85,14 +92,11 @@ const tierEntitlements = {
     ...defaultEntitlements
   },
   [SUBSCRIPTION_TIERS.SOLO]: {
-    advanced_reporting: true,
-    business_analytics: true,
-    inventory_analytics: true,
-    revenue_dashboards: true,
-    backup_tools: true,
-    additional_storage: true,
-    max_users: 3,
-    max_storage_bytes: 25 * 1024 * 1024 * 1024
+    ...defaultEntitlements
+  },
+  [SUBSCRIPTION_TIERS.SHOP]: {
+    photo_editor: true,
+    team_members: true
   },
   [SUBSCRIPTION_TIERS.PRO]: {
     photo_editor: true,
@@ -130,12 +134,18 @@ const tierEntitlements = {
 
 export const premiumFeatureGroups = [
   {
+    tier: SUBSCRIPTION_TIERS.SHOP,
+    label: 'Shop',
+    features: [
+      [PREMIUM_FEATURES.PHOTO_EDITOR, 'Photo Editor'],
+      [PREMIUM_FEATURES.TEAM_MEMBERS, 'Team Members']
+    ]
+  },
+  {
     tier: SUBSCRIPTION_TIERS.PRO,
     label: 'Pro',
     features: [
-      [PREMIUM_FEATURES.PHOTO_EDITOR, 'Photo Editor'],
-      [PREMIUM_FEATURES.ADVANCED_REPORTING, 'Advanced Reporting'],
-      [PREMIUM_FEATURES.TEAM_MEMBERS, 'Team Members']
+      [PREMIUM_FEATURES.ADVANCED_REPORTING, 'Advanced Reporting']
     ]
   }
 ];
@@ -295,7 +305,8 @@ export function normalizeSubscriptionTier(tier) {
 export function getSubscriptionTierLabel(tier) {
   const labels = {
     [SUBSCRIPTION_TIERS.FREE]: 'Free',
-    [SUBSCRIPTION_TIERS.SOLO]: 'Solo',
+    [SUBSCRIPTION_TIERS.SOLO]: 'Free',
+    [SUBSCRIPTION_TIERS.SHOP]: 'Shop',
     [SUBSCRIPTION_TIERS.PRO]: 'Pro',
     [SUBSCRIPTION_TIERS.ENTERPRISE]: 'Enterprise'
   };

@@ -22,7 +22,7 @@ export default function PhotoGallery({
               </button>
             )}
             {!canEdit && (
-              <span className="locked-feature-chip">Photo Editor - Available on Pro</span>
+              <span className="locked-feature-chip">Photo Editor - Available on Shop</span>
             )}
             {canToggleCustomerReport && (
               <button

@@ -14,8 +14,8 @@ Beta access approval and premium trial entitlement are separate systems.
 - Expired premium trials fall back to Free-tier entitlements instead of making the shop read-only.
 - Expired premium trials ignore feature overrides until the premium lifecycle is started, extended, or otherwise restored by an operator.
 - Explicit administrative `read_only` or cancellation states can still pause core write operations.
-- Free vs Pro Tier Split Phase 1 now makes `photo_editor`, `advanced_reporting`, and `team_members` explicit entitlements.
-- Free keeps owner-led core workflow writable. Pro unlocks Photo Editor, Advanced Reporting, and Team Members.
+- Shop Tier Foundation Phase 1 now makes `photo_editor`, `advanced_reporting`, and `team_members` explicit entitlements across Free, Shop, and Pro.
+- Free keeps owner-led core workflow writable. Shop unlocks Photo Editor and Team Members. Pro unlocks Advanced Reporting.
 - Stripe, billing webhooks, and payment collection are still not connected.
 
 ## Implemented
@@ -80,7 +80,7 @@ Premium trial management now adds operator-only RPCs in `20260611120000_premium_
 
 The start/extend durations are limited to 7, 14, or 30 days. Premium trial start and extension are currently limited to the `pro` tier. These RPCs update authoritative `shop_subscriptions` rows and mirror tier/status/trial end into `shop_profiles`.
 
-Free vs Pro Tier Split Phase 1 adds migration `20260611133000_free_pro_tier_split_phase_1.sql`:
+Free vs Pro Tier Split Phase 1 added migration `20260611133000_free_pro_tier_split_phase_1.sql`:
 
 - Seeds explicit `photo_editor`, `advanced_reporting`, and `team_members` entitlements.
 - Adds `private.shop_has_entitlement(target_shop_id, entitlement_key)`.
@@ -89,6 +89,16 @@ Free vs Pro Tier Split Phase 1 adds migration `20260611133000_free_pro_tier_spli
 - Hardens member-management RPCs and direct `shop_members` insert/update/delete policies so Free shops cannot add, activate, restore, remove, or role-change staff.
 - Hardens customer email/SMS Edge Function access checks so service-role validation also respects effective team-member access.
 - Extends entitlement snapshots with `canUsePhotoEditor` and `canManageTeamMembers`.
+
+Shop Tier Foundation Phase 1 adds migration `20260612233321_shop_tier_foundation_phase_1.sql`:
+
+- Adds the `shop` plan identifier.
+- Keeps legacy `solo` and previously seeded `enterprise` accepted for compatibility, but current product-facing tiers are Free, Shop, and Pro.
+- Updates the shop profile subscription-tier constraint and entitlement snapshot allow-lists to include `shop`.
+- Seeds Shop entitlements so Photo Editor and Team Members are enabled while Advanced Reporting remains locked until Pro.
+- Does not create a Business tier or add new Enterprise entitlements.
+- Keeps operator-managed premium trial controls Pro-only for now.
+- Updates team-member RPC rejection wording from Pro to Shop.
 
 RLS is enabled on all new tables. Authenticated owners/admins can read billing tables for their own shops. Normal authenticated users cannot update plan, subscription, Stripe ID, entitlement override, or authoritative usage state.
 
@@ -137,11 +147,14 @@ High-cost writes now check the central entitlement/access snapshot:
 - Customer SMS sends
 - General write access when the shop is read-only/canceled
 
-Pro-only feature gates:
+Shop feature gates:
 
 - Photo Editor
-- Advanced Reporting
 - Team Members
+
+Pro feature gates:
+
+- Advanced Reporting
 
 The following remain available:
 
@@ -151,7 +164,7 @@ The following remain available:
 - Job JSON export
 - Accounting screen access and basic export while the shop data is visible
 
-Team-member gating is enforced both in the app and in database RPC/RLS paths. Existing non-owner staff memberships are preserved on Free but cannot access the shop until Pro entitlement is restored.
+Team-member gating is enforced both in the app and in database RPC/RLS paths. Existing non-owner staff memberships are preserved on Free but cannot access the shop until Shop entitlement is restored.
 
 Customer email/SMS Edge Functions also validate effective staff access because they use service-role database reads and cannot rely on browser RLS alone.
 
@@ -192,7 +205,7 @@ After applying the migration:
 
 ## Next Steps
 
-1. Decide final Free/Pro/Business pricing and any caps before enforcing storage, SMS, or user-count limits.
+1. Decide final Free/Shop/Pro/Business pricing and any caps before enforcing storage, SMS, or user-count limits.
 2. Add trusted storage usage reconciliation and quota warnings.
 3. Add Edge Function entitlement checks for email/SMS before enabling provider-cost automation.
 4. Keep operator tools for trial/status support separate from future customer self-service billing.

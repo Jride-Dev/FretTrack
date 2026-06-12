@@ -4,7 +4,7 @@ FretTrack is moving from the old `v0.2.6-beta.14` live baseline into product mil
 
 ## Current Product State
 
-The old live baseline is `v0.2.6-beta.14`. The current branch builds on that baseline with inventory foundation work, Scheduling / Calendar Phase 1, premium entitlement/reporting foundations, operator-controlled premium trial management, beta approval notifications, Photo Editor Phase 1, and Free vs Pro Tier Split Phase 1.
+The old live baseline is `v0.2.6-beta.14`. The current branch builds on that baseline with inventory foundation work, Scheduling / Calendar Phase 1, premium entitlement/reporting foundations, operator-controlled premium trial management, beta approval notifications, Photo Editor Phase 1, and Shop Tier Foundation Phase 1.
 
 Shipped or current-branch foundations:
 
@@ -27,7 +27,7 @@ Shipped or current-branch foundations:
 - Advanced Reporting Phase 1 with premium-gated dashboard metric cards
 - beta approval applicant email notifications through `notify-beta-approval`
 - Photo Editor Phase 1 with freehand markup, shapes, arrows, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup
-- Free vs Pro Tier Split Phase 1 with Photo Editor, Advanced Reporting, and Team Members gated behind Pro while Free retains writable owner-led core workflow
+- Shop Tier Foundation Phase 1 with Free, Shop, and Pro entitlement boundaries: Shop unlocks Photo Editor and Team Members, Pro unlocks Advanced Reporting, and Free retains writable owner-led core workflow
 
 Known weak spots:
 
@@ -39,7 +39,7 @@ Known weak spots:
 - deeper inventory operations are still future work
 - commerce, licensing, billing automation, production backups, and monitoring are later release tracks
 - Photo Editor Phase 1 is practical canvas editing, not a full Photoshop-style editor or AI cutout tool
-- Free/Pro pricing, plan caps, storage enforcement, Stripe, and self-service billing are still not implemented
+- Free/Shop/Pro pricing, plan caps, storage enforcement, Stripe, and self-service billing are still not implemented
 
 ## Milestone Version Ladder
 
@@ -82,7 +82,7 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - clean operator/admin workflow for beta shops
 - beta access approval and premium trial access kept as separate systems
 - Free tier remains operational after premium trial expiry, with premium features locked
-- Pro entitlement boundaries are explicit for Photo Editor, Advanced Reporting, and Team Members
+- Shop entitlement boundaries are explicit for Photo Editor and Team Members, and Pro entitlement boundaries are explicit for Advanced Reporting
 - practical shop settings for currency, tax labels, date formats, and measurement preferences
 - known launch limitations documented clearly
 
@@ -140,7 +140,7 @@ These are already shipped or have a first foundation in place and should not be 
 - unsaved-changes protection foundation
 - premium entitlement foundation
 - premium trial management foundation
-- Free vs Pro Tier Split Phase 1
+- Shop Tier Foundation Phase 1
 - Advanced Reporting Phase 1
 - beta approval applicant email notification foundation
 - Photo Editor Phase 1

@@ -673,7 +673,7 @@ export default function App() {
 
   async function handleShopSelected(selectedMembership) {
     if (selectedMembership?.effectiveMemberAccess === false) {
-      setNotice({ type: 'error', message: 'Staff access for this shop is available on Pro.' });
+      setNotice({ type: 'error', message: 'Staff access for this shop is available on Shop.' });
       return;
     }
 
@@ -946,7 +946,7 @@ export default function App() {
                 disabled={shopMembership.effectiveMemberAccess === false}
               >
                 <strong>{shopMembership.shopName || shopMembership.shopId}</strong>
-                <span>{shopMembership.role}{shopMembership.effectiveMemberAccess === false ? ' - Pro team access required' : ''}</span>
+                <span>{shopMembership.role}{shopMembership.effectiveMemberAccess === false ? ' - Shop team access required' : ''}</span>
               </button>
             ))}
           </div>
@@ -1001,7 +1001,7 @@ export default function App() {
           <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
           <section className="panel auth-panel">
             <h1>Shop Access Locked</h1>
-            <p>Free shops keep the owner account active. Staff access is available on Pro.</p>
+            <p>Free shops keep the owner account active. Staff access is available on Shop.</p>
             <p className="muted-text">{session.user?.email}</p>
             <div className="shop-picker-list">
               {memberships.map((shopMembership) => (

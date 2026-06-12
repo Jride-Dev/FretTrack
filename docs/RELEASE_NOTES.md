@@ -14,8 +14,9 @@ FretTrack has moved from the beta6 operations/storage baseline to a broader real
 - Existing work orders now support editable job-level parts and services while preserving totals, discounts, tax/VAT, payments, invoice summaries, and print output.
 - Inventory parts foundation now covers shop-scoped parts, stock counts, job attachment, stock movement rows, low-stock indicators, and viewer-safe write controls.
 - Scheduling / Calendar Phase 1 now covers internal schedule events, job due dates, intake appointments, pickup appointments, follow-ups, shop blocks, filters, and Job Detail scheduling.
-- Premium entitlement architecture, operator-managed Pro trial controls, and Advanced Reporting Phase 1 are in place without enabling Stripe, billing collection, self-service subscriptions, charts, exports, or PDFs.
+- Premium entitlement architecture, operator-managed Pro trial controls, Shop Tier Foundation Phase 1, and Advanced Reporting Phase 1 are in place without enabling Stripe, billing collection, self-service subscriptions, charts, exports, or PDFs.
 - Permission hardening now centralizes operator/shop-role checks and separates photo upload, edit, overwrite, delete, and customer-report selection permissions.
+- Free remains the solo starter workflow, Shop unlocks Photo Editor and Team Members, and Pro unlocks Advanced Reporting.
 - Expired premium trials now fall back to writable Free-tier core workflow while premium features lock.
 - Unsaved-changes protection now warns before losing manual edits in the first high-risk areas.
 - Photo Editor Phase 1 now supports repair-shop image markup, text captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
