@@ -60,7 +60,7 @@ export default function AdvancedReportsPage({
         <div className="panel-heading">
           <div>
             <h2>Reports</h2>
-            <p className="muted-text">Advanced Reporting is available on Pro. Core shop workflows remain available on the free tier.</p>
+            <p className="muted-text">Advanced Reporting is available on Pro. Trial and Shop access keep core workflows separate from Pro reporting.</p>
           </div>
           <span className="billing-status">Pro</span>
         </div>

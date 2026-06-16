@@ -28,7 +28,8 @@ const sendSmsFunction = read('supabase/functions/send-sms/index.ts');
 const migration = read('supabase/migrations/20260611133000_free_pro_tier_split_phase_1.sql');
 const bootstrapMigration = read('supabase/migrations/20260612043000_verified_shop_bootstrap_rpc.sql');
 const shopTierMigration = read('supabase/migrations/20260612233321_shop_tier_foundation_phase_1.sql');
-const tierMigrations = `${migration}\n${shopTierMigration}`;
+const paidLifecycleMigration = read('supabase/migrations/20260616034902_paid_access_lifecycle_phase_1.sql');
+const tierMigrations = `${migration}\n${shopTierMigration}\n${paidLifecycleMigration}`;
 
 assertIncludes(entitlementService, "SHOP: 'shop'", 'Shop tier key must be centralized.');
 assertIncludes(
@@ -44,7 +45,7 @@ assertIncludes(
 assertIncludes(entitlementService, "ENTERPRISE: 'enterprise'", 'Enterprise compatibility key must remain normalized.');
 assertIncludes(entitlementService, "[SUBSCRIPTION_TIERS.ENTERPRISE]: 'Enterprise'", 'Enterprise compatibility label must remain safe.');
 assertMatches(entitlementService, /\[SUBSCRIPTION_TIERS\.SOLO\]: \{\r?\n\s+\.\.\.defaultEntitlements/, 'Legacy Solo must fall back to Free-equivalent frontend defaults.');
-assertIncludes(entitlementService, "[SUBSCRIPTION_TIERS.SOLO]: 'Free'", 'Legacy Solo must display as Free.');
+assertIncludes(entitlementService, "[SUBSCRIPTION_TIERS.SOLO]: 'Legacy trial'", 'Legacy Solo must not be marketed as Free.');
 assertMatches(entitlementService, /\[SUBSCRIPTION_TIERS\.SHOP\]: \{\r?\n\s+photo_editor: true,\r?\n\s+team_members: true/, 'Shop must unlock Photo Editor and Team Members in frontend defaults.');
 assertMatches(entitlementService, /\[SUBSCRIPTION_TIERS\.PRO\]: \{\r?\n\s+photo_editor: true,\r?\n\s+advanced_reporting: true,\r?\n\s+team_members: true/, 'Pro must unlock Photo Editor, Advanced Reporting, and Team Members in frontend defaults.');
 
@@ -65,6 +66,12 @@ assertIncludes(shopTierMigration, "stored_tier in ('free', 'solo', 'shop', 'pro'
 assertIncludes(shopTierMigration, "effective_tier not in ('free', 'solo', 'shop', 'pro', 'enterprise')", 'Snapshot effective tier allow-list must include Shop.');
 assertIncludes(shopTierMigration, "entitlement_plan_id not in ('free', 'solo', 'shop', 'pro', 'enterprise', 'trial')", 'Snapshot entitlement plan allow-list must include Shop.');
 assert.ok(!/\('enterprise',\s*'[^']+'/i.test(shopTierMigration), 'Shop tier migration must not seed new Enterprise entitlements.');
+assertIncludes(paidLifecycleMigration, "when trial_expired then 'free'", 'Expired trials must use internal free compatibility entitlements.');
+assertMatches(paidLifecycleMigration, /effective_status := 'expired';\r?\n\s+effective_tier := stored_tier;\r?\n\s+entitlement_plan_id := 'free';/, 'Expired trials must preserve stored tier while using internal compatibility entitlements.');
+assertIncludes(paidLifecycleMigration, "can_write := effective_status not in ('read_only', 'canceled', 'cancelled', 'expired');", 'Expired trials must block writes.');
+assertIncludes(paidLifecycleMigration, "if normalized_tier not in ('shop', 'pro') then", 'Operator trial start must allow Shop or Pro only.');
+assertIncludes(paidLifecycleMigration, "if resolved_tier not in ('shop', 'pro') then", 'Operator trial extension must allow existing Shop or Pro trials only.');
+assertIncludes(paidLifecycleMigration, "status = 'expired'", 'Ending a trial must create an expired lifecycle.');
 
 for (const key of ['customer_portal', 'sms_messages', 'api_access', 'custom_branding', 'advanced_inventory_workflows', 'multi_location']) {
   assertMatches(tierMigrations, new RegExp(`\\('pro', '${key}', 'false'::jsonb\\)`, 'i'), `${key} must remain false for Pro Phase 1.`);
@@ -111,8 +118,8 @@ assertIncludes(bootstrapMigration, "raise exception 'Confirm your email before c
 assertIncludes(bootstrapMigration, "and status = 'approved'", 'Shop bootstrap must require approved beta access.');
 assertIncludes(migration, "'canUsePhotoEditor'", 'Snapshot must expose photo editor access.');
 assertIncludes(migration, "'canManageTeamMembers'", 'Snapshot must expose team member access.');
-assertMatches(migration, /if trial_expired then\r?\n\s+effective_entitlements := entitlement_values;/, 'Expired trials must ignore overrides and use Free entitlements.');
-assertMatches(migration, /effective_status := 'expired';\r?\n\s+effective_tier := 'free';\r?\n\s+entitlement_plan_id := 'free';/, 'Expired Pro trials must resolve to Free.');
+assertMatches(tierMigrations, /if trial_expired then\r?\n\s+effective_entitlements := entitlement_values;/, 'Expired trials must ignore overrides and use compatibility entitlements.');
+assertMatches(paidLifecycleMigration, /effective_status := 'expired';\r?\n\s+effective_tier := stored_tier;\r?\n\s+entitlement_plan_id := 'free';/, 'Expired trials must preserve stored tier without premium access.');
 
 for (const [name, source] of [
   ['send-email', sendEmailFunction],
@@ -120,9 +127,20 @@ for (const [name, source] of [
 ]) {
   assertIncludes(source, 'canUseShopWriteRole', `${name} must validate effective write-role access.`);
   assertIncludes(source, "return await shopHasTeamMembers(supabase, shopId);", `${name} must require team_members for staff roles.`);
-  assertIncludes(source, "const planId = trialExpired ? 'free'", `${name} must resolve expired trials to Free.`);
+  assertIncludes(source, "const planId = trialExpired ? 'free'", `${name} must resolve expired trials to internal compatibility entitlements.`);
   assertIncludes(source, 'if (trialExpired) {', `${name} must ignore overrides on expired trials.`);
+  assertMatches(source, /if \(trialExpired\) \{\r?\n\s+return false;/, `${name} must block expired trial writes.`);
   assertIncludes(source, "return !['read_only', 'canceled', 'cancelled'].includes(status);", `${name} must block explicit read-only/canceled lifecycle.`);
 }
 
-console.log('Free, Shop, and Pro tier split checks passed.');
+for (const [name, source] of [
+  ['README.md', read('README.md')],
+  ['ROADMAP.md', read('ROADMAP.md')],
+  ['docs/PRICING_AND_TIERS.md', read('docs/PRICING_AND_TIERS.md')],
+  ['docs/SUBSCRIPTION_FOUNDATION.md', read('docs/SUBSCRIPTION_FOUNDATION.md')],
+  ['docs/TRIAL_READINESS.md', read('docs/TRIAL_READINESS.md')]
+]) {
+  assert.ok(!/Free \/ Shop \/ Pro|permanent public Free|Free shops|Free remains operational|writable Free-tier/i.test(source), `${name} must not market Free as a public plan.`);
+}
+
+console.log('Trial, Shop, and Pro tier split checks passed.');

@@ -251,6 +251,17 @@ async function canUseShopWriteRole(supabase: ReturnType<typeof createClient>, sh
 async function shopLifecycleAllowsWrite(supabase: ReturnType<typeof createClient>, shopId: string) {
   const { profile, subscription } = await loadShopAccessState(supabase, shopId);
   const status = subscription?.status || profile?.subscription_status || 'active';
+  const trialEndsAt = subscription?.trial_ends_at || profile?.trial_ends_at || '';
+  const trialExpired = status === 'expired' || (
+    status === 'trialing'
+    && trialEndsAt
+    && new Date(trialEndsAt).getTime() < Date.now()
+  );
+
+  if (trialExpired) {
+    return false;
+  }
+
   return !['read_only', 'canceled', 'cancelled'].includes(status);
 }
 
@@ -258,7 +269,11 @@ async function shopHasTeamMembers(supabase: ReturnType<typeof createClient>, sho
   const { profile, subscription } = await loadShopAccessState(supabase, shopId);
   const status = subscription?.status || profile?.subscription_status || 'active';
   const trialEndsAt = subscription?.trial_ends_at || profile?.trial_ends_at || '';
-  const trialExpired = status === 'trialing' && trialEndsAt && new Date(trialEndsAt).getTime() < Date.now();
+  const trialExpired = status === 'expired' || (
+    status === 'trialing'
+    && trialEndsAt
+    && new Date(trialEndsAt).getTime() < Date.now()
+  );
   const planId = trialExpired ? 'free' : subscription?.plan_id || profile?.subscription_tier || 'free';
 
   const { data: entitlement } = await supabase

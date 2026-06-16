@@ -1001,7 +1001,7 @@ export default function App() {
           <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
           <section className="panel auth-panel">
             <h1>Shop Access Locked</h1>
-            <p>Free shops keep the owner account active. Staff access is available on Shop.</p>
+            <p>Trial access keeps the owner account active. Staff access is available on Shop while access is active.</p>
             <p className="muted-text">{session.user?.email}</p>
             <div className="shop-picker-list">
               {memberships.map((shopMembership) => (
@@ -1585,22 +1585,29 @@ function BillingStateBanner({ canManageShop, entitlementSnapshot }) {
   }
 
   const isReadOnly = isReadOnlyStatus(entitlementSnapshot);
+  const isExpired = status === 'expired';
   const actionText = canManageShop
     ? 'Open Billing to review plan details or contact support.'
     : 'Ask a shop owner or admin to review billing.';
-  const message = isReadOnly
+  const message = isExpired
+    ? `This trial has expired. Existing jobs and customers remain viewable, but new work, uploads, edits, and customer messages require upgraded access. ${actionText}`
+    : isReadOnly
     ? `This shop is ${getBillingStatusLabel(status).toLowerCase()}. Existing jobs and customers remain viewable, but new work, uploads, and customer messages are paused. ${actionText}`
     : `This shop is in a billing grace period. Normal work is still available for now. ${actionText}`;
 
   return (
     <section className={`billing-state-banner ${isReadOnly ? 'read-only' : 'grace'}`}>
-      <strong>{isReadOnly ? 'Read-only access' : 'Grace period'}</strong>
+      <strong>{isExpired ? 'Trial expired' : isReadOnly ? 'Read-only access' : 'Grace period'}</strong>
       <span>{message}</span>
     </section>
   );
 }
 
 function getEntitlementMessage(entitlementSnapshot) {
+  if (getEffectiveStatus(entitlementSnapshot) === 'expired') {
+    return 'Trial expired. Viewing, printing, and exports remain available where safe, but new writes and customer messages require upgraded access.';
+  }
+
   if (isReadOnlyStatus(entitlementSnapshot)) {
     return 'This shop is read-only. Viewing, printing, and exports remain available, but new writes and customer messages are paused.';
   }

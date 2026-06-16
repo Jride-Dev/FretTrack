@@ -23,8 +23,8 @@ This includes:
 - Scheduling / Calendar Phase 1
 - Premium entitlement foundation and Advanced Reporting Phase 1
 - Permission hardening with centralized role checks and granular photo controls
-- Operator-managed Pro premium trials for 7, 14, or 30 days
-- Shop Tier Foundation Phase 1 with Free, Shop, and Pro entitlement boundaries
+- Operator-managed Shop and Pro trials for 7, 14, or 30 days
+- Paid Access Lifecycle Phase 1 with Trial, Shop, and Pro public product boundaries
 - Photo Editor Phase 1 for job-photo markup and manual background cleanup
 - Beta approval applicant email notifications
 - Jobs, photos, damage map, work logs, accounting foundation, auth/RLS, and multi-shop architecture
@@ -55,9 +55,10 @@ Product milestone ladder:
 - Premium entitlement checks now centralize future paid-feature gating without blocking core shop workflow.
 - Permission checks now centralize operator, owner/admin, tech, viewer, inventory, customer, scheduling, photo, and premium-reporting behavior.
 - Photo controls now separate upload, edit, overwrite, delete, and customer-report selection permissions.
-- Operators can start, extend, and end 7/14/30-day Pro premium trials while beta approval remains separate from premium access.
-- Expired premium trials fall back to writable Free-tier core workflow with premium features locked.
-- Shop Tier Foundation Phase 1 keeps core Free workflow writable, unlocks Photo Editor and Team Members on Shop, and keeps Advanced Reporting on Pro.
+- Operators can start, extend, and end 7/14/30-day Shop or Pro trials while beta approval remains separate from paid access.
+- Expired trials preserve shop data and memberships, allow login/view access where safe, block writes, and lock premium entitlements.
+- Paid Access Lifecycle Phase 1 removes permanent public unpaid-plan wording. Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration.
+- Shop access unlocks Photo Editor and Team Members. Pro access unlocks Advanced Reporting.
 - Advanced Reporting Phase 1 adds premium-gated dashboard metrics for revenue, jobs, customers, and inventory.
 - Photo Editor Phase 1 adds repair-shop photo markup, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
 - Print output has been improved for beta use, with a dedicated print renderer rebuild still planned for the Customer Damage Report and damage-map output.
@@ -72,7 +73,7 @@ Product milestone ladder:
 - Public invoice or work-order links.
 - Customer-facing appointment confirmations and external calendar sync.
 - AI background removal or third-party image cutout APIs.
-- Pricing, plan caps, automated billing, or storage enforcement for the Free/Shop/Pro split.
+- Pricing, plan caps, automated billing, or storage enforcement for the Trial/Shop/Pro model.
 
 ## Screenshots
 

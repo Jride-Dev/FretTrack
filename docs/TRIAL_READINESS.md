@@ -58,18 +58,18 @@ Apply all current schema changes, including:
 7. If the signed-in user has more than one shop, confirm the shop picker appears and only the selected shop opens.
 8. Sign out and confirm the app returns to the sign-in screen.
 
-## Premium Trial / Free Tier Test
+## Paid Access Trial Test
 
-Beta access approval is separate from premium trial access. A user may be approved for the beta and still be on the Free tier.
+Beta access approval is separate from paid access trial state. A user may be approved for the beta and still have an expired or inactive shop trial.
 
 1. Sign in as a platform operator.
 2. Open the internal Operator Dashboard.
 3. Confirm normal shop owners/admins/techs/viewers do not see the Operator Dashboard unless they are also listed in `public.operator_users`.
-4. Start a 7-day Pro trial for a test shop and confirm premium features such as Advanced Reporting become available.
-5. Start a 14-day and 30-day Pro trial on the same test shop and confirm the trial end date is reset from now, not extended from the old date.
-6. Extend the trial by 7, 14, and 30 days and confirm each extension starts from the greater of the existing trial end or now.
-7. End the premium trial and confirm the shop returns to Free-tier entitlements.
-8. Confirm core Free-tier workflow remains writable for the owner account after premium trial expiry/end:
+4. Start a 7-day Shop trial for a test shop and confirm Photo Editor and Team Members become available while Advanced Reporting stays locked.
+5. Start a 7-day Pro trial for a test shop and confirm Advanced Reporting becomes available.
+6. Start 14-day and 30-day trials on the same test shop and confirm the trial end date is reset from now, not extended from the old date.
+7. Extend the trial by 7, 14, and 30 days and confirm each extension starts from the greater of the existing trial end or now.
+8. End the trial and confirm the lifecycle becomes expired, stored tier is preserved, and writes are blocked without deleting data:
    - customers
    - jobs
    - photos
@@ -80,14 +80,15 @@ Beta access approval is separate from premium trial access. A user may be approv
    - inventory basics
    - printing
    - email documents
-9. Confirm Pro-only features lock on Free:
+9. Confirm expired-trial actions are blocked for create/edit/send/upload paths while existing records remain viewable where safe.
+10. Confirm feature locks after trial expiry:
    - Photo Editor shows `Available on Shop`
    - Advanced Reporting shows a Pro placeholder
    - Team Members shows a Shop lock in Shop Settings
-10. Confirm existing non-owner staff memberships are preserved but cannot access the shop while the shop is on Free.
-11. Restore a Pro trial and confirm preserved staff memberships regain access without recreating them.
-12. Confirm viewer users remain read-only.
-13. Confirm Stripe, billing webhooks, and payment collection are not shown as connected.
+11. Confirm existing non-owner staff memberships are preserved but cannot access the shop while access is expired.
+12. Restore a Shop or Pro trial and confirm preserved staff memberships regain access without recreating them.
+13. Confirm viewer users remain read-only.
+14. Confirm Stripe, billing webhooks, and payment collection are not shown as connected.
 
 ## Test Job Creation Flow
 

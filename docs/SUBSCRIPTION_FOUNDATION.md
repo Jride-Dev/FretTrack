@@ -10,12 +10,13 @@ Beta access approval and premium trial entitlement are separate systems.
 
 - Beta access controls whether a user may enter the beta application workspace.
 - Premium trial state controls premium feature availability for an approved shop.
-- Free-tier shops remain writable after a premium trial expires.
-- Expired premium trials fall back to Free-tier entitlements instead of making the shop read-only.
-- Expired premium trials ignore feature overrides until the premium lifecycle is started, extended, or otherwise restored by an operator.
+- Public product language is now Trial, Shop, and Pro. Trial is a lifecycle/status, not a feature tier.
+- Expired unpaid trials preserve shop data and staff memberships, allow login/view access where safe, block writes, and require upgraded/reactivated access.
+- Expired trials use internal compatibility entitlements and ignore feature overrides until the lifecycle is started, extended, or otherwise restored by an operator.
 - Explicit administrative `read_only` or cancellation states can still pause core write operations.
-- Shop Tier Foundation Phase 1 now makes `photo_editor`, `advanced_reporting`, and `team_members` explicit entitlements across Free, Shop, and Pro.
-- Free keeps owner-led core workflow writable. Shop unlocks Photo Editor and Team Members. Pro unlocks Advanced Reporting.
+- Shop Tier Foundation Phase 1 makes `photo_editor`, `advanced_reporting`, and `team_members` explicit entitlements across internal compatibility, Shop, and Pro.
+- Shop unlocks Photo Editor and Team Members. Pro unlocks Advanced Reporting.
+- Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration. Existing `free + active` beta shops are preserved for now.
 - Stripe, billing webhooks, and payment collection are still not connected.
 
 ## Implemented
@@ -70,34 +71,35 @@ Supported subscription states:
 - `grace`
 - `read_only`
 - `canceled`
+- `expired`
 - `beta_bypass`
 
-Premium trial management now adds operator-only RPCs in `20260611120000_premium_trial_management_phase_1.sql`:
+Premium trial management added operator-only RPCs in `20260611120000_premium_trial_management_phase_1.sql`, with paid-access lifecycle adjustments in `20260616034902_paid_access_lifecycle_phase_1.sql`:
 
 - `public.set_shop_premium_trial(target_shop_id text, trial_days integer, trial_tier text default 'pro')`
 - `public.extend_shop_premium_trial(target_shop_id text, extend_days integer)`
 - `public.end_shop_premium_trial(target_shop_id text)`
 
-The start/extend durations are limited to 7, 14, or 30 days. Premium trial start and extension are currently limited to the `pro` tier. These RPCs update authoritative `shop_subscriptions` rows and mirror tier/status/trial end into `shop_profiles`.
+The start/extend durations are limited to 7, 14, or 30 days. Trial start and extension are currently limited to `shop` or `pro`. These RPCs update authoritative `shop_subscriptions` rows and mirror tier/status/trial end into `shop_profiles`. Ending a trial now marks the lifecycle `expired` instead of silently creating writable unpaid access.
 
 Free vs Pro Tier Split Phase 1 added migration `20260611133000_free_pro_tier_split_phase_1.sql`:
 
 - Seeds explicit `photo_editor`, `advanced_reporting`, and `team_members` entitlements.
 - Adds `private.shop_has_entitlement(target_shop_id, entitlement_key)`.
 - Adds `public.get_current_user_shop_memberships()` so the app can show preserved-but-locked staff memberships.
-- Updates membership helpers so owners retain Free access, while admin/tech/viewer access requires the `team_members` entitlement.
-- Hardens member-management RPCs and direct `shop_members` insert/update/delete policies so Free shops cannot add, activate, restore, remove, or role-change staff.
+- Updates membership helpers so owners retain safe view access after trial expiry, while admin/tech/viewer access requires the `team_members` entitlement.
+- Hardens member-management RPCs and direct `shop_members` insert/update/delete policies so shops without active Shop/Pro team access cannot add, activate, restore, remove, or role-change staff.
 - Hardens customer email/SMS Edge Function access checks so service-role validation also respects effective team-member access.
 - Extends entitlement snapshots with `canUsePhotoEditor` and `canManageTeamMembers`.
 
 Shop Tier Foundation Phase 1 adds migration `20260612233321_shop_tier_foundation_phase_1.sql`:
 
 - Adds the `shop` plan identifier.
-- Keeps legacy `solo` and previously seeded `enterprise` accepted for compatibility, but current product-facing tiers are Free, Shop, and Pro.
+- Keeps legacy `free`, `solo`, and previously seeded `enterprise` accepted for compatibility, but current product-facing plans are Trial, Shop, and Pro.
 - Updates the shop profile subscription-tier constraint and entitlement snapshot allow-lists to include `shop`.
 - Seeds Shop entitlements so Photo Editor and Team Members are enabled while Advanced Reporting remains locked until Pro.
 - Does not create a Business tier or add new Enterprise entitlements.
-- Keeps operator-managed premium trial controls Pro-only for now.
+- Operator-managed trials now support Shop or Pro starts and extensions.
 - Updates team-member RPC rejection wording from Pro to Shop.
 
 RLS is enabled on all new tables. Authenticated owners/admins can read billing tables for their own shops. Normal authenticated users cannot update plan, subscription, Stripe ID, entitlement override, or authoritative usage state.
@@ -136,7 +138,7 @@ The Billing page is owner/admin only and shows:
 - Enabled features
 - Upgrade/contact support placeholder
 
-The app shell now fetches an entitlement snapshot when shop access loads and shows a banner for `grace`, `read_only`, and `canceled` states. Premium trial expiry alone should not trigger the read-only banner.
+The app shell now fetches an entitlement snapshot when shop access loads and shows a banner for `grace`, `read_only`, `canceled`, and `expired` states. Trial expiry shows upgrade-required messaging and blocks create/edit/send/upload actions through centralized permissions.
 
 ### Gating
 
@@ -190,7 +192,7 @@ After applying the migration:
 4. Confirm plan/status/usage/features render without errors.
 5. Confirm `trialing`, `active`, `grace`, and `beta_bypass` shops can create jobs and upload photos.
 6. Start a 7-day, 14-day, or 30-day Pro trial from the operator dashboard and confirm the shop receives Pro premium features.
-7. End the premium trial from the operator dashboard and confirm the shop falls back to Free-tier entitlements while jobs, customers, inventory, scheduling, photos, printing, and email documents remain writable for write-role users.
+7. End the trial from the operator dashboard and confirm the shop becomes expired: jobs, customers, inventory, scheduling, photos, printing, and email documents remain preserved/viewable where safe, while create/edit/send/upload writes are blocked.
 8. Set a test shop subscription to `grace`; reload and confirm the warning banner appears while normal work remains available.
 9. Set a test shop subscription to `read_only`; reload and confirm:
    - Existing jobs and customers are visible.

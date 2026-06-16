@@ -137,7 +137,7 @@ export default function ShopMembersPanel({
       {!canManageTeamMembers && (
         <section className="locked-feature-panel">
           <strong>Team Members - Available on Shop</strong>
-          <p>Free shops keep the owner account active. Existing staff memberships are preserved, but staff access and member changes unlock on Shop.</p>
+          <p>Trial access keeps the owner account active. Existing staff memberships are preserved, and staff access plus member changes unlock on active Shop access.</p>
         </section>
       )}
 

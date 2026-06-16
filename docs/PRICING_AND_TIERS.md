@@ -16,13 +16,13 @@ FretTrack is in a controlled beta rollout.
 
 During beta, beta access approval and premium trial access are separate systems. Beta approval controls whether a tester can enter the product. Premium trial state controls premium feature access for an approved shop.
 
-Operators can currently manage Pro premium trials manually:
+Operators can currently manage Shop and Pro trials manually:
 
-- Start a 7-day, 14-day, or 30-day Pro trial.
-- Extend an active Pro trial by 7, 14, or 30 days.
-- End a premium trial and return the shop to Free-tier entitlements.
+- Start a 7-day, 14-day, or 30-day Shop or Pro trial.
+- Extend an active Shop or Pro trial by 7, 14, or 30 days.
+- End a trial and mark the lifecycle expired without deleting shop data or staff memberships.
 
-Free-tier core workflow remains operational after a premium trial expires. Premium features lock, and explicit administrative read-only/canceled states remain available when intentionally configured.
+When an unpaid trial expires, login and safe viewing remain available, but writes, uploads, customer messages, member management, and premium features are blocked until access is restored. Explicit administrative read-only/canceled states remain available when intentionally configured.
 
 Billing during beta can still be handled manually while real subscription automation is planned and tested.
 
@@ -30,39 +30,51 @@ Stripe and automated subscription management are planned later. The current goal
 
 Beta tester feedback should directly shape pricing, included features, limits, and the order of future modules.
 
-## Current Free / Shop / Pro Split
+## Current Trial / Shop / Pro Split
 
 Phase 1 defines the product boundary without adding pricing, plan caps, Stripe, billing webhooks, payment forms, SMS limits, storage enforcement, or multi-shop restrictions.
 
-### Free
+### Trial
 
-Free is a permanent usable solo-shop tier. It keeps an owner-led shop writable for the core workflow:
+Trial is a lifecycle state, not a permanent public plan. An active unpaid trial is assigned either Shop or Pro entitlements by an operator:
 
-- one owner account
+- Active Shop trial: core workflow, Photo Editor, and Team Members are writable.
+- Active Pro trial: everything in Shop plus Advanced Reporting.
+- Expired trial: data and memberships are preserved, login/view access remains where safe, and writes are blocked until access is restored.
+
+Core workflow includes:
+
 - customers
 - jobs and status workflow
+- photos, gallery, and customer-report toggles
 - Damage Map and neck inspection
 - job parts and services
 - work logs
 - basic events
-- basic inventory
-- basic scheduling
-- photo uploads, gallery, and customer-report toggles
+- inventory
+- scheduling
 - job sheets and customer reports
 - totals, tax/VAT, and manual payments
-- manual customer email/document sending
+- manual customer email/document sending while writable
 - mobile/PWA access
 
-Free remains operational after a premium trial expires or is ended. Premium trial expiry must not make the core shop workflow read-only.
+Internal compatibility values `free`, `solo`, and `enterprise` may still appear in the database during migration. Existing `free + active` beta shops are preserved for now and should be converted manually later; FretTrack should not market that state as a permanent public plan.
 
 ### Shop
 
 Shop is the normal paid operating plan for repair shops. Phase 1 currently unlocks:
 
+- core workflow
+- customers
+- jobs
+- photos
+- work logs
+- inventory
+- scheduling
 - Photo Editor
 - Team Members
 
-Team Members is backend-enforced. Existing staff memberships are preserved on downgrade, but non-owner staff access is inactive while the shop is on Free. Restoring Shop restores those preserved memberships without deleting customer-owned data.
+Team Members is backend-enforced. Existing staff memberships are preserved when trial access expires, but non-owner staff access and member changes are inactive until Shop or Pro access is restored.
 
 ### Pro
 
@@ -112,11 +124,11 @@ Expected access states:
 
 Beta testers should be expected to provide practical feedback on intake, job tracking, photo upload, job sheets, payments, reports, and day-to-day shop fit.
 
-Beta should not be treated as a permanent free production tier. It exists to improve the software and prove the workflow before paid launch.
+Beta should not be treated as a permanent unpaid production plan. It exists to improve the software and prove the workflow before paid launch.
 
 ### Solo Shop
 
-Older planning used a Solo Shop tier. The active Phase 1 product model is now Free, Shop, Pro, and deferred Business; keep this section as historical pricing research until pricing is finalized.
+Older planning used a Solo Shop tier. The active Phase 1 product model is now Trial, Shop, Pro, and deferred Business; keep this section as historical pricing research until pricing is finalized.
 
 Included:
 

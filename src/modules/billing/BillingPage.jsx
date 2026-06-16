@@ -3,7 +3,8 @@ import {
   formatStorage,
   getBillingStatusLabel,
   getEnabledFeatureLabels,
-  getEntitlement
+  getEntitlement,
+  getSubscriptionTierLabel
 } from './entitlementService';
 
 export default function BillingPage({ canManageShop = false, entitlementSnapshot, shopProfile = null }) {
@@ -23,6 +24,7 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
   const enabledFeatures = getEnabledFeatureLabels(snapshot);
   const storageLimit = Number(getEntitlement(snapshot, 'max_storage_bytes', 0)) || 0;
   const userLimit = Number(getEntitlement(snapshot, 'max_users', 0)) || 0;
+  const planLabel = getSubscriptionTierLabel(subscription.effectiveTier || subscription.tier || plan.id);
 
   return (
     <section className="panel billing-page">
@@ -35,7 +37,7 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
       </div>
 
       <div className="billing-summary-grid">
-        <BillingCard label="Current Plan" value={plan.name || 'Beta / Trial'} detail={plan.id || 'trial'} />
+        <BillingCard label="Current Plan" value={planLabel || 'Trial'} detail={plan.id || subscription.tier || 'trial'} />
         <BillingCard label="Status" value={getBillingStatusLabel(subscription.effectiveStatus || subscription.status)} detail={`Stored: ${getBillingStatusLabel(subscription.status)}`} />
         <BillingCard label="Trial Ends" value={formatDate(subscription.trialEndsAt)} />
         <BillingCard label="Grace Ends" value={formatDate(subscription.graceEndsAt)} />
