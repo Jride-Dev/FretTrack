@@ -18,6 +18,7 @@ Start here for the current product path:
 - [Architecture review beta 14](ARCHITECTURE_REVIEW_BETA14.md)
 - [Print renderer rebuild plan](PRINT_RENDERER_REBUILD_PLAN.md)
 - [Security review checklist](SECURITY_REVIEW_CHECKLIST.md)
+- [Supabase RPC security audit](SUPABASE_RPC_SECURITY_AUDIT.md)
 - [Offline continuity plan](OFFLINE_CONTINUITY_PLAN.md)
 - [Public invoice links plan](PUBLIC_INVOICE_LINKS_PLAN.md)
 - [Paid tier readiness audit](PAID_TIER_READINESS_AUDIT.md)

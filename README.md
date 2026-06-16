@@ -4,6 +4,8 @@
 
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
+Current version: `0.2.7-beta.0`
+
 FretTrack is a guitar and bass repair shop check-in and work order system for real bench workflow: customer intake, instrument details, inspection notes, damage photos, parts and services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
 ## Try Out FretTrack Beta
@@ -25,6 +27,7 @@ This includes:
 - Permission hardening with centralized role checks and granular photo controls
 - Operator-managed Shop and Pro trials for 7, 14, or 30 days
 - Paid Access Lifecycle Phase 1 with Trial, Shop, and Pro public product boundaries
+- Supabase SECURITY DEFINER RPC hardening for beta intake, operator, inventory, accounting, and membership RPCs
 - Photo Editor Phase 1 for job-photo markup and manual background cleanup
 - Beta approval applicant email notifications
 - Jobs, photos, damage map, work logs, accounting foundation, auth/RLS, and multi-shop architecture
