@@ -95,7 +95,7 @@ export default function BetaOperatorDashboard({ onNotice }) {
   }
 
   async function endPremiumTrial(shop) {
-    if (!window.confirm(`End premium trial for ${shop.shopName || shop.shopId}? Core Free tier operations will remain writable.`)) {
+    if (!window.confirm(`End premium trial for ${shop.shopName || shop.shopId}? Existing data and memberships stay preserved, but shop writes will be blocked until access is reactivated.`)) {
       return;
     }
 
@@ -390,7 +390,7 @@ function ShopsTable({
               <td>{shop.planName || shop.planId}</td>
               <td>
                 <StatusBadge status={shop.subscriptionStatus} />
-                <small>Effective: {shop.effectiveTier || 'free'}</small>
+                <small>Effective: {shop.effectiveTier || 'trial'}</small>
               </td>
               <td>
                 <strong>{shop.effectiveStatus || shop.subscriptionStatus}</strong>
@@ -410,16 +410,16 @@ function ShopsTable({
                   >
                     {shop.subscriptionStatus === 'beta_bypass' ? 'Unset beta' : 'Beta bypass'}
                   </button>
-                  {[7, 14, 30].map((days) => (
+                  {['shop', 'pro'].flatMap((tier) => [7, 14, 30].map((days) => (
                     <button
-                      key={`start-${days}`}
+                      key={`start-${tier}-${days}`}
                       type="button"
                       disabled={isSavingShopId === shop.shopId}
-                      onClick={() => onStartPremiumTrial(shop, days, 'pro')}
+                      onClick={() => onStartPremiumTrial(shop, days, tier)}
                     >
-                      Start {days}-day Pro trial
+                      Start {days}-day {tier === 'shop' ? 'Shop' : 'Pro'} trial
                     </button>
-                  ))}
+                  )))}
                   {[7, 14, 30].map((days) => (
                     <button
                       key={`extend-${days}`}

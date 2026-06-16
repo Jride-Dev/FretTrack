@@ -4,7 +4,7 @@ Date: 2026-05-25
 
 Scope: audit and planning only. No billing implementation is included here.
 
-Current note, 2026-06-11: this audit is historical planning context. Premium Trial Management Phase 1 supersedes the earlier expired-trial read-only recommendation. Beta access approval and premium trial access are separate systems, and Free-tier shops remain writable after premium trial expiry while premium features lock.
+Current note, 2026-06-16: this audit is historical planning context. Paid Access Lifecycle Phase 1 supersedes the earlier unpaid fallback recommendation. Beta access approval and paid trial access are separate systems; expired trials preserve data and memberships, block writes, and require restored access.
 
 ## Executive Summary
 
@@ -12,7 +12,7 @@ FretTrack is strong enough to support a paid private beta or early Solo Shop tie
 
 The app is not yet ready for broad self-serve paid SaaS launch. The biggest blockers are not Stripe itself; they are subscription state, entitlement enforcement, billing/admin UX, formal export/deletion policies, storage quotas, and money/audit hardening. The current multi-tenant and RLS foundation is a good starting point, but paid-tier access must be enforced in the database and Edge Functions, not just hidden in React.
 
-Recommended path: launch a controlled paid beta with manual billing or Stripe links only after adding subscription/entitlement tables, premium trial expiry that falls back to Free-tier entitlements, an admin billing/settings page, storage/member quotas, and a clean support/export story. Keep the repair workflow generous; gate higher-cost or premium features such as additional users, storage, exports, reports, SMS, inventory, advanced branding, and future API access.
+Recommended path: launch a controlled paid beta with manual billing or Stripe links only after adding subscription/entitlement tables, expired-trial read-only lifecycle behavior, an admin billing/settings page, storage/member quota decisions, and a clean support/export story. Keep the repair workflow generous for active paid access; gate higher-cost or premium features such as additional users, storage, exports, reports, SMS, inventory, advanced branding, and future API access.
 
 ## Current Strengths
 

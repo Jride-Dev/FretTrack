@@ -8,16 +8,16 @@ FretTrack has moved from the beta6 operations/storage baseline to a broader real
 
 - Beta access is now gated by an application and operator approval flow instead of automatically opening a shop workspace for every new sign-in.
 - Approved beta users can now receive an approval email with the app login URL through the `notify-beta-approval` Supabase Edge Function.
-- The internal operator dashboard now supports approval workflows, shop/member/usage visibility, beta-bypass handling, Pro premium trial start/extension/end controls, and status controls.
+- The internal operator dashboard now supports approval workflows, shop/member/usage visibility, beta-bypass handling, Shop/Pro trial start/extension/end controls, and status controls.
 - Customer and subcontractor management are now first-class beta workflows, including profiles, balances, payment history, customer creation, and CRM-style lookup.
 - Work orders and invoices can now be emailed from inside FretTrack through the authenticated Supabase Edge Function and Resend path.
 - Existing work orders now support editable job-level parts and services while preserving totals, discounts, tax/VAT, payments, invoice summaries, and print output.
 - Inventory parts foundation now covers shop-scoped parts, stock counts, job attachment, stock movement rows, low-stock indicators, and viewer-safe write controls.
 - Scheduling / Calendar Phase 1 now covers internal schedule events, job due dates, intake appointments, pickup appointments, follow-ups, shop blocks, filters, and Job Detail scheduling.
-- Premium entitlement architecture, operator-managed Pro trial controls, Shop Tier Foundation Phase 1, and Advanced Reporting Phase 1 are in place without enabling Stripe, billing collection, self-service subscriptions, charts, exports, or PDFs.
+- Premium entitlement architecture, operator-managed Shop/Pro trial controls, Shop Tier Foundation Phase 1, Paid Access Lifecycle Phase 1, and Advanced Reporting Phase 1 are in place without enabling Stripe, billing collection, self-service subscriptions, charts, exports, or PDFs.
 - Permission hardening now centralizes operator/shop-role checks and separates photo upload, edit, overwrite, delete, and customer-report selection permissions.
-- Free remains the solo starter workflow, Shop unlocks Photo Editor and Team Members, and Pro unlocks Advanced Reporting.
-- Expired premium trials now fall back to writable Free-tier core workflow while premium features lock.
+- Public product wording is now Trial, Shop, and Pro. Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration.
+- Expired trials now preserve data and memberships, allow safe viewing, block writes, and lock premium entitlements until access is restored.
 - Unsaved-changes protection now warns before losing manual edits in the first high-risk areas.
 - Photo Editor Phase 1 now supports repair-shop image markup, text captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
 - Mobile and tablet readiness improved with responsive layout work, touch-friendlier controls, camera-first photo capture, and installable PWA support.

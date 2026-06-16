@@ -37,18 +37,19 @@ Core shipped beta areas now include:
 - unsaved-changes protection foundation
 - premium entitlement foundation
 - permission hardening with centralized role checks
-- operator-managed Pro premium trial controls
+- operator-managed Shop and Pro trial controls
 - Shop Tier Foundation Phase 1
+- Paid Access Lifecycle Phase 1
 - Advanced Reporting Phase 1
 - beta approval applicant notifications
 - Photo Editor Phase 1
 
 Current permission and premium-trial behavior:
 
-- Beta access approval and premium trial access are separate systems.
-- Operators can start, extend, and end 7/14/30-day Pro premium trials.
-- Expired premium trials fall back to writable Free-tier core workflow while premium features lock.
-- Free keeps owner-led customers, jobs, photos/gallery/report toggles, damage maps, work logs, basic inventory, scheduling, printing, email documents, totals/tax/manual payments, and core workflow.
+- Beta access approval and paid trial access are separate systems.
+- Operators can start, extend, and end 7/14/30-day Shop or Pro trials.
+- Expired trials preserve data and memberships, allow safe viewing, block writes, and lock premium entitlements.
+- Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration and should not be marketed as public plans.
 - Shop currently unlocks Photo Editor and Team Members.
 - Pro currently unlocks Advanced Reporting.
 - Photo permissions are split across upload, edit, overwrite, delete, and customer-report selection.

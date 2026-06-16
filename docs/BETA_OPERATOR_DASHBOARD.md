@@ -29,7 +29,7 @@ Operators can:
 - Toggle a shop into or out of `beta_bypass`.
 - Start a 7-day, 14-day, or 30-day Pro premium trial.
 - Extend a premium trial by 7, 14, or 30 days.
-- End a premium trial and return the shop to Free-tier entitlements while keeping core shop operations writable.
+- End a trial by marking the lifecycle expired while preserving shop data and memberships.
 - Set subscription status to `trialing`, `active`, `grace`, `read_only`, `canceled`, or `beta_bypass`.
 
 Beta-bypass and status actions call `public.update_beta_shop_subscription`. Premium trial actions call `public.set_shop_premium_trial`, `public.extend_shop_premium_trial`, and `public.end_shop_premium_trial`. They do not expose direct table writes from the browser.

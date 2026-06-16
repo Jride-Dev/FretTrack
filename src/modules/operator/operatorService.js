@@ -181,15 +181,22 @@ function normalizeDashboard(dashboard = {}) {
 }
 
 function normalizeShopRow(shop = {}) {
+  const planId = shop.plan_id || shop.planId || 'trial';
+  const rawEffectiveStatus = shop.effective_status || shop.effectiveStatus || shop.subscription_status || shop.subscriptionStatus || 'trialing';
+  const rawEffectiveTier = shop.effective_tier || shop.effectiveTier || planId || 'trial';
+  const effectiveTier = rawEffectiveStatus === 'expired' && rawEffectiveTier === 'free'
+    ? planId
+    : rawEffectiveTier;
+
   return {
     shopId: shop.shop_id || shop.shopId || '',
     shopName: shop.shop_name || shop.shopName || '',
     shopEmail: shop.shop_email || shop.shopEmail || '',
-    planId: shop.plan_id || shop.planId || 'trial',
+    planId,
     planName: shop.plan_name || shop.planName || '',
     subscriptionStatus: shop.subscription_status || shop.subscriptionStatus || 'trialing',
-    effectiveTier: shop.effective_tier || shop.effectiveTier || shop.plan_id || shop.planId || 'free',
-    effectiveStatus: shop.effective_status || shop.effectiveStatus || shop.subscription_status || shop.subscriptionStatus || 'trialing',
+    effectiveTier,
+    effectiveStatus: rawEffectiveStatus,
     trialEndsAt: shop.trial_ends_at || shop.trialEndsAt || '',
     daysRemaining: Number(shop.days_remaining ?? shop.daysRemaining ?? 0),
     graceEndsAt: shop.grace_ends_at || shop.graceEndsAt || '',

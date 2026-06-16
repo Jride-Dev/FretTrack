@@ -24,6 +24,7 @@ Review this file before every production deploy and after every manual database/
 - `20260611120000`
 - `20260611133000`
 - `20260612233321`
+- `20260616034902`
 
 These should be treated as deployment-history alignment items before future production migration work. Some may have already been manually applied or deployment-tested; verify remote migration history before future production migration work.
 
@@ -40,9 +41,9 @@ Do not use a blanket production migration push while unrelated local migrations 
 - Photo Editor Phase 1 frontend
 - Photo Editor Phase 1 documentation and screenshot: `docs/screenshots/photo_editor.jpg`
 - Permission hardening with centralized role checks and granular photo controls
-- Premium Trial Management Phase 1 with operator-managed 7/14/30-day Pro trials
-- Expired premium trials fall back to writable Free-tier core workflow while premium features lock
-- Free vs Pro Tier Split Phase 1 was the previous entitlement boundary pass.
+- Premium Trial Management Phase 1 with operator-managed 7/14/30-day trials
+- Paid Access Lifecycle Phase 1 is implemented locally: Trial/Shop/Pro public model, expired trials block writes, and legacy internal unpaid values remain compatibility-only.
+- Free vs Pro Tier Split Phase 1 was the earlier entitlement boundary pass before the Trial/Shop/Pro wording change.
 - Shop Tier Foundation Phase 1 is implemented locally but not deployed from this development pass.
 - Customer email/SMS Edge Function effective team-member access hardening is implemented locally but not deployed from this review pass
 - `notify-beta-access-request` Supabase Edge Function
@@ -86,7 +87,7 @@ curl.exe -I https://frettrack-app.com/
 - Shop Tier Foundation Phase 1 adds `20260612233321_shop_tier_foundation_phase_1.sql`. It adds the `shop` plan identifier, allows `shop` in subscription-tier resolution, enables Photo Editor and Team Members for Shop, keeps Advanced Reporting on Pro, and updates team-member RPC wording from Pro to Shop. This migration still needs an intentional production apply after review.
 - The Free vs Pro review also updates `send-email` and `send-sms`; deploy those Edge Functions after the database migration so service-role message sends respect effective team-member access.
 - Beta access approval and premium trial state are separate. Do not use premium trial expiry as a reason to remove beta approval.
-- Premium trial expiry should return the shop to Free-tier entitlements while keeping core shop operations writable.
+- Trial expiry should preserve shop data and memberships, block writes, and require restored access before core operations continue.
 - Free owner access must remain active after downgrade. Existing non-owner staff memberships should be preserved but inactive while `team_members` is false, then restored when Shop entitlement returns.
 - Stripe, billing webhooks, and payment collection are still not connected.
 - If a migration is manually applied with `supabase db query --linked --file`, confirm the schema change and then align remote migration history intentionally.

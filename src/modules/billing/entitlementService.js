@@ -20,7 +20,6 @@ export const SUBSCRIPTION_TIERS = {
 };
 
 export const CURRENT_SUBSCRIPTION_TIER_ORDER = [
-  SUBSCRIPTION_TIERS.FREE,
   SUBSCRIPTION_TIERS.SHOP,
   SUBSCRIPTION_TIERS.PRO
 ];
@@ -268,7 +267,6 @@ export function isWritableBillingStatus(status) {
     BILLING_STATUSES.TRIALING,
     BILLING_STATUSES.ACTIVE,
     BILLING_STATUSES.GRACE,
-    BILLING_STATUSES.EXPIRED,
     BILLING_STATUSES.BETA_BYPASS
   ].includes(status);
 }
@@ -304,13 +302,13 @@ export function normalizeSubscriptionTier(tier) {
 
 export function getSubscriptionTierLabel(tier) {
   const labels = {
-    [SUBSCRIPTION_TIERS.FREE]: 'Free',
-    [SUBSCRIPTION_TIERS.SOLO]: 'Free',
+    [SUBSCRIPTION_TIERS.FREE]: 'Legacy trial',
+    [SUBSCRIPTION_TIERS.SOLO]: 'Legacy trial',
     [SUBSCRIPTION_TIERS.SHOP]: 'Shop',
     [SUBSCRIPTION_TIERS.PRO]: 'Pro',
     [SUBSCRIPTION_TIERS.ENTERPRISE]: 'Enterprise'
   };
-  return labels[normalizeSubscriptionTier(tier)] || 'Free';
+  return labels[normalizeSubscriptionTier(tier)] || 'Trial';
 }
 
 export function getShopFeatureValue(snapshot, featureKey) {
