@@ -1,12 +1,14 @@
 # Changelog
 
-Current version: `0.2.6-beta.14`
+Current version: `0.2.7-beta.0`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
 ## Documentation Catch-Up - Current Beta Candidate
 
-- Added Paid Access Lifecycle Phase 1: public product wording is now Trial, Shop, and Pro, while internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration.
+- Bumped package metadata and the in-app version display to `0.2.7-beta.0`.
+- Added SECURITY DEFINER RPC hardening for flagged Supabase RPCs with explicit grants, locked search paths, stronger inventory/accounting input validation, and documented callable-role intent.
+- Added Paid Access Lifecycle Phase 1 so public product language is Trial, Shop, and Pro, expired trials preserve data while blocking writes, and legacy internal unpaid values remain compatibility-only during migration.
 - Added Shop Tier Foundation Phase 1: Shop unlocks Photo Editor and Team Members, and Pro remains the advanced reporting/automation tier.
 - Added backend enforcement for Shop team-member access so preserved staff memberships cannot access shop data or mutate member records while trial access is expired.
 - Hardened customer email/SMS Edge Function access checks so preserved staff rows cannot bypass effective team-member access or expired-trial write blocking.

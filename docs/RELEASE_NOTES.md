@@ -1,5 +1,9 @@
 # Release Notes
 
+## GitHub Release Summary: v0.2.7-beta.0
+
+FretTrack `0.2.7-beta.0` moves the beta toward paid-access readiness: Trial, Shop, and Pro are now the public product model, expired trials preserve data while blocking writes, and flagged Supabase SECURITY DEFINER RPCs have explicit search paths, grants, and stronger write-path validation.
+
 ## GitHub Release Summary: v0.2.6-beta.14 Updates Since beta6
 
 FretTrack has moved from the beta6 operations/storage baseline to a broader real-shop beta focused on access control, customer workflow, email documents, mobile readiness, editable billing details, inventory, scheduling, reporting foundations, premium trial management, safer editing, photo documentation, and first-pass offline continuity.

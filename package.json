@@ -1,6 +1,6 @@
 {
   "name": "frettrack",
-  "version": "0.2.6-beta.14",
+  "version": "0.2.7-beta.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "check:permissions": "node scripts/check-permission-hardening.mjs",
+    "check:permissions": "node scripts/check-permission-hardening.mjs && node scripts/check-rpc-security.mjs",
     "check:tiers": "node scripts/check-tier-split.mjs",
     "check:landing-worker": "node scripts/check-landing-worker.mjs",
     "check:migrations": "node scripts/check-supabase-migrations.mjs",

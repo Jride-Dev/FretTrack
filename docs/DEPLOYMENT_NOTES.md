@@ -43,6 +43,7 @@ Do not use a blanket production migration push while unrelated local migrations 
 - Permission hardening with centralized role checks and granular photo controls
 - Premium Trial Management Phase 1 with operator-managed 7/14/30-day trials
 - Paid Access Lifecycle Phase 1 is implemented locally: Trial/Shop/Pro public model, expired trials block writes, and legacy internal unpaid values remain compatibility-only.
+- Supabase SECURITY DEFINER RPC hardening is implemented locally in `20260616063922`: flagged RPCs have explicit grants/search paths, inventory and transaction write paths have stronger validation, and public beta intake remains intentionally `anon` callable until the landing Worker moves to a server-side credential.
 - Free vs Pro Tier Split Phase 1 was the earlier entitlement boundary pass before the Trial/Shop/Pro wording change.
 - Shop Tier Foundation Phase 1 is implemented locally but not deployed from this development pass.
 - Customer email/SMS Edge Function effective team-member access hardening is implemented locally but not deployed from this review pass
