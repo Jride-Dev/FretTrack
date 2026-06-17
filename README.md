@@ -51,6 +51,7 @@ Product milestone ladder:
 - Work orders and invoices can now be emailed from inside the app.
 - Existing work orders now support editable job-level parts and services.
 - The app now has mobile/tablet readiness improvements and PWA install support.
+- Legacy WebKit compatibility work lets FretTrack load and run on older iPad browser versions, including older iOS Chrome/Brave WebKit shells, with graceful fallbacks instead of black screens.
 - New work orders can be saved as local offline drafts and synced manually after reconnecting.
 - Inventory parts foundation adds stock counts, movements, low-stock visibility, and job attachment.
 - Scheduling Phase 1 adds internal shop scheduling for due dates, intake appointments, pickups, follow-ups, and shop blocks.
@@ -65,6 +66,8 @@ Product milestone ladder:
 - Advanced Reporting Phase 1 adds premium-gated dashboard metrics for revenue, jobs, customers, and inventory.
 - Photo Editor Phase 1 adds repair-shop photo markup, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
 - Print output has been improved for beta use, with a dedicated print renderer rebuild still planned for the Customer Damage Report and damage-map output.
+
+Legacy device note: older iPadOS/iOS browser versions can be useful for shop-floor testing and light bench workflows, but unsupported operating systems and browsers may no longer receive vendor security patches. Keep devices updated when possible, avoid using unpatched legacy devices for owner/operator administration, and treat them as convenience clients rather than primary security-sensitive workstations.
 
 ## Not Included Yet
 
