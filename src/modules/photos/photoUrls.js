@@ -1,27 +1,34 @@
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 
-export async function createJobImageObjectUrl(storagePath) {
+const SIGNED_IMAGE_URL_TTL_SECONDS = 60 * 60 * 24;
+
+export async function createJobImageSignedUrl(storagePath) {
   if (!storagePath || !hasSupabaseConfig || !supabase) {
     return '';
   }
 
   const { data, error } = await supabase.storage
     .from('job-images')
-    .download(storagePath);
+    .createSignedUrl(storagePath, SIGNED_IMAGE_URL_TTL_SECONDS);
 
   if (error) {
-    console.error('Job image download failed.', error);
+    console.error('Job image signed URL failed.', error);
     return '';
   }
 
-  return data ? URL.createObjectURL(data) : '';
+  return data?.signedUrl || '';
 }
 
 export async function resolveJobImageUrl(image) {
   const storagePath = image?.storagePath || image?.storage_path || '';
-  const objectUrl = await createJobImageObjectUrl(storagePath);
   const fallbackUrl = image?.url || image?.public_url || '';
-  return objectUrl || (String(fallbackUrl).startsWith('blob:') ? '' : fallbackUrl);
+  const safeFallbackUrl = String(fallbackUrl).startsWith('blob:') && storagePath ? '' : fallbackUrl;
+
+  if (safeFallbackUrl && !String(safeFallbackUrl).startsWith('blob:')) {
+    return safeFallbackUrl;
+  }
+
+  return await createJobImageSignedUrl(storagePath) || safeFallbackUrl || '';
 }
 
 export async function resolveJobImageUrls(images = []) {

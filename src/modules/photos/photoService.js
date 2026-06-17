@@ -3,7 +3,7 @@ import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { ensureRemoteJob, getLocalJobs, saveLocalJobs, updateJob } from '../jobs/jobService';
 import { logJobEventSafe } from '../jobs/jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
-import { createJobImageObjectUrl } from './photoUrls';
+import { createJobImageSignedUrl } from './photoUrls';
 
 export async function uploadJobImages(job, files, options = {}) {
   const fileList = Array.from(files || []);
@@ -99,12 +99,12 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
     return null;
   }
 
-  const objectUrl = await createJobImageObjectUrl(filePath);
+  const imageUrl = await createJobImageSignedUrl(filePath);
 
   const image = {
     id: crypto.randomUUID(),
     jobId,
-    url: objectUrl,
+    url: imageUrl,
     fileName: storedFileName,
     name: storedFileName,
     storagePath: filePath,
@@ -275,11 +275,11 @@ export async function saveEditedJobImageCopy(job, sourceImage, editedFile, editM
     throw new Error(`Edited image upload failed: ${uploadError.message}`);
   }
 
-  const objectUrl = await createJobImageObjectUrl(filePath);
+  const imageUrl = await createJobImageSignedUrl(filePath);
   const image = {
     id: crypto.randomUUID(),
     jobId,
-    url: objectUrl,
+    url: imageUrl,
     fileName,
     name: fileName,
     storagePath: filePath,
@@ -381,10 +381,10 @@ export async function overwriteJobImage(job, sourceImage, editedFile, editMetada
     throw new Error(`Edited image upload failed: ${uploadError.message}`);
   }
 
-  const objectUrl = await createJobImageObjectUrl(filePath);
+  const imageUrl = await createJobImageSignedUrl(filePath);
   const updatedImage = {
     ...sourceImage,
-    url: objectUrl,
+    url: imageUrl,
     storagePath: filePath,
     fileName,
     name: fileName,
