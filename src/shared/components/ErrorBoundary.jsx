@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { getErrorMessage, logLegacyDebug } from '../legacy/legacyDebug';
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -12,6 +13,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error('FretTrack render failed.', error, info);
+    logLegacyDebug('caught render error', getErrorMessage(error));
   }
 
   render() {

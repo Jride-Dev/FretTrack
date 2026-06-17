@@ -6,6 +6,9 @@ import {
   signUpWithPassword,
   updateCurrentUserPassword
 } from './authService';
+import { getErrorMessage, logLegacyDebug } from '../../shared/legacy/legacyDebug';
+
+const AUTH_REQUEST_TIMEOUT_MS = 20000;
 
 export default function AuthGate({ initialMode = 'sign-in', onAuthCompleted, onPasswordUpdated, onNotice }) {
   const [mode, setMode] = useState(initialMode);
@@ -14,11 +17,13 @@ export default function AuthGate({ initialMode = 'sign-in', onAuthCompleted, onP
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
+  const [inlineError, setInlineError] = useState('');
 
   function switchMode(nextMode) {
     setMode(nextMode);
     setPassword('');
     setConfirmPassword('');
+    setInlineError('');
   }
 
   async function handleResendConfirmation() {
@@ -43,12 +48,14 @@ export default function AuthGate({ initialMode = 'sign-in', onAuthCompleted, onP
 
   async function handleSubmit(event) {
     event.preventDefault();
+    logLegacyDebug('login submit clicked', mode);
     setIsSubmitting(true);
+    setInlineError('');
     onNotice?.(null);
 
     try {
       if (mode === 'reset-request') {
-        await sendPasswordResetEmail(email);
+        await withAuthTimeout(sendPasswordResetEmail(email), 'Password reset request timed out.');
         onNotice?.({
           type: 'success',
           message: 'Password reset email sent. Open the link, then set a new password.'
@@ -56,14 +63,14 @@ export default function AuthGate({ initialMode = 'sign-in', onAuthCompleted, onP
         switchMode('sign-in');
       } else if (mode === 'update-password') {
         validateNewPassword(password, confirmPassword);
-        await updateCurrentUserPassword(password);
+        await withAuthTimeout(updateCurrentUserPassword(password), 'Password update request timed out.');
         setPassword('');
         setConfirmPassword('');
         onNotice?.({ type: 'success', message: 'Password updated. You are signed in.' });
         onPasswordUpdated?.();
       } else if (mode === 'sign-up') {
         validateNewPassword(password, confirmPassword);
-        const result = await signUpWithPassword({ email, password });
+        const result = await withAuthTimeout(signUpWithPassword({ email, password }), 'Sign-up request timed out.');
         onNotice?.({
           type: 'success',
           message: signupNoticeForResult(result)
@@ -74,14 +81,19 @@ export default function AuthGate({ initialMode = 'sign-in', onAuthCompleted, onP
           switchMode('sign-in');
         }
       } else {
-        const session = await signInWithPassword({ email, password });
+        logLegacyDebug('login request started');
+        const session = await withAuthTimeout(signInWithPassword({ email, password }), 'Login request timed out.');
+        logLegacyDebug('login request success', session ? 'Session returned.' : 'No session returned.');
         onNotice?.({ type: 'success', message: 'Signed in.' });
         onAuthCompleted?.(session);
       }
     } catch (error) {
+      const message = getErrorMessage(error, 'Authentication failed.');
+      logLegacyDebug('login request failure', message);
+      setInlineError(message);
       onNotice?.({
         type: 'error',
-        message: getErrorMessage(error, 'Authentication failed.')
+        message
       });
     } finally {
       setIsSubmitting(false);
@@ -141,6 +153,8 @@ export default function AuthGate({ initialMode = 'sign-in', onAuthCompleted, onP
           </button>
         </form>
 
+        {inlineError && <p className="auth-inline-error">{inlineError}</p>}
+
         {mode === 'sign-in' && (
           <>
             <button
@@ -183,6 +197,22 @@ export default function AuthGate({ initialMode = 'sign-in', onAuthCompleted, onP
       </section>
     </main>
   );
+}
+
+function withAuthTimeout(promise, timeoutMessage) {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, AUTH_REQUEST_TIMEOUT_MS);
+
+    promise
+      .then(resolve)
+      .catch(reject)
+      .then(
+        () => window.clearTimeout(timeoutId),
+        () => window.clearTimeout(timeoutId)
+      );
+  });
 }
 
 function copyForMode(mode) {
@@ -233,16 +263,4 @@ function signupNoticeForResult(result) {
   }
 
   return 'Check your email to confirm your account, then sign in. If it does not arrive, use Resend confirmation email.';
-}
-
-function getErrorMessage(error, fallback) {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String(error.message || fallback);
-  }
-
-  return fallback;
 }

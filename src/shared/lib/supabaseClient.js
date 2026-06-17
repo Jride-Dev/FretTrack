@@ -1,12 +1,32 @@
 import { createClient } from '@supabase/supabase-js';
+import { getErrorMessage, logLegacyDebug } from '../legacy/legacyDebug';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+let createdSupabaseClient = null;
+let supabaseClientError = null;
 
 export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseKey);
-export const supabase = hasSupabaseConfig
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
+
+if (hasSupabaseConfig) {
+  try {
+    createdSupabaseClient = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        flowType: 'implicit'
+      }
+    });
+    logLegacyDebug('Supabase client created');
+  } catch (error) {
+    supabaseClientError = error;
+    console.error('Supabase client creation failed.', error);
+    logLegacyDebug('Supabase client creation failed', getErrorMessage(error));
+  }
+} else {
+  logLegacyDebug('Supabase client skipped', 'Missing frontend Supabase config.');
+}
+
+export const supabase = createdSupabaseClient;
+export const supabaseInitError = supabaseClientError;
 
 export async function checkSupabaseJobsConnection() {
   if (!hasSupabaseConfig || !supabase) {

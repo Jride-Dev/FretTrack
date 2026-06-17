@@ -1,3 +1,5 @@
+import { logLegacyDebug, logLegacyFeatureSnapshot } from './legacyDebug';
+
 function defineValue(target, propertyName, value) {
   try {
     Object.defineProperty(target, propertyName, {
@@ -20,6 +22,18 @@ if (!Array.prototype.at) {
     const relativeIndex = Math.trunc(Number(index) || 0);
     const resolvedIndex = relativeIndex >= 0 ? relativeIndex : length + relativeIndex;
     return resolvedIndex < 0 || resolvedIndex >= length ? undefined : this[resolvedIndex];
+  });
+}
+
+if (window.Promise && !window.Promise.prototype.finally) {
+  defineValue(window.Promise.prototype, 'finally', function promiseFinally(callback) {
+    const PromiseConstructor = this.constructor || window.Promise;
+    return this.then(
+      (value) => PromiseConstructor.resolve(callback()).then(() => value),
+      (reason) => PromiseConstructor.resolve(callback()).then(() => {
+        throw reason;
+      })
+    );
   });
 }
 
@@ -67,4 +81,11 @@ if (!window.IntersectionObserver) {
       return [];
     }
   };
+}
+
+try {
+  logLegacyDebug('legacy support loaded');
+  logLegacyFeatureSnapshot();
+} catch {
+  // Debug logging must never block app startup on older browsers.
 }
