@@ -1,16 +1,25 @@
-import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
+import { hasSupabaseConfig, supabase, supabaseInitError } from '../../shared/lib/supabaseClient';
+import { getErrorMessage, logLegacyDebug } from '../../shared/legacy/legacyDebug';
 
 export async function getCurrentSession() {
   if (!hasSupabaseConfig || !supabase) {
+    if (supabaseInitError) {
+      logLegacyDebug('session check skipped', getErrorMessage(supabaseInitError));
+    }
     return null;
   }
 
-  const { data, error } = await supabase.auth.getSession();
-  if (error) {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      throw error;
+    }
+
+    return data.session || null;
+  } catch (error) {
+    logLegacyDebug('session check failure', getErrorMessage(error));
     throw error;
   }
-
-  return data.session || null;
 }
 
 export async function getCurrentUser() {
@@ -31,23 +40,37 @@ export function onAuthSessionChange(callback) {
     return () => {};
   }
 
-  const { data } = supabase.auth.onAuthStateChange((event, session) => {
-    callback(session || null, event);
-  });
+  try {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      callback(session || null, event);
+    });
 
-  return () => data.subscription.unsubscribe();
+    return () => data.subscription.unsubscribe();
+  } catch (error) {
+    logLegacyDebug('auth state subscription failure', getErrorMessage(error));
+    throw error;
+  }
 }
 
 export async function signInWithPassword({ email, password }) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
+  assertSupabaseClient();
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      throw error;
+    }
+
+    return data.session || null;
+  } catch (error) {
+    logLegacyDebug('login request failure', getErrorMessage(error));
     throw error;
   }
-
-  return data.session || null;
 }
 
 export async function signUpWithPassword({ email, password }) {
+  assertSupabaseClient();
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -68,6 +91,8 @@ export async function signUpWithPassword({ email, password }) {
 }
 
 export async function resendSignupConfirmation(email) {
+  assertSupabaseClient();
+
   const { error } = await supabase.auth.resend({
     type: 'signup',
     email,
@@ -81,6 +106,8 @@ export async function resendSignupConfirmation(email) {
 }
 
 export async function sendPasswordResetEmail(email) {
+  assertSupabaseClient();
+
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: window.location.origin
   });
@@ -90,6 +117,8 @@ export async function sendPasswordResetEmail(email) {
 }
 
 export async function updateCurrentUserPassword(password) {
+  assertSupabaseClient();
+
   const { data, error } = await supabase.auth.updateUser({ password });
   if (error) {
     throw error;
@@ -115,5 +144,13 @@ export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) {
     throw error;
+  }
+}
+
+function assertSupabaseClient() {
+  if (!supabase) {
+    throw new Error(supabaseInitError
+      ? `Supabase client failed to start: ${getErrorMessage(supabaseInitError)}`
+      : 'Supabase client is not available in this browser.');
   }
 }
