@@ -8,6 +8,8 @@ import { logJobEventSafe } from './jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
 import { validateJobForSave } from './jobValidation';
 import { resolveJobImageUrl, resolveJobImageUrls } from '../photos/photoUrls';
+import { normalizeJobPriority } from './jobPriority';
+import { normalizeJobSource } from './jobSources';
 
 const STORAGE_KEY = 'guitar_checkin_jobs';
 const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
@@ -74,7 +76,9 @@ const defaultTechDetails = {
     liabilityText: '',
     views: {
       front: { marks: [] },
-      back: { marks: [] }
+      back: { marks: [] },
+      headstock: { marks: [] },
+      serial_number: { marks: [] }
     }
   },
   tax: {
@@ -683,12 +687,18 @@ function normalizeJob(job, jobs = []) {
     emailOptIn: Boolean(job.emailOptIn ?? job.email_opt_in),
     smsOptIn: Boolean(job.smsOptIn ?? job.sms_opt_in),
     preferredContactMethod: job.preferredContactMethod || job.preferred_contact_method || 'email',
+    addressLine1: job.addressLine1 || job.address_line1 || job.address || '',
+    city: job.city || '',
+    region: job.region || job.state || '',
+    postalCode: job.postalCode || job.postal_code || job.zipCode || job.zip_code || '',
     guitarBrand: job.guitarBrand || '',
     model: job.model || '',
     serial: job.serial || '',
     color: job.color || '',
     reasonForVisit: job.reasonForVisit || '',
     dateReceived,
+    promiseDate: job.promiseDate || job.promise_date || job.promisedDate || '',
+    priority: normalizeJobPriority(job.priority || techDetails.priority),
     jobDate,
     jobDayCode,
     dailySequence,
@@ -759,18 +769,27 @@ function normalizeDamageMap(damageMap = {}) {
   const oldMarks = Array.isArray(damageMap.marks) ? damageMap.marks : [];
   const frontView = damageMap.views?.front || {};
   const backView = damageMap.views?.back || {};
+  const headstockView = damageMap.views?.headstock || {};
+  const serialNumberView = damageMap.views?.serial_number || {};
   const frontMarks = Array.isArray(frontView.marks) ? frontView.marks : oldMarks;
   const backMarks = Array.isArray(backView.marks) ? backView.marks : [];
+  const headstockMarks = Array.isArray(headstockView.marks) ? headstockView.marks : [];
+  const serialNumberMarks = Array.isArray(serialNumberView.marks) ? serialNumberView.marks : [];
+  const selectedView = ['front', 'back', 'headstock', 'serial_number'].includes(damageMap.selectedView)
+    ? damageMap.selectedView
+    : 'front';
 
   return {
     selectedArea: damageMap.selectedArea || defaultTechDetails.damageMap.selectedArea,
     selectedSeverity: normalizeSeverity(damageMap.selectedSeverity),
-    selectedView: damageMap.selectedView === 'back' ? 'back' : 'front',
+    selectedView,
     liabilityAcknowledged: Boolean(damageMap.liabilityAcknowledged),
     liabilityText: damageMap.liabilityText || '',
     views: {
       front: normalizeDamageView(frontView, frontMarks),
-      back: normalizeDamageView(backView, backMarks)
+      back: normalizeDamageView(backView, backMarks),
+      headstock: normalizeDamageView(headstockView, headstockMarks),
+      serial_number: normalizeDamageView(serialNumberView, serialNumberMarks)
     }
   };
 }
@@ -842,10 +861,7 @@ function normalizePayment(payment) {
 }
 
 function normalizeIntakeType(intakeType) {
-  if (intakeType === 'Sub-Contract' || intakeType === 'Telephone Appt.' || intakeType === 'Referral' || intakeType === 'Walk-In') {
-    return intakeType;
-  }
-  return 'Walk-In';
+  return normalizeJobSource(intakeType);
 }
 
 function normalizePart(part) {
@@ -914,6 +930,8 @@ function toDbJob(job) {
     ...toLegacyDbJob(job),
     customer_id: job.customerId || null,
     job_date: job.jobDate || job.dateReceived || null,
+    promise_date: job.promiseDate || null,
+    priority: normalizeJobPriority(job.priority),
     job_day_code: job.jobDayCode || getJobDayCode(job.jobDate || job.dateReceived),
     daily_sequence: job.dailySequence || null,
     shop_id: shopId,
@@ -988,6 +1006,8 @@ function fromDbJob(job) {
     color: job.color || '',
     reasonForVisit: job.reason_for_visit || '',
     dateReceived: job.date_received || '',
+    promiseDate: job.promise_date || '',
+    priority: normalizeJobPriority(job.priority || job.tech_details?.priority),
     jobDate: job.job_date || job.date_received || '',
     jobDayCode: job.job_day_code || '',
     dailySequence: job.daily_sequence || null,
@@ -1284,7 +1304,7 @@ function shouldRetryWithLegacyJobPayload(error) {
 
   const message = String(error.message || error.details || '');
   return (
-    ['customer_id', 'job_date', 'job_day_code', 'daily_sequence', 'shop_id'].some((columnName) => isMissingColumnError(error, columnName))
+    ['customer_id', 'job_date', 'promise_date', 'priority', 'job_day_code', 'daily_sequence', 'shop_id'].some((columnName) => isMissingColumnError(error, columnName))
     || message.includes('violates check constraint')
     || message.includes('schema cache')
   );

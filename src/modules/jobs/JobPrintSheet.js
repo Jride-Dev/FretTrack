@@ -3,6 +3,7 @@ import { formatShopDate } from '../../shared/utils/dateFormat';
 import { formatLength } from '../../shared/utils/measurements';
 import { getPrintFooterText, getShopDateOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
 import { money } from '../../shared/utils/money';
+import { getJobSourceLabel } from './jobSources';
 
 export default function JobPrintSheet({
   draftJob,
@@ -57,7 +58,7 @@ export default function JobPrintSheet({
           <span>Job Number</span><strong>{draftJob.jobNumber}</strong>
           <span>Date Received</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions)}</strong>
           <span>Status</span><strong>{draftJob.status}</strong>
-          <span>Job Source</span><strong>{techDetails.intakeType || 'Walk-In'}</strong>
+          <span>Job Source</span><strong>{getJobSourceLabel(techDetails.intakeType)}</strong>
           <span>Sub-Contract</span><strong>{techDetails.subcontractorName || '-'}</strong>
           <span>Reason For Visit</span><strong>{draftJob.reasonForVisit}</strong>
         </div>

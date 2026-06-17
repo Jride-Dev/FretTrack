@@ -36,7 +36,7 @@ export default function PartsList({
             value={inventorySearch}
             onChange={(event) => setInventorySearch(event.target.value)}
           />
-          <button type="submit" disabled={isInventoryLoading}>{isInventoryLoading ? 'Searching...' : 'Search Inventory'}</button>
+          <button type="submit" disabled={isInventoryLoading}>{isInventoryLoading ? 'Searching...' : 'Search'}</button>
           {inventoryParts.length > 0 && (
             <select
               defaultValue=""

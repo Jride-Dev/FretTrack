@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { formatShopDate } from '../../shared/utils/dateFormat';
 import { getShopDateOptions } from '../shops/shopConfig';
 import { sortNewestFirst } from './jobSelectors';
+import { getJobPriorityOption, getJobPriorityShortLabel } from './jobPriority';
 
 function searchableText(job) {
   return [
@@ -14,7 +15,8 @@ function searchableText(job) {
     job.guitarBrand,
     job.model,
     job.serial,
-    job.status
+    job.status,
+    job.priority
   ]
     .join(' ')
     .toLowerCase();
@@ -62,7 +64,12 @@ export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob }) 
               onClick={() => handleSelect(job.id)}
               className={job.id === selectedJobId ? 'job-row selected' : 'job-row'}
             >
-              <strong>#{job.jobNumber}</strong>
+              <span className="job-number-priority">
+                <strong>#{job.jobNumber}</strong>
+                <span className={`priority-badge ${getJobPriorityOption(job.priority).className}`}>
+                  {getJobPriorityShortLabel(job.priority)}
+                </span>
+              </span>
               <span>{job.customerName}</span>
               <span>
                 {job.guitarBrand} {job.model}

@@ -13,6 +13,10 @@ import {
 import { formatShopDate, toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences } from '../../shared/utils/measurements';
 import { getShopDateOptions } from '../shops/shopConfig';
+import { smsEnabled } from '../../data/messagesRepository';
+import { stateOptionsWithCurrent } from '../../data/usStates';
+import { JOB_PRIORITY_OPTIONS, normalizeJobPriority } from './jobPriority';
+import { JOB_SOURCE_OPTIONS } from './jobSources';
 
 function todayValue() {
   return toIsoDateInputValue();
@@ -27,6 +31,13 @@ function getInitialFormState(jobs = []) {
     customerName: '',
     intakeType: 'Walk-In',
     subcontractorName: '',
+    addressLine1: '',
+    city: '',
+    region: '',
+    postalCode: '',
+    emailOptIn: false,
+    smsOptIn: false,
+    preferredContactMethod: 'email',
     instrumentType: 'Electric',
     stringCount: getDefaultStringCount('Electric'),
     customStringCount: getDefaultStringCount('Electric'),
@@ -39,6 +50,8 @@ function getInitialFormState(jobs = []) {
     color: '',
     reasonForVisit: '',
     dateReceived,
+    promiseDate: '',
+    priority: 'regular',
     jobNumber: generateJobNumber(dateReceived, jobs)
   };
 }
@@ -126,6 +139,14 @@ export default function JobForm({
     });
   }
 
+  function handleCheckboxChange(event) {
+    const { name, checked } = event.target;
+    setForm((current) => ({
+      ...current,
+      [name]: checked
+    }));
+  }
+
   function setInstrumentType(instrumentType) {
     setForm((current) => ({
       ...current,
@@ -145,7 +166,11 @@ export default function JobForm({
         customerLastName: customer.customerLastName || customer.lastName || '',
         customerName: customer.customerName || customer.displayName,
         phone: customer.phone,
-        email: customer.email
+        email: customer.email,
+        addressLine1: customer.addressLine1 || '',
+        city: customer.city || '',
+        region: customer.region || '',
+        postalCode: customer.postalCode || ''
       };
 
       if (customer.customerType === 'subcontractor') {
@@ -169,7 +194,11 @@ export default function JobForm({
       customerLastName: customer.customerLastName || customer.lastName || '',
       customerName,
       phone: customer.phone || '',
-      email: customer.email || ''
+      email: customer.email || '',
+      addressLine1: customer.addressLine1 || '',
+      city: customer.city || '',
+      region: customer.region || '',
+      postalCode: customer.postalCode || ''
     };
 
     if (customer.customerType === 'subcontractor') {
@@ -208,6 +237,8 @@ export default function JobForm({
       customerId: form.customerId || selectedCustomer?.id || '',
       customerName,
       dateReceived,
+      promiseDate: form.promiseDate || '',
+      priority: normalizeJobPriority(form.priority),
       jobNumber: generateJobNumber(dateReceived, jobs),
       status: 'Checked In',
       discountType: 'none',
@@ -217,6 +248,7 @@ export default function JobForm({
         stringCount: form.stringCount,
         intakeType: form.intakeType,
         subcontractorName: form.subcontractorName,
+        priority: normalizeJobPriority(form.priority),
         stringGauges: resizeStringGauges([], form.stringCount),
         newStringBrand: '',
         newStringGauge: '',
@@ -240,7 +272,9 @@ export default function JobForm({
           liabilityText: '',
           views: {
             front: { marks: [] },
-            back: { marks: [] }
+            back: { marks: [] },
+            headstock: { marks: [] },
+            serial_number: { marks: [] }
           }
         },
         tax: {
@@ -375,12 +409,61 @@ export default function JobForm({
           <input name="customerLastName" value={form.customerLastName} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
+          Address
+          <input name="addressLine1" value={form.addressLine1} onChange={handleChange} disabled={!canWrite} />
+        </label>
+        <label>
+          City
+          <input name="city" value={form.city} onChange={handleChange} disabled={!canWrite} />
+        </label>
+        <label>
+          State
+          <select name="region" value={form.region} onChange={handleChange} disabled={!canWrite}>
+            <option value="">Select state</option>
+            {stateOptionsWithCurrent(form.region).map((state) => (
+              <option key={state} value={state}>{state}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Zip Code
+          <input name="postalCode" value={form.postalCode} onChange={handleChange} disabled={!canWrite} inputMode="numeric" />
+        </label>
+        <label>
+          Phone
+          <input name="phone" value={form.phone} onChange={handleChange} disabled={!canWrite} />
+        </label>
+        <label className="checkline">
+          <input
+            type="checkbox"
+            name="smsOptIn"
+            checked={Boolean(form.smsOptIn)}
+            disabled={!canWrite || !smsEnabled}
+            title={!smsEnabled ? 'SMS is disabled for this trial build. Email is active.' : undefined}
+            onChange={handleCheckboxChange}
+          />
+          SMS opt-in
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" value={form.email} onChange={handleChange} disabled={!canWrite} />
+        </label>
+        <label className="checkline">
+          <input
+            type="checkbox"
+            name="emailOptIn"
+            checked={Boolean(form.emailOptIn)}
+            disabled={!canWrite}
+            onChange={handleCheckboxChange}
+          />
+          Email opt-in
+        </label>
+        <label>
           Job Source
           <select name="intakeType" value={form.intakeType} onChange={handleChange} disabled={!canWrite}>
-            <option value="Walk-In">Walk-In</option>
-            <option value="Telephone Appt.">Telephone Appt.</option>
-            <option value="Referral">Referral</option>
-            <option value="Sub-Contract">Sub-Contract</option>
+            {JOB_SOURCE_OPTIONS.map((source) => (
+              <option key={source.value} value={source.value}>{source.label}</option>
+            ))}
           </select>
         </label>
         <label>
@@ -438,14 +521,6 @@ export default function JobForm({
           </label>
         )}
         <label>
-          Phone
-          <input name="phone" value={form.phone} onChange={handleChange} disabled={!canWrite} />
-        </label>
-        <label>
-          Email
-          <input type="email" name="email" value={form.email} onChange={handleChange} disabled={!canWrite} />
-        </label>
-        <label>
           Brand
           <input name="guitarBrand" list="new-job-brand-options" value={form.guitarBrand} onChange={handleChange} disabled={!canWrite} required />
         </label>
@@ -464,6 +539,18 @@ export default function JobForm({
         <label>
           Date Received
           <input type="date" name="dateReceived" value={form.dateReceived} onChange={handleChange} disabled={!canWrite} />
+        </label>
+        <label>
+          Promise Date
+          <input type="date" name="promiseDate" value={form.promiseDate} onChange={handleChange} disabled={!canWrite} />
+        </label>
+        <label>
+          Priority
+          <select name="priority" value={form.priority} onChange={handleChange} disabled={!canWrite}>
+            {JOB_PRIORITY_OPTIONS.map((priority) => (
+              <option key={priority.value} value={priority.value}>{priority.label}</option>
+            ))}
+          </select>
         </label>
         <label>
           Job Number

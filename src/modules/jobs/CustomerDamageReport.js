@@ -44,6 +44,8 @@ export default function CustomerDamageReport({
       </section>
       {reportDamageView('front')}
       {reportDamageView('back')}
+      {reportDamageView('headstock')}
+      {reportDamageView('serial_number')}
       <section className="print-section">
       <h3>Neck Measurements</h3>
       <table>
