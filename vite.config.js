@@ -1,5 +1,6 @@
 import { defineConfig, transformWithOxc } from 'vite';
 import react from '@vitejs/plugin-react';
+import legacy from '@vitejs/plugin-legacy';
 
 export default defineConfig({
   server: {
@@ -38,6 +39,12 @@ export default defineConfig({
     },
     react({
       include: /\.(js|jsx)$/
+    }),
+    legacy({
+      targets: ['defaults', 'iOS >= 12', 'Safari >= 12'],
+      modernPolyfills: true,
+      polyfills: true,
+      renderLegacyChunks: true
     })
   ]
 });

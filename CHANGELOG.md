@@ -34,6 +34,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added the new photo editor screenshot at `docs/screenshots/photo_editor.jpg`.
 - Fixed operator UI access guards so non-operator shop users cannot restore, navigate to, or render the internal Operator Dashboard from persisted workspace mode.
 - Added beta feedback polish for work orders: Promise Date, stable priority tags, shortened inventory search copy, Mail In / Shipped In job source, Headstock and Serial Number damage-map views, reordered New Job customer fields with state dropdown and opt-ins, and string-gauge presets with corrected high/low string ordering.
+- Added an old iPad/WebKit compatibility pass with Vite legacy bundles, guarded browser API polyfills, a top-level error boundary, a public unsupported-browser fallback, and a lighter login bootstrap before authenticated modules load.
 
 ## v0.2.6-beta.14 - Offline New-Job Draft Continuity
 
