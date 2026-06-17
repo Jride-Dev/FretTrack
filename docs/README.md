@@ -31,6 +31,7 @@ Core shipped beta areas now include:
 - customer and subcontractor management
 - work-order and invoice email flow
 - mobile and PWA readiness
+- legacy WebKit compatibility for older iPad browser versions, with readable fallback messaging instead of black screens
 - offline new-job draft queue
 - editable job-level parts and services
 - inventory parts foundation

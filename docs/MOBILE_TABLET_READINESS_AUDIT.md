@@ -30,6 +30,12 @@ FretTrack is still a desktop-first browser app, but the current beta can be made
 - Kept operator tables scrollable while making operator controls wrap better.
 - Tuned the public landing page application modal for smaller screens.
 
+## Legacy WebKit Compatibility
+
+FretTrack has a legacy browser compatibility pass for older iPad browsers. The login screen has been smoke-tested on an older iPad/iOS WebKit browser stack and now renders instead of failing to a black screen. The app includes legacy Vite output, runtime polyfill coverage, readable load/error fallbacks, and temporary legacy debug logging for diagnosing older WebKit auth/bootstrap issues.
+
+These devices are useful for beta testing and light shop-floor workflows, but older iOS/iPadOS releases and third-party iOS browsers still share the system WebKit engine and may no longer receive current security updates. Shops should keep devices updated when possible, avoid using unpatched legacy devices for owner/operator administration, and treat older devices as convenience clients rather than primary security-sensitive workstations.
+
 ## Remaining Tablet and PWA Candidates
 
 - Tablet intake mode with a slightly different split layout for job entry and detail review.
