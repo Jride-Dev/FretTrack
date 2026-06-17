@@ -3450,11 +3450,39 @@ th.internal-only {
   align-items: center;
 }
 
+.inventory-tabs {
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inventory-tabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  color: var(--text-muted);
+  padding: 8px 10px;
+}
+
+.inventory-tabs button:hover,
+.inventory-tabs button:focus-visible,
+.inventory-tabs button.active {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}
+
 .inventory-layout {
   align-items: start;
   display: grid;
   gap: 16px;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+}
+
+.inventory-layout-wide {
+  grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
 }
 
 .inventory-table-wrap {
@@ -3532,6 +3560,60 @@ th.internal-only {
   display: grid;
   gap: 12px;
   padding-top: 12px;
+}
+
+.inventory-meta-grid {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  margin: 10px 0;
+  padding: 10px;
+}
+
+.inventory-meta-grid span,
+.receive-item-row small {
+  color: var(--text-muted);
+  display: grid;
+  gap: 3px;
+}
+
+.inventory-subsection {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.inventory-subsection h4 {
+  margin: 0;
+}
+
+.purchase-order-item-row,
+.receive-item-row {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+}
+
+.purchase-order-item-row {
+  grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.4fr) minmax(110px, 0.9fr) 80px 110px auto;
+}
+
+.receive-item-row {
+  grid-template-columns: minmax(180px, 1fr) 90px 110px;
+}
+
+.inventory-receive-list,
+.inventory-history-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.inventory-history-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .inventory-picker-form {
@@ -3660,6 +3742,16 @@ th.internal-only {
 
 @media (max-width: 980px) {
   .inventory-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-layout-wide,
+  .inventory-history-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .purchase-order-item-row,
+  .receive-item-row {
     grid-template-columns: 1fr;
   }
 

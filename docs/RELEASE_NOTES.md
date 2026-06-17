@@ -4,6 +4,28 @@
 
 FretTrack `0.2.7-beta.0` moves the beta toward paid-access readiness: Trial, Shop, and Pro are now the public product model, expired trials preserve data while blocking writes, and flagged Supabase SECURITY DEFINER RPCs have explicit search paths, grants, and stronger write-path validation.
 
+## 0.2.8 Inventory Purchasing Foundation - In Progress
+
+This foundation pass starts the 0.2.8 Inventory Operations Release without changing SMS, public document links, calendar sync, or offline mode.
+
+### Added
+
+- Shop-scoped vendors with contact details and active/inactive state.
+- Purchase orders with draft, ordered, partially received, received, and cancelled states.
+- Purchase order items with part links, descriptions, vendor SKU, ordered quantity, received quantity, and unit cost.
+- Inventory receipts and receipt items for manual receives and purchase-order receives.
+- Transactional receiving RPCs so stock increases, cost updates, receipt rows, purchase order received quantities, purchase order status, and `part_movements` history are written together.
+- Part fields for vendor link, vendor SKU, barcode code, desired stock level, last cost, and average cost while preserving existing supplier/manufacturer/part number/unit cost/retail/quantity/reorder/location data.
+- Inventory UI tabs for Parts, Vendors, Purchase Orders, and Purchase History.
+- Stable barcode identity display/search using `FT-PART-{barcode_code}` without adding a barcode rendering package yet.
+
+### Still Not Included
+
+- Printable barcode label sheets.
+- Vendor import/export.
+- Offline receiving or offline inventory conflict handling.
+- SMS, public invoice/work-order links, or external calendar sync.
+
 ## GitHub Release Summary: v0.2.6-beta.14 Updates Since beta6
 
 FretTrack has moved from the beta6 operations/storage baseline to a broader real-shop beta focused on access control, customer workflow, email documents, mobile readiness, editable billing details, inventory, scheduling, reporting foundations, premium trial management, safer editing, photo documentation, and first-pass offline continuity.
@@ -32,7 +54,7 @@ FretTrack has moved from the beta6 operations/storage baseline to a broader real
 
 - Stripe billing or live payment automation.
 - Customer self-service subscription management.
-- Inventory receiving workflow, barcode labels, vendors, purchase orders, and purchase history.
+- Printable barcode labels and deeper inventory workflows beyond the first vendors / purchase orders / receiving foundation.
 - Full offline mode for existing job edits, photo queues, or cached authenticated Supabase data.
 - SMS production messaging.
 - Public invoice/work-order links.

@@ -19,17 +19,21 @@ function integerNumber(value, fallback = 0) {
 function toDbPart(shopId, payload = {}) {
   return {
     shop_id: shopId,
+    vendor_id: cleanText(payload.vendorId || payload.vendor_id) || null,
     sku: cleanText(payload.sku) || null,
     name: cleanText(payload.name),
     description: cleanText(payload.description) || null,
     category: cleanText(payload.category) || null,
     supplier: cleanText(payload.supplier) || null,
+    vendor_sku: cleanText(payload.vendorSku || payload.vendor_sku) || null,
+    barcode_code: cleanText(payload.barcodeCode || payload.barcode_code) || null,
     manufacturer: cleanText(payload.manufacturer) || null,
     part_number: cleanText(payload.partNumber || payload.part_number) || null,
     unit_cost: moneyNumber(payload.unitCost ?? payload.unit_cost),
     retail_price: moneyNumber(payload.retailPrice ?? payload.retail_price),
     quantity_on_hand: integerNumber(payload.quantityOnHand ?? payload.quantity_on_hand),
     reorder_point: integerNumber(payload.reorderPoint ?? payload.reorder_point),
+    desired_stock_level: integerNumber(payload.desiredStockLevel ?? payload.desired_stock_level),
     location: cleanText(payload.location) || null,
     is_active: payload.isActive ?? payload.is_active ?? true
   };
@@ -39,21 +43,125 @@ function fromDbPart(row = {}) {
   return {
     id: row.id,
     shopId: row.shop_id,
+    vendorId: row.vendor_id || '',
     sku: row.sku || '',
     name: row.name || '',
     description: row.description || '',
     category: row.category || '',
     supplier: row.supplier || '',
+    vendorSku: row.vendor_sku || '',
+    barcodeCode: row.barcode_code || '',
+    barcodeLabel: row.barcode_code ? `FT-PART-${row.barcode_code}` : '',
     manufacturer: row.manufacturer || '',
     partNumber: row.part_number || '',
     unitCost: moneyNumber(row.unit_cost),
     retailPrice: moneyNumber(row.retail_price),
     quantityOnHand: integerNumber(row.quantity_on_hand),
     reorderPoint: integerNumber(row.reorder_point),
+    desiredStockLevel: integerNumber(row.desired_stock_level),
+    lastCost: row.last_cost === null || row.last_cost === undefined ? null : moneyNumber(row.last_cost),
+    averageCost: row.average_cost === null || row.average_cost === undefined ? null : moneyNumber(row.average_cost),
     location: row.location || '',
     isActive: row.is_active !== false,
     createdAt: row.created_at,
     updatedAt: row.updated_at
+  };
+}
+
+function toDbVendor(shopId, payload = {}) {
+  return {
+    shop_id: shopId,
+    name: cleanText(payload.name),
+    contact_name: cleanText(payload.contactName || payload.contact_name) || null,
+    email: cleanText(payload.email) || null,
+    phone: cleanText(payload.phone) || null,
+    website: cleanText(payload.website) || null,
+    notes: cleanText(payload.notes) || null,
+    is_active: payload.isActive ?? payload.is_active ?? true
+  };
+}
+
+function fromDbVendor(row = {}) {
+  return {
+    id: row.id,
+    shopId: row.shop_id || '',
+    name: row.name || '',
+    contactName: row.contact_name || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    website: row.website || '',
+    notes: row.notes || '',
+    isActive: row.is_active !== false,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+function fromDbPurchaseOrder(row = {}) {
+  return {
+    id: row.id,
+    shopId: row.shop_id || '',
+    vendorId: row.vendor_id || '',
+    poNumber: row.po_number || '',
+    status: row.status || 'draft',
+    orderedAt: row.ordered_at || '',
+    expectedAt: row.expected_at || '',
+    notes: row.notes || '',
+    createdBy: row.created_by || '',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    items: []
+  };
+}
+
+function fromDbPurchaseOrderItem(row = {}) {
+  return {
+    id: row.id,
+    shopId: row.shop_id || '',
+    purchaseOrderId: row.purchase_order_id || '',
+    partId: row.part_id || '',
+    description: row.description || '',
+    vendorSku: row.vendor_sku || '',
+    quantityOrdered: integerNumber(row.quantity_ordered),
+    quantityReceived: integerNumber(row.quantity_received),
+    unitCost: moneyNumber(row.unit_cost),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+function fromDbPartMovement(row = {}) {
+  return {
+    id: row.id,
+    shopId: row.shop_id || '',
+    partId: row.part_id || '',
+    jobId: row.job_id || '',
+    purchaseOrderId: row.purchase_order_id || '',
+    inventoryReceiptId: row.inventory_receipt_id || '',
+    inventoryReceiptItemId: row.inventory_receipt_item_id || '',
+    movementType: row.movement_type || '',
+    quantity: integerNumber(row.quantity),
+    unitCost: row.unit_cost === null || row.unit_cost === undefined ? null : moneyNumber(row.unit_cost),
+    retailPrice: row.retail_price === null || row.retail_price === undefined ? null : moneyNumber(row.retail_price),
+    note: row.note || '',
+    createdBy: row.created_by || '',
+    createdAt: row.created_at
+  };
+}
+
+function fromDbReceiptItem(row = {}) {
+  return {
+    id: row.id,
+    shopId: row.shop_id || '',
+    inventoryReceiptId: row.inventory_receipt_id || '',
+    purchaseOrderId: row.purchase_order_id || '',
+    purchaseOrderItemId: row.purchase_order_item_id || '',
+    partId: row.part_id || '',
+    description: row.description || '',
+    vendorSku: row.vendor_sku || '',
+    quantityReceived: integerNumber(row.quantity_received),
+    unitCost: moneyNumber(row.unit_cost),
+    createdAt: row.created_at
   };
 }
 
@@ -97,7 +205,7 @@ export async function listParts(shopId = getCurrentShopId(), filters = {}) {
   const search = cleanText(filters.search);
   if (search) {
     const escaped = search.replace(/[%_]/g, '\\$&');
-    query = query.or(`name.ilike.%${escaped}%,sku.ilike.%${escaped}%,category.ilike.%${escaped}%,supplier.ilike.%${escaped}%`);
+    query = query.or(`name.ilike.%${escaped}%,sku.ilike.%${escaped}%,category.ilike.%${escaped}%,supplier.ilike.%${escaped}%,vendor_sku.ilike.%${escaped}%,barcode_code.ilike.%${escaped}%,manufacturer.ilike.%${escaped}%,part_number.ilike.%${escaped}%`);
   }
 
   const { data, error } = await query;
@@ -170,6 +278,185 @@ export async function deactivatePart(partId) {
   return updatePart(partId, { isActive: false });
 }
 
+export async function listVendors(shopId = getCurrentShopId(), filters = {}) {
+  if (!hasSupabaseConfig || !supabase) {
+    return [];
+  }
+
+  let query = supabase
+    .from('vendors')
+    .select('*')
+    .eq('shop_id', shopId)
+    .order('is_active', { ascending: false })
+    .order('name', { ascending: true });
+
+  if (filters.activeOnly) {
+    query = query.eq('is_active', true);
+  }
+
+  const search = cleanText(filters.search);
+  if (search) {
+    const escaped = search.replace(/[%_]/g, '\\$&');
+    query = query.or(`name.ilike.%${escaped}%,contact_name.ilike.%${escaped}%,email.ilike.%${escaped}%,phone.ilike.%${escaped}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    throw error;
+  }
+  return (data || []).map(fromDbVendor);
+}
+
+export async function createVendor(shopId = getCurrentShopId(), payload = {}) {
+  requireInventoryConfigured();
+  const vendorPayload = toDbVendor(shopId, payload);
+  if (!vendorPayload.name) {
+    throw new Error('Vendor name is required.');
+  }
+
+  const { data, error } = await supabase
+    .from('vendors')
+    .insert(vendorPayload)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+  return fromDbVendor(data);
+}
+
+export async function updateVendor(vendorId, payload = {}) {
+  requireInventoryConfigured();
+  const shopId = payload.shopId || payload.shop_id || getCurrentShopId();
+  const vendorPayload = toDbVendor(shopId, payload);
+  if (!vendorPayload.name) {
+    throw new Error('Vendor name is required.');
+  }
+
+  const { data, error } = await supabase
+    .from('vendors')
+    .update(vendorPayload)
+    .eq('id', vendorId)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+  return fromDbVendor(data);
+}
+
+export async function listPurchaseOrders(shopId = getCurrentShopId()) {
+  if (!hasSupabaseConfig || !supabase) {
+    return [];
+  }
+
+  const { data: orders, error: ordersError } = await supabase
+    .from('purchase_orders')
+    .select('*')
+    .eq('shop_id', shopId)
+    .order('created_at', { ascending: false });
+
+  if (ordersError) {
+    throw ordersError;
+  }
+
+  const mappedOrders = (orders || []).map(fromDbPurchaseOrder);
+  const orderIds = mappedOrders.map((order) => order.id);
+  if (!orderIds.length) {
+    return mappedOrders;
+  }
+
+  const { data: items, error: itemsError } = await supabase
+    .from('purchase_order_items')
+    .select('*')
+    .in('purchase_order_id', orderIds)
+    .order('created_at', { ascending: true });
+
+  if (itemsError) {
+    throw itemsError;
+  }
+
+  const itemsByOrderId = new Map();
+  for (const item of (items || []).map(fromDbPurchaseOrderItem)) {
+    const rows = itemsByOrderId.get(item.purchaseOrderId) || [];
+    rows.push(item);
+    itemsByOrderId.set(item.purchaseOrderId, rows);
+  }
+
+  return mappedOrders.map((order) => ({
+    ...order,
+    items: itemsByOrderId.get(order.id) || []
+  }));
+}
+
+export async function createPurchaseOrder(shopId = getCurrentShopId(), payload = {}) {
+  requireInventoryConfigured();
+  const items = Array.isArray(payload.items) ? payload.items : [];
+  if (!items.length) {
+    throw new Error('Add at least one purchase order item.');
+  }
+
+  const orderPayload = {
+    shop_id: shopId,
+    vendor_id: cleanText(payload.vendorId || payload.vendor_id) || null,
+    status: cleanText(payload.status) || 'draft',
+    ordered_at: cleanText(payload.orderedAt || payload.ordered_at) || null,
+    expected_at: cleanText(payload.expectedAt || payload.expected_at) || null,
+    notes: cleanText(payload.notes) || null
+  };
+
+  const { data: order, error: orderError } = await supabase
+    .from('purchase_orders')
+    .insert(orderPayload)
+    .select()
+    .single();
+
+  if (orderError) {
+    throw orderError;
+  }
+
+  const itemPayloads = items.map((item) => {
+    const matchedPart = item.part || {};
+    return {
+      shop_id: shopId,
+      purchase_order_id: order.id,
+      part_id: cleanText(item.partId || item.part_id) || null,
+      description: cleanText(item.description) || matchedPart.name || 'Inventory item',
+      vendor_sku: cleanText(item.vendorSku || item.vendor_sku) || matchedPart.vendorSku || null,
+      quantity_ordered: Math.max(integerNumber(item.quantityOrdered ?? item.quantity_ordered, 1), 1),
+      quantity_received: Math.max(integerNumber(item.quantityReceived ?? item.quantity_received, 0), 0),
+      unit_cost: moneyNumber(item.unitCost ?? item.unit_cost)
+    };
+  });
+
+  const { error: itemsError } = await supabase
+    .from('purchase_order_items')
+    .insert(itemPayloads);
+
+  if (itemsError) {
+    throw itemsError;
+  }
+
+  return fromDbPurchaseOrder(order);
+}
+
+export async function updatePurchaseOrderStatus(purchaseOrderId, status) {
+  requireInventoryConfigured();
+  const { data, error } = await supabase
+    .from('purchase_orders')
+    .update({ status: cleanText(status) || 'draft' })
+    .eq('id', purchaseOrderId)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+  return fromDbPurchaseOrder(data);
+}
+
 async function createPartMovement(part, movementType, quantity, { unitCost, retailPrice, note, jobId = null } = {}) {
   requireInventoryConfigured();
   const { error } = await supabase
@@ -191,20 +478,46 @@ async function createPartMovement(part, movementType, quantity, { unitCost, reta
 }
 
 export async function receivePart(partId, quantity, cost, note = '') {
-  const part = await getPart(partId);
-  if (!part) {
-    throw new Error('Part not found.');
-  }
   const receivedQuantity = Math.max(integerNumber(quantity, 0), 1);
-  const nextQuantity = part.quantityOnHand + receivedQuantity;
-  const unitCost = moneyNumber(cost ?? part.unitCost);
-
-  const updatedPart = await updatePart(partId, {
-    quantityOnHand: nextQuantity,
-    unitCost
+  const unitCost = cleanText(cost) === '' ? null : moneyNumber(cost);
+  requireInventoryConfigured();
+  const { data, error } = await supabase.rpc('receive_inventory_part', {
+    p_part_id: partId,
+    p_quantity: receivedQuantity,
+    p_unit_cost: unitCost,
+    p_note: cleanText(note)
   });
-  await createPartMovement(updatedPart, 'receive', receivedQuantity, { unitCost, note });
-  return updatedPart;
+
+  if (error) {
+    throw error;
+  }
+  return fromDbPart(Array.isArray(data) ? data[0] : data);
+}
+
+export async function receivePurchaseOrderItems(purchaseOrderId, items = [], note = '') {
+  requireInventoryConfigured();
+  const receiptItems = items
+    .map((item) => ({
+      purchaseOrderItemId: item.purchaseOrderItemId || item.purchase_order_item_id || item.id,
+      quantityReceived: integerNumber(item.quantityReceived ?? item.quantity_received ?? item.quantity, 0),
+      unitCost: moneyNumber(item.unitCost ?? item.unit_cost)
+    }))
+    .filter((item) => item.purchaseOrderItemId && item.quantityReceived > 0);
+
+  if (!receiptItems.length) {
+    throw new Error('Enter a received quantity for at least one purchase order item.');
+  }
+
+  const { data, error } = await supabase.rpc('receive_purchase_order_items', {
+    p_purchase_order_id: purchaseOrderId,
+    p_items: receiptItems,
+    p_note: cleanText(note)
+  });
+
+  if (error) {
+    throw error;
+  }
+  return data;
 }
 
 export async function adjustPart(partId, quantityDelta, note = '') {
@@ -400,4 +713,85 @@ export async function listJobParts(jobId) {
     throw error;
   }
   return (data || []).map(fromDbJobPart);
+}
+
+export async function listPartMovements(partId) {
+  if (!hasSupabaseConfig || !supabase || !partId) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('part_movements')
+    .select('*')
+    .eq('part_id', partId)
+    .order('created_at', { ascending: false })
+    .limit(25);
+
+  if (error) {
+    throw error;
+  }
+  return (data || []).map(fromDbPartMovement);
+}
+
+export async function listPartPurchaseHistory(partId) {
+  if (!hasSupabaseConfig || !supabase || !partId) {
+    return [];
+  }
+
+  const { data: receiptItems, error: receiptItemsError } = await supabase
+    .from('inventory_receipt_items')
+    .select('*')
+    .eq('part_id', partId)
+    .order('created_at', { ascending: false })
+    .limit(25);
+
+  if (receiptItemsError) {
+    throw receiptItemsError;
+  }
+
+  const mappedItems = (receiptItems || []).map(fromDbReceiptItem);
+  const receiptIds = [...new Set(mappedItems.map((item) => item.inventoryReceiptId).filter(Boolean))];
+  const orderIds = [...new Set(mappedItems.map((item) => item.purchaseOrderId).filter(Boolean))];
+
+  const receiptsById = new Map();
+  if (receiptIds.length) {
+    const { data: receipts, error: receiptsError } = await supabase
+      .from('inventory_receipts')
+      .select('*')
+      .in('id', receiptIds);
+
+    if (receiptsError) {
+      throw receiptsError;
+    }
+    for (const receipt of receipts || []) {
+      receiptsById.set(receipt.id, receipt);
+    }
+  }
+
+  const ordersById = new Map();
+  if (orderIds.length) {
+    const { data: orders, error: ordersError } = await supabase
+      .from('purchase_orders')
+      .select('*')
+      .in('id', orderIds);
+
+    if (ordersError) {
+      throw ordersError;
+    }
+    for (const order of orders || []) {
+      ordersById.set(order.id, order);
+    }
+  }
+
+  return mappedItems.map((item) => {
+    const receipt = receiptsById.get(item.inventoryReceiptId) || {};
+    const order = ordersById.get(item.purchaseOrderId) || {};
+    return {
+      ...item,
+      receiptNumber: receipt.receipt_number || '',
+      receivedAt: receipt.received_at || item.createdAt,
+      receiptNotes: receipt.notes || '',
+      poNumber: order.po_number || ''
+    };
+  });
 }
