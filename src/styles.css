@@ -19,6 +19,14 @@
   --input-bg: #11141a;
   --button-bg: #20242d;
   --button-text: #f4f4f5;
+  --button-primary-bg: var(--accent);
+  --button-primary-border: var(--accent);
+  --button-primary-hover-bg: var(--accent-hover);
+  --button-primary-hover-border: var(--accent-hover);
+  --button-primary-text: #111827;
+  --button-disabled-bg: var(--surface-2);
+  --button-disabled-border: var(--border);
+  --button-disabled-text: var(--text-muted);
   --shadow: 0 12px 30px rgba(0,0,0,.35);
   --surface-muted: var(--surface-2);
   --surface-soft: var(--surface-3);
@@ -38,6 +46,7 @@
   --error-bg: var(--surface-2);
   --error-border: var(--danger);
   --error-text: var(--danger);
+  --focus-ring-solid: #fbbf24;
   --focus-ring: color-mix(in srgb, var(--accent) 35%, transparent);
   --print-bg: #ffffff;
   --print-text: #000000;
@@ -61,6 +70,7 @@
   --input-bg: #11141a;
   --button-bg: #20242d;
   --button-text: #f4f4f5;
+  --button-primary-text: #111827;
   --shadow: 0 12px 30px rgba(0,0,0,.35);
 }
 
@@ -81,6 +91,7 @@
   --input-bg: #ffffff;
   --button-bg: #eee8dc;
   --button-text: #1f2933;
+  --button-primary-text: #ffffff;
   --shadow: 0 10px 25px rgba(31,41,51,.12);
 }
 
@@ -101,6 +112,7 @@
   --input-bg: #160f09;
   --button-bg: #2a1c10;
   --button-text: #fff7ed;
+  --button-primary-text: #111827;
   --shadow: 0 12px 30px rgba(249,115,22,.15);
 }
 
@@ -121,6 +133,7 @@
   --input-bg: #092220;
   --button-bg: #123b38;
   --button-text: #ecfeff;
+  --button-primary-text: #062422;
   --shadow: 0 12px 30px rgba(45,212,191,.12);
 }
 
@@ -141,6 +154,7 @@
   --input-bg: #19140b;
   --button-bg: #322815;
   --button-text: #fff8dc;
+  --button-primary-text: #17130b;
   --shadow: 0 12px 30px rgba(245,197,66,.12);
 }
 
@@ -161,6 +175,7 @@
   --input-bg: #19090d;
   --button-bg: #35111a;
   --button-text: #fff1f2;
+  --button-primary-text: #ffffff;
   --shadow: 0 12px 30px rgba(225,29,72,.16);
 }
 
@@ -181,6 +196,7 @@
   --input-bg: #0a1525;
   --button-bg: #17263d;
   --button-text: #eff6ff;
+  --button-primary-text: #06101f;
   --shadow: 0 12px 30px rgba(56,189,248,.12);
 }
 
@@ -201,6 +217,8 @@
   --input-bg: #000000;
   --button-bg: #171717;
   --button-text: #ffffff;
+  --button-primary-text: #000000;
+  --focus-ring-solid: #ffffff;
   --shadow: none;
 }
 
@@ -220,6 +238,7 @@ textarea {
 
 button {
   align-items: center;
+  background: var(--button-bg);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--button-bg) 88%, white 12%), var(--button-bg));
   border: 1px solid var(--border);
@@ -237,34 +256,57 @@ button {
   padding: 6px 11px;
   text-transform: none;
   transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease, transform 80ms ease;
+  -webkit-text-fill-color: currentColor;
   white-space: nowrap;
 }
 
-button:hover {
+button:hover:not(:disabled) {
+  background: var(--button-primary-hover-bg);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--accent-hover) 76%, white 24%), var(--accent-hover));
-  border-color: var(--accent);
+  border-color: var(--button-primary-hover-border);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent), 0 8px 18px color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--button-primary-text);
+  -webkit-text-fill-color: var(--button-primary-text);
 }
 
-button:active {
+button:active:not(:disabled) {
   transform: translateY(1px);
 }
 
+button:focus {
+  box-shadow: 0 0 0 1px var(--bg);
+  outline: 3px solid var(--focus-ring-solid, #fbbf24);
+  outline-offset: 2px;
+}
+
 button:focus-visible {
-  box-shadow: 0 0 0 3px var(--focus-ring);
-  outline: none;
+  box-shadow: 0 0 0 1px var(--bg);
+  outline: 3px solid var(--focus-ring-solid, #fbbf24);
+  outline-offset: 2px;
+}
+
+@supports selector(:focus-visible) {
+  button:focus:not(:focus-visible) {
+    outline: none;
+  }
 }
 
 button:disabled {
+  background: var(--button-disabled-bg);
+  border-color: var(--button-disabled-border);
+  box-shadow: none;
+  color: var(--button-disabled-text);
   cursor: not-allowed;
-  opacity: 0.58;
+  opacity: 1;
   transform: none;
+  -webkit-text-fill-color: var(--button-disabled-text);
 }
 
 .button,
 a.button-link {
   align-items: center;
+  background: var(--button-bg);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--button-bg) 88%, white 12%), var(--button-bg));
   border: 1px solid var(--border);
@@ -284,17 +326,41 @@ a.button-link {
   white-space: nowrap;
 }
 
-.primary-action {
+.primary-action,
+.button-primary,
+form.panel > button[type="submit"] {
+  background: var(--button-primary-bg);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--accent) 78%, white 22%), var(--accent));
-  border-color: var(--accent);
-  color: var(--bg);
+    linear-gradient(180deg, color-mix(in srgb, var(--button-primary-bg) 78%, white 22%), var(--button-primary-bg));
+  border-color: var(--button-primary-border);
+  color: var(--button-primary-text);
+  -webkit-text-fill-color: var(--button-primary-text);
 }
 
-.primary-action:hover {
+.primary-action:hover:not(:disabled),
+.button-primary:hover:not(:disabled),
+form.panel > button[type="submit"]:hover:not(:disabled),
+.primary-action:focus-visible:not(:disabled),
+.button-primary:focus-visible:not(:disabled),
+form.panel > button[type="submit"]:focus-visible:not(:disabled),
+.primary-action:active:not(:disabled),
+.button-primary:active:not(:disabled),
+form.panel > button[type="submit"]:active:not(:disabled) {
+  background: var(--button-primary-hover-bg);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--accent-hover) 78%, white 22%), var(--accent-hover));
-  border-color: var(--accent-hover);
+    linear-gradient(180deg, color-mix(in srgb, var(--button-primary-hover-bg) 78%, white 22%), var(--button-primary-hover-bg));
+  border-color: var(--button-primary-hover-border);
+  color: var(--button-primary-text);
+  -webkit-text-fill-color: var(--button-primary-text);
+}
+
+.primary-action:disabled,
+.button-primary:disabled,
+form.panel > button[type="submit"]:disabled {
+  background: var(--button-disabled-bg);
+  border-color: var(--button-disabled-border);
+  color: var(--button-disabled-text);
+  -webkit-text-fill-color: var(--button-disabled-text);
 }
 
 input,
@@ -349,10 +415,12 @@ main {
 }
 
 .button-primary {
+  background: var(--button-primary-bg);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--accent) 78%, white 22%), var(--accent));
-  border-color: var(--accent);
-  color: var(--bg);
+  border-color: var(--button-primary-border);
+  color: var(--button-primary-text);
+  -webkit-text-fill-color: var(--button-primary-text);
 }
 
 .button-secondary {
