@@ -86,6 +86,9 @@ export default function PhotoEditorModal({
         setLoadError('This image could not be opened in the editor.');
       }
     };
+    if (!String(image.url || '').startsWith('data:') && !String(image.url || '').startsWith('blob:')) {
+      source.crossOrigin = 'anonymous';
+    }
     source.src = image.url;
 
     return () => {
