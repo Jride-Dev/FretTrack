@@ -40,8 +40,15 @@ import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoServic
 import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
+import { JOB_SOURCE_OPTIONS } from './jobSources';
 
-const intakeTypes = ['Walk-In', 'Telephone Appt.', 'Referral', 'Sub-Contract'];
+const intakeTypes = JOB_SOURCE_OPTIONS;
+const damageViewLabels = {
+  front: 'Front',
+  back: 'Back',
+  headstock: 'Headstock',
+  serial_number: 'Serial Number'
+};
 
 function markerColorForReport(severity) {
   if (severity === 'Critical') return '#b3261e';
@@ -452,6 +459,17 @@ export default function JobDetail({
         }
       };
     });
+  }
+
+  function updateStringGauges(gauges) {
+    setIsDirty(true);
+    setDraftJob((current) => ({
+      ...current,
+      techDetails: {
+        ...current.techDetails,
+        stringGauges: resizeStringGauges(gauges, getInstrumentStringCount(current))
+      }
+    }));
   }
 
   function handleSaveRequest(event) {
@@ -975,7 +993,7 @@ export default function JobDetail({
     const view = damageMap.views?.[viewName] || { marks: [] };
     const imageUrl = view.imageUrl || '';
     const marks = view.marks || [];
-    const title = viewName === 'front' ? 'Front Damage Map' : 'Back Damage Map';
+    const title = `${damageViewLabels[viewName] || 'Damage'} Damage Map`;
 
     if (!imageUrl && marks.length === 0) {
       return null;
@@ -1197,6 +1215,7 @@ export default function JobDetail({
         outerStringLabels={outerStringLabels}
         updateNeckInspection={updateNeckInspection}
         updateStringGauge={updateStringGauge}
+        updateStringGauges={updateStringGauges}
         updateTechField={updateTechField}
       />
       <DamageMapSection

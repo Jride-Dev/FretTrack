@@ -158,6 +158,121 @@ const stringCountOptionsByType = {
 
 export const STRING_COUNT_OPTIONS = [4, 5, 6, 7, 8, 9, 10, 12];
 
+const stringGaugePresets = [
+  {
+    id: 'electric-6-super-light-9-42',
+    instrumentType: 'Electric',
+    stringCount: 6,
+    label: 'Super Light 9-42',
+    gauges: ['.009', '.011', '.016', '.024', '.032', '.042']
+  },
+  {
+    id: 'electric-6-regular-light-10-46',
+    instrumentType: 'Electric',
+    stringCount: 6,
+    label: 'Regular Light / Standard 10-46',
+    gauges: ['.010', '.013', '.017', '.026', '.036', '.046']
+  },
+  {
+    id: 'electric-6-xl-10-52',
+    instrumentType: 'Electric',
+    stringCount: 6,
+    label: "XL / D'Addario 10-52",
+    gauges: ['.010', '.013', '.017', '.030', '.042', '.052']
+  },
+  {
+    id: 'electric-7-standard-light-10-56',
+    instrumentType: 'Electric',
+    stringCount: 7,
+    label: 'Standard Light 10-56',
+    gauges: ['.010', '.013', '.017', '.026', '.036', '.046', '.056']
+  },
+  {
+    id: 'electric-7-balanced-light-10-60',
+    instrumentType: 'Electric',
+    stringCount: 7,
+    label: 'Balanced Light 10-60',
+    gauges: ['.010', '.013', '.017', '.026', '.036', '.046', '.060']
+  },
+  {
+    id: 'electric-8-super-light-9-65',
+    instrumentType: 'Electric',
+    stringCount: 8,
+    label: 'Super Light 9-65',
+    gauges: ['.009', '.011', '.016', '.024', '.032', '.042', '.054', '.065']
+  },
+  {
+    id: 'electric-8-balanced-light-10-80',
+    instrumentType: 'Electric',
+    stringCount: 8,
+    label: 'Balanced Light 10-80',
+    gauges: ['.010', '.0135', '.017', '.026', '.036', '.048', '.060', '.080']
+  },
+  {
+    id: 'acoustic-6-extra-light-10-47',
+    instrumentType: 'Acoustic',
+    stringCount: 6,
+    label: 'Extra Light 10-47',
+    gauges: ['.010', '.014', '.023', '.030', '.039', '.047']
+  },
+  {
+    id: 'acoustic-6-custom-light-11-52',
+    instrumentType: 'Acoustic',
+    stringCount: 6,
+    label: 'Custom Light / Light 11-52',
+    gauges: ['.011', '.015', '.022', '.032', '.042', '.052']
+  },
+  {
+    id: 'acoustic-6-medium-12-53',
+    instrumentType: 'Acoustic',
+    stringCount: 6,
+    label: 'Medium 12-53',
+    gauges: ['.012', '.016', '.025', '.035', '.045', '.053']
+  },
+  {
+    id: 'acoustic-6-heavy-13-56',
+    instrumentType: 'Acoustic',
+    stringCount: 6,
+    label: 'Heavy 13-56',
+    gauges: ['.013', '.017', '.026', '.035', '.045', '.056']
+  },
+  {
+    id: 'bass-4-custom-light-40-95',
+    instrumentType: 'Bass',
+    stringCount: 4,
+    label: '4-string Custom Light 40-95',
+    gauges: ['.040', '.060', '.075', '.095']
+  },
+  {
+    id: 'bass-4-standard-light-45-105',
+    instrumentType: 'Bass',
+    stringCount: 4,
+    label: '4-string Standard / Regular Light 45-105',
+    gauges: ['.045', '.065', '.085', '.105']
+  },
+  {
+    id: 'bass-4-medium-50-110',
+    instrumentType: 'Bass',
+    stringCount: 4,
+    label: '4-string Medium 50-110',
+    gauges: ['.050', '.070', '.090', '.110']
+  },
+  {
+    id: 'bass-5-standard-light-45-130',
+    instrumentType: 'Bass',
+    stringCount: 5,
+    label: '5-string Standard Light 45-130',
+    gauges: ['.045', '.065', '.080', '.100', '.130']
+  },
+  {
+    id: 'bass-5-medium-heavy-50-135',
+    instrumentType: 'Bass',
+    stringCount: 5,
+    label: '5-string Medium / Heavy 50-135',
+    gauges: ['.050', '.070', '.085', '.105', '.135']
+  }
+];
+
 export function normalizeInstrumentType(instrumentType) {
   if (instrumentType === 'Bass') {
     return 'Bass';
@@ -178,6 +293,14 @@ export function getInstrumentTypeOptions() {
 
 export function getStringCountOptions(instrumentType) {
   return stringCountOptionsByType[normalizeInstrumentType(instrumentType)] || stringCountOptionsByType.Electric;
+}
+
+export function getStringGaugePresets(instrumentType, stringCount) {
+  const normalizedType = normalizeInstrumentType(instrumentType);
+  const normalizedCount = normalizeStringCount(stringCount, normalizedType);
+  return stringGaugePresets.filter((preset) => (
+    preset.instrumentType === normalizedType && preset.stringCount === normalizedCount
+  ));
 }
 
 export function getDefaultStringCount(instrumentType) {
@@ -220,10 +343,10 @@ export function getGaugeSlotLabel(index, stringCount, instrumentType = 'Electric
   const outerLabels = getOuterStringLabels(instrumentType, normalizedCount);
 
   if (index === 0) {
-    return outerLabels.bass;
+    return outerLabels.treble;
   }
   if (index === normalizedCount - 1) {
-    return outerLabels.treble;
+    return outerLabels.bass;
   }
   return String(index + 1);
 }

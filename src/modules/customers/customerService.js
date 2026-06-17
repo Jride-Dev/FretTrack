@@ -104,6 +104,10 @@ export async function ensureCustomerForJob(job, options = {}) {
     displayName: job.customerName || job.customer_name || '',
     phone: job.phone || '',
     email: job.email || '',
+    addressLine1: job.addressLine1 || job.address_line1 || job.address || '',
+    city: job.city || '',
+    region: job.region || job.state || '',
+    postalCode: job.postalCode || job.postal_code || job.zipCode || job.zip_code || '',
     source: 'work_order'
   });
 

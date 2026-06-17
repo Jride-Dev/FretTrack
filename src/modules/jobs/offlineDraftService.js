@@ -1,3 +1,5 @@
+import { getJobSourceLabel } from './jobSources';
+
 const DB_NAME = 'frettrack-offline-drafts';
 const DB_VERSION = 1;
 const STORE_NAME = 'job-drafts';
@@ -138,7 +140,7 @@ export function summarizeOfflineDraft(draft) {
   return {
     customerName: job.customerName || [job.customerFirstName, job.customerLastName].filter(Boolean).join(' ') || 'Unnamed Customer',
     instrument: [job.guitarBrand, job.model].filter(Boolean).join(' ') || job.instrumentType || 'Instrument',
-    intakeType: job.intakeType || job.techDetails?.intakeType || 'Walk-In',
+    intakeType: getJobSourceLabel(job.intakeType || job.techDetails?.intakeType),
     requestedWork: job.reasonForVisit || '',
     jobNumber: job.jobNumber || '',
     dateReceived: job.dateReceived || '',

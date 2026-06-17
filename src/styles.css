@@ -417,6 +417,35 @@ main {
   padding: 4px 7px;
 }
 
+.priority-badge {
+  border: 1px solid transparent;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 4px 6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.priority-high {
+  background: color-mix(in srgb, #d32222 18%, var(--surface) 82%);
+  border-color: color-mix(in srgb, #d32222 58%, var(--border) 42%);
+  color: #8f1111;
+}
+
+.priority-medium {
+  background: color-mix(in srgb, #f4c430 24%, var(--surface) 76%);
+  border-color: color-mix(in srgb, #c89210 62%, var(--border) 38%);
+  color: #735008;
+}
+
+.priority-regular {
+  background: color-mix(in srgb, #2f9e44 18%, var(--surface) 82%);
+  border-color: color-mix(in srgb, #2f9e44 56%, var(--border) 44%);
+  color: #1d6b2b;
+}
+
 .divider {
   border: 0;
   border-top: 1px solid var(--border);
@@ -1052,6 +1081,13 @@ form.panel button {
   grid-template-columns: 76px 1.1fr 1.35fr 108px 94px;
   padding: 10px;
   text-align: left;
+}
+
+.job-number-priority {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .job-row:hover,

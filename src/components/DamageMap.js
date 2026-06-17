@@ -20,6 +20,12 @@ const damageAreas = [
 ];
 
 const severities = ['Cosmetic', 'Structural', 'Critical'];
+const viewOptions = [
+  { value: 'front', label: 'Front' },
+  { value: 'back', label: 'Back' },
+  { value: 'headstock', label: 'Headstock' },
+  { value: 'serial_number', label: 'Serial Number' }
+];
 
 const DAMAGE_IMAGE_MAX_EDGE = 1400;
 const DAMAGE_IMAGE_QUALITY = 0.85;
@@ -110,7 +116,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
   const viewImageInputRef = useRef(null);
   const viewCameraInputRef = useRef(null);
   const markerInputRefs = useRef({});
-  const selectedView = damageMap.selectedView === 'back' ? 'back' : 'front';
+  const selectedView = viewOptions.some((option) => option.value === damageMap.selectedView) ? damageMap.selectedView : 'front';
   const selectedArea = damageMap.selectedArea || 'Body';
   const selectedSeverity = damageMap.selectedSeverity || 'Cosmetic';
   const views = damageMap.views || {};
@@ -127,7 +133,9 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
       selectedView,
       views: {
         front: { marks: [], ...(views.front || {}) },
-        back: { marks: [], ...(views.back || {}) }
+        back: { marks: [], ...(views.back || {}) },
+        headstock: { marks: [], ...(views.headstock || {}) },
+        serial_number: { marks: [], ...(views.serial_number || {}) }
       },
       ...patch
     });
@@ -138,6 +146,8 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
       views: {
         front: { marks: [], ...(views.front || {}) },
         back: { marks: [], ...(views.back || {}) },
+        headstock: { marks: [], ...(views.headstock || {}) },
+        serial_number: { marks: [], ...(views.serial_number || {}) },
         [selectedView]: {
           ...currentView,
           marks,
@@ -257,8 +267,9 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
         <label>
           View
           <select value={selectedView} onChange={(event) => updateMap({ selectedView: event.target.value })}>
-            <option value="front">Front</option>
-            <option value="back">Back</option>
+            {viewOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
           </select>
         </label>
         <label>

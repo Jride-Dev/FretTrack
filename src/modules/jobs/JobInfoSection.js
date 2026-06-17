@@ -6,6 +6,8 @@ import {
   normalizeStringCount
 } from '../instruments/instrumentService';
 import { smsEnabled } from '../../data/messagesRepository';
+import { stateOptionsWithCurrent } from '../../data/usStates';
+import { JOB_PRIORITY_OPTIONS } from './jobPriority';
 
 export default function JobInfoSection({
   draftJob,
@@ -50,10 +52,61 @@ export default function JobInfoSection({
           <input name="customerLastName" value={draftJob.customerLastName || ''} onChange={updateField} />
         </label>
         <label>
+          Address
+          <input name="addressLine1" value={draftJob.addressLine1 || ''} onChange={updateField} />
+        </label>
+        <label>
+          City
+          <input name="city" value={draftJob.city || ''} onChange={updateField} />
+        </label>
+        <label>
+          State
+          <select name="region" value={draftJob.region || ''} onChange={updateField}>
+            <option value="">Select state</option>
+            {stateOptionsWithCurrent(draftJob.region).map((state) => (
+              <option key={state} value={state}>{state}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Zip Code
+          <input name="postalCode" value={draftJob.postalCode || ''} onChange={updateField} inputMode="numeric" />
+        </label>
+        <label>
+          Phone
+          <input name="phone" value={draftJob.phone} onChange={updateField} />
+        </label>
+        <label className="checkline">
+          <input
+            type="checkbox"
+            checked={Boolean(draftJob.smsOptIn)}
+            disabled={!smsEnabled}
+            title={!smsEnabled ? 'SMS is disabled for this trial build. Email is active.' : undefined}
+            onChange={(event) => updateContactPreference('smsOptIn', event.target.checked)}
+          />
+          SMS opt-in
+        </label>
+        <label>
+          Email
+          <input name="email" type="email" value={draftJob.email} onChange={updateField} />
+        </label>
+        <label className="checkline">
+          <input type="checkbox" checked={Boolean(draftJob.emailOptIn)} onChange={(event) => updateContactPreference('emailOptIn', event.target.checked)} />
+          Email opt-in
+        </label>
+        <label>
+          Preferred Contact
+          <select value={draftJob.preferredContactMethod || 'email'} onChange={(event) => updateContactPreference('preferredContactMethod', event.target.value)}>
+            <option value="email">Email</option>
+            <option value="sms" disabled={!smsEnabled}>SMS</option>
+            <option value="none">None</option>
+          </select>
+        </label>
+        <label>
           Job Source
           <select name="intakeType" value={draftJob.techDetails.intakeType || 'Walk-In'} onChange={updateTechField}>
-            {intakeTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
+            {intakeTypes.map((source) => (
+              <option key={source.value || source} value={source.value || source}>{source.label || source}</option>
             ))}
           </select>
         </label>
@@ -111,36 +164,6 @@ export default function JobInfoSection({
           </label>
         )}
         <label>
-          Phone
-          <input name="phone" value={draftJob.phone} onChange={updateField} />
-        </label>
-        <label>
-          Email
-          <input name="email" value={draftJob.email} onChange={updateField} />
-        </label>
-        <label className="checkline">
-          <input type="checkbox" checked={Boolean(draftJob.emailOptIn)} onChange={(event) => updateContactPreference('emailOptIn', event.target.checked)} />
-          Email opt-in
-        </label>
-        <label className="checkline">
-          <input
-            type="checkbox"
-            checked={Boolean(draftJob.smsOptIn)}
-            disabled={!smsEnabled}
-            title={!smsEnabled ? 'SMS is disabled for this trial build. Email is active.' : undefined}
-            onChange={(event) => updateContactPreference('smsOptIn', event.target.checked)}
-          />
-          SMS opt-in
-        </label>
-        <label>
-          Preferred Contact
-          <select value={draftJob.preferredContactMethod || 'email'} onChange={(event) => updateContactPreference('preferredContactMethod', event.target.value)}>
-            <option value="email">Email</option>
-            <option value="sms" disabled={!smsEnabled}>SMS</option>
-            <option value="none">None</option>
-          </select>
-        </label>
-        <label>
           Brand
           <input name="guitarBrand" list="detail-brand-options" value={draftJob.guitarBrand} onChange={updateField} />
         </label>
@@ -159,6 +182,18 @@ export default function JobInfoSection({
         <label>
           Date Received
           <input type="date" name="dateReceived" value={draftJob.dateReceived} onChange={updateField} />
+        </label>
+        <label>
+          Promise Date
+          <input type="date" name="promiseDate" value={draftJob.promiseDate || ''} onChange={updateField} />
+        </label>
+        <label>
+          Priority
+          <select name="priority" value={draftJob.priority || 'regular'} onChange={updateField}>
+            {JOB_PRIORITY_OPTIONS.map((priority) => (
+              <option key={priority.value} value={priority.value}>{priority.label}</option>
+            ))}
+          </select>
         </label>
         <label>
           Job Number

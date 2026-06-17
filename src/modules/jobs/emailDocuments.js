@@ -1,5 +1,6 @@
 import { formatShopDate } from '../../shared/utils/dateFormat';
 import { money } from '../../shared/utils/money';
+import { getJobSourceLabel } from './jobSources';
 
 export function getDefaultDocumentRecipient(job = {}) {
   return String(job.email || '').trim();
@@ -16,7 +17,7 @@ export function buildWorkOrderEmailDraft(job, context = {}) {
   const partSummary = summarizeRows(job.parts || [], (row) => `${row.sku ? `${row.sku} - ` : ''}${row.name || 'Part'} x${row.quantity || 1}`);
   const authorizationNote = cleanText(job.techDetails?.damageMap?.liabilityText);
   const pickupNote = cleanText(job.techDetails?.notes);
-  const intakeSource = cleanText(job.techDetails?.intakeType) || 'Walk-In';
+  const intakeSource = getJobSourceLabel(job.techDetails?.intakeType);
   const subject = `${base.shopName} work order ${base.jobNumberLabel} for ${base.customerName}`;
   const summaryLines = [
     ['Shop', base.shopContactLine],

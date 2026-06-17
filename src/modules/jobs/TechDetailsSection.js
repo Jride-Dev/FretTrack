@@ -1,5 +1,5 @@
 import NeckInspectionSection from './NeckInspectionSection';
-import { getGaugeSlotLabel, getInstrumentStringCount } from '../instruments/instrumentService';
+import { getGaugeSlotLabel, getInstrumentStringCount, getStringGaugePresets } from '../instruments/instrumentService';
 
 export default function TechDetailsSection({
   draftJob,
@@ -8,17 +8,40 @@ export default function TechDetailsSection({
   outerStringLabels,
   updateNeckInspection,
   updateStringGauge,
+  updateStringGauges,
   updateTechField
 }) {
+  const stringCount = getInstrumentStringCount(draftJob);
+  const gaugePresets = getStringGaugePresets(draftJob.instrumentType, stringCount);
+
   return (
     <section>
       <h3>Tech Details</h3>
       <div className="form-grid">
         <fieldset className="wide string-gauges">
           <legend>String Gauges</legend>
+          {gaugePresets.length > 0 && (
+            <label className="wide string-gauge-preset">
+              Gauge Preset
+              <select
+                value=""
+                onChange={(event) => {
+                  const preset = gaugePresets.find((option) => option.id === event.target.value);
+                  if (preset && updateStringGauges) {
+                    updateStringGauges(preset.gauges);
+                  }
+                }}
+              >
+                <option value="">Manual / custom</option>
+                {gaugePresets.map((preset) => (
+                  <option key={preset.id} value={preset.id}>{preset.label}</option>
+                ))}
+              </select>
+            </label>
+          )}
           {draftJob.techDetails.stringGauges.map((gauge, index) => (
             <label key={index}>
-              {getGaugeSlotLabel(index, getInstrumentStringCount(draftJob), draftJob.instrumentType)}
+              {getGaugeSlotLabel(index, stringCount, draftJob.instrumentType)}
               <input
                 value={gauge}
                 onChange={(event) => updateStringGauge(index, event.target.value)}
