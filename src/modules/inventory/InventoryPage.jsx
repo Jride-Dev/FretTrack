@@ -7,9 +7,11 @@ import {
   createPurchaseOrder,
   createVendor,
   deactivatePart,
+  fixMissingPartBarcodeCode,
   listPartMovements,
   listPartPurchaseHistory,
   listParts,
+  listPurchaseHistory,
   listPurchaseOrders,
   listVendors,
   receivePart,
@@ -20,6 +22,7 @@ import {
 } from './inventoryService';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
+import BarcodeLabelSheet from './BarcodeLabelSheet.jsx';
 
 const emptyPartForm = {
   vendorId: '',
@@ -69,6 +72,7 @@ const emptyPurchaseOrderForm = {
 };
 
 const purchaseOrderStatuses = ['draft', 'ordered', 'partially_received', 'received', 'cancelled'];
+const purchaseOrderFilterOptions = ['all', ...purchaseOrderStatuses];
 
 function formatStatusLabel(status = '') {
   return status
@@ -108,6 +112,27 @@ function remainingForItem(item) {
   return Math.max(Number(item.quantityOrdered || 0) - Number(item.quantityReceived || 0), 0);
 }
 
+function purchaseOrderTotals(order) {
+  const items = order?.items || [];
+  return items.reduce((totals, item) => {
+    const ordered = Number(item.quantityOrdered || 0);
+    const received = Number(item.quantityReceived || 0);
+    const cost = Number(item.unitCost || 0);
+    totals.lineCount += 1;
+    totals.ordered += ordered;
+    totals.received += received;
+    totals.remaining += Math.max(ordered - received, 0);
+    totals.estimatedCost += ordered * cost;
+    return totals;
+  }, {
+    lineCount: 0,
+    ordered: 0,
+    received: 0,
+    remaining: 0,
+    estimatedCost: 0
+  });
+}
+
 export default function InventoryPage({ canWrite = true, shopId = getCurrentShopId(), onNotice, onDirtyChange }) {
   const [activeTab, setActiveTab] = useState('parts');
   const [parts, setParts] = useState([]);
@@ -116,9 +141,11 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
   const [search, setSearch] = useState('');
   const [showInactive, setShowInactive] = useState(false);
   const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [poStatusFilter, setPoStatusFilter] = useState('all');
   const [selectedPartId, setSelectedPartId] = useState('');
   const [selectedVendorId, setSelectedVendorId] = useState('');
   const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState('');
+  const [selectedLabelPartIds, setSelectedLabelPartIds] = useState([]);
   const [partForm, setPartForm] = useState(emptyPartForm);
   const [vendorForm, setVendorForm] = useState(emptyVendorForm);
   const [purchaseOrderForm, setPurchaseOrderForm] = useState(emptyPurchaseOrderForm);
@@ -129,6 +156,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
   const [purchaseReceiveNote, setPurchaseReceiveNote] = useState('');
   const [partMovements, setPartMovements] = useState([]);
   const [partPurchaseHistory, setPartPurchaseHistory] = useState([]);
+  const [purchaseHistory, setPurchaseHistory] = useState([]);
+  const [isPrintingLabels, setIsPrintingLabels] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { isDirty, markDirty, markClean, confirmIfDirty } = useUnsavedChanges();
@@ -150,6 +179,18 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
   const vendorsById = useMemo(
     () => new Map(vendors.map((vendor) => [vendor.id, vendor])),
     [vendors]
+  );
+  const selectedLabelParts = useMemo(
+    () => selectedLabelPartIds
+      .map((partId) => parts.find((part) => part.id === partId))
+      .filter(Boolean),
+    [parts, selectedLabelPartIds]
+  );
+  const filteredPurchaseOrders = useMemo(
+    () => poStatusFilter === 'all'
+      ? purchaseOrders
+      : purchaseOrders.filter((order) => order.status === poStatusFilter),
+    [purchaseOrders, poStatusFilter]
   );
 
   useEffect(() => {
@@ -186,18 +227,38 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       });
   }, [selectedPartId]);
 
+  useEffect(() => {
+    if (!isPrintingLabels) {
+      return undefined;
+    }
+
+    document.body.classList.add('barcode-label-printing');
+    const handleAfterPrint = () => {
+      document.body.classList.remove('barcode-label-printing');
+      setIsPrintingLabels(false);
+    };
+
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => {
+      window.removeEventListener('afterprint', handleAfterPrint);
+      document.body.classList.remove('barcode-label-printing');
+    };
+  }, [isPrintingLabels]);
+
   async function loadInventoryPage() {
     setIsLoading(true);
     try {
-      const [loadedParts, loadedVendors, loadedOrders] = await Promise.all([
+      const [loadedParts, loadedVendors, loadedOrders, loadedHistory] = await Promise.all([
         listParts(shopId, { search, activeOnly: !showInactive, lowStockOnly }),
         listVendors(shopId, { activeOnly: false }),
-        listPurchaseOrders(shopId)
+        listPurchaseOrders(shopId),
+        listPurchaseHistory({ shopId })
       ]);
       setParts(loadedParts);
       setVendors(loadedVendors);
       setPurchaseOrders(loadedOrders);
-      return { loadedParts, loadedVendors, loadedOrders };
+      setPurchaseHistory(loadedHistory);
+      return { loadedParts, loadedVendors, loadedOrders, loadedHistory };
     } finally {
       setIsLoading(false);
     }
@@ -215,13 +276,15 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
   }
 
   async function refreshPurchasingData() {
-    const [loadedVendors, loadedOrders] = await Promise.all([
+    const [loadedVendors, loadedOrders, loadedHistory] = await Promise.all([
       listVendors(shopId, { activeOnly: false }),
-      listPurchaseOrders(shopId)
+      listPurchaseOrders(shopId),
+      listPurchaseHistory({ shopId })
     ]);
     setVendors(loadedVendors);
     setPurchaseOrders(loadedOrders);
-    return { loadedVendors, loadedOrders };
+    setPurchaseHistory(loadedHistory);
+    return { loadedVendors, loadedOrders, loadedHistory };
   }
 
   async function handleSearch(event) {
@@ -323,18 +386,81 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     if (!canWrite || !selectedPart) {
       return;
     }
+    const receiveQuantity = Number.parseInt(receiveForm.quantity, 10);
+    const receiveCost = receiveForm.cost === '' ? null : Number(receiveForm.cost);
+    if (!Number.isFinite(receiveQuantity) || receiveQuantity < 1) {
+      onNotice?.({ type: 'error', message: 'Receive quantity must be at least 1.' });
+      return;
+    }
+    if (receiveCost !== null && (!Number.isFinite(receiveCost) || receiveCost < 0)) {
+      onNotice?.({ type: 'error', message: 'Unit cost cannot be negative.' });
+      return;
+    }
     setIsSaving(true);
     try {
       await receivePart(selectedPart.id, receiveForm.quantity, receiveForm.cost, receiveForm.note);
       onNotice?.({ type: 'success', message: 'Stock received.' });
       setReceiveForm({ quantity: '1', cost: receiveForm.cost, note: '' });
-      await loadPartsOnly({ search, activeOnly: !showInactive, lowStockOnly });
+      await Promise.all([
+        loadPartsOnly({ search, activeOnly: !showInactive, lowStockOnly }),
+        refreshPurchasingData()
+      ]);
+      const [movements, purchaseRows] = await Promise.all([
+        listPartMovements(selectedPart.id),
+        listPartPurchaseHistory(selectedPart.id)
+      ]);
+      setPartMovements(movements);
+      setPartPurchaseHistory(purchaseRows);
     } catch (error) {
       console.error('Receive stock failed.', error);
       onNotice?.({ type: 'error', message: error.message || 'Unable to receive stock.' });
     } finally {
       setIsSaving(false);
     }
+  }
+
+  async function handleGenerateBarcodeCode() {
+    if (!canWrite || !selectedPart) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const updatedPart = await fixMissingPartBarcodeCode(selectedPart);
+      onNotice?.({ type: 'success', message: 'Barcode code generated.' });
+      const loadedParts = await loadPartsOnly({ search, activeOnly: !showInactive, lowStockOnly });
+      const nextPart = loadedParts.find((part) => part.id === updatedPart.id);
+      if (nextPart) {
+        selectPart(nextPart, { skipDirtyGuard: true });
+      }
+    } catch (error) {
+      console.error('Generate barcode code failed.', error);
+      onNotice?.({ type: 'error', message: error.message || 'Unable to generate barcode code.' });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function toggleLabelPart(partId, checked) {
+    setSelectedLabelPartIds((current) => {
+      if (checked) {
+        return current.includes(partId) ? current : [...current, partId];
+      }
+      return current.filter((id) => id !== partId);
+    });
+  }
+
+  function selectVisibleLabelParts() {
+    setSelectedLabelPartIds(parts.filter((part) => part.barcodeCode).map((part) => part.id));
+  }
+
+  function printBarcodeLabels() {
+    if (!selectedLabelParts.length) {
+      onNotice?.({ type: 'error', message: 'Select at least one part with a barcode code.' });
+      return;
+    }
+    setIsPrintingLabels(true);
+    window.setTimeout(() => window.print(), 80);
   }
 
   async function handleAdjust(event) {
@@ -530,6 +656,27 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       }))
       .filter((item) => Number(item.quantityReceived || 0) > 0);
 
+    if (!receiptItems.length) {
+      onNotice?.({ type: 'error', message: 'Enter a received quantity for at least one item.' });
+      return;
+    }
+
+    const invalidReceipt = receiptItems.find((receiptItem) => {
+      const sourceItem = selectedPurchaseOrder.items.find((item) => item.id === receiptItem.purchaseOrderItemId);
+      const quantity = Number(receiptItem.quantityReceived || 0);
+      const cost = Number(receiptItem.unitCost || 0);
+      return !sourceItem
+        || quantity < 1
+        || quantity > remainingForItem(sourceItem)
+        || !Number.isFinite(cost)
+        || cost < 0;
+    });
+
+    if (invalidReceipt) {
+      onNotice?.({ type: 'error', message: 'Receipt quantities must be positive and cannot exceed the remaining ordered quantity.' });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const result = await receivePurchaseOrderItems(selectedPurchaseOrder.id, receiptItems, purchaseReceiveNote);
@@ -558,7 +705,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
           ['parts', 'Parts'],
           ['vendors', 'Vendors'],
           ['purchase-orders', 'Purchase Orders'],
-          ['history', 'Purchase History']
+          ['history', 'Purchase History'],
+          ['labels', 'Barcode Labels']
         ].map(([tab, label]) => (
           <button
             key={tab}
@@ -601,11 +749,19 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
           <button type="submit" disabled={isLoading}>{isLoading ? 'Searching...' : 'Search'}</button>
         </form>
 
+        <div className="inventory-label-toolbar">
+          <span>{selectedLabelPartIds.length} label part{selectedLabelPartIds.length === 1 ? '' : 's'} selected</span>
+          <button type="button" onClick={selectVisibleLabelParts}>Select visible with barcodes</button>
+          <button type="button" onClick={() => setSelectedLabelPartIds([])}>Clear labels</button>
+          <button type="button" className="primary-action" onClick={() => setActiveTab('labels')}>Preview Labels</button>
+        </div>
+
         <div className="inventory-layout">
           <div className="inventory-table-wrap">
             <table>
               <thead>
                 <tr>
+                  <th>Label</th>
                   <th>SKU</th>
                   <th>Name</th>
                   <th>Barcode</th>
@@ -626,6 +782,15 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                       className={`${selectedPartId === part.id ? 'selected-row' : ''}${part.isActive ? '' : ' inactive-row'}`}
                       onClick={() => selectPart(part)}
                     >
+                      <td onClick={(event) => event.stopPropagation()}>
+                        <input
+                          aria-label={`Select ${part.name} barcode label`}
+                          disabled={!part.barcodeCode}
+                          type="checkbox"
+                          checked={selectedLabelPartIds.includes(part.id)}
+                          onChange={(event) => toggleLabelPart(part.id, event.target.checked)}
+                        />
+                      </td>
                       <td>{part.sku || '-'}</td>
                       <td><strong>{part.name}</strong></td>
                       <td><code>{getBarcodeLabel(part)}</code></td>
@@ -644,7 +809,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                 })}
                 {!parts.length && (
                   <tr>
-                    <td colSpan="9">{isLoading ? 'Loading parts...' : 'No parts found.'}</td>
+                    <td colSpan="10">{isLoading ? 'Loading parts...' : 'No parts found.'}</td>
                   </tr>
                 )}
               </tbody>
@@ -690,8 +855,19 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               {selectedPart && (
                 <div className="inventory-meta-grid">
                   <span>Barcode label <strong><code>{getBarcodeLabel(selectedPart)}</code></strong></span>
+                  <span>Vendor <strong>{vendorsById.get(selectedPart.vendorId)?.name || '-'}</strong></span>
+                  <span>Vendor SKU <strong>{selectedPart.vendorSku || '-'}</strong></span>
+                  <span>Location <strong>{selectedPart.location || '-'}</strong></span>
+                  <span>On hand <strong>{selectedPart.quantityOnHand}</strong></span>
+                  <span>Reorder point <strong>{selectedPart.reorderPoint}</strong></span>
+                  <span>Desired stock <strong>{selectedPart.desiredStockLevel}</strong></span>
                   <span>Last cost <strong>{selectedPart.lastCost === null ? '-' : money(selectedPart.lastCost, moneyOptions)}</strong></span>
                   <span>Average cost <strong>{selectedPart.averageCost === null ? '-' : money(selectedPart.averageCost, moneyOptions)}</strong></span>
+                </div>
+              )}
+              {selectedPart && !selectedPart.barcodeCode && canWrite && (
+                <div className="mode-actions">
+                  <button type="button" onClick={handleGenerateBarcodeCode} disabled={isSaving}>Generate Barcode Code</button>
                 </div>
               )}
               <label className="table-checkbox">
@@ -811,6 +987,15 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     return (
       <div className="inventory-layout inventory-layout-wide">
         <div className="inventory-table-wrap">
+          <div className="inventory-label-toolbar">
+            <label>Filter
+              <select value={poStatusFilter} onChange={(event) => setPoStatusFilter(event.target.value)}>
+                {purchaseOrderFilterOptions.map((status) => (
+                  <option key={status} value={status}>{status === 'all' ? 'All' : formatStatusLabel(status)}</option>
+                ))}
+              </select>
+            </label>
+          </div>
           <table>
             <thead>
               <tr>
@@ -818,14 +1003,18 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                 <th>Vendor</th>
                 <th>Status</th>
                 <th>Ordered</th>
-                <th>Items</th>
+                <th>Expected</th>
                 <th>Received</th>
+                <th>Lines</th>
+                <th>Qty</th>
+                <th>Remaining</th>
+                <th>Est. Cost</th>
+                <th>Receipts</th>
               </tr>
             </thead>
             <tbody>
-              {purchaseOrders.map((order) => {
-                const totalOrdered = order.items.reduce((sum, item) => sum + Number(item.quantityOrdered || 0), 0);
-                const totalReceived = order.items.reduce((sum, item) => sum + Number(item.quantityReceived || 0), 0);
+              {filteredPurchaseOrders.map((order) => {
+                const totals = purchaseOrderTotals(order);
                 return (
                   <tr
                     key={order.id}
@@ -836,13 +1025,18 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                     <td>{vendorsById.get(order.vendorId)?.name || '-'}</td>
                     <td><span className={`status-pill ${order.status === 'received' ? 'success' : order.status === 'cancelled' ? 'muted' : 'warning'}`}>{formatStatusLabel(order.status)}</span></td>
                     <td>{formatDate(order.orderedAt)}</td>
-                    <td>{order.items.length}</td>
-                    <td>{totalReceived} / {totalOrdered}</td>
+                    <td>{formatDate(order.expectedAt)}</td>
+                    <td>{formatDate(order.latestReceivedAt)}</td>
+                    <td>{totals.lineCount}</td>
+                    <td>{totals.received} / {totals.ordered}</td>
+                    <td>{totals.remaining}</td>
+                    <td>{money(totals.estimatedCost, moneyOptions)}</td>
+                    <td>{order.receiptCount || 0}</td>
                   </tr>
                 );
               })}
-              {!purchaseOrders.length && (
-                <tr><td colSpan="6">No purchase orders yet.</td></tr>
+              {!filteredPurchaseOrders.length && (
+                <tr><td colSpan="11">No purchase orders found.</td></tr>
               )}
             </tbody>
           </table>
@@ -904,14 +1098,32 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
             <form className="inventory-stock-actions" onSubmit={handlePurchaseReceive}>
               <div className="editor-heading">
                 <h3>Receive {selectedPurchaseOrder.poNumber}</h3>
-                {canWrite && (
-                  <select value={selectedPurchaseOrder.status} onChange={(event) => handlePurchaseOrderStatus(event.target.value)} disabled={isSaving}>
-                    {purchaseOrderStatuses.map((status) => (
-                      <option key={status} value={status}>{formatStatusLabel(status)}</option>
-                    ))}
-                  </select>
-                )}
+                <span className={`status-pill ${selectedPurchaseOrder.status === 'received' ? 'success' : selectedPurchaseOrder.status === 'cancelled' ? 'muted' : 'warning'}`}>{formatStatusLabel(selectedPurchaseOrder.status)}</span>
               </div>
+              <div className="inventory-meta-grid">
+                {(() => {
+                  const totals = purchaseOrderTotals(selectedPurchaseOrder);
+                  return (
+                    <>
+                      <span>Vendor <strong>{vendorsById.get(selectedPurchaseOrder.vendorId)?.name || '-'}</strong></span>
+                      <span>Ordered <strong>{formatDate(selectedPurchaseOrder.orderedAt)}</strong></span>
+                      <span>Expected <strong>{formatDate(selectedPurchaseOrder.expectedAt)}</strong></span>
+                      <span>Received <strong>{formatDate(selectedPurchaseOrder.latestReceivedAt)}</strong></span>
+                      <span>Line count <strong>{totals.lineCount}</strong></span>
+                      <span>Ordered qty <strong>{totals.ordered}</strong></span>
+                      <span>Received qty <strong>{totals.received}</strong></span>
+                      <span>Remaining qty <strong>{totals.remaining}</strong></span>
+                      <span>Estimated cost <strong>{money(totals.estimatedCost, moneyOptions)}</strong></span>
+                    </>
+                  );
+                })()}
+              </div>
+              {canWrite && (
+                <div className="mode-actions">
+                  <button type="button" onClick={() => handlePurchaseOrderStatus('ordered')} disabled={isSaving || selectedPurchaseOrder.status === 'cancelled' || selectedPurchaseOrder.status === 'received'}>Mark Ordered</button>
+                  <button type="button" onClick={() => handlePurchaseOrderStatus('cancelled')} disabled={isSaving || selectedPurchaseOrder.status === 'cancelled' || selectedPurchaseOrder.status === 'received'}>Cancel PO</button>
+                </div>
+              )}
               <div className="inventory-receive-list">
                 {(selectedPurchaseOrder.items || []).map((item) => {
                   const remaining = remainingForItem(item);
@@ -919,7 +1131,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                     <div className="receive-item-row" key={item.id}>
                       <span>
                         <strong>{item.description}</strong>
-                        <small>{item.vendorSku || 'No vendor SKU'} · remaining {remaining}</small>
+                        <small>{item.vendorSku || 'No vendor SKU'} - ordered {item.quantityOrdered} - received {item.quantityReceived} - remaining {remaining}</small>
                       </span>
                       <input
                         disabled={!canWrite || remaining <= 0 || selectedPurchaseOrder.status === 'cancelled'}
@@ -958,68 +1170,98 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
   }
 
   function renderHistoryTab() {
-    if (!selectedPart) {
-      return <section className="empty-state panel">Select a part to view purchase and stock movement history.</section>;
-    }
-
     return (
       <div className="inventory-history-grid">
         <section className="inventory-editor">
-          <h3>Purchase History: {selectedPart.name}</h3>
+          <h3>{selectedPart ? `Purchase History: ${selectedPart.name}` : 'Purchase History'}</h3>
           <table>
             <thead>
               <tr>
-                <th>Receipt</th>
+                <th>Date</th>
+                <th>Part</th>
+                <th>Vendor</th>
                 <th>PO</th>
+                <th>Receipt</th>
                 <th>Qty</th>
                 <th>Unit Cost</th>
-                <th>Received</th>
+                <th>Total</th>
+                <th>Received By</th>
+                <th>Notes</th>
               </tr>
             </thead>
             <tbody>
-              {partPurchaseHistory.map((row) => (
+              {(selectedPart ? partPurchaseHistory : purchaseHistory).map((row) => (
                 <tr key={row.id}>
-                  <td>{row.receiptNumber || '-'}</td>
+                  <td>{formatDateTime(row.receivedAt)}</td>
+                  <td>{row.partName || row.description || '-'}</td>
+                  <td>{row.vendorName || '-'}</td>
                   <td>{row.poNumber || 'Manual'}</td>
+                  <td>{row.receiptNumber || '-'}</td>
                   <td>{row.quantityReceived}</td>
                   <td>{money(row.unitCost, moneyOptions)}</td>
-                  <td>{formatDateTime(row.receivedAt)}</td>
+                  <td>{money(row.totalCost ?? row.quantityReceived * row.unitCost, moneyOptions)}</td>
+                  <td>{row.receivedBy ? `${row.receivedBy.slice(0, 8)}...` : '-'}</td>
+                  <td>{row.receiptNotes || '-'}</td>
                 </tr>
               ))}
-              {!partPurchaseHistory.length && (
-                <tr><td colSpan="5">No purchase receipts yet.</td></tr>
+              {!(selectedPart ? partPurchaseHistory : purchaseHistory).length && (
+                <tr><td colSpan="10">No purchase receipts yet.</td></tr>
               )}
             </tbody>
           </table>
         </section>
 
         <section className="inventory-editor">
-          <h3>Stock Movements</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Qty</th>
-                <th>Cost</th>
-                <th>Note</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {partMovements.map((movement) => (
-                <tr key={movement.id}>
-                  <td>{formatStatusLabel(movement.movementType)}</td>
-                  <td>{movement.quantity}</td>
-                  <td>{movement.unitCost === null ? '-' : money(movement.unitCost, moneyOptions)}</td>
-                  <td>{movement.note || '-'}</td>
-                  <td>{formatDateTime(movement.createdAt)}</td>
-                </tr>
-              ))}
-              {!partMovements.length && (
-                <tr><td colSpan="5">No stock movements yet.</td></tr>
-              )}
-            </tbody>
-          </table>
+          {selectedPart ? (
+            <>
+              <h3>Stock Movements: {selectedPart.name}</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Qty</th>
+                    <th>Cost</th>
+                    <th>Note</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {partMovements.map((movement) => (
+                    <tr key={movement.id}>
+                      <td>{formatStatusLabel(movement.movementType)}</td>
+                      <td>{movement.quantity}</td>
+                      <td>{movement.unitCost === null ? '-' : money(movement.unitCost, moneyOptions)}</td>
+                      <td>{movement.note || '-'}</td>
+                      <td>{formatDateTime(movement.createdAt)}</td>
+                    </tr>
+                  ))}
+                  {!partMovements.length && (
+                    <tr><td colSpan="5">No stock movements yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </>
+          ) : (
+            <p className="muted-text">Select a part from the Parts tab to view stock movement history for that specific item.</p>
+          )}
+        </section>
+      </div>
+    );
+  }
+
+  function renderLabelsTab() {
+    return (
+      <div className="inventory-label-panel">
+        <section className="inventory-editor">
+          <div className="editor-heading">
+            <h3>Barcode Labels</h3>
+            <div className="mode-actions">
+              <button type="button" onClick={() => setActiveTab('parts')}>Select Parts</button>
+              <button type="button" onClick={printBarcodeLabels} className="primary-action" disabled={!selectedLabelParts.length}>Print Labels</button>
+            </div>
+          </div>
+          <p className="muted-text">Labels use stable barcode identity only. Prices, quantities, and other mutable stock data are not encoded.</p>
+          <BarcodeLabelSheet parts={selectedLabelParts} />
         </section>
       </div>
     );
@@ -1040,6 +1282,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       {activeTab === 'vendors' && renderVendorsTab()}
       {activeTab === 'purchase-orders' && renderPurchaseOrdersTab()}
       {activeTab === 'history' && renderHistoryTab()}
+      {activeTab === 'labels' && renderLabelsTab()}
     </section>
   );
 }

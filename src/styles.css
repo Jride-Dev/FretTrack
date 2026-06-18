@@ -3474,6 +3474,25 @@ th.internal-only {
   color: var(--text);
 }
 
+.inventory-label-toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.inventory-label-toolbar span {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.inventory-label-toolbar label {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
 .inventory-layout {
   align-items: start;
   display: grid;
@@ -3614,6 +3633,60 @@ th.internal-only {
 
 .inventory-history-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.inventory-label-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.barcode-label-print-area {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.barcode-label-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+
+.barcode-label-card {
+  background: #fff;
+  border: 1px dashed #111;
+  border-radius: 4px;
+  color: #111;
+  display: grid;
+  gap: 4px;
+  min-height: 118px;
+  padding: 8px;
+  page-break-inside: avoid;
+}
+
+.barcode-label-card strong {
+  font-size: 12px;
+  line-height: 1.2;
+  min-height: 28px;
+}
+
+.barcode-label-card svg {
+  height: 36px;
+  max-width: 100%;
+  width: 100%;
+}
+
+.barcode-label-card code {
+  color: #111;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.barcode-label-card small {
+  color: #333;
+  font-size: 10px;
+  line-height: 1.15;
 }
 
 .inventory-picker-form {
@@ -4019,5 +4092,37 @@ th.internal-only {
 
   .totals {
     margin-top: 16px;
+  }
+
+  body.barcode-label-printing * {
+    visibility: hidden;
+  }
+
+  body.barcode-label-printing .barcode-label-print-area,
+  body.barcode-label-printing .barcode-label-print-area * {
+    visibility: visible;
+  }
+
+  body.barcode-label-printing .barcode-label-print-area {
+    background: #fff;
+    border: 0;
+    border-radius: 0;
+    left: 0;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+  }
+
+  body.barcode-label-printing .barcode-label-grid {
+    gap: 0.125in;
+    grid-template-columns: repeat(3, 2.45in);
+  }
+
+  body.barcode-label-printing .barcode-label-card {
+    border: 1px solid #111;
+    break-inside: avoid;
+    min-height: 1.15in;
+    padding: 0.08in;
   }
 }

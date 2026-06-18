@@ -16,6 +16,13 @@ function integerNumber(value, fallback = 0) {
   return Number.isFinite(numberValue) ? numberValue : fallback;
 }
 
+function normalizeBarcodeSearch(value) {
+  const search = cleanText(value);
+  return search.toUpperCase().startsWith('FT-PART-')
+    ? search.slice('FT-PART-'.length)
+    : search;
+}
+
 function toDbPart(shopId, payload = {}) {
   return {
     shop_id: shopId,
@@ -110,6 +117,8 @@ function fromDbPurchaseOrder(row = {}) {
     createdBy: row.created_by || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    latestReceivedAt: row.latest_received_at || '',
+    receiptCount: integerNumber(row.receipt_count),
     items: []
   };
 }
@@ -205,7 +214,9 @@ export async function listParts(shopId = getCurrentShopId(), filters = {}) {
   const search = cleanText(filters.search);
   if (search) {
     const escaped = search.replace(/[%_]/g, '\\$&');
-    query = query.or(`name.ilike.%${escaped}%,sku.ilike.%${escaped}%,category.ilike.%${escaped}%,supplier.ilike.%${escaped}%,vendor_sku.ilike.%${escaped}%,barcode_code.ilike.%${escaped}%,manufacturer.ilike.%${escaped}%,part_number.ilike.%${escaped}%`);
+    const barcodeSearch = normalizeBarcodeSearch(search);
+    const escapedBarcode = barcodeSearch.replace(/[%_]/g, '\\$&');
+    query = query.or(`name.ilike.%${escaped}%,sku.ilike.%${escaped}%,category.ilike.%${escaped}%,supplier.ilike.%${escaped}%,vendor_sku.ilike.%${escaped}%,barcode_code.ilike.%${escapedBarcode}%,manufacturer.ilike.%${escaped}%,part_number.ilike.%${escaped}%`);
   }
 
   const { data, error } = await query;
@@ -378,6 +389,16 @@ export async function listPurchaseOrders(shopId = getCurrentShopId()) {
     throw itemsError;
   }
 
+  const { data: receipts, error: receiptsError } = await supabase
+    .from('inventory_receipts')
+    .select('*')
+    .in('purchase_order_id', orderIds)
+    .order('received_at', { ascending: false });
+
+  if (receiptsError) {
+    throw receiptsError;
+  }
+
   const itemsByOrderId = new Map();
   for (const item of (items || []).map(fromDbPurchaseOrderItem)) {
     const rows = itemsByOrderId.get(item.purchaseOrderId) || [];
@@ -385,8 +406,17 @@ export async function listPurchaseOrders(shopId = getCurrentShopId()) {
     itemsByOrderId.set(item.purchaseOrderId, rows);
   }
 
+  const receiptsByOrderId = new Map();
+  for (const receipt of receipts || []) {
+    const rows = receiptsByOrderId.get(receipt.purchase_order_id) || [];
+    rows.push(receipt);
+    receiptsByOrderId.set(receipt.purchase_order_id, rows);
+  }
+
   return mappedOrders.map((order) => ({
     ...order,
+    latestReceivedAt: receiptsByOrderId.get(order.id)?.[0]?.received_at || '',
+    receiptCount: receiptsByOrderId.get(order.id)?.length || 0,
     items: itemsByOrderId.get(order.id) || []
   }));
 }
@@ -478,7 +508,10 @@ async function createPartMovement(part, movementType, quantity, { unitCost, reta
 }
 
 export async function receivePart(partId, quantity, cost, note = '') {
-  const receivedQuantity = Math.max(integerNumber(quantity, 0), 1);
+  const receivedQuantity = integerNumber(quantity, 0);
+  if (receivedQuantity < 1) {
+    throw new Error('Receive quantity must be at least 1.');
+  }
   const unitCost = cleanText(cost) === '' ? null : moneyNumber(cost);
   requireInventoryConfigured();
   const { data, error } = await supabase.rpc('receive_inventory_part', {
@@ -518,6 +551,13 @@ export async function receivePurchaseOrderItems(purchaseOrderId, items = [], not
     throw error;
   }
   return data;
+}
+
+export async function fixMissingPartBarcodeCode(part) {
+  if (!part?.id) {
+    throw new Error('Select a part first.');
+  }
+  return updatePart(part.id, { ...part, barcodeCode: '' });
 }
 
 export async function adjustPart(partId, quantityDelta, note = '') {
@@ -738,12 +778,27 @@ export async function listPartPurchaseHistory(partId) {
     return [];
   }
 
-  const { data: receiptItems, error: receiptItemsError } = await supabase
+  return listPurchaseHistory({ partId });
+}
+
+export async function listPurchaseHistory({ shopId = getCurrentShopId(), partId = null } = {}) {
+  if (!hasSupabaseConfig || !supabase) {
+    return [];
+  }
+
+  let receiptItemsQuery = supabase
     .from('inventory_receipt_items')
     .select('*')
-    .eq('part_id', partId)
     .order('created_at', { ascending: false })
-    .limit(25);
+    .limit(75);
+
+  if (partId) {
+    receiptItemsQuery = receiptItemsQuery.eq('part_id', partId);
+  } else {
+    receiptItemsQuery = receiptItemsQuery.eq('shop_id', shopId);
+  }
+
+  const { data: receiptItems, error: receiptItemsError } = await receiptItemsQuery;
 
   if (receiptItemsError) {
     throw receiptItemsError;
@@ -752,6 +807,7 @@ export async function listPartPurchaseHistory(partId) {
   const mappedItems = (receiptItems || []).map(fromDbReceiptItem);
   const receiptIds = [...new Set(mappedItems.map((item) => item.inventoryReceiptId).filter(Boolean))];
   const orderIds = [...new Set(mappedItems.map((item) => item.purchaseOrderId).filter(Boolean))];
+  const partIds = [...new Set(mappedItems.map((item) => item.partId).filter(Boolean))];
 
   const receiptsById = new Map();
   if (receiptIds.length) {
@@ -783,15 +839,68 @@ export async function listPartPurchaseHistory(partId) {
     }
   }
 
+  const partsById = new Map();
+  const vendorIds = new Set();
+  if (partIds.length) {
+    const { data: parts, error: partsError } = await supabase
+      .from('parts')
+      .select('*')
+      .in('id', partIds);
+
+    if (partsError) {
+      throw partsError;
+    }
+    for (const part of (parts || []).map(fromDbPart)) {
+      partsById.set(part.id, part);
+      if (part.vendorId) {
+        vendorIds.add(part.vendorId);
+      }
+    }
+  }
+
+  for (const receipt of receiptsById.values()) {
+    if (receipt.vendor_id) {
+      vendorIds.add(receipt.vendor_id);
+    }
+  }
+  for (const order of ordersById.values()) {
+    if (order.vendor_id) {
+      vendorIds.add(order.vendor_id);
+    }
+  }
+
+  const vendorsById = new Map();
+  if (vendorIds.size) {
+    const { data: vendors, error: vendorsError } = await supabase
+      .from('vendors')
+      .select('*')
+      .in('id', [...vendorIds]);
+
+    if (vendorsError) {
+      throw vendorsError;
+    }
+    for (const vendor of (vendors || []).map(fromDbVendor)) {
+      vendorsById.set(vendor.id, vendor);
+    }
+  }
+
   return mappedItems.map((item) => {
     const receipt = receiptsById.get(item.inventoryReceiptId) || {};
     const order = ordersById.get(item.purchaseOrderId) || {};
+    const part = partsById.get(item.partId) || {};
+    const vendorId = receipt.vendor_id || order.vendor_id || part.vendorId || '';
+    const totalCost = item.quantityReceived * item.unitCost;
     return {
       ...item,
+      partName: part.name || item.description || '',
+      partSku: part.sku || '',
+      vendorName: vendorsById.get(vendorId)?.name || '',
       receiptNumber: receipt.receipt_number || '',
       receivedAt: receipt.received_at || item.createdAt,
       receiptNotes: receipt.notes || '',
-      poNumber: order.po_number || ''
+      receivedBy: receipt.received_by || '',
+      poNumber: order.po_number || '',
+      totalCost
     };
   });
 }
