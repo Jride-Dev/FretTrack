@@ -51,6 +51,7 @@ Do not use a blanket production migration push while unrelated local migrations 
 - `notify-beta-approval` Supabase Edge Function
 - Cloudflare landing Worker beta application email path
 - Cloudflare landing Worker beta application hardening deployed on 2026-06-12: Supabase request creation is authoritative, email/R2 archive failures return warnings after save, and `npm run check:landing-worker` covers the request lifecycle.
+- Cloudflare landing Worker launch-page redesign deployed on 2026-06-18 as Worker version `490c7988-a697-4d06-8845-a72ff6fc6017`. It adds a product screenshot hero, workflow/security/pricing sections, bundled favicon/static screenshot assets through `LANDING_ASSETS`, and `no-store` HTML caching so deploys do not leave stale launch copy in browser cache.
 
 ## Verification Reminders
 
@@ -94,5 +95,6 @@ curl.exe -I https://frettrack-app.com/
 - If a migration is manually applied with `supabase db query --linked --file`, confirm the schema change and then align remote migration history intentionally.
 - Confirm Supabase Edge Function secrets by name only; never print secret values.
 - Confirm Cloudflare Worker secrets by name only; never print secret values.
+- The public landing Worker now has a bundled static-assets binding named `LANDING_ASSETS` in addition to the existing `FRETTRACK_APP_ASSETS` R2 binding. Confirm favicon routes such as `https://frettrack-app.com/favicon.ico` and landing screenshots such as `https://frettrack-app.com/landing/overview.jpg` after deploying the Worker.
 - For public beta application issues, run `npm run check:landing-worker`, submit a live test through `https://frettrack-app.com/api/beta-application`, and confirm the saved row in `public.beta_access_requests`.
 - If frontend asset hashes are used to confirm a deployment, compare the current app HTML against the most recent local build output.

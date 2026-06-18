@@ -6,6 +6,8 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## Documentation Catch-Up - Current Beta Candidate
 
+- Redesigned the public `frettrack-app.com` landing Worker for launch readiness with a product screenshot hero, workflow, security, Trial/Shop/Pro pricing preview, and beta application sections.
+- Added bundled landing Worker static assets for the FretTrack favicon package and product screenshots, plus `npm run check:landing-worker` coverage for the landing HTML and favicon route.
 - Added the first 0.2.8 Inventory Purchasing Foundation pass with shop-scoped vendors, purchase orders, purchase order items, inventory receipts, receipt items, part barcode identity fields, vendor SKU, desired stock levels, last/average cost tracking, purchase history UI, and transactional receiving RPCs.
 - Added 0.2.8-B inventory polish with printable barcode labels, `FT-PART-` lookup support, purchase order filters/actions, clearer receiving quantities/costs, expanded purchase history, and tighter receiving RPC validation.
 - Bumped package metadata and the in-app version display to `0.2.7-beta.0`.

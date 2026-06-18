@@ -30,6 +30,7 @@ Start here for the current product path:
 Core shipped beta areas now include:
 
 - customer and subcontractor management
+- public launch landing page refresh with bundled favicon and product screenshot assets
 - work-order and invoice email flow
 - mobile and PWA readiness
 - legacy WebKit compatibility for older iPad browser versions, with readable fallback messaging instead of black screens
