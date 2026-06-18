@@ -18,10 +18,14 @@ This foundation pass starts the 0.2.8 Inventory Operations Release without chang
 - Part fields for vendor link, vendor SKU, barcode code, desired stock level, last cost, and average cost while preserving existing supplier/manufacturer/part number/unit cost/retail/quantity/reorder/location data.
 - Inventory UI tabs for Parts, Vendors, Purchase Orders, and Purchase History.
 - Stable barcode identity display/search using `FT-PART-{barcode_code}` without adding a barcode rendering package yet.
+- Printable browser-based barcode label sheets using CODE128 barcodes through `jsbarcode`.
+- Barcode search now handles both `FT-PART-{barcode_code}` and raw barcode code values.
+- Purchase Orders now show status filters, expected and received dates, ordered/received/remaining quantities, receipt counts, estimated cost, and clear Mark Ordered / Cancel / Receive actions.
+- Purchase History now shows date, part, vendor, PO, receipt reference, quantity, unit cost, total cost, received-by reference, and notes.
+- Receiving RPCs now enforce stricter cost and quantity bounds while preserving transactional stock, receipt, and movement writes.
 
 ### Still Not Included
 
-- Printable barcode label sheets.
 - Vendor import/export.
 - Offline receiving or offline inventory conflict handling.
 - SMS, public invoice/work-order links, or external calendar sync.
