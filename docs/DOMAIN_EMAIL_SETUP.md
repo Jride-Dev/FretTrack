@@ -17,6 +17,8 @@ Domain: `frettrack-app.com`
   - Custom root domain: `frettrack-app.com`
   - Custom www domain: `www.frettrack-app.com`
   - Source: `cloudflare/frettrack-coming-soon`
+  - Bundled static asset binding: `LANDING_ASSETS`
+  - Bundled public asset paths include `/favicon.ico`, `/site.webmanifest`, and `/landing/...` product screenshots.
   - Required variables/secrets:
     - `SUPABASE_URL`
     - `SUPABASE_ANON_KEY`
@@ -110,6 +112,12 @@ Deploy the root coming-soon page:
 npx wrangler deploy --config cloudflare/frettrack-coming-soon/wrangler.jsonc
 ```
 
+The root Worker has two asset paths:
+
+- Bundled static assets in `cloudflare/frettrack-coming-soon/public`, served by the `LANDING_ASSETS` binding. This is
+  where the favicon package and launch-page screenshots live.
+- Existing R2 assets under `https://frettrack-app.com/assets/...`, served by the `FRETTRACK_APP_ASSETS` binding.
+
 The beta application endpoint calls Supabase RPC `public.submit_beta_access_request`, so the Worker must have `SUPABASE_URL` and `SUPABASE_ANON_KEY` configured before form submissions will create Operator Dashboard requests.
 
 It also sends confirmation and notification email through Resend, so the Worker must have:
@@ -123,6 +131,8 @@ Confirm:
 ```powershell
 curl.exe -I https://frettrack-app.com/
 curl.exe -I https://www.frettrack-app.com/
+curl.exe -I https://frettrack-app.com/favicon.ico
+curl.exe -I https://frettrack-app.com/landing/overview.jpg
 ```
 
 Update public site images:

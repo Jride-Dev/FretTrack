@@ -14,6 +14,8 @@ const VALID_BODY = {
 const originalFetch = globalThis.fetch;
 
 try {
+  await testLandingPageIncludesLaunchAssets();
+  await testBundledFaviconAssetRoute();
   await testSuccessfulApplication();
   await testSupabaseFailureBlocksSuccess();
   await testEmailFailureDoesNotLoseSavedApplication();
@@ -23,6 +25,43 @@ try {
   console.log('Landing Worker beta application checks passed.');
 } finally {
   globalThis.fetch = originalFetch;
+}
+
+async function testLandingPageIncludesLaunchAssets() {
+  const response = await worker.fetch(new Request('https://frettrack-app.com/'), baseEnv());
+  const html = await response.text();
+
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type') || '', /text\/html/);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.match(html, /<link rel="icon" href="\/favicon\.ico" sizes="any">/);
+  assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png">/);
+  assert.match(html, /Request Beta Access/);
+  assert.match(html, /\/landing\/overview\.jpg/);
+  assert.match(html, /Stripe-powered account management planned/);
+}
+
+async function testBundledFaviconAssetRoute() {
+  const assetCalls = [];
+  const response = await worker.fetch(new Request('https://frettrack-app.com/favicon.ico'), {
+    ...baseEnv(),
+    LANDING_ASSETS: {
+      async fetch(request) {
+        assetCalls.push(String(request.url));
+        return new Response('icon-bytes', {
+          headers: {
+            'content-type': 'image/x-icon'
+          }
+        });
+      }
+    }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'icon-bytes');
+  assert.equal(assetCalls.length, 1);
+  assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
 }
 
 async function testSuccessfulApplication() {

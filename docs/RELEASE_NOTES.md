@@ -4,6 +4,13 @@
 
 FretTrack `0.2.7-beta.0` moves the beta toward paid-access readiness: Trial, Shop, and Pro are now the public product model, expired trials preserve data while blocking writes, and flagged Supabase SECURITY DEFINER RPCs have explicit search paths, grants, and stronger write-path validation.
 
+## Public Launch Site Refresh - In Progress
+
+The public `frettrack-app.com` landing Worker has been redesigned around a launch-ready SaaS page: product screenshot
+hero, repair-shop workflow, security posture, Trial/Shop/Pro pricing preview, and the existing beta application form.
+The Worker now bundles the favicon package and landing screenshots through a static asset binding so the browser tab
+icon and product imagery deploy with the public site.
+
 ## 0.2.8 Inventory Purchasing Foundation - In Progress
 
 This foundation pass starts the 0.2.8 Inventory Operations Release without changing SMS, public document links, calendar sync, or offline mode.

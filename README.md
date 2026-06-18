@@ -46,6 +46,10 @@ Product milestone ladder:
 ## Recent Beta Updates Since beta6
 
 - Beta access now uses a public application and operator approval flow.
+- The public `frettrack-app.com` landing page has been redesigned for launch readiness with a product screenshot hero,
+workflow, security, pricing, and beta application sections.
+- The landing Worker now includes the FretTrack favicon package and product screenshots as bundled static assets so the
+browser tab icon and landing imagery do not depend on manual local files.
 - Approved beta users can now receive an access-approved email with the app login URL through the `notify-beta-approval` Supabase Edge Function.
 - Customer and subcontractor records are now first-class workflows, not just fields on work orders.
 - Work orders and invoices can now be emailed from inside the app.
