@@ -42,6 +42,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added beta feedback polish for work orders: Promise Date, stable priority tags, shortened inventory search copy, Mail In / Shipped In job source, Headstock and Serial Number damage-map views, reordered New Job customer fields with state dropdown and opt-ins, and string-gauge presets with corrected high/low string ordering.
 - Added an old iPad/WebKit compatibility pass with Vite legacy bundles, guarded browser API polyfills, a top-level error boundary, a public unsupported-browser fallback, and a lighter login bootstrap before authenticated modules load.
 - Added temporary `?debug=legacy` login diagnostics, Supabase auth startup logging, session-check timeout handling, and visible auth failure messages for iOS 12 WebKit troubleshooting.
+- Added a collapsible New Job section menu so shops can hide the left rail and give the form more working space.
 
 ## v0.2.6-beta.14 - Offline New-Job Draft Continuity
 

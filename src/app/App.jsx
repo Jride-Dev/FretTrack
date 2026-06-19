@@ -56,6 +56,7 @@ const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';
 const PWA_INSTALL_HELP_DISMISSED_KEY = 'frettrack_pwa_install_help_dismissed';
+const NEW_JOB_SIDEBAR_COLLAPSED_KEY = 'frettrack:new-job-sidebar-collapsed';
 const UNSAVED_CHANGES_MESSAGE = 'You have unsaved changes. Leave without saving?';
 
 export default function App() {
@@ -90,6 +91,7 @@ export default function App() {
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
   const [isStandalonePwa, setIsStandalonePwa] = useState(() => isStandaloneDisplayMode());
   const [showInstallHelp, setShowInstallHelp] = useState(() => localStorage.getItem(PWA_INSTALL_HELP_DISMISSED_KEY) !== 'true');
+  const [isNewJobSidebarCollapsed, setIsNewJobSidebarCollapsed] = useState(() => localStorage.getItem(NEW_JOB_SIDEBAR_COLLAPSED_KEY) === 'true');
   const [isOnline, setIsOnline] = useState(() => window.navigator.onLine);
   const [offlineDrafts, setOfflineDrafts] = useState([]);
   const [selectedOfflineDraftId, setSelectedOfflineDraftId] = useState('');
@@ -757,6 +759,14 @@ export default function App() {
     setShowInstallHelp(false);
   }
 
+  function toggleNewJobSidebar() {
+    setIsNewJobSidebarCollapsed((isCollapsed) => {
+      const nextValue = !isCollapsed;
+      localStorage.setItem(NEW_JOB_SIDEBAR_COLLAPSED_KEY, String(nextValue));
+      return nextValue;
+    });
+  }
+
   async function handleOfflineDraftSaved(jobDraft, error) {
     if (!shouldQueueOfflineDraft(error)) {
       return false;
@@ -1179,47 +1189,60 @@ export default function App() {
         />
       )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
-      <div className={`layout app-layout${mode === 'detail' && selectedJob ? ' detail-active' : ''}`}>
-        <aside className="no-print">
-          <JobForm
-            jobs={jobs}
-            customers={customers}
-            canWrite={canWrite}
-            shopProfile={shopProfile}
-            initialCustomer={pendingNewJobCustomer}
-            onJobSaved={handleJobSaved}
-            onOfflineDraftSaved={handleOfflineDraftSaved}
-            onNotice={setNotice}
-          />
-          <JobList jobs={jobs} selectedJobId={selectedJobId} onSelectJob={handleSelectJob} />
-          <section className="panel till-summary">
-            <h2>Till Summary</h2>
-            <div className="totals">
-              <span>Paid In</span>
-              <strong>{money(tillSummary.paidTotal, moneyOptions)}</strong>
-              <span>{shopProfile?.taxLabel || 'Sales Tax'}</span>
-              <strong>{money(tillSummary.salesTaxAccrued, moneyOptions)}</strong>
-              <span>Open Balance</span>
-              <strong>{money(tillSummary.openBalance, moneyOptions)}</strong>
-              {Object.entries(tillSummary.byMethod).map(([method, amount]) => (
-                <Fragment key={method}>
-                  <span>{method}</span>
-                  <strong>{money(amount, moneyOptions)}</strong>
-                </Fragment>
-              ))}
-            </div>
-          </section>
-          {membership?.shopId && (
-            <UpcomingSchedulePanel
-              shopId={membership.shopId}
-              onOpenSchedule={() => navigateTo('scheduling')}
+      <div className={`layout app-layout${mode === 'detail' && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
+        <aside className="new-job-sidebar no-print" aria-label="New job sections">
+          <div className="new-job-sidebar-controls">
+            <button
+              type="button"
+              className="button-tertiary new-job-sidebar-toggle"
+              onClick={toggleNewJobSidebar}
+              aria-expanded={!isNewJobSidebarCollapsed}
+              aria-controls="new-job-sidebar-content"
+            >
+              {isNewJobSidebarCollapsed ? 'Show sections' : 'Hide sections'}
+            </button>
+          </div>
+          <div id="new-job-sidebar-content" className="new-job-sidebar-content" hidden={isNewJobSidebarCollapsed}>
+            <JobForm
+              jobs={jobs}
+              customers={customers}
+              canWrite={canWrite}
+              shopProfile={shopProfile}
+              initialCustomer={pendingNewJobCustomer}
+              onJobSaved={handleJobSaved}
+              onOfflineDraftSaved={handleOfflineDraftSaved}
+              onNotice={setNotice}
             />
-          )}
+            <JobList jobs={jobs} selectedJobId={selectedJobId} onSelectJob={handleSelectJob} />
+            <section className="panel till-summary">
+              <h2>Till Summary</h2>
+              <div className="totals">
+                <span>Paid In</span>
+                <strong>{money(tillSummary.paidTotal, moneyOptions)}</strong>
+                <span>{shopProfile?.taxLabel || 'Sales Tax'}</span>
+                <strong>{money(tillSummary.salesTaxAccrued, moneyOptions)}</strong>
+                <span>Open Balance</span>
+                <strong>{money(tillSummary.openBalance, moneyOptions)}</strong>
+                {Object.entries(tillSummary.byMethod).map(([method, amount]) => (
+                  <Fragment key={method}>
+                    <span>{method}</span>
+                    <strong>{money(amount, moneyOptions)}</strong>
+                  </Fragment>
+                ))}
+              </div>
+            </section>
+            {membership?.shopId && (
+              <UpcomingSchedulePanel
+                shopId={membership.shopId}
+                onOpenSchedule={() => navigateTo('scheduling')}
+              />
+            )}
+          </div>
         </aside>
         <div className="content">
           {mode === 'new' && (
             <section className="panel empty-state">
-              Enter a new job on the left, then click Save Job.
+              {isNewJobSidebarCollapsed ? 'Show sections to enter a new job.' : 'Enter a new job on the left, then click Save Job.'}
             </section>
           )}
 

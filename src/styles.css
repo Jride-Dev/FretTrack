@@ -656,6 +656,39 @@ aside {
   gap: 16px;
 }
 
+.app-layout.sidebar-collapsed {
+  grid-template-columns: 144px minmax(0, 1fr);
+}
+
+.new-job-sidebar {
+  min-width: 0;
+}
+
+.new-job-sidebar-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.new-job-sidebar-content {
+  display: grid;
+  gap: 16px;
+}
+
+.new-job-sidebar-content[hidden] {
+  display: none;
+}
+
+.new-job-sidebar-toggle {
+  min-height: 36px;
+  white-space: normal;
+  width: 100%;
+}
+
+.sidebar-collapsed .new-job-sidebar-controls {
+  margin-bottom: 0;
+}
+
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -3127,8 +3160,17 @@ th.internal-only {
     flex-wrap: wrap;
   }
 
-  .layout {
+  .layout,
+  .app-layout.sidebar-collapsed {
     grid-template-columns: 1fr;
+  }
+
+  .new-job-sidebar-controls {
+    justify-content: flex-start;
+  }
+
+  .new-job-sidebar-toggle {
+    width: auto;
   }
 
   .app-layout.detail-active .content {
