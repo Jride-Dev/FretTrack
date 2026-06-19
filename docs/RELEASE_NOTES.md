@@ -1,8 +1,8 @@
 # Release Notes
 
-## GitHub Release Summary: v0.2.7-beta.0
+## GitHub Release Summary: v0.2.8-beta.0
 
-FretTrack `0.2.7-beta.0` moves the beta toward paid-access readiness: Trial, Shop, and Pro are now the public product model, expired trials preserve data while blocking writes, and flagged Supabase SECURITY DEFINER RPCs have explicit search paths, grants, and stronger write-path validation.
+FretTrack `0.2.8-beta.0` moves the beta into the Inventory Operations release: vendors, purchase orders, receiving, purchase history, barcode labels, and hardened receiving RPCs are now documented alongside the existing Trial/Shop/Pro access model, SECURITY DEFINER RPC hardening, and a clarified new-job-draft-only offline scope.
 
 ## Public Launch Site Refresh - In Progress
 
@@ -11,9 +11,9 @@ hero, repair-shop workflow, security posture, Trial/Shop/Pro pricing preview, an
 The Worker now bundles the favicon package and landing screenshots through a static asset binding so the browser tab
 icon and product imagery deploy with the public site.
 
-## 0.2.8 Inventory Purchasing Foundation - In Progress
+## 0.2.8 Inventory Purchasing Foundation
 
-This foundation pass starts the 0.2.8 Inventory Operations Release without changing SMS, public document links, calendar sync, or offline mode.
+This foundation pass starts the 0.2.8 Inventory Operations Release without adding SMS, public document links, calendar sync, or broad offline mode.
 
 ### Added
 
@@ -37,6 +37,26 @@ This foundation pass starts the 0.2.8 Inventory Operations Release without chang
 - Offline receiving or offline inventory conflict handling.
 - SMS, public invoice/work-order links, or external calendar sync.
 
+## 0.2.8-C Offline Mode Audit And Version Sync
+
+This pass syncs the visible release version to `0.2.8-beta.0` and documents the current offline boundary clearly. FretTrack supports new-job intake draft continuity only; it does not support full offline database sync.
+
+### Added
+
+- Package metadata, lockfile metadata, app version display, README, changelog, release notes, and trial readiness references now point at `0.2.8-beta.0`.
+- `docs/OFFLINE_MODE_AUDIT.md` documents what works offline, what does not, where local draft data lives, refresh behavior, reconnect behavior, known risks, and the future offline architecture.
+- User-facing offline wording now says offline draft mode is for new job intake only.
+
+### Current Offline Scope
+
+- New job intake drafts can be saved locally in IndexedDB when the browser or Supabase connection is unavailable.
+- Drafts are reviewed in Local Drafts and synced manually after reconnecting.
+- Existing job edits, photo uploads, inventory receiving, purchase orders, and broad authenticated data sync remain online-only.
+
+### Future Offline Architecture
+
+Full offline support will need an offline outbox, idempotency keys, server-side conflict detection, sync status, retry queues, photo upload queues, inventory mutation safeguards, stock receiving conflict handling, and audit logging before inventory receiving can be safely taken offline.
+
 ## GitHub Release Summary: v0.2.6-beta.14 Updates Since beta6
 
 FretTrack has moved from the beta6 operations/storage baseline to a broader real-shop beta focused on access control, customer workflow, email documents, mobile readiness, editable billing details, inventory, scheduling, reporting foundations, premium trial management, safer editing, photo documentation, and first-pass offline continuity.
@@ -49,7 +69,7 @@ FretTrack has moved from the beta6 operations/storage baseline to a broader real
 - Customer and subcontractor management are now first-class beta workflows, including profiles, balances, payment history, customer creation, and CRM-style lookup.
 - Work orders and invoices can now be emailed from inside FretTrack through the authenticated Supabase Edge Function and Resend path.
 - Existing work orders now support editable job-level parts and services while preserving totals, discounts, tax/VAT, payments, invoice summaries, and print output.
-- Inventory parts foundation now covers shop-scoped parts, stock counts, job attachment, stock movement rows, low-stock indicators, and viewer-safe write controls.
+- Inventory operations now cover shop-scoped parts, stock counts, job attachment, stock movement rows, low-stock indicators, vendors, purchase orders, receiving, purchase history, barcode labels, and viewer-safe write controls.
 - Scheduling / Calendar Phase 1 now covers internal schedule events, job due dates, intake appointments, pickup appointments, follow-ups, shop blocks, filters, and Job Detail scheduling.
 - Premium entitlement architecture, operator-managed Shop/Pro trial controls, Shop Tier Foundation Phase 1, Paid Access Lifecycle Phase 1, and Advanced Reporting Phase 1 are in place without enabling Stripe, billing collection, self-service subscriptions, charts, exports, or PDFs.
 - Permission hardening now centralizes operator/shop-role checks and separates photo upload, edit, overwrite, delete, and customer-report selection permissions.
@@ -65,8 +85,8 @@ FretTrack has moved from the beta6 operations/storage baseline to a broader real
 
 - Stripe billing or live payment automation.
 - Customer self-service subscription management.
-- Printable barcode labels and deeper inventory workflows beyond the first vendors / purchase orders / receiving foundation.
-- Full offline mode for existing job edits, photo queues, or cached authenticated Supabase data.
+- Vendor import/export, supplier integrations, and deeper inventory forecasting beyond the current vendors / purchase orders / receiving / barcode label foundation.
+- Full offline mode for existing job edits, photo queues, inventory receiving, purchase orders, or cached authenticated Supabase data.
 - SMS production messaging.
 - Public invoice/work-order links.
 - AI background removal or third-party image cutout APIs.

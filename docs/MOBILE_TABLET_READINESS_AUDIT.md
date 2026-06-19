@@ -42,7 +42,7 @@ These devices are useful for beta testing and light shop-floor workflows, but ol
 - Direct camera capture for better photo intake on phones and tablets.
 - Signature capture for approvals and pickup workflows.
 - PWA install support for a more app-like bench experience.
-- Offline draft queue for intake and job notes during spotty shop connectivity.
+- Offline draft queue for new job intake during spotty shop connectivity.
 - Deeper mobile tuning for the damage map and photo review flow after more real bench testing.
 
 ## Recommended Next Sprint

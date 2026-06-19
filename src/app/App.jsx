@@ -51,7 +51,7 @@ import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService'
 import { isCurrentOperator } from '../modules/operator/operatorService';
 import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
 
-const APP_VERSION = '0.2.7-beta.0';
+const APP_VERSION = '0.2.8-beta.0';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';
@@ -534,7 +534,7 @@ export default function App() {
 
     if (selectedJob && mode === 'detail') {
       if (hasSupabaseConfig && !isOnline) {
-        setNotice({ type: 'error', message: 'Existing job edits are not supported offline yet. New work orders can still be saved as local drafts.' });
+        setNotice({ type: 'error', message: 'Offline draft mode is for new job intake only. Existing job edits require an active connection.' });
         return;
       }
 
@@ -598,7 +598,7 @@ export default function App() {
     }
 
     if (hasSupabaseConfig && !isOnline) {
-      throw new Error('Existing job edits are not supported offline yet. New work orders can still be saved as local drafts.');
+      throw new Error('Offline draft mode is for new job intake only. Existing job edits require an active connection.');
     }
 
     setJobs((current) => current.map((item) => (item.id === job.id ? job : item)));
@@ -780,7 +780,7 @@ export default function App() {
     setMode('drafts');
     setNotice({
       type: 'success',
-      message: 'Saved locally. Sync when connection returns.'
+      message: 'Saved locally as a new-job intake draft. Sync when connection returns.'
     });
     return true;
   }
@@ -1158,7 +1158,7 @@ export default function App() {
       {!isOnline && (
         <section className="offline-banner no-print">
           <strong>Offline</strong>
-          <span>Drafts will be saved locally. Existing job edits and photo sync still need a connection.</span>
+          <span>Offline draft mode is for new job intake only. Existing job edits, photos, inventory, purchase orders, and receiving require an active connection.</span>
         </section>
       )}
       {session && <SystemAnnouncements />}

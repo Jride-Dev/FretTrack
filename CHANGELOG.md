@@ -1,16 +1,17 @@
 # Changelog
 
-Current version: `0.2.7-beta.0`
+Current version: `0.2.8-beta.0`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## Documentation Catch-Up - Current Beta Candidate
+## v0.2.8-beta.0 - Current Beta Candidate
 
 - Redesigned the public `frettrack-app.com` landing Worker for launch readiness with a product screenshot hero, workflow, security, Trial/Shop/Pro pricing preview, and beta application sections.
 - Added bundled landing Worker static assets for the FretTrack favicon package and product screenshots, plus `npm run check:landing-worker` coverage for the landing HTML and favicon route.
 - Added the first 0.2.8 Inventory Purchasing Foundation pass with shop-scoped vendors, purchase orders, purchase order items, inventory receipts, receipt items, part barcode identity fields, vendor SKU, desired stock levels, last/average cost tracking, purchase history UI, and transactional receiving RPCs.
 - Added 0.2.8-B inventory polish with printable barcode labels, `FT-PART-` lookup support, purchase order filters/actions, clearer receiving quantities/costs, expanded purchase history, and tighter receiving RPC validation.
-- Bumped package metadata and the in-app version display to `0.2.7-beta.0`.
+- Added 0.2.8-C offline mode audit documentation, clarified user-facing offline scope, and kept offline inventory receiving, purchase orders, photo queues, and existing-job edits out of scope until a real sync architecture exists.
+- Bumped package metadata and the in-app version display to `0.2.8-beta.0`.
 - Added SECURITY DEFINER RPC hardening for flagged Supabase RPCs with explicit grants, locked search paths, stronger inventory/accounting input validation, and documented callable-role intent.
 - Added Paid Access Lifecycle Phase 1 so public product language is Trial, Shop, and Pro, expired trials preserve data while blocking writes, and legacy internal unpaid values remain compatibility-only during migration.
 - Added Shop Tier Foundation Phase 1: Shop unlocks Photo Editor and Team Members, and Pro remains the advanced reporting/automation tier.

@@ -39,6 +39,8 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /Request Beta Access/);
   assert.match(html, /\/landing\/overview\.jpg/);
   assert.match(html, /Stripe-powered account management planned/);
+  assert.match(html, /https:\/\/devglobe\.app\/projects\/frettrack\?utm_source=badge&utm_medium=embed/);
+  assert.match(html, /Launched on DevGlobe/);
 }
 
 async function testBundledFaviconAssetRoute() {

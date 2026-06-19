@@ -164,7 +164,7 @@ export default function OfflineDraftQueue({
               <p className="muted-text">
                 {!canWrite
                   ? 'Your current shop role can review local drafts but cannot sync or discard them.'
-                  : 'Existing job edits are not supported offline yet. Beta 14 only queues new work orders locally.'}
+                  : 'Offline draft mode only queues new job intake. Existing job edits, photos, inventory, purchase orders, and receiving require an active connection.'}
               </p>
             </>
           ) : (
