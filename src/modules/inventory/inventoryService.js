@@ -428,9 +428,45 @@ export async function createPurchaseOrder(shopId = getCurrentShopId(), payload =
     throw new Error('Add at least one purchase order item.');
   }
 
+  const vendorId = cleanText(payload.vendorId || payload.vendor_id) || null;
+  const preparedItems = [];
+
+  for (const item of items) {
+    const existingPartId = cleanText(item.partId || item.part_id);
+    if (existingPartId) {
+      preparedItems.push(item);
+      continue;
+    }
+
+    const description = cleanText(item.description || item.name);
+    if (!description) {
+      throw new Error('Enter a part name or choose an existing inventory part for each purchase order item.');
+    }
+
+    const createdPart = await createPart(shopId, {
+      vendorId,
+      name: description,
+      vendorSku: cleanText(item.vendorSku || item.vendor_sku),
+      unitCost: moneyNumber(item.unitCost ?? item.unit_cost),
+      retailPrice: 0,
+      quantityOnHand: 0,
+      reorderPoint: 0,
+      desiredStockLevel: 0,
+      isActive: true
+    });
+
+    preparedItems.push({
+      ...item,
+      partId: createdPart.id,
+      part: createdPart,
+      description: createdPart.name,
+      vendorSku: cleanText(item.vendorSku || item.vendor_sku) || createdPart.vendorSku
+    });
+  }
+
   const orderPayload = {
     shop_id: shopId,
-    vendor_id: cleanText(payload.vendorId || payload.vendor_id) || null,
+    vendor_id: vendorId,
     status: cleanText(payload.status) || 'draft',
     ordered_at: cleanText(payload.orderedAt || payload.ordered_at) || null,
     expected_at: cleanText(payload.expectedAt || payload.expected_at) || null,
@@ -447,7 +483,7 @@ export async function createPurchaseOrder(shopId = getCurrentShopId(), payload =
     throw orderError;
   }
 
-  const itemPayloads = items.map((item) => {
+  const itemPayloads = preparedItems.map((item) => {
     const matchedPart = item.part || {};
     return {
       shop_id: shopId,

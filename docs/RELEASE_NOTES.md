@@ -37,6 +37,14 @@ This foundation pass starts the 0.2.8 Inventory Operations Release without addin
 - Offline receiving or offline inventory conflict handling.
 - SMS, public invoice/work-order links, or external calendar sync.
 
+## 0.2.8 Hotfix: Purchase Order Items Create Inventory Parts
+
+Purchase order line items now create or link a real shop inventory part before receiving. New PO-created parts start with `quantity_on_hand = 0`, receive a barcode identity through the existing part barcode trigger, and become searchable in inventory immediately. Receiving the PO then increments that linked part, writes receipt history, and records the `receive` movement.
+
+The receive RPC also repairs older purchase order items with `part_id = null` when the line has enough description data to create the missing inventory part safely. It still rejects cancelled purchase orders, over-receiving, invalid quantities, invalid costs, and unauthorized/shop-mismatched writes.
+
+Inbound PO shipping, landed-cost allocation, outbound customer shipping, carrier labels, tracking numbers, and shipping notifications remain future work and are not part of this hotfix.
+
 ## 0.2.8-C Offline Mode Audit And Version Sync
 
 This pass syncs the visible release version to `0.2.8-beta.0` and documents the current offline boundary clearly. FretTrack supports new-job intake draft continuity only; it does not support full offline database sync.
