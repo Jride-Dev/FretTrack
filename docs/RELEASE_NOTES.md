@@ -11,6 +11,10 @@ hero, repair-shop workflow, security posture, Trial/Shop/Pro pricing preview, an
 The Worker now bundles the favicon package and landing screenshots through a static asset binding so the browser tab
 icon and product imagery deploy with the public site.
 
+## 0.2.8 UI Polish
+
+- The New Job section menu can now be collapsed to give the form more working space, with the preference saved per browser.
+
 ## 0.2.8 Inventory Purchasing Foundation
 
 This foundation pass starts the 0.2.8 Inventory Operations Release without adding SMS, public document links, calendar sync, or broad offline mode.
