@@ -2,9 +2,13 @@
 
 ![FretTrack logo and wordmark](images/logo_name.png)
 
+<a href="https://devglobe.app/projects/frettrack?utm_source=badge&utm_medium=embed" target="_blank" rel="noopener">
+  <img src="https://devglobe.app/badges/launched-on-devglobe-dark.svg" alt="Launched on DevGlobe" width="250" height="54" />
+</a>
+
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
-Current version: `0.2.7-beta.0`
+Current version: `0.2.8-beta.0`
 
 FretTrack is a guitar and bass repair shop check-in and work order system for real bench workflow: customer intake, instrument details, inspection notes, damage photos, parts and services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
@@ -21,13 +25,14 @@ Current milestone branch: `v0.2.63 beta candidate`
 This includes:
 
 - Customers foundation
-- Inventory parts foundation
+- Inventory purchasing foundation with vendors, purchase orders, receiving, purchase history, barcode labels, and transactional receiving RPCs
 - Scheduling / Calendar Phase 1
 - Premium entitlement foundation and Advanced Reporting Phase 1
 - Permission hardening with centralized role checks and granular photo controls
 - Operator-managed Shop and Pro trials for 7, 14, or 30 days
 - Paid Access Lifecycle Phase 1 with Trial, Shop, and Pro public product boundaries
 - Supabase SECURITY DEFINER RPC hardening for beta intake, operator, inventory, accounting, and membership RPCs
+- Offline mode audit for the current new-job draft-only continuity scope
 - Photo Editor Phase 1 for job-photo markup and manual background cleanup
 - Beta approval applicant email notifications
 - Jobs, photos, damage map, work logs, accounting foundation, auth/RLS, and multi-shop architecture
@@ -56,8 +61,8 @@ browser tab icon and landing imagery do not depend on manual local files.
 - Existing work orders now support editable job-level parts and services.
 - The app now has mobile/tablet readiness improvements and PWA install support.
 - Legacy WebKit compatibility work lets FretTrack load and run on older iPad browser versions, including older iOS Chrome/Brave WebKit shells, with graceful fallbacks instead of black screens.
-- New work orders can be saved as local offline drafts and synced manually after reconnecting.
-- Inventory parts foundation adds stock counts, movements, low-stock visibility, and job attachment.
+- New work orders can be saved as local offline drafts and synced manually after reconnecting; this is not full offline mode.
+- Inventory purchasing foundation adds stock counts, movements, low-stock visibility, job attachment, vendors, purchase orders, receiving, purchase history, barcode labels, and receiving RPC hardening.
 - Scheduling Phase 1 adds internal shop scheduling for due dates, intake appointments, pickups, follow-ups, and shop blocks.
 - Unsaved-changes protection now warns before losing manual edits on high-risk forms.
 - Premium entitlement checks now centralize future paid-feature gating without blocking core shop workflow.
@@ -77,8 +82,8 @@ Legacy device note: older iPadOS/iOS browser versions can be useful for shop-flo
 
 - Stripe billing or live payment automation.
 - Customer self-service subscription management or Stripe-powered billing portal.
-- Full inventory receiving workflow, barcode labels, purchase history, vendors, purchase orders, and deeper stock management.
-- Full offline mode for existing job edits, queued photo uploads, or cached authenticated Supabase data.
+- Vendor import/export, external supplier integrations, and broader inventory operations beyond the current purchasing/receiving foundation.
+- Full offline mode for existing job edits, queued photo uploads, inventory receiving, purchase orders, or cached authenticated Supabase data.
 - Production SMS messaging.
 - Public invoice or work-order links.
 - Customer-facing appointment confirmations and external calendar sync.
@@ -107,6 +112,8 @@ Legacy device note: older iPadOS/iOS browser versions can be useful for shop-flo
 - [Roadmap](ROADMAP.md)
 - [Release notes](docs/RELEASE_NOTES.md)
 - [Photo editor](docs/PHOTO_EDITOR.md)
+- [Offline mode audit](docs/OFFLINE_MODE_AUDIT.md)
+- [Inventory purchasing notes](docs/INVENTORY_PURCHASING.md)
 - [Deployment notes](docs/DEPLOYMENT_NOTES.md)
 - [Beta operator dashboard](docs/BETA_OPERATOR_DASHBOARD.md)
 - [Subscription foundation](docs/SUBSCRIPTION_FOUNDATION.md)

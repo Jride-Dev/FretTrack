@@ -21,6 +21,7 @@ Start here for the current product path:
 - [Security review checklist](SECURITY_REVIEW_CHECKLIST.md)
 - [Supabase RPC security audit](SUPABASE_RPC_SECURITY_AUDIT.md)
 - [Offline continuity plan](OFFLINE_CONTINUITY_PLAN.md)
+- [Offline mode audit](OFFLINE_MODE_AUDIT.md)
 - [Public invoice links plan](PUBLIC_INVOICE_LINKS_PLAN.md)
 - [Paid tier readiness audit](PAID_TIER_READINESS_AUDIT.md)
 - [Subscription foundation](SUBSCRIPTION_FOUNDATION.md)
@@ -34,9 +35,9 @@ Core shipped beta areas now include:
 - work-order and invoice email flow
 - mobile and PWA readiness
 - legacy WebKit compatibility for older iPad browser versions, with readable fallback messaging instead of black screens
-- offline new-job draft queue
+- offline new-job draft queue with 0.2.8 scope audit
 - editable job-level parts and services
-- inventory parts foundation
+- inventory purchasing foundation with vendors, purchase orders, receiving, purchase history, barcode labels, and transactional receiving RPCs
 - Scheduling / Calendar Phase 1
 - unsaved-changes protection foundation
 - premium entitlement foundation
@@ -88,6 +89,7 @@ Current docs:
 - [Supabase migration workflow](supabase-migrations.md)
 - [Pricing and tiers](PRICING_AND_TIERS.md)
 - [Offline continuity plan](OFFLINE_CONTINUITY_PLAN.md)
+- [Offline mode audit](OFFLINE_MODE_AUDIT.md)
 - [Public invoice links plan](PUBLIC_INVOICE_LINKS_PLAN.md)
 
 The root README should stay focused on what the app is and how to open it. Deeper product, setup, and operational notes can live here as FretTrack grows from a React project into a product repository.

@@ -561,6 +561,16 @@ function landingPage() {
         gap: 14px;
       }
 
+      .footer-badge {
+        align-items: center;
+        display: inline-flex;
+      }
+
+      .footer-badge img {
+        height: 54px;
+        width: 250px;
+      }
+
       .modal-backdrop {
         align-items: center;
         background: rgba(5, 8, 13, 0.78);
@@ -887,7 +897,7 @@ function landingPage() {
               </div>
               <div class="feature">
                 <h3>Parts, inventory, and purchasing foundation</h3>
-                <p>Inventory counts, movements, low stock, barcode identity, vendors, purchase orders, and receiving history are coming together for 0.2.8.</p>
+                <p>Inventory counts, movements, low stock, barcode identity, vendors, purchase orders, barcode labels, and receiving history are part of the 0.2.8 beta.</p>
               </div>
               <div class="feature">
                 <h3>Scheduling and customer records</h3>
@@ -978,6 +988,9 @@ function landingPage() {
     <footer>
       <div class="footer-inner">
         <span>FretTrack Systems</span>
+        <a class="footer-badge" href="https://devglobe.app/projects/frettrack?utm_source=badge&utm_medium=embed" target="_blank" rel="noopener">
+          <img src="https://devglobe.app/badges/launched-on-devglobe-dark.svg" alt="Launched on DevGlobe" width="250" height="54">
+        </a>
         <div class="footer-links">
           <a href="${APP_URL}">App Login</a>
           <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
