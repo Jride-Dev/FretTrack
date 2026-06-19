@@ -10,6 +10,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added bundled landing Worker static assets for the FretTrack favicon package and product screenshots, plus `npm run check:landing-worker` coverage for the landing HTML and favicon route.
 - Added the first 0.2.8 Inventory Purchasing Foundation pass with shop-scoped vendors, purchase orders, purchase order items, inventory receipts, receipt items, part barcode identity fields, vendor SKU, desired stock levels, last/average cost tracking, purchase history UI, and transactional receiving RPCs.
 - Added 0.2.8-B inventory polish with printable barcode labels, `FT-PART-` lookup support, purchase order filters/actions, clearer receiving quantities/costs, expanded purchase history, and tighter receiving RPC validation.
+- Fixed purchase order new-part line items so they create and link real inventory parts at quantity 0 before receiving, and hardened PO receiving to repair legacy null-part lines before stock, receipt history, and movement rows are written.
 - Added 0.2.8-C offline mode audit documentation, clarified user-facing offline scope, and kept offline inventory receiving, purchase orders, photo queues, and existing-job edits out of scope until a real sync architecture exists.
 - Bumped package metadata and the in-app version display to `0.2.8-beta.0`.
 - Added SECURITY DEFINER RPC hardening for flagged Supabase RPCs with explicit grants, locked search paths, stronger inventory/accounting input validation, and documented callable-role intent.

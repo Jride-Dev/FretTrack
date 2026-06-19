@@ -579,7 +579,10 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       const savedOrder = await createPurchaseOrder(shopId, purchaseOrderForm);
       onNotice?.({ type: 'success', message: 'Purchase order created.' });
       setPurchaseOrderForm(emptyPurchaseOrderForm);
-      const { loadedOrders } = await refreshPurchasingData();
+      const [{ loadedOrders }] = await Promise.all([
+        refreshPurchasingData(),
+        loadPartsOnly({ search, activeOnly: !showInactive, lowStockOnly })
+      ]);
       setSelectedPurchaseOrderId(savedOrder.id);
       const nextOrder = loadedOrders.find((order) => order.id === savedOrder.id);
       if (nextOrder) {
@@ -1071,10 +1074,11 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                 <h4>Items</h4>
                 {canWrite && <button type="button" onClick={addPurchaseOrderItem}>Add Item</button>}
               </div>
+              <p className="muted-text">Choose an existing part, or leave the selector on Create new inventory part. New PO items are added to inventory with quantity 0 until received.</p>
               {purchaseOrderForm.items.map((item, index) => (
                 <div className="purchase-order-item-row" key={`${index}-${item.partId || 'manual'}`}>
                   <select disabled={!canWrite} value={item.partId} onChange={(event) => updatePurchaseOrderItem(index, 'partId', event.target.value)}>
-                    <option value="">Manual item</option>
+                    <option value="">Create new inventory part</option>
                     {parts.filter((part) => part.isActive).map((part) => (
                       <option key={part.id} value={part.id}>{part.name}</option>
                     ))}
