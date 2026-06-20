@@ -71,6 +71,6 @@ Defer:
 
 - Prettier dashboard
 - Accounting polish
-- Inventory expansion
+- Deeper inventory expansion beyond the current purchasing/receiving/barcode/landed-cost foundation
 - SMS/email automation polish
 - More reports

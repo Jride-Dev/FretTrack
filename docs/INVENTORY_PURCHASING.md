@@ -1,5 +1,18 @@
 # Inventory Purchasing Notes
 
+## Current 0.2.8 Scope
+
+Current inventory documentation covers the 0.2.8 purchasing foundation:
+
+- parts catalog, stock counts, reorder levels, low-stock visibility, and job-part usage/returns
+- shop-scoped vendors with Company/Sales Rep labels, address fields, and Online Only behavior
+- purchase orders, purchase-order items, partial/full receiving, and purchase history
+- transactional receiving RPCs that keep stock, receipts, costs, purchase-order status, and part movements in sync
+- stable `FT-PART-{barcode_code}` identities and printable barcode label sheets
+- inbound purchase-order Shipping Cost and optional landed-cost allocation
+
+Inventory receiving and purchase-order work remain online-only until a future offline sync/outbox design exists.
+
 ## Barcode Labels
 
 Inventory parts use a stable barcode identity:

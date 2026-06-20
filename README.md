@@ -25,7 +25,7 @@ Current milestone branch: `v0.2.63 beta candidate`
 This includes:
 
 - Customers foundation
-- Inventory purchasing foundation with vendors, purchase orders, receiving, purchase history, barcode labels, and transactional receiving RPCs
+- Inventory purchasing foundation with parts, vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, landed-cost allocation, and transactional receiving RPCs
 - Scheduling / Calendar Phase 1
 - Premium entitlement foundation and Advanced Reporting Phase 1
 - Permission hardening with centralized role checks and granular photo controls
@@ -62,7 +62,7 @@ browser tab icon and landing imagery do not depend on manual local files.
 - The app now has mobile/tablet readiness improvements and PWA install support.
 - Legacy WebKit compatibility work lets FretTrack load and run on older iPad browser versions, including older iOS Chrome/Brave WebKit shells, with graceful fallbacks instead of black screens.
 - New work orders can be saved as local offline drafts and synced manually after reconnecting; this is not full offline mode.
-- Inventory purchasing foundation adds stock counts, movements, low-stock visibility, job attachment, vendors, purchase orders, receiving, purchase history, barcode labels, and receiving RPC hardening.
+- Inventory purchasing foundation adds stock counts, movements, low-stock visibility, job attachment, vendors with Company/Sales Rep/address/Online Only fields, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping cost, optional landed-cost allocation, and receiving RPC hardening.
 - Scheduling Phase 1 adds internal shop scheduling for due dates, intake appointments, pickups, follow-ups, and shop blocks.
 - Unsaved-changes protection now warns before losing manual edits on high-risk forms.
 - Premium entitlement checks now centralize future paid-feature gating without blocking core shop workflow.
@@ -82,7 +82,7 @@ Legacy device note: older iPadOS/iOS browser versions can be useful for shop-flo
 
 - Stripe billing or live payment automation.
 - Customer self-service subscription management or Stripe-powered billing portal.
-- Vendor import/export, external supplier integrations, and broader inventory operations beyond the current purchasing/receiving foundation.
+- Vendor import/export, external supplier integrations, vendor returns, inventory forecasting, outbound/customer shipping, carrier labels, and tracking numbers.
 - Full offline mode for existing job edits, queued photo uploads, inventory receiving, purchase orders, or cached authenticated Supabase data.
 - Production SMS messaging.
 - Public invoice or work-order links.

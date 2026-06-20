@@ -46,6 +46,11 @@ Apply all current schema changes, including:
 - `supabase/migrations/20260514035528_shop_scope_rls_audit.sql`
 - `supabase/migrations/20260514215512_add_shop_profile_onboarding.sql`
 - `supabase/migrations/20260514220946_drop_legacy_public_job_image_storage_policies.sql`
+- `supabase/migrations/20260606093000_inventory_parts_phase_1.sql`
+- `supabase/migrations/20260617220231_inventory_purchasing_foundation_phase_1.sql`
+- `supabase/migrations/20260618072854_inventory_receiving_rpc_polish.sql`
+- `supabase/migrations/20260619092622_po_items_create_inventory_parts.sql`
+- `supabase/migrations/20260620015312_inventory_vendor_shipping_landed_cost.sql`
 
 ## Auth / Shop Access Test
 
@@ -77,7 +82,7 @@ Beta access approval is separate from paid access trial state. A user may be app
    - damage maps
    - work logs
    - scheduling
-   - inventory basics
+   - inventory purchasing basics
    - printing
    - email documents
 9. Confirm expired-trial actions are blocked for create/edit/send/upload paths while existing records remain viewable where safe.
@@ -100,6 +105,19 @@ Beta access approval is separate from paid access trial state. A user may be app
 6. Add a work log entry and save.
 7. Add a payment and save.
 8. Confirm Activity Timeline shows creation/update/status/payment/work-log events after the migration is applied.
+
+## Inventory Purchasing Smoke Test
+
+1. Open Inventory and confirm the Parts, Vendors, Purchase Orders, Barcode Labels, and Purchase History flows load.
+2. Create or edit a vendor with Company and Sales Rep labels.
+3. Add vendor address fields, enable Online Only, and confirm hidden phone/address values are not cleared unless the user manually clears them.
+4. Create a purchase order for an existing part and a new PO-created part.
+5. Confirm the new PO-created part appears in inventory search and barcode label selection with quantity `0` before receiving.
+6. Add PO Shipping Cost and test receiving with Add shipping to cost off; confirm stock increases and purchase history uses normal unit cost.
+7. Receive another PO with Add shipping to cost on; confirm receipt items show shipping allocated, landed unit cost, and total landed cost.
+8. Partially receive a PO more than once and confirm shipping is not double-counted.
+9. Confirm cancelled POs cannot be received and invalid quantity/cost inputs fail cleanly.
+10. Confirm viewer users can read inventory but cannot create, edit, receive, adjust, or print-changing actions that require write access.
 
 ## Image Upload Test
 

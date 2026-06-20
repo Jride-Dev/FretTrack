@@ -4,7 +4,7 @@ Date: 2026-05-25
 
 Scope: audit and planning only. No billing implementation is included here.
 
-Current note, 2026-06-16: this audit is historical planning context. Paid Access Lifecycle Phase 1 supersedes the earlier unpaid fallback recommendation. Beta access approval and paid trial access are separate systems; expired trials preserve data and memberships, block writes, and require restored access.
+Current note, 2026-06-16: this audit is historical planning context. Paid Access Lifecycle Phase 1 supersedes the earlier unpaid fallback recommendation. Beta access approval and paid trial access are separate systems; expired trials preserve data and memberships, block writes, and require restored access. Later 0.2.8 inventory work also supersedes the old no-inventory-module gap statements: the current foundation covers parts, vendors, purchase orders, receiving, barcode labels, purchase history, inbound PO shipping, and landed-cost allocation, while deeper inventory automation remains future work.
 
 ## Executive Summary
 
@@ -111,7 +111,7 @@ Included:
 Limits:
 
 - No API access.
-- No inventory module.
+- Historical 2026-05-25 gap: no inventory module at the time. Superseded by the 0.2.8 inventory purchasing foundation.
 - No advanced accounting ledger UI.
 - No custom domain.
 - Beta tester bypass available only through an operator-controlled database flag.
@@ -135,7 +135,7 @@ Included:
 Limits:
 
 - No SMS or SMS add-on only.
-- No inventory/purchasing module.
+- Historical 2026-05-25 gap: no inventory/purchasing module at the time. Superseded by the 0.2.8 inventory purchasing foundation.
 - Limited exports/reporting history only if necessary, but avoid blocking access to shop data.
 
 ### Shop Pro
@@ -154,7 +154,7 @@ Included:
 - Email messaging.
 - SMS as metered add-on or included allowance after carrier registration.
 - Priority support.
-- Future inventory/accounting modules can attach here first.
+- Future advanced inventory automation and accounting modules can attach here first.
 
 Limits:
 
@@ -164,7 +164,7 @@ Limits:
 ### Optional Future Modules
 
 - SMS messaging add-on: per-shop monthly allowance plus overage.
-- Inventory module: parts catalog, stock, reorder points, receiving, inventory movements.
+- Advanced inventory automation: expand beyond the current parts/vendors/POs/receiving foundation into forecasting, vendor returns, supplier integrations, and deeper movement workflows.
 - Advanced accounting module: committed closeout, immutable transaction events, refunds/voids, bookkeeper exports.
 - Multi-location module: locations, tills, users per location, location-scoped reports.
 - API/Webhooks module: partner integrations and external reporting.
@@ -198,7 +198,7 @@ Recommended enforcement pattern:
 - Create a private SQL helper such as `private.shop_entitlements(target_shop_id text)` or targeted helpers like `private.can_write_shop_data(target_shop_id text)`.
 - For core tables, preserve member RLS but add paid-state checks only where appropriate.
 - Do not over-gate read access. Expired shops should usually be able to view/export data during a grace period.
-- Gate expensive or premium writes first: adding users, uploading photos, sending SMS, exporting advanced reports, enabling inventory/accounting modules.
+- Gate expensive or premium writes first: adding users, uploading photos, sending SMS, exporting advanced reports, and enabling advanced inventory/accounting automation.
 - Edge Functions must re-check entitlements server-side before sending email/SMS or performing any provider-cost action.
 
 ## Suggested Database Additions
@@ -325,7 +325,7 @@ Owner/admin only.
 
 - Reports: keep basic summary available; gate advanced yearly/detail exports if needed.
 - SMS: show configured/disabled/plan-required states.
-- Inventory/accounting modules: visible as locked future modules only if useful, otherwise keep hidden.
+- Advanced inventory/accounting automation: visible as locked future modules only if useful, otherwise keep hidden.
 - Advanced branding/API: settings placeholders only after the user has a reason to care.
 
 ## Feature Gating Points
@@ -339,7 +339,7 @@ Gate or limit:
 - Photo uploads: before Storage upload and `job_images` insert; warn near quota, block over quota.
 - Reports/exports: basic reports included; advanced yearly/export packets can be Pro.
 - SMS/email: Edge Functions must check plan and monthly limits; SMS should be paid or metered.
-- Inventory/accounting modules: gate module entry points and database writes.
+- Advanced inventory/accounting automation: gate module entry points and database writes.
 - Advanced branding: extra print template controls, custom logos/templates, later custom domain.
 - API access: future token/table/RPC access only for a plan that explicitly includes it.
 

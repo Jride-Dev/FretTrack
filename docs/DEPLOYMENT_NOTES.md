@@ -30,9 +30,16 @@ These should be treated as deployment-history alignment items before future prod
 
 Do not use a blanket production migration push while unrelated local migrations are still pending.
 
+0.2.8 inventory work also includes these migrations that must be verified against remote migration history before production apply:
+
+- `20260617220231_inventory_purchasing_foundation_phase_1.sql`
+- `20260618072854_inventory_receiving_rpc_polish.sql`
+- `20260619092622_po_items_create_inventory_parts.sql`
+- `20260620015312_inventory_vendor_shipping_landed_cost.sql`
+
 ## Recent Deployed Systems
 
-- Inventory foundation
+- Inventory purchasing foundation: parts, vendors, purchase orders, receiving, purchase history, barcode labels, and transactional receiving RPCs
 - Scheduling / Calendar Phase 1
 - Premium entitlement foundation
 - Advanced Reporting Phase 1
@@ -44,6 +51,8 @@ Do not use a blanket production migration push while unrelated local migrations 
 - Premium Trial Management Phase 1 with operator-managed 7/14/30-day trials
 - Paid Access Lifecycle Phase 1 is implemented locally: Trial/Shop/Pro public model, expired trials block writes, and legacy internal unpaid values remain compatibility-only.
 - Supabase SECURITY DEFINER RPC hardening is implemented locally in `20260616063922`: flagged RPCs have explicit grants/search paths, inventory and transaction write paths have stronger validation, and public beta intake remains intentionally `anon` callable until the landing Worker moves to a server-side credential.
+- 0.2.8 inventory purchasing work adds vendor/Purchase Order/receiving/barcode/purchase-history flows and transactional receiving RPCs.
+- 0.2.8-D vendor + landed-cost purchasing polish adds Company/Sales Rep vendor labels, vendor address and Online Only fields, PO Shipping Cost, optional Add shipping to cost allocation, landed-cost receipt fields, and partial-receipt shipping allocation.
 - Free vs Pro Tier Split Phase 1 was the earlier entitlement boundary pass before the Trial/Shop/Pro wording change.
 - Shop Tier Foundation Phase 1 is implemented locally but not deployed from this development pass.
 - Customer email/SMS Edge Function effective team-member access hardening is implemented locally but not deployed from this review pass
@@ -87,6 +96,8 @@ curl.exe -I https://frettrack-app.com/
 - Premium Trial Management Phase 1 adds `20260611120000_premium_trial_management_phase_1.sql`. It replaces entitlement snapshot behavior and adds operator-only trial RPCs; verify migration-history alignment before future production migration work.
 - Free vs Pro Tier Split Phase 1 adds `20260611133000_free_pro_tier_split_phase_1.sql`. It seeds explicit `photo_editor`, `advanced_reporting`, and `team_members` entitlements and hardens team-member access/RPCs. This migration still needs an intentional production apply after review.
 - Shop Tier Foundation Phase 1 adds `20260612233321_shop_tier_foundation_phase_1.sql`. It adds the `shop` plan identifier, allows `shop` in subscription-tier resolution, enables Photo Editor and Team Members for Shop, keeps Advanced Reporting on Pro, and updates team-member RPC wording from Pro to Shop. This migration still needs an intentional production apply after review.
+- Inventory Purchasing Foundation adds `20260617220231_inventory_purchasing_foundation_phase_1.sql`, `20260618072854_inventory_receiving_rpc_polish.sql`, and `20260619092622_po_items_create_inventory_parts.sql`; verify vendors, POs, partial/full receiving, part linkage, barcode search/labels, purchase history, and receive movement rows after deploy.
+- Inventory vendor + landed-cost purchasing polish adds `20260620015312_inventory_vendor_shipping_landed_cost.sql`; verify vendor Company/Sales Rep/address/Online Only fields, PO Shipping Cost, Add shipping to cost, partial-receipt allocation, receipt item landed costs, and purchase-history landed-cost display after deploy.
 - The Free vs Pro review also updates `send-email` and `send-sms`; deploy those Edge Functions after the database migration so service-role message sends respect effective team-member access.
 - Beta access approval and premium trial state are separate. Do not use premium trial expiry as a reason to remove beta approval.
 - Trial expiry should preserve shop data and memberships, block writes, and require restored access before core operations continue.

@@ -4,7 +4,7 @@ FretTrack is moving from the old `v0.2.6-beta.14` live baseline into product mil
 
 ## Current Product State
 
-The old live baseline is `v0.2.6-beta.14`. The current branch builds on that baseline with inventory foundation work, Scheduling / Calendar Phase 1, premium entitlement/reporting foundations, operator-controlled premium trial management, beta approval notifications, Photo Editor Phase 1, and Shop Tier Foundation Phase 1.
+The old live baseline is `v0.2.6-beta.14`. The current branch builds on that baseline with inventory purchasing and landed-cost foundation work, Scheduling / Calendar Phase 1, premium entitlement/reporting foundations, operator-controlled premium trial management, beta approval notifications, Photo Editor Phase 1, and Shop Tier Foundation Phase 1.
 
 Shipped or current-branch foundations:
 
@@ -18,7 +18,7 @@ Shipped or current-branch foundations:
 - offline draft queue foundation for new work orders
 - image optimization before upload
 - editable job-level parts and services
-- inventory parts foundation with stock counts, movements, low-stock visibility, and job attachment
+- inventory purchasing foundation with parts, stock counts, movements, low-stock visibility, job attachment, vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, and landed-cost allocation
 - Scheduling / Calendar Phase 1 with week view, schedule events, job/customer links, and Job Detail scheduling
 - reusable unsaved-changes protection for high-risk manual-edit screens
 - premium entitlement architecture for future feature gating
@@ -36,7 +36,7 @@ Known weak spots:
 - SMS remains disabled
 - staff permissions are centralized but still broad-role based, not task-by-task custom ACLs
 - public invoice and work-order links are planned but not implemented
-- deeper inventory operations are still future work
+- deeper inventory operations such as vendor import/export, supplier integrations, vendor returns, forecasting, outbound/customer shipping, carrier labels, and tracking numbers are still future work
 - commerce, licensing, billing automation, production backups, and monitoring are later release tracks
 - Photo Editor Phase 1 is practical canvas editing, not a full Photoshop-style editor or AI cutout tool
 - Free/Shop/Pro pricing, plan caps, storage enforcement, Stripe, and self-service billing are still not implemented
@@ -74,7 +74,7 @@ Included in Phase 1:
 The Operational Shop Release should pull the core workflow into one stable beta experience.
 
 - stable intake-to-pickup job workflow
-- customers, inventory foundation, and scheduling working together
+- customers, inventory purchasing foundation, and scheduling working together
 - reliable work-order and invoice email summaries
 - reliable beta application and approval notification flow
 - practical photo documentation editor for annotated customer/shop records
@@ -106,11 +106,13 @@ This series deepens back-office and repeat-workflow tools after the core operati
 
 - customer import
 - reporting
-- inventory receiving workflow
+- vendor import/export
 - low stock management
-- barcode labels
-- vendors
-- purchase history
+- supplier integrations
+- vendor returns
+- inventory forecasting
+- outbound/customer shipping workflow
+- carrier labels and tracking numbers
 - deeper photo/document workflows if real-shop testing shows gaps
 
 ## v0.5.x: Commercial Release Preparation
@@ -136,7 +138,7 @@ These are already shipped or have a first foundation in place and should not be 
 - camera-first photo workflow
 - offline local draft queue for new work orders
 - editable job-level parts and services
-- inventory parts foundation
+- inventory purchasing foundation with vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, and landed-cost allocation
 - Scheduling / Calendar Phase 1
 - unsaved-changes protection foundation
 - premium entitlement foundation
