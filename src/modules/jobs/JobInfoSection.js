@@ -28,13 +28,6 @@ export default function JobInfoSection({
   const stringCountSelectValue = showCustomStringCount || !isPresetStringCount ? 'custom' : String(stringCount);
   const brandOptions = getBrandsForInstrumentType(instrumentType);
   const modelOptions = getModelsForBrand(instrumentType, draftJob.guitarBrand);
-  const hasBrand = Boolean(String(draftJob.guitarBrand || '').trim());
-  const brandHelperText = 'Choose from suggestions or type a custom brand/model.';
-  const modelHelperText = !hasBrand
-    ? 'Choose a brand to see matching model suggestions, or type a custom model.'
-    : modelOptions.length
-      ? 'Choose from matching suggestions or type a custom model.'
-      : 'No saved model suggestions for this brand yet. Type the model manually.';
 
   useEffect(() => {
     setShowCustomStringCount(!getStringCountOptions(instrumentType).includes(stringCount));
@@ -157,9 +150,7 @@ export default function JobInfoSection({
                 value={draftJob.guitarBrand}
                 onChange={updateField}
                 placeholder="Fender"
-                aria-describedby="detail-brand-helper"
               />
-              <span id="detail-brand-helper" className="muted-text">{brandHelperText}</span>
             </label>
             <label>
               Model
@@ -169,13 +160,12 @@ export default function JobInfoSection({
                 value={draftJob.model}
                 onChange={updateField}
                 placeholder="Stratocaster"
-                aria-describedby="detail-model-helper"
               />
-              <span id="detail-model-helper" className="muted-text">{modelHelperText}</span>
             </label>
             <label>
               Year
               <input
+                className="compact-input"
                 name="instrumentYear"
                 value={draftJob.techDetails.instrumentYear || ''}
                 onChange={updateTechField}

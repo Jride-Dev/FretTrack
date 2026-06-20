@@ -15,7 +15,7 @@ icon and product imagery deploy with the public site.
 
 - The New Job section menu can now be collapsed to give the form more working space, with the preference saved per browser.
 - New Job and Job Detail instrument intake now use cascading Instrument Type / Brand / Model suggestions, with brand-matched model options and custom brand/model entry still allowed.
-- New Job instrument intake now has clearer Brand/Model helper text, improved Serial Number/Color labels and placeholders, optional Year/Finish/Orientation details, and a cleaner grouped layout for screenshots and real shop intake.
+- New Job instrument intake now has improved Serial Number/Color labels and placeholders, optional Year/Finish/Orientation details, a cleaner grouped layout for screenshots and real shop intake, no extra Brand/Model helper copy, and a compact Year field.
 
 ## 0.2.8-D Vendor And Landed-Cost Purchasing Polish
 

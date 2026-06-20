@@ -363,13 +363,6 @@ export default function JobForm({
 
   const brandOptions = getBrandsForInstrumentType(form.instrumentType);
   const modelOptions = getModelsForBrand(form.instrumentType, form.guitarBrand);
-  const hasBrand = Boolean(form.guitarBrand.trim());
-  const brandHelperText = 'Choose from suggestions or type a custom brand/model.';
-  const modelHelperText = !hasBrand
-    ? 'Choose a brand to see matching model suggestions, or type a custom model.'
-    : modelOptions.length
-      ? 'Choose from matching suggestions or type a custom model.'
-      : 'No saved model suggestions for this brand yet. Type the model manually.';
 
   return (
     <form className="panel" onSubmit={handleSubmit}>
@@ -537,10 +530,8 @@ export default function JobForm({
                 onChange={handleChange}
                 disabled={!canWrite}
                 placeholder="Fender"
-                aria-describedby="new-job-brand-helper"
                 required
               />
-              <span id="new-job-brand-helper" className="muted-text">{brandHelperText}</span>
             </label>
             <label>
               Model
@@ -551,13 +542,12 @@ export default function JobForm({
                 onChange={handleChange}
                 disabled={!canWrite}
                 placeholder="Stratocaster"
-                aria-describedby="new-job-model-helper"
               />
-              <span id="new-job-model-helper" className="muted-text">{modelHelperText}</span>
             </label>
             <label>
               Year
               <input
+                className="compact-input"
                 name="instrumentYear"
                 value={form.instrumentYear}
                 onChange={handleChange}
