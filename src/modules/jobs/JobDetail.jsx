@@ -29,6 +29,8 @@ import {
   normalizeInstrumentType,
   normalizeStringCount,
   resizeStringGauges,
+  shouldResetBrandForInstrumentType,
+  shouldResetModelForBrand,
   stringCountForInstrument
 } from '../instruments/instrumentService';
 import { generateJobNumber } from './jobNumber';
@@ -54,6 +56,21 @@ function markerColorForReport(severity) {
   if (severity === 'Critical') return '#b3261e';
   if (severity === 'Structural') return '#a15c00';
   return '#255f85';
+}
+
+function getInstrumentSelectionPatch(currentJob, instrumentType) {
+  const normalizedInstrumentType = normalizeInstrumentType(instrumentType);
+  const shouldResetBrand = shouldResetBrandForInstrumentType(normalizedInstrumentType, currentJob.guitarBrand);
+  const guitarBrand = shouldResetBrand ? '' : currentJob.guitarBrand;
+  const model = shouldResetBrand || shouldResetModelForBrand(normalizedInstrumentType, guitarBrand, currentJob.model)
+    ? ''
+    : currentJob.model;
+
+  return {
+    instrumentType: normalizedInstrumentType,
+    guitarBrand,
+    model
+  };
 }
 
 function buildMeasurementDisplay(job, lengthUnit) {
@@ -206,14 +223,21 @@ export default function JobDetail({
       patchJob({ dateReceived: value, jobNumber: generateJobNumber(value, jobs, draftJob.id, draftJob.shopId) });
       return;
     }
-    if (name === 'instrumentType') {
-      const normalizedInstrumentType = normalizeInstrumentType(value);
-      const stringCount = stringCountForInstrument(normalizedInstrumentType);
+    if (name === 'guitarBrand') {
       patchJob({
-        instrumentType: normalizedInstrumentType,
+        guitarBrand: value,
+        model: shouldResetModelForBrand(draftJob.instrumentType, value, draftJob.model) ? '' : draftJob.model
+      });
+      return;
+    }
+    if (name === 'instrumentType') {
+      const instrumentPatch = getInstrumentSelectionPatch(draftJob, value);
+      const stringCount = stringCountForInstrument(instrumentPatch.instrumentType);
+      patchJob({
+        ...instrumentPatch,
         techDetails: {
           ...draftJob.techDetails,
-          instrumentType: normalizedInstrumentType,
+          instrumentType: instrumentPatch.instrumentType,
           stringCount,
           stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
         }
@@ -248,13 +272,13 @@ export default function JobDetail({
   }
 
   function setInstrumentType(instrumentType) {
-    const normalizedInstrumentType = normalizeInstrumentType(instrumentType);
-    const stringCount = stringCountForInstrument(normalizedInstrumentType);
+    const instrumentPatch = getInstrumentSelectionPatch(draftJob, instrumentType);
+    const stringCount = stringCountForInstrument(instrumentPatch.instrumentType);
     patchJob({
-      instrumentType: normalizedInstrumentType,
+      ...instrumentPatch,
       techDetails: {
         ...draftJob.techDetails,
-        instrumentType: normalizedInstrumentType,
+        instrumentType: instrumentPatch.instrumentType,
         stringCount,
         stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
       }

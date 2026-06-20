@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
+  getBrandsForInstrumentType,
   getInstrumentTypeOptions,
+  getModelsForBrand,
   getStringCountOptions,
-  instrumentCatalog,
   normalizeStringCount
 } from '../instruments/instrumentService';
 import { smsEnabled } from '../../data/messagesRepository';
@@ -24,6 +25,14 @@ export default function JobInfoSection({
   const isPresetStringCount = getStringCountOptions(instrumentType).includes(stringCount);
   const [showCustomStringCount, setShowCustomStringCount] = useState(!isPresetStringCount);
   const stringCountSelectValue = showCustomStringCount || !isPresetStringCount ? 'custom' : String(stringCount);
+  const brandOptions = getBrandsForInstrumentType(instrumentType);
+  const modelOptions = getModelsForBrand(instrumentType, draftJob.guitarBrand);
+  const hasBrand = Boolean(String(draftJob.guitarBrand || '').trim());
+  const modelHelperText = !hasBrand
+    ? 'Choose a brand to see common matching models, or type a custom model.'
+    : modelOptions.length
+      ? 'Model suggestions are matched to the selected brand. You can still type a custom model.'
+      : 'No catalog models for this brand yet. Type a custom model.';
 
   useEffect(() => {
     setShowCustomStringCount(!getStringCountOptions(instrumentType).includes(stringCount));
@@ -32,12 +41,12 @@ export default function JobInfoSection({
   return (
     <section>
       <datalist id="detail-brand-options">
-        {(instrumentCatalog[instrumentType]?.brands || []).map((brand) => (
+        {brandOptions.map((brand) => (
           <option key={brand} value={brand} />
         ))}
       </datalist>
       <datalist id="detail-model-options">
-        {(instrumentCatalog[instrumentType]?.models || []).map((model) => (
+        {modelOptions.map((model) => (
           <option key={model} value={model} />
         ))}
       </datalist>
@@ -169,7 +178,14 @@ export default function JobInfoSection({
         </label>
         <label>
           Model
-          <input name="model" list="detail-model-options" value={draftJob.model} onChange={updateField} />
+          <input
+            name="model"
+            list="detail-model-options"
+            value={draftJob.model}
+            onChange={updateField}
+            aria-describedby="detail-model-helper"
+          />
+          <span id="detail-model-helper" className="muted-text">{modelHelperText}</span>
         </label>
         <label>
           Serial

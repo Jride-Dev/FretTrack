@@ -1,159 +1,19 @@
-export const instrumentCatalog = {
-  Electric: {
-    brands: [
-      'Alvarez',
-      'Breedlove',
-      'Charvel',
-      'Cordoba',
-      'Danelectro',
-      "D'Angelico",
-      'Eastman',
-      'Epiphone',
-      'ESP',
-      'Fender',
-      'G&L',
-      'Gibson',
-      'Godin',
-      'Gretsch',
-      'Guild',
-      'Harley Benton',
-      'Ibanez',
-      'Jackson',
-      'LTD',
-      'Martin',
-      'PRS',
-      'Reverend',
-      'Schecter',
-      'Seagull',
-      'Squier',
-      'Takamine',
-      'Taylor',
-      'Washburn',
-      'Yamaha'
-    ],
-    models: [
-      'AZ',
-      'Concert',
-      'Custom 24',
-      'Dreadnought',
-      'ES-335',
-      'Explorer',
-      'Flying V',
-      'Grand Auditorium',
-      'Jaguar',
-      'Jazzmaster',
-      'Les Paul',
-      'Mustang',
-      'OM',
-      'Pacifica',
-      'Baritone',
-      'Baritone Guitar',
-      'RG',
-      'Revstar',
-      'S',
-      'SE',
-      'SG',
-      'Stratocaster',
-      'Streamliner',
-      'Telecaster'
-    ]
-  },
-  Acoustic: {
-    brands: [
-      'Alvarez',
-      'Breedlove',
-      'Cordoba',
-      "D'Angelico",
-      'Eastman',
-      'Epiphone',
-      'Gibson',
-      'Godin',
-      'Guild',
-      'Ibanez',
-      'Martin',
-      'Ovation',
-      'Seagull',
-      'Takamine',
-      'Taylor',
-      'Washburn',
-      'Yamaha'
-    ],
-    models: [
-      '000',
-      'Auditorium',
-      'Concert',
-      'Dreadnought',
-      'Grand Auditorium',
-      'Grand Concert',
-      'Jumbo',
-      'OM',
-      'Parlor',
-      'Travel'
-    ]
-  },
-  Bass: {
-    brands: [
-      'Charvel',
-      'Cort',
-      'Dingwall',
-      'Epiphone',
-      'ESP',
-      'Fender',
-      'G&L',
-      'Gibson',
-      'Hofner',
-      'Ibanez',
-      'Jackson',
-      'Lakland',
-      'LTD',
-      'Music Man',
-      'Peavey',
-      'Reverend',
-      'Rickenbacker',
-      'Sandberg',
-      'Schecter',
-      'Spector',
-      'Squier',
-      'Sterling',
-      'Warwick',
-      'Yamaha'
-    ],
-    models: [
-      '4001',
-      '4003',
-      'BB',
-      'Bongo',
-      'BTB',
-      'Combustion',
-      'Corvette',
-      'D-Roc',
-      'EB Bass',
-      'Euro',
-      'Jazz Bass',
-      'Mustang Bass',
-      'NS',
-      'Precision Bass',
-      'SR',
-      'Sterling',
-      'StingRay',
-      'Streamer',
-      'Thunderbird',
-      'TRBX',
-      'Violin Bass'
-    ]
-  }
-};
+import { INSTRUMENT_CATALOG } from './instrumentCatalog.js';
 
 const instrumentTypeOptions = [
-  { value: 'Acoustic', label: 'Acoustic' },
-  { value: 'Electric', label: 'Electric' },
-  { value: 'Bass', label: 'Bass' }
+  { value: 'Electric', label: INSTRUMENT_CATALOG.Electric.label },
+  { value: 'Acoustic', label: INSTRUMENT_CATALOG.Acoustic.label },
+  { value: 'Bass', label: INSTRUMENT_CATALOG.Bass.label },
+  { value: 'Classical', label: INSTRUMENT_CATALOG.Classical.label },
+  { value: 'Other', label: INSTRUMENT_CATALOG.Other.label }
 ];
 
 const stringCountOptionsByType = {
   Electric: [5, 6, 7, 8],
   Bass: [4, 5, 6],
-  Acoustic: [6, 12]
+  Acoustic: [6, 12],
+  Classical: [6],
+  Other: [4, 5, 6, 7, 8, 12]
 };
 
 export const STRING_COUNT_OPTIONS = [4, 5, 6, 7, 8, 9, 10, 12];
@@ -273,15 +133,139 @@ const stringGaugePresets = [
   }
 ];
 
-export function normalizeInstrumentType(instrumentType) {
-  if (instrumentType === 'Bass') {
-    return 'Bass';
-  }
-  if (instrumentType === 'Acoustic') {
-    return 'Acoustic';
-  }
-  return 'Electric';
+function cleanCatalogValue(value) {
+  return String(value || '').trim();
 }
+
+function normalizeLookupValue(value) {
+  return cleanCatalogValue(value).toLowerCase();
+}
+
+function uniqueSorted(values) {
+  return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+}
+
+function getCatalogEntry(instrumentType) {
+  const normalizedType = normalizeInstrumentType(instrumentType);
+  if (normalizedType === 'Other') {
+    return {
+      ...INSTRUMENT_CATALOG.Other,
+      brands: getMergedBrandCatalog()
+    };
+  }
+  return INSTRUMENT_CATALOG[normalizedType] || INSTRUMENT_CATALOG.Electric;
+}
+
+function getMergedBrandCatalog() {
+  return Object.values(INSTRUMENT_CATALOG).reduce((merged, entry) => {
+    Object.entries(entry.brands || {}).forEach(([brand, models]) => {
+      merged[brand] = uniqueSorted([...(merged[brand] || []), ...models]);
+    });
+    return merged;
+  }, {});
+}
+
+function findCatalogBrand(instrumentType, brand) {
+  const cleanedBrand = cleanCatalogValue(brand);
+  if (!cleanedBrand) {
+    return '';
+  }
+
+  const lookupBrand = normalizeLookupValue(cleanedBrand);
+  const brands = getBrandsForInstrumentType(instrumentType);
+  return brands.find((candidate) => normalizeLookupValue(candidate) === lookupBrand) || '';
+}
+
+function getAllKnownBrands() {
+  return uniqueSorted(Object.keys(getMergedBrandCatalog()));
+}
+
+function getAllKnownModels() {
+  return uniqueSorted(Object.values(getMergedBrandCatalog()).flat());
+}
+
+export function normalizeInstrumentType(instrumentType) {
+  const cleanedType = cleanCatalogValue(instrumentType);
+  const lookupType = normalizeLookupValue(cleanedType);
+
+  if (!lookupType) {
+    return 'Electric';
+  }
+
+  const matchedEntry = Object.entries(INSTRUMENT_CATALOG).find(([key, entry]) => {
+    const labels = [key, entry.label, ...(entry.aliases || [])];
+    return labels.some((label) => normalizeLookupValue(label) === lookupType);
+  });
+
+  return matchedEntry ? matchedEntry[0] : 'Electric';
+}
+
+export function normalizeBrand(brand, instrumentType = 'Electric') {
+  const cleanedBrand = cleanCatalogValue(brand);
+  if (!cleanedBrand) {
+    return '';
+  }
+
+  return findCatalogBrand(instrumentType, cleanedBrand)
+    || getAllKnownBrands().find((candidate) => normalizeLookupValue(candidate) === normalizeLookupValue(cleanedBrand))
+    || cleanedBrand;
+}
+
+export function getBrandsForInstrumentType(instrumentType) {
+  return uniqueSorted(Object.keys(getCatalogEntry(instrumentType).brands || {}));
+}
+
+export function getModelsForBrand(instrumentType, brand) {
+  const matchedBrand = findCatalogBrand(instrumentType, brand);
+  if (!matchedBrand) {
+    return [];
+  }
+
+  return [...(getCatalogEntry(instrumentType).brands[matchedBrand] || [])];
+}
+
+export function isKnownBrand(instrumentType, brand) {
+  return Boolean(findCatalogBrand(instrumentType, brand));
+}
+
+export function isKnownBrandForAnyInstrumentType(brand) {
+  const lookupBrand = normalizeLookupValue(brand);
+  return Boolean(lookupBrand && getAllKnownBrands().some((candidate) => normalizeLookupValue(candidate) === lookupBrand));
+}
+
+export function isKnownModel(instrumentType, brand, model) {
+  const lookupModel = normalizeLookupValue(model);
+  return Boolean(lookupModel && getModelsForBrand(instrumentType, brand).some((candidate) => normalizeLookupValue(candidate) === lookupModel));
+}
+
+export function isKnownModelForAnyBrand(model) {
+  const lookupModel = normalizeLookupValue(model);
+  return Boolean(lookupModel && getAllKnownModels().some((candidate) => normalizeLookupValue(candidate) === lookupModel));
+}
+
+export function shouldResetBrandForInstrumentType(instrumentType, brand) {
+  return Boolean(cleanCatalogValue(brand) && isKnownBrandForAnyInstrumentType(brand) && !isKnownBrand(instrumentType, brand));
+}
+
+export function shouldResetModelForBrand(instrumentType, brand, model) {
+  return Boolean(
+    cleanCatalogValue(model)
+    && isKnownBrand(instrumentType, brand)
+    && isKnownModelForAnyBrand(model)
+    && !isKnownModel(instrumentType, brand, model)
+  );
+}
+
+export const instrumentCatalog = Object.fromEntries(
+  Object.keys(INSTRUMENT_CATALOG).map((instrumentType) => [
+    instrumentType,
+    {
+      brands: getBrandsForInstrumentType(instrumentType),
+      models: uniqueSorted(Object.values(getCatalogEntry(instrumentType).brands || {}).flat()),
+      modelsByBrand: getCatalogEntry(instrumentType).brands
+    }
+  ])
+);
 
 export function stringCountForInstrument(instrumentType) {
   return getDefaultStringCount(instrumentType);
