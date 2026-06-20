@@ -83,6 +83,13 @@ function toDbVendor(shopId, payload = {}) {
     email: cleanText(payload.email) || null,
     phone: cleanText(payload.phone) || null,
     website: cleanText(payload.website) || null,
+    address_line1: cleanText(payload.addressLine1 || payload.address_line1) || null,
+    address_line2: cleanText(payload.addressLine2 || payload.address_line2) || null,
+    city: cleanText(payload.city) || null,
+    state: cleanText(payload.state) || null,
+    postal_code: cleanText(payload.postalCode || payload.postal_code) || null,
+    country: cleanText(payload.country) || 'US',
+    online_only: payload.onlineOnly ?? payload.online_only ?? false,
     notes: cleanText(payload.notes) || null,
     is_active: payload.isActive ?? payload.is_active ?? true
   };
@@ -97,6 +104,13 @@ function fromDbVendor(row = {}) {
     email: row.email || '',
     phone: row.phone || '',
     website: row.website || '',
+    addressLine1: row.address_line1 || '',
+    addressLine2: row.address_line2 || '',
+    city: row.city || '',
+    state: row.state || '',
+    postalCode: row.postal_code || '',
+    country: row.country || 'US',
+    onlineOnly: row.online_only === true,
     notes: row.notes || '',
     isActive: row.is_active !== false,
     createdAt: row.created_at,
@@ -114,11 +128,16 @@ function fromDbPurchaseOrder(row = {}) {
     orderedAt: row.ordered_at || '',
     expectedAt: row.expected_at || '',
     notes: row.notes || '',
+    shippingCost: moneyNumber(row.shipping_cost),
+    addShippingToCost: row.add_shipping_to_cost === true,
     createdBy: row.created_by || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     latestReceivedAt: row.latest_received_at || '',
     receiptCount: integerNumber(row.receipt_count),
+    receivedSubtotal: moneyNumber(row.received_subtotal),
+    allocatedShipping: moneyNumber(row.allocated_shipping),
+    landedReceivedTotal: moneyNumber(row.landed_received_total),
     items: []
   };
 }
@@ -170,6 +189,9 @@ function fromDbReceiptItem(row = {}) {
     vendorSku: row.vendor_sku || '',
     quantityReceived: integerNumber(row.quantity_received),
     unitCost: moneyNumber(row.unit_cost),
+    baseUnitCost: row.base_unit_cost === null || row.base_unit_cost === undefined ? moneyNumber(row.unit_cost) : moneyNumber(row.base_unit_cost),
+    shippingAllocated: moneyNumber(row.shipping_allocated),
+    landedUnitCost: row.landed_unit_cost === null || row.landed_unit_cost === undefined ? moneyNumber(row.unit_cost) : moneyNumber(row.landed_unit_cost),
     createdAt: row.created_at
   };
 }
@@ -308,7 +330,7 @@ export async function listVendors(shopId = getCurrentShopId(), filters = {}) {
   const search = cleanText(filters.search);
   if (search) {
     const escaped = search.replace(/[%_]/g, '\\$&');
-    query = query.or(`name.ilike.%${escaped}%,contact_name.ilike.%${escaped}%,email.ilike.%${escaped}%,phone.ilike.%${escaped}%`);
+    query = query.or(`name.ilike.%${escaped}%,contact_name.ilike.%${escaped}%,email.ilike.%${escaped}%,phone.ilike.%${escaped}%,website.ilike.%${escaped}%,city.ilike.%${escaped}%,state.ilike.%${escaped}%,postal_code.ilike.%${escaped}%`);
   }
 
   const { data, error } = await query;
@@ -399,6 +421,15 @@ export async function listPurchaseOrders(shopId = getCurrentShopId()) {
     throw receiptsError;
   }
 
+  const { data: receiptItems, error: receiptItemsError } = await supabase
+    .from('inventory_receipt_items')
+    .select('*')
+    .in('purchase_order_id', orderIds);
+
+  if (receiptItemsError) {
+    throw receiptItemsError;
+  }
+
   const itemsByOrderId = new Map();
   for (const item of (items || []).map(fromDbPurchaseOrderItem)) {
     const rows = itemsByOrderId.get(item.purchaseOrderId) || [];
@@ -413,12 +444,32 @@ export async function listPurchaseOrders(shopId = getCurrentShopId()) {
     receiptsByOrderId.set(receipt.purchase_order_id, rows);
   }
 
-  return mappedOrders.map((order) => ({
-    ...order,
-    latestReceivedAt: receiptsByOrderId.get(order.id)?.[0]?.received_at || '',
-    receiptCount: receiptsByOrderId.get(order.id)?.length || 0,
-    items: itemsByOrderId.get(order.id) || []
-  }));
+  const receiptTotalsByOrderId = new Map();
+  for (const item of (receiptItems || []).map(fromDbReceiptItem)) {
+    const totals = receiptTotalsByOrderId.get(item.purchaseOrderId) || {
+      receivedSubtotal: 0,
+      allocatedShipping: 0,
+      landedReceivedTotal: 0
+    };
+    const baseTotal = item.quantityReceived * item.baseUnitCost;
+    totals.receivedSubtotal += baseTotal;
+    totals.allocatedShipping += item.shippingAllocated;
+    totals.landedReceivedTotal += baseTotal + item.shippingAllocated;
+    receiptTotalsByOrderId.set(item.purchaseOrderId, totals);
+  }
+
+  return mappedOrders.map((order) => {
+    const receiptTotals = receiptTotalsByOrderId.get(order.id) || {};
+    return {
+      ...order,
+      latestReceivedAt: receiptsByOrderId.get(order.id)?.[0]?.received_at || '',
+      receiptCount: receiptsByOrderId.get(order.id)?.length || 0,
+      receivedSubtotal: moneyNumber(receiptTotals.receivedSubtotal),
+      allocatedShipping: moneyNumber(receiptTotals.allocatedShipping),
+      landedReceivedTotal: moneyNumber(receiptTotals.landedReceivedTotal),
+      items: itemsByOrderId.get(order.id) || []
+    };
+  });
 }
 
 export async function createPurchaseOrder(shopId = getCurrentShopId(), payload = {}) {
@@ -470,6 +521,8 @@ export async function createPurchaseOrder(shopId = getCurrentShopId(), payload =
     status: cleanText(payload.status) || 'draft',
     ordered_at: cleanText(payload.orderedAt || payload.ordered_at) || null,
     expected_at: cleanText(payload.expectedAt || payload.expected_at) || null,
+    shipping_cost: moneyNumber(payload.shippingCost ?? payload.shipping_cost),
+    add_shipping_to_cost: payload.addShippingToCost ?? payload.add_shipping_to_cost ?? false,
     notes: cleanText(payload.notes) || null
   };
 
@@ -925,7 +978,8 @@ export async function listPurchaseHistory({ shopId = getCurrentShopId(), partId 
     const order = ordersById.get(item.purchaseOrderId) || {};
     const part = partsById.get(item.partId) || {};
     const vendorId = receipt.vendor_id || order.vendor_id || part.vendorId || '';
-    const totalCost = item.quantityReceived * item.unitCost;
+    const baseTotalCost = item.quantityReceived * item.baseUnitCost;
+    const totalLandedCost = baseTotalCost + item.shippingAllocated;
     return {
       ...item,
       partName: part.name || item.description || '',
@@ -936,7 +990,9 @@ export async function listPurchaseHistory({ shopId = getCurrentShopId(), partId 
       receiptNotes: receipt.notes || '',
       receivedBy: receipt.received_by || '',
       poNumber: order.po_number || '',
-      totalCost
+      baseTotalCost,
+      totalCost: totalLandedCost,
+      totalLandedCost
     };
   });
 }

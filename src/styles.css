@@ -3590,6 +3590,13 @@ th.internal-only {
   color: var(--text-muted);
 }
 
+.vendor-list-meta {
+  color: var(--text-muted);
+  display: grid;
+  font-size: 12px;
+  gap: 3px;
+}
+
 .inventory-editor {
   background: var(--surface-2);
   border: 1px solid var(--border);
