@@ -44,6 +44,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added temporary `?debug=legacy` login diagnostics, Supabase auth startup logging, session-check timeout handling, and visible auth failure messages for iOS 12 WebKit troubleshooting.
 - Added a collapsible New Job section menu so shops can hide the left rail and give the form more working space.
 - Added 0.2.8-D vendor and landed-cost purchasing polish: Company/Sales Rep labels, vendor address fields, Online Only behavior, inbound PO Shipping Cost, optional Add shipping to cost allocation, and purchase-history landed-cost display.
+- Added 0.2.8-E instrument intake polish: Instrument Type / Brand / Model now use a cascading catalog with brand-matched model suggestions while still allowing custom brand and model entry.
 
 ## v0.2.6-beta.14 - Offline New-Job Draft Continuity
 

@@ -14,6 +14,7 @@ icon and product imagery deploy with the public site.
 ## 0.2.8 UI Polish
 
 - The New Job section menu can now be collapsed to give the form more working space, with the preference saved per browser.
+- New Job and Job Detail instrument intake now use cascading Instrument Type / Brand / Model suggestions, with brand-matched model options and custom brand/model entry still allowed.
 
 ## 0.2.8-D Vendor And Landed-Cost Purchasing Polish
 

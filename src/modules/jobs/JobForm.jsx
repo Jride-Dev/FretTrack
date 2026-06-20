@@ -4,11 +4,15 @@ import { generateJobNumber } from './jobNumber';
 import { combineCustomerName, findCustomerMatches } from '../customers';
 import {
   getDefaultStringCount,
+  getBrandsForInstrumentType,
   getInstrumentTypeOptions,
+  getModelsForBrand,
   getStringCountOptions,
-  instrumentCatalog,
+  normalizeInstrumentType,
   normalizeStringCount,
   resizeStringGauges,
+  shouldResetBrandForInstrumentType,
+  shouldResetModelForBrand,
 } from '../instruments/instrumentService';
 import { formatShopDate, toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences } from '../../shared/utils/measurements';
@@ -120,6 +124,9 @@ export default function JobForm({
         const dateReceived = value || todayValue();
         nextForm.jobNumber = generateJobNumber(dateReceived, jobs);
       }
+      if (name === 'guitarBrand' && shouldResetModelForBrand(current.instrumentType, value, current.model)) {
+        nextForm.model = '';
+      }
       if (name === 'stringCountMode') {
         if (value === 'custom') {
           nextForm.stringCount = normalizeStringCount(current.customStringCount || current.stringCount, current.instrumentType);
@@ -148,13 +155,22 @@ export default function JobForm({
   }
 
   function setInstrumentType(instrumentType) {
-    setForm((current) => ({
-      ...current,
-      instrumentType,
-      stringCount: getDefaultStringCount(instrumentType),
-      customStringCount: getDefaultStringCount(instrumentType),
-      stringCountMode: 'preset'
-    }));
+    const normalizedInstrumentType = normalizeInstrumentType(instrumentType);
+    setForm((current) => {
+      const shouldResetBrand = shouldResetBrandForInstrumentType(normalizedInstrumentType, current.guitarBrand);
+      const nextBrand = shouldResetBrand ? '' : current.guitarBrand;
+      const shouldResetModel = shouldResetBrand || shouldResetModelForBrand(normalizedInstrumentType, nextBrand, current.model);
+      const defaultStringCount = getDefaultStringCount(normalizedInstrumentType);
+      return {
+        ...current,
+        instrumentType: normalizedInstrumentType,
+        guitarBrand: nextBrand,
+        model: shouldResetModel ? '' : current.model,
+        stringCount: defaultStringCount,
+        customStringCount: defaultStringCount,
+        stringCountMode: 'preset'
+      };
+    });
   }
 
   function useCustomer(customer) {
@@ -338,17 +354,26 @@ export default function JobForm({
     }
   }
 
+  const brandOptions = getBrandsForInstrumentType(form.instrumentType);
+  const modelOptions = getModelsForBrand(form.instrumentType, form.guitarBrand);
+  const hasBrand = Boolean(form.guitarBrand.trim());
+  const modelHelperText = !hasBrand
+    ? 'Choose a brand to see common matching models, or type a custom model.'
+    : modelOptions.length
+      ? 'Model suggestions are matched to the selected brand. You can still type a custom model.'
+      : 'No catalog models for this brand yet. Type a custom model.';
+
   return (
     <form className="panel" onSubmit={handleSubmit}>
       <h2>New Job</h2>
       {!canWrite && <p className="muted-text">Your shop role can view work orders but cannot create new ones.</p>}
       <datalist id="new-job-brand-options">
-        {(instrumentCatalog[form.instrumentType]?.brands || []).map((brand) => (
+        {brandOptions.map((brand) => (
           <option key={brand} value={brand} />
         ))}
       </datalist>
       <datalist id="new-job-model-options">
-        {(instrumentCatalog[form.instrumentType]?.models || []).map((model) => (
+        {modelOptions.map((model) => (
           <option key={model} value={model} />
         ))}
       </datalist>
@@ -526,7 +551,15 @@ export default function JobForm({
         </label>
         <label>
           Model
-          <input name="model" list="new-job-model-options" value={form.model} onChange={handleChange} disabled={!canWrite} />
+          <input
+            name="model"
+            list="new-job-model-options"
+            value={form.model}
+            onChange={handleChange}
+            disabled={!canWrite}
+            aria-describedby="new-job-model-helper"
+          />
+          <span id="new-job-model-helper" className="muted-text">{modelHelperText}</span>
         </label>
         <label>
           Serial
