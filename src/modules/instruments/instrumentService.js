@@ -8,6 +8,12 @@ const instrumentTypeOptions = [
   { value: 'Other', label: INSTRUMENT_CATALOG.Other.label }
 ];
 
+export const ORIENTATION_OPTIONS = [
+  { value: 'Unknown', label: 'Unknown' },
+  { value: 'Right-handed', label: 'Right-handed' },
+  { value: 'Left-handed', label: 'Left-handed' }
+];
+
 const stringCountOptionsByType = {
   Electric: [5, 6, 7, 8],
   Bass: [4, 5, 6],
@@ -273,6 +279,15 @@ export function stringCountForInstrument(instrumentType) {
 
 export function getInstrumentTypeOptions() {
   return instrumentTypeOptions;
+}
+
+export function getOrientationOptions(currentValue = '') {
+  const cleanedValue = cleanCatalogValue(currentValue);
+  if (!cleanedValue || ORIENTATION_OPTIONS.some((option) => option.value === cleanedValue)) {
+    return ORIENTATION_OPTIONS;
+  }
+
+  return [...ORIENTATION_OPTIONS, { value: cleanedValue, label: cleanedValue }];
 }
 
 export function getStringCountOptions(instrumentType) {

@@ -7,6 +7,7 @@ import {
   getBrandsForInstrumentType,
   getInstrumentTypeOptions,
   getModelsForBrand,
+  getOrientationOptions,
   getStringCountOptions,
   normalizeInstrumentType,
   normalizeStringCount,
@@ -50,8 +51,11 @@ function getInitialFormState(jobs = []) {
     email: '',
     guitarBrand: '',
     model: '',
+    instrumentYear: '',
     serial: '',
     color: '',
+    finish: '',
+    orientation: 'Unknown',
     reasonForVisit: '',
     dateReceived,
     promiseDate: '',
@@ -261,6 +265,9 @@ export default function JobForm({
       discountValue: '',
       techDetails: {
         instrumentType: form.instrumentType,
+        instrumentYear: form.instrumentYear,
+        finish: form.finish,
+        orientation: form.orientation || 'Unknown',
         stringCount: form.stringCount,
         intakeType: form.intakeType,
         subcontractorName: form.subcontractorName,
@@ -357,11 +364,12 @@ export default function JobForm({
   const brandOptions = getBrandsForInstrumentType(form.instrumentType);
   const modelOptions = getModelsForBrand(form.instrumentType, form.guitarBrand);
   const hasBrand = Boolean(form.guitarBrand.trim());
+  const brandHelperText = 'Choose from suggestions or type a custom brand/model.';
   const modelHelperText = !hasBrand
-    ? 'Choose a brand to see common matching models, or type a custom model.'
+    ? 'Choose a brand to see matching model suggestions, or type a custom model.'
     : modelOptions.length
-      ? 'Model suggestions are matched to the selected brand. You can still type a custom model.'
-      : 'No catalog models for this brand yet. Type a custom model.';
+      ? 'Choose from matching suggestions or type a custom model.'
+      : 'No saved model suggestions for this brand yet. Type the model manually.';
 
   return (
     <form className="panel" onSubmit={handleSubmit}>
@@ -503,7 +511,7 @@ export default function JobForm({
         </label>
         <div className="instrument-selector" role="group" aria-label="Instrument Type">
           <span>Instrument Type</span>
-          <div className="segmented-control">
+          <div className="segmented-control instrument-type-control">
             {getInstrumentTypeOptions().map((option) => (
               <button
                 type="button"
@@ -517,58 +525,114 @@ export default function JobForm({
             ))}
           </div>
         </div>
-        <label>
-          String Count
-          <select
-            name="stringCountMode"
-            value={getStringCountSelectValue(form)}
-            onChange={handleChange}
-            disabled={!canWrite}
-          >
-            {getStringCountOptions(form.instrumentType).map((count) => (
-              <option key={count} value={count}>{count}-string</option>
-            ))}
-            <option value="custom">Custom</option>
-          </select>
-        </label>
-        {getStringCountSelectValue(form) === 'custom' && (
-          <label>
-            Custom String Count
-            <input
-              type="number"
-              min="1"
-              max="24"
-              name="customStringCount"
-              value={form.customStringCount || form.stringCount}
-              onChange={handleChange}
-              disabled={!canWrite}
-            />
-          </label>
-        )}
-        <label>
-          Brand
-          <input name="guitarBrand" list="new-job-brand-options" value={form.guitarBrand} onChange={handleChange} disabled={!canWrite} required />
-        </label>
-        <label>
-          Model
-          <input
-            name="model"
-            list="new-job-model-options"
-            value={form.model}
-            onChange={handleChange}
-            disabled={!canWrite}
-            aria-describedby="new-job-model-helper"
-          />
-          <span id="new-job-model-helper" className="muted-text">{modelHelperText}</span>
-        </label>
-        <label>
-          Serial
-          <input name="serial" value={form.serial} onChange={handleChange} disabled={!canWrite} />
-        </label>
-        <label>
-          Color
-          <input name="color" value={form.color} onChange={handleChange} disabled={!canWrite} />
-        </label>
+        <fieldset className="instrument-intake-section wide">
+          <legend>Instrument Details</legend>
+          <div className="form-grid instrument-detail-grid">
+            <label>
+              Brand
+              <input
+                name="guitarBrand"
+                list="new-job-brand-options"
+                value={form.guitarBrand}
+                onChange={handleChange}
+                disabled={!canWrite}
+                placeholder="Fender"
+                aria-describedby="new-job-brand-helper"
+                required
+              />
+              <span id="new-job-brand-helper" className="muted-text">{brandHelperText}</span>
+            </label>
+            <label>
+              Model
+              <input
+                name="model"
+                list="new-job-model-options"
+                value={form.model}
+                onChange={handleChange}
+                disabled={!canWrite}
+                placeholder="Stratocaster"
+                aria-describedby="new-job-model-helper"
+              />
+              <span id="new-job-model-helper" className="muted-text">{modelHelperText}</span>
+            </label>
+            <label>
+              Year
+              <input
+                name="instrumentYear"
+                value={form.instrumentYear}
+                onChange={handleChange}
+                disabled={!canWrite}
+                placeholder="1972"
+              />
+            </label>
+            <label>
+              Serial Number
+              <input
+                name="serial"
+                value={form.serial}
+                onChange={handleChange}
+                disabled={!canWrite}
+                placeholder="Z8239242, Unknown, or Not provided"
+              />
+            </label>
+            <label>
+              Color
+              <input
+                name="color"
+                value={form.color}
+                onChange={handleChange}
+                disabled={!canWrite}
+                placeholder="3-Color Sunburst"
+              />
+            </label>
+            <label>
+              Finish
+              <input
+                name="finish"
+                value={form.finish}
+                onChange={handleChange}
+                disabled={!canWrite}
+                placeholder="Gloss, Nitro, Poly, Satin"
+              />
+            </label>
+            <label>
+              Orientation
+              <select name="orientation" value={form.orientation || 'Unknown'} onChange={handleChange} disabled={!canWrite}>
+                {getOrientationOptions(form.orientation).map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              String Count
+              <select
+                name="stringCountMode"
+                value={getStringCountSelectValue(form)}
+                onChange={handleChange}
+                disabled={!canWrite}
+              >
+                {getStringCountOptions(form.instrumentType).map((count) => (
+                  <option key={count} value={count}>{count}-string</option>
+                ))}
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+            {getStringCountSelectValue(form) === 'custom' && (
+              <label>
+                Custom String Count
+                <input
+                  type="number"
+                  min="1"
+                  max="24"
+                  name="customStringCount"
+                  value={form.customStringCount || form.stringCount}
+                  onChange={handleChange}
+                  disabled={!canWrite}
+                />
+              </label>
+            )}
+          </div>
+        </fieldset>
         <label>
           Date Received
           <input type="date" name="dateReceived" value={form.dateReceived} onChange={handleChange} disabled={!canWrite} />

@@ -719,6 +719,38 @@ label {
   font-weight: 700;
 }
 
+.instrument-intake-section {
+  border: 0;
+  border-top: 1px solid var(--border-soft);
+  display: grid;
+  gap: 12px;
+  margin: 4px 0 0;
+  min-width: 0;
+  padding: 14px 0 0;
+}
+
+.instrument-intake-section legend {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+  padding-right: 10px;
+}
+
+.instrument-detail-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.segmented-control.instrument-type-control {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  max-width: 760px;
+}
+
+.instrument-detail-grid .muted-text {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
 .segmented-control {
   border: 1px solid var(--button-border);
   display: grid;
