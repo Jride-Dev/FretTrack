@@ -91,7 +91,7 @@ FretTrack has moved from the beta6 operations/storage baseline to a broader real
 - Customer and subcontractor management are now first-class beta workflows, including profiles, balances, payment history, customer creation, and CRM-style lookup.
 - Work orders and invoices can now be emailed from inside FretTrack through the authenticated Supabase Edge Function and Resend path.
 - Existing work orders now support editable job-level parts and services while preserving totals, discounts, tax/VAT, payments, invoice summaries, and print output.
-- Inventory operations now cover shop-scoped parts, stock counts, job attachment, stock movement rows, low-stock indicators, vendors, purchase orders, receiving, purchase history, barcode labels, and viewer-safe write controls.
+- Inventory operations now cover shop-scoped parts, stock counts, job attachment, stock movement rows, low-stock indicators, vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, landed-cost allocation, and viewer-safe write controls.
 - Scheduling / Calendar Phase 1 now covers internal schedule events, job due dates, intake appointments, pickup appointments, follow-ups, shop blocks, filters, and Job Detail scheduling.
 - Premium entitlement architecture, operator-managed Shop/Pro trial controls, Shop Tier Foundation Phase 1, Paid Access Lifecycle Phase 1, and Advanced Reporting Phase 1 are in place without enabling Stripe, billing collection, self-service subscriptions, charts, exports, or PDFs.
 - Permission hardening now centralizes operator/shop-role checks and separates photo upload, edit, overwrite, delete, and customer-report selection permissions.
@@ -107,7 +107,7 @@ FretTrack has moved from the beta6 operations/storage baseline to a broader real
 
 - Stripe billing or live payment automation.
 - Customer self-service subscription management.
-- Vendor import/export, supplier integrations, and deeper inventory forecasting beyond the current vendors / purchase orders / receiving / barcode label foundation.
+- Vendor import/export, supplier integrations, vendor returns, outbound/customer shipping, carrier labels, tracking numbers, and deeper inventory forecasting beyond the current vendors / purchase orders / receiving / barcode label / landed-cost foundation.
 - Full offline mode for existing job edits, photo queues, inventory receiving, purchase orders, or cached authenticated Supabase data.
 - SMS production messaging.
 - Public invoice/work-order links.

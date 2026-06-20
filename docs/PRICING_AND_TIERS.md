@@ -51,7 +51,7 @@ Core workflow includes:
 - job parts and services
 - work logs
 - basic events
-- inventory
+- inventory purchasing basics
 - scheduling
 - job sheets and customer reports
 - totals, tax/VAT, and manual payments
@@ -69,7 +69,7 @@ Shop is the normal paid operating plan for repair shops. Phase 1 currently unloc
 - jobs
 - photos
 - work logs
-- inventory
+- inventory purchasing basics
 - scheduling
 - Photo Editor
 - Team Members
@@ -86,7 +86,7 @@ Future Pro candidates are documented only and are not implemented in this phase:
 
 - CSV export boundary
 - custom branding
-- inventory alerts
+- inventory alerts and forecasting
 - scheduling reminders
 - message templates
 - automated email
@@ -166,7 +166,7 @@ Included:
 - Advanced employee permissions and staff roles
 - SMS allowance
 - Priority support
-- Future inventory access
+- Future advanced inventory automation
 - Future advanced accounting access
 
 Shop Pro should fit busier shops with multiple staff, heavier photo usage, higher message volume, and stronger reporting needs.
@@ -206,7 +206,7 @@ Possible permissions:
 - Manage billing/subscription
 - Access accounting exports
 - Manage employees
-- Manage inventory later
+- Manage advanced inventory permissions later
 
 Solo/basic tiers may continue using simplified role handling, while larger shops unlock advanced staff management.
 
@@ -217,7 +217,7 @@ Possible add-ons:
 - Additional storage
 - SMS packs
 - Additional users
-- Inventory module
+- Advanced inventory operations
 - Advanced accounting and reporting
 - API and integrations
 - Advanced branding or white-labeling later

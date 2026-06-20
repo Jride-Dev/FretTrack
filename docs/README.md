@@ -37,7 +37,7 @@ Core shipped beta areas now include:
 - legacy WebKit compatibility for older iPad browser versions, with readable fallback messaging instead of black screens
 - offline new-job draft queue with 0.2.8 scope audit
 - editable job-level parts and services
-- inventory purchasing foundation with vendors, purchase orders, receiving, purchase history, barcode labels, and transactional receiving RPCs
+- inventory purchasing foundation with parts, vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, landed-cost allocation, and transactional receiving RPCs
 - Scheduling / Calendar Phase 1
 - unsaved-changes protection foundation
 - premium entitlement foundation

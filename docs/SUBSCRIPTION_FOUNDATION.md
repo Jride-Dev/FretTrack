@@ -192,7 +192,7 @@ After applying the migration:
 4. Confirm plan/status/usage/features render without errors.
 5. Confirm `trialing`, `active`, `grace`, and `beta_bypass` shops can create jobs and upload photos.
 6. Start a 7-day, 14-day, or 30-day Pro trial from the operator dashboard and confirm the shop receives Pro premium features.
-7. End the trial from the operator dashboard and confirm the shop becomes expired: jobs, customers, inventory, scheduling, photos, printing, and email documents remain preserved/viewable where safe, while create/edit/send/upload writes are blocked.
+7. End the trial from the operator dashboard and confirm the shop becomes expired: jobs, customers, inventory purchasing data, scheduling, photos, printing, and email documents remain preserved/viewable where safe, while create/edit/send/upload writes are blocked.
 8. Set a test shop subscription to `grace`; reload and confirm the warning banner appears while normal work remains available.
 9. Set a test shop subscription to `read_only`; reload and confirm:
    - Existing jobs and customers are visible.

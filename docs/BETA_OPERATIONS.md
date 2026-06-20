@@ -72,7 +72,7 @@ If a tester reports data loss or corruption:
 
 If login, onboarding, job save, photo upload, cross-shop access, or print output is broken, treat it as a beta blocker.
 
-If the request is dashboard polish, accounting polish, inventory expansion, SMS/email automation polish, or more reporting, file it as post-beta.
+If the request is dashboard polish, accounting polish, deeper inventory expansion beyond the current purchasing/receiving/landed-cost foundation, SMS/email automation polish, or more reporting, file it as post-beta.
 
 ## Known Beta Limitations
 
@@ -85,5 +85,5 @@ If the request is dashboard polish, accounting polish, inventory expansion, SMS/
 - Bulk export/import tooling is not yet in the app.
 - Supabase Storage objects need separate backup/export handling.
 - Email/SMS automation polish is post-beta.
-- Inventory expansion is post-beta.
+- Deeper inventory expansion beyond current parts, vendors, purchase orders, receiving, barcode labels, purchase history, and landed-cost allocation is post-beta.
 - Reports beyond current print sheets are post-beta.
