@@ -3,6 +3,7 @@ import {
   getBrandsForInstrumentType,
   getInstrumentTypeOptions,
   getModelsForBrand,
+  getOrientationOptions,
   getStringCountOptions,
   normalizeStringCount
 } from '../instruments/instrumentService';
@@ -28,11 +29,12 @@ export default function JobInfoSection({
   const brandOptions = getBrandsForInstrumentType(instrumentType);
   const modelOptions = getModelsForBrand(instrumentType, draftJob.guitarBrand);
   const hasBrand = Boolean(String(draftJob.guitarBrand || '').trim());
+  const brandHelperText = 'Choose from suggestions or type a custom brand/model.';
   const modelHelperText = !hasBrand
-    ? 'Choose a brand to see common matching models, or type a custom model.'
+    ? 'Choose a brand to see matching model suggestions, or type a custom model.'
     : modelOptions.length
-      ? 'Model suggestions are matched to the selected brand. You can still type a custom model.'
-      : 'No catalog models for this brand yet. Type a custom model.';
+      ? 'Choose from matching suggestions or type a custom model.'
+      : 'No saved model suggestions for this brand yet. Type the model manually.';
 
   useEffect(() => {
     setShowCustomStringCount(!getStringCountOptions(instrumentType).includes(stringCount));
@@ -131,7 +133,7 @@ export default function JobInfoSection({
         </label>
         <div className="instrument-selector" role="group" aria-label="Instrument Type">
           <span>Instrument Type</span>
-          <div className="segmented-control">
+          <div className="segmented-control instrument-type-control">
             {getInstrumentTypeOptions().map((option) => (
               <button
                 type="button"
@@ -144,57 +146,107 @@ export default function JobInfoSection({
             ))}
           </div>
         </div>
-        <label>
-          String Count
-          <select
-            value={stringCountSelectValue}
-            onChange={(event) => {
-              const value = event.target.value;
-              setShowCustomStringCount(value === 'custom');
-              updateStringCount(value === 'custom' ? stringCount : value);
-            }}
-          >
-            {getStringCountOptions(instrumentType).map((count) => (
-              <option key={count} value={count}>{count}-string</option>
-            ))}
-            <option value="custom">Custom</option>
-          </select>
-        </label>
-        {showCustomStringCount && (
-          <label>
-            Custom String Count
-            <input
-              type="number"
-              min="1"
-              max="24"
-              value={stringCount}
-              onChange={(event) => updateStringCount(event.target.value)}
-            />
-          </label>
-        )}
-        <label>
-          Brand
-          <input name="guitarBrand" list="detail-brand-options" value={draftJob.guitarBrand} onChange={updateField} />
-        </label>
-        <label>
-          Model
-          <input
-            name="model"
-            list="detail-model-options"
-            value={draftJob.model}
-            onChange={updateField}
-            aria-describedby="detail-model-helper"
-          />
-          <span id="detail-model-helper" className="muted-text">{modelHelperText}</span>
-        </label>
-        <label>
-          Serial
-          <input name="serial" value={draftJob.serial} onChange={updateField} />
-        </label>
-        <label>
-          Color
-          <input name="color" value={draftJob.color} onChange={updateField} />
-        </label>
+        <fieldset className="instrument-intake-section wide">
+          <legend>Instrument Details</legend>
+          <div className="form-grid instrument-detail-grid">
+            <label>
+              Brand
+              <input
+                name="guitarBrand"
+                list="detail-brand-options"
+                value={draftJob.guitarBrand}
+                onChange={updateField}
+                placeholder="Fender"
+                aria-describedby="detail-brand-helper"
+              />
+              <span id="detail-brand-helper" className="muted-text">{brandHelperText}</span>
+            </label>
+            <label>
+              Model
+              <input
+                name="model"
+                list="detail-model-options"
+                value={draftJob.model}
+                onChange={updateField}
+                placeholder="Stratocaster"
+                aria-describedby="detail-model-helper"
+              />
+              <span id="detail-model-helper" className="muted-text">{modelHelperText}</span>
+            </label>
+            <label>
+              Year
+              <input
+                name="instrumentYear"
+                value={draftJob.techDetails.instrumentYear || ''}
+                onChange={updateTechField}
+                placeholder="1972"
+              />
+            </label>
+            <label>
+              Serial Number
+              <input
+                name="serial"
+                value={draftJob.serial}
+                onChange={updateField}
+                placeholder="Z8239242, Unknown, or Not provided"
+              />
+            </label>
+            <label>
+              Color
+              <input
+                name="color"
+                value={draftJob.color}
+                onChange={updateField}
+                placeholder="3-Color Sunburst"
+              />
+            </label>
+            <label>
+              Finish
+              <input
+                name="finish"
+                value={draftJob.techDetails.finish || ''}
+                onChange={updateTechField}
+                placeholder="Gloss, Nitro, Poly, Satin"
+              />
+            </label>
+            <label>
+              Orientation
+              <select name="orientation" value={draftJob.techDetails.orientation || 'Unknown'} onChange={updateTechField}>
+                {getOrientationOptions(draftJob.techDetails.orientation).map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              String Count
+              <select
+                value={stringCountSelectValue}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setShowCustomStringCount(value === 'custom');
+                  updateStringCount(value === 'custom' ? stringCount : value);
+                }}
+              >
+                {getStringCountOptions(instrumentType).map((count) => (
+                  <option key={count} value={count}>{count}-string</option>
+                ))}
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+            {showCustomStringCount && (
+              <label>
+                Custom String Count
+                <input
+                  type="number"
+                  min="1"
+                  max="24"
+                  value={stringCount}
+                  onChange={(event) => updateStringCount(event.target.value)}
+                />
+              </label>
+            )}
+          </div>
+        </fieldset>
         <label>
           Date Received
           <input type="date" name="dateReceived" value={draftJob.dateReceived} onChange={updateField} />
