@@ -2,7 +2,7 @@
 
 ## GitHub Release Summary: v0.2.8-beta.0
 
-FretTrack `0.2.8-beta.0` moves the beta into the Inventory Operations release: vendors, purchase orders, receiving, purchase history, barcode labels, and hardened receiving RPCs are now documented alongside the existing Trial/Shop/Pro access model, SECURITY DEFINER RPC hardening, and a clarified new-job-draft-only offline scope.
+FretTrack `0.2.8-beta.0` moves the beta into the Inventory Operations release: vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, landed-cost allocation, and hardened receiving RPCs are now documented alongside the existing Trial/Shop/Pro access model, SECURITY DEFINER RPC hardening, and a clarified new-job-draft-only offline scope.
 
 ## Public Launch Site Refresh - In Progress
 
@@ -14,6 +14,16 @@ icon and product imagery deploy with the public site.
 ## 0.2.8 UI Polish
 
 - The New Job section menu can now be collapsed to give the form more working space, with the preference saved per browser.
+
+## 0.2.8-D Vendor And Landed-Cost Purchasing Polish
+
+- Vendor UI now uses Company and Sales Rep labels while preserving the existing `vendors.name` and `vendors.contact_name` data model.
+- Vendors can store address fields and can be marked Online Only, which collapses phone/address fields without clearing existing values.
+- Purchase Orders now support inbound vendor Shipping Cost and an optional Add shipping to cost flag.
+- Purchase-order receiving can allocate remaining shipping proportionally across received line subtotals and store base unit cost, shipping allocated, and landed unit cost on receipt items.
+- Partial receipts allocate only remaining unallocated shipping, preventing shipping from being double-counted across multiple receives.
+- Purchase History now shows unit cost, shipping allocated, landed unit cost, and total landed cost where available.
+- Outbound customer shipping, carrier integrations, labels, tracking numbers, and shipment notifications remain future scope.
 
 ## 0.2.8 Inventory Purchasing Foundation
 
@@ -47,7 +57,7 @@ Purchase order line items now create or link a real shop inventory part before r
 
 The receive RPC also repairs older purchase order items with `part_id = null` when the line has enough description data to create the missing inventory part safely. It still rejects cancelled purchase orders, over-receiving, invalid quantities, invalid costs, and unauthorized/shop-mismatched writes.
 
-Inbound PO shipping, landed-cost allocation, outbound customer shipping, carrier labels, tracking numbers, and shipping notifications remain future work and are not part of this hotfix.
+Inbound PO shipping and landed-cost allocation are now covered by the 0.2.8-D purchasing polish pass. Outbound customer shipping, carrier labels, tracking numbers, and shipping notifications remain future work and are not part of this hotfix.
 
 ## 0.2.8-C Offline Mode Audit And Version Sync
 

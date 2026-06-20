@@ -50,6 +50,13 @@ const emptyVendorForm = {
   email: '',
   phone: '',
   website: '',
+  onlineOnly: false,
+  addressLine1: '',
+  addressLine2: '',
+  city: '',
+  state: '',
+  postalCode: '',
+  country: 'US',
   notes: '',
   isActive: true
 };
@@ -67,6 +74,8 @@ const emptyPurchaseOrderForm = {
   status: 'draft',
   orderedAt: '',
   expectedAt: '',
+  shippingCost: '',
+  addShippingToCost: false,
   notes: '',
   items: [{ ...emptyPurchaseOrderItem }]
 };
@@ -108,29 +117,52 @@ function getBarcodeLabel(part) {
   return part?.barcodeCode ? `FT-PART-${part.barcodeCode}` : '-';
 }
 
+function vendorLocationLabel(vendor) {
+  const cityState = [vendor?.city, vendor?.state].filter(Boolean).join(', ');
+  if (cityState) {
+    return cityState;
+  }
+  return vendor?.addressLine1 || '';
+}
+
 function remainingForItem(item) {
   return Math.max(Number(item.quantityOrdered || 0) - Number(item.quantityReceived || 0), 0);
 }
 
 function purchaseOrderTotals(order) {
   const items = order?.items || [];
-  return items.reduce((totals, item) => {
+  const totals = items.reduce((summary, item) => {
     const ordered = Number(item.quantityOrdered || 0);
     const received = Number(item.quantityReceived || 0);
     const cost = Number(item.unitCost || 0);
-    totals.lineCount += 1;
-    totals.ordered += ordered;
-    totals.received += received;
-    totals.remaining += Math.max(ordered - received, 0);
-    totals.estimatedCost += ordered * cost;
-    return totals;
+    summary.lineCount += 1;
+    summary.ordered += ordered;
+    summary.received += received;
+    summary.remaining += Math.max(ordered - received, 0);
+    summary.itemSubtotal += ordered * cost;
+    summary.receivedSubtotalFallback += received * cost;
+    return summary;
   }, {
     lineCount: 0,
     ordered: 0,
     received: 0,
     remaining: 0,
-    estimatedCost: 0
+    itemSubtotal: 0,
+    receivedSubtotalFallback: 0
   });
+  const shippingCost = Number(order?.shippingCost || 0);
+  const receivedSubtotal = Number(order?.receivedSubtotal || totals.receivedSubtotalFallback || 0);
+  const allocatedShipping = Number(order?.allocatedShipping || 0);
+  const landedReceivedTotal = Number(order?.landedReceivedTotal || receivedSubtotal + allocatedShipping || 0);
+  return {
+    ...totals,
+    estimatedCost: totals.itemSubtotal,
+    shippingCost,
+    estimatedTotal: totals.itemSubtotal + shippingCost,
+    receivedSubtotal,
+    allocatedShipping,
+    landedReceivedTotal
+  };
 }
 
 export default function InventoryPage({ canWrite = true, shopId = getCurrentShopId(), onNotice, onDirtyChange }) {
@@ -512,6 +544,13 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       email: vendor.email || '',
       phone: vendor.phone || '',
       website: vendor.website || '',
+      onlineOnly: vendor.onlineOnly === true,
+      addressLine1: vendor.addressLine1 || '',
+      addressLine2: vendor.addressLine2 || '',
+      city: vendor.city || '',
+      state: vendor.state || '',
+      postalCode: vendor.postalCode || '',
+      country: vendor.country || 'US',
       notes: vendor.notes || '',
       isActive: vendor.isActive !== false
     });
@@ -572,6 +611,11 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
   async function savePurchaseOrder(event) {
     event.preventDefault();
     if (!canWrite) {
+      return;
+    }
+    const shippingCost = Number(purchaseOrderForm.shippingCost || 0);
+    if (!Number.isFinite(shippingCost) || shippingCost < 0) {
+      onNotice?.({ type: 'error', message: 'Shipping cost cannot be negative.' });
       return;
     }
     setIsSaving(true);
@@ -924,10 +968,10 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Contact</th>
-                <th>Email</th>
-                <th>Phone</th>
+                <th>Company</th>
+                <th>Sales Rep</th>
+                <th>Location</th>
+                <th>Email / Website</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -938,10 +982,18 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                   className={`${selectedVendorId === vendor.id ? 'selected-row' : ''}${vendor.isActive ? '' : ' inactive-row'}`}
                   onClick={() => loadVendorIntoForm(vendor)}
                 >
-                  <td><strong>{vendor.name}</strong></td>
+                  <td>
+                    <strong>{vendor.name}</strong>
+                    {vendor.onlineOnly && <span className="status-pill muted">Online Only</span>}
+                  </td>
                   <td>{vendor.contactName || '-'}</td>
-                  <td>{vendor.email || '-'}</td>
-                  <td>{vendor.phone || '-'}</td>
+                  <td>{vendor.onlineOnly ? 'Online only' : vendorLocationLabel(vendor) || '-'}</td>
+                  <td>
+                    <div className="vendor-list-meta">
+                      <span>{vendor.email || '-'}</span>
+                      {vendor.website && <span>{vendor.website}</span>}
+                    </div>
+                  </td>
                   <td><span className={`status-pill ${vendor.isActive ? 'success' : 'muted'}`}>{vendor.isActive ? 'Active' : 'Inactive'}</span></td>
                 </tr>
               ))}
@@ -959,13 +1011,32 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               {canWrite && <button type="button" onClick={resetVendorForm}>New Vendor</button>}
             </div>
             <div className="form-grid">
-              <label>Name<input disabled={!canWrite} required value={vendorForm.name} onChange={(event) => setVendorForm((current) => ({ ...current, name: event.target.value }))} /></label>
-              <label>Contact<input disabled={!canWrite} value={vendorForm.contactName} onChange={(event) => setVendorForm((current) => ({ ...current, contactName: event.target.value }))} /></label>
+              <label>Company<input disabled={!canWrite} required value={vendorForm.name} onChange={(event) => setVendorForm((current) => ({ ...current, name: event.target.value }))} /></label>
+              <label>Sales Rep<input disabled={!canWrite} value={vendorForm.contactName} onChange={(event) => setVendorForm((current) => ({ ...current, contactName: event.target.value }))} /></label>
               <label>Email<input disabled={!canWrite} type="email" value={vendorForm.email} onChange={(event) => setVendorForm((current) => ({ ...current, email: event.target.value }))} /></label>
-              <label>Phone<input disabled={!canWrite} value={vendorForm.phone} onChange={(event) => setVendorForm((current) => ({ ...current, phone: event.target.value }))} /></label>
               <label>Website<input disabled={!canWrite} value={vendorForm.website} onChange={(event) => setVendorForm((current) => ({ ...current, website: event.target.value }))} /></label>
-              <label>Notes<input disabled={!canWrite} value={vendorForm.notes} onChange={(event) => setVendorForm((current) => ({ ...current, notes: event.target.value }))} /></label>
             </div>
+            <label className="table-checkbox">
+              <input
+                disabled={!canWrite}
+                type="checkbox"
+                checked={vendorForm.onlineOnly}
+                onChange={(event) => setVendorForm((current) => ({ ...current, onlineOnly: event.target.checked }))}
+              />
+              Online Only
+            </label>
+            {!vendorForm.onlineOnly && (
+              <div className="form-grid">
+                <label>Phone<input disabled={!canWrite} value={vendorForm.phone} onChange={(event) => setVendorForm((current) => ({ ...current, phone: event.target.value }))} /></label>
+                <label>Address Line 1<input disabled={!canWrite} value={vendorForm.addressLine1} onChange={(event) => setVendorForm((current) => ({ ...current, addressLine1: event.target.value }))} /></label>
+                <label>Address Line 2<input disabled={!canWrite} value={vendorForm.addressLine2} onChange={(event) => setVendorForm((current) => ({ ...current, addressLine2: event.target.value }))} /></label>
+                <label>City<input disabled={!canWrite} value={vendorForm.city} onChange={(event) => setVendorForm((current) => ({ ...current, city: event.target.value }))} /></label>
+                <label>State / Region<input disabled={!canWrite} value={vendorForm.state} onChange={(event) => setVendorForm((current) => ({ ...current, state: event.target.value }))} /></label>
+                <label>Postal Code<input disabled={!canWrite} value={vendorForm.postalCode} onChange={(event) => setVendorForm((current) => ({ ...current, postalCode: event.target.value }))} /></label>
+                <label>Country<input disabled={!canWrite} value={vendorForm.country} onChange={(event) => setVendorForm((current) => ({ ...current, country: event.target.value }))} /></label>
+              </div>
+            )}
+            <label>Notes<input disabled={!canWrite} value={vendorForm.notes} onChange={(event) => setVendorForm((current) => ({ ...current, notes: event.target.value }))} /></label>
             <label className="table-checkbox">
               <input
                 disabled={!canWrite}
@@ -1011,7 +1082,9 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                 <th>Lines</th>
                 <th>Qty</th>
                 <th>Remaining</th>
-                <th>Est. Cost</th>
+                <th>Item Subtotal</th>
+                <th>Shipping</th>
+                <th>Est. Total</th>
                 <th>Receipts</th>
               </tr>
             </thead>
@@ -1033,13 +1106,15 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                     <td>{totals.lineCount}</td>
                     <td>{totals.received} / {totals.ordered}</td>
                     <td>{totals.remaining}</td>
-                    <td>{money(totals.estimatedCost, moneyOptions)}</td>
+                    <td>{money(totals.itemSubtotal, moneyOptions)}</td>
+                    <td>{money(totals.shippingCost, moneyOptions)}</td>
+                    <td>{money(totals.estimatedTotal, moneyOptions)}</td>
                     <td>{order.receiptCount || 0}</td>
                   </tr>
                 );
               })}
               {!filteredPurchaseOrders.length && (
-                <tr><td colSpan="11">No purchase orders found.</td></tr>
+                <tr><td colSpan="13">No purchase orders found.</td></tr>
               )}
             </tbody>
           </table>
@@ -1066,8 +1141,19 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               </label>
               <label>Ordered<input disabled={!canWrite} type="date" value={purchaseOrderForm.orderedAt} onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, orderedAt: event.target.value }))} /></label>
               <label>Expected<input disabled={!canWrite} type="date" value={purchaseOrderForm.expectedAt} onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, expectedAt: event.target.value }))} /></label>
+              <label>Shipping Cost<input disabled={!canWrite} type="number" min="0" step="0.01" value={purchaseOrderForm.shippingCost} onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, shippingCost: event.target.value }))} /></label>
               <label>Notes<input disabled={!canWrite} value={purchaseOrderForm.notes} onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, notes: event.target.value }))} /></label>
             </div>
+            <label className="table-checkbox">
+              <input
+                disabled={!canWrite}
+                type="checkbox"
+                checked={purchaseOrderForm.addShippingToCost}
+                onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, addShippingToCost: event.target.checked }))}
+              />
+              Add shipping to cost
+            </label>
+            <p className="muted-text">Use this for inbound vendor shipping. Customer/outbound shipping is planned separately.</p>
 
             <div className="inventory-subsection">
               <div className="editor-heading">
@@ -1117,7 +1203,13 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                       <span>Ordered qty <strong>{totals.ordered}</strong></span>
                       <span>Received qty <strong>{totals.received}</strong></span>
                       <span>Remaining qty <strong>{totals.remaining}</strong></span>
-                      <span>Estimated cost <strong>{money(totals.estimatedCost, moneyOptions)}</strong></span>
+                      <span>Item subtotal <strong>{money(totals.itemSubtotal, moneyOptions)}</strong></span>
+                      <span>Shipping cost <strong>{money(totals.shippingCost, moneyOptions)}</strong></span>
+                      <span>Estimated total <strong>{money(totals.estimatedTotal, moneyOptions)}</strong></span>
+                      <span>Add shipping to cost <strong>{selectedPurchaseOrder.addShippingToCost ? 'Yes' : 'No'}</strong></span>
+                      <span>Received subtotal <strong>{money(totals.receivedSubtotal, moneyOptions)}</strong></span>
+                      <span>Allocated shipping <strong>{money(totals.allocatedShipping, moneyOptions)}</strong></span>
+                      <span>Landed received total <strong>{money(totals.landedReceivedTotal, moneyOptions)}</strong></span>
                     </>
                   );
                 })()}
@@ -1188,7 +1280,9 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                 <th>Receipt</th>
                 <th>Qty</th>
                 <th>Unit Cost</th>
-                <th>Total</th>
+                <th>Shipping Allocated</th>
+                <th>Landed Unit Cost</th>
+                <th>Total Landed Cost</th>
                 <th>Received By</th>
                 <th>Notes</th>
               </tr>
@@ -1202,14 +1296,16 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                   <td>{row.poNumber || 'Manual'}</td>
                   <td>{row.receiptNumber || '-'}</td>
                   <td>{row.quantityReceived}</td>
-                  <td>{money(row.unitCost, moneyOptions)}</td>
-                  <td>{money(row.totalCost ?? row.quantityReceived * row.unitCost, moneyOptions)}</td>
+                  <td>{money(row.baseUnitCost ?? row.unitCost, moneyOptions)}</td>
+                  <td>{row.shippingAllocated ? money(row.shippingAllocated, moneyOptions) : '-'}</td>
+                  <td>{money(row.landedUnitCost ?? row.unitCost, moneyOptions)}</td>
+                  <td>{money(row.totalLandedCost ?? row.totalCost ?? row.quantityReceived * row.unitCost, moneyOptions)}</td>
                   <td>{row.receivedBy ? `${row.receivedBy.slice(0, 8)}...` : '-'}</td>
                   <td>{row.receiptNotes || '-'}</td>
                 </tr>
               ))}
               {!(selectedPart ? partPurchaseHistory : purchaseHistory).length && (
-                <tr><td colSpan="10">No purchase receipts yet.</td></tr>
+                <tr><td colSpan="12">No purchase receipts yet.</td></tr>
               )}
             </tbody>
           </table>
