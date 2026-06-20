@@ -751,6 +751,11 @@ label {
   line-height: 1.35;
 }
 
+.compact-input {
+  max-width: 11rem;
+  width: 100%;
+}
+
 .segmented-control {
   border: 1px solid var(--button-border);
   display: grid;
@@ -3354,6 +3359,10 @@ th.internal-only {
 
   .string-gauges {
     grid-template-columns: 1fr;
+  }
+
+  .compact-input {
+    max-width: none;
   }
 
   .job-tab-bar {

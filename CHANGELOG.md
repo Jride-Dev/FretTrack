@@ -45,7 +45,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added a collapsible New Job section menu so shops can hide the left rail and give the form more working space.
 - Added 0.2.8-D vendor and landed-cost purchasing polish: Company/Sales Rep labels, vendor address fields, Online Only behavior, inbound PO Shipping Cost, optional Add shipping to cost allocation, and purchase-history landed-cost display.
 - Added 0.2.8-E instrument intake polish: Instrument Type / Brand / Model now use a cascading catalog with brand-matched model suggestions while still allowing custom brand and model entry.
-- Added 0.2.8-F New Job instrument intake polish with clearer Brand/Model helper text, screenshot-ready instrument detail grouping, optional Year/Finish/Orientation fields stored in job details, and improved Serial Number/Color labels and placeholders.
+- Added 0.2.8-F New Job instrument intake polish with screenshot-ready instrument detail grouping, optional Year/Finish/Orientation fields stored in job details, improved Serial Number/Color labels and placeholders, removed extra Brand/Model helper copy, and tightened the Year field layout.
 
 ## v0.2.6-beta.14 - Offline New-Job Draft Continuity
 
