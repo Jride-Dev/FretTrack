@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FretTrack Beta Testing Checklist</title>
-    <meta name="description" content="Download and use the FretTrack beta tester checklist for repair-shop workflow testing.">
+    <meta name="description" content="Download and use the FretTrack beta tester workbook for repair-shop workflow testing.">
     <link rel="canonical" href="https://frettrack-app.com/beta-tester">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -206,9 +206,10 @@
 
       <header class="hero">
         <h1>FretTrack beta testing checklist</h1>
-        <p class="lede">Use this package to test the repair-shop workflow and report useful, reproducible feedback. The checklist works in Excel, Google Sheets, LibreOffice, or any spreadsheet tool that can open CSV files.</p>
+        <p class="lede">Use this package to test the repair-shop workflow and report useful, reproducible feedback. Recommended: download the Excel workbook. It includes a compact checklist, detailed test references, and a bug log.</p>
         <div class="actions">
-          <a class="button" href="/downloads/frettrack-beta-tester-checklist.csv" download>Download CSV Checklist</a>
+          <a class="button" href="/downloads/frettrack-beta-tester-workbook.xlsx" download>Download Excel Workbook</a>
+          <a class="button secondary" href="/downloads/frettrack-beta-tester-checklist.csv" download>CSV fallback</a>
           <a class="button secondary" href="https://app.frettrack-app.com/">Open Beta Login</a>
         </div>
       </header>
@@ -286,32 +287,26 @@
         </section>
 
         <section class="section panel">
-          <h2>CSV columns</h2>
+          <h2>Workbook tabs</h2>
+          <p>The workbook is the primary beta tester file. Use the CSV only if your spreadsheet tool cannot open the workbook.</p>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Column</th>
-                  <th>How to fill it out</th>
+                  <th>Tab</th>
+                  <th>How to use it</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td>Section</td><td>The checklist category, such as New Job Intake or Inventory Parts.</td></tr>
-                <tr><td>Test ID</td><td>Stable test ID like JOB-001 or PO-006.</td></tr>
-                <tr><td>Test Item</td><td>The workflow to test.</td></tr>
-                <tr><td>Expected Result</td><td>What should happen if the workflow is working.</td></tr>
-                <tr><td>Role</td><td>Suggested role to test with.</td></tr>
-                <tr><td>Status</td><td>Pass, Fail, Blocked, Not Tested, or Needs Clarification.</td></tr>
-                <tr><td>Severity</td><td>Low, Medium, High, or Critical.</td></tr>
-                <tr><td>Browser / Device</td><td>Example: Chrome / Windows 11, Safari / iPadOS 17, Safari / iOS 12.</td></tr>
-                <tr><td>Notes</td><td>What happened, what you expected, and any reproduction steps.</td></tr>
-                <tr><td>Screenshot / Video Link</td><td>Attach or link screenshots and short recordings for visual issues.</td></tr>
-                <tr><td>Reproducible?</td><td>Yes, No, Sometimes, or Unknown.</td></tr>
-                <tr><td>Tester</td><td>Your name or tester label.</td></tr>
-                <tr><td>Date</td><td>Date tested.</td></tr>
+                <tr><td>Start Here</td><td>Read the testing flow, status/severity guide, and feedback instructions.</td></tr>
+                <tr><td>Quick Checklist</td><td>Use this compact sheet for normal pass/fail testing. It has dropdowns for status and severity.</td></tr>
+                <tr><td>Detailed Tests</td><td>Use this when you need the longer expected-result text or more device/testing context.</td></tr>
+                <tr><td>Bug Log</td><td>Record longer bug details, reproduction steps, expected behavior, actual behavior, and issue links.</td></tr>
+                <tr><td>Lists</td><td>Stores dropdown values for the workbook.</td></tr>
               </tbody>
             </table>
           </div>
+          <p><a href="/downloads/frettrack-beta-tester-checklist.csv" download>Download the CSV fallback</a> if you cannot use the workbook.</p>
         </section>
       </main>
 
