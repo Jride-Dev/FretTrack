@@ -82,6 +82,8 @@ Pro is the advanced reporting and automation tier. Phase 1 currently unlocks:
 
 - Advanced Reporting
 
+The current Pro reporting dashboard includes operational tables for shop overview counts, jobs by status, priority, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock inventory by desired stock level, open purchase orders, landed-cost purchase history, and upcoming schedule workload. These reports use existing shop data and do not add Stripe, billing automation, charts, PDF generation, or export workflows yet.
+
 Future Pro candidates are documented only and are not implemented in this phase:
 
 - CSV export boundary
