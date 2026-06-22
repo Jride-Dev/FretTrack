@@ -16,6 +16,7 @@ const originalFetch = globalThis.fetch;
 try {
   await testLandingPageIncludesLaunchAssets();
   await testBundledFaviconAssetRoute();
+  await testBetaTesterChecklistRoutes();
   await testSuccessfulApplication();
   await testSupabaseFailureBlocksSuccess();
   await testEmailFailureDoesNotLoseSavedApplication();
@@ -41,6 +42,8 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /Stripe-powered account management planned/);
   assert.match(html, /https:\/\/devglobe\.app\/projects\/frettrack\?utm_source=badge&utm_medium=embed/);
   assert.match(html, /Launched on DevGlobe/);
+  assert.match(html, /href="\/beta-tester"/);
+  assert.match(html, /Beta Tester Checklist/);
 }
 
 async function testBundledFaviconAssetRoute() {
@@ -64,6 +67,47 @@ async function testBundledFaviconAssetRoute() {
   assert.equal(assetCalls.length, 1);
   assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable');
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+}
+
+async function testBetaTesterChecklistRoutes() {
+  const assetCalls = [];
+  const env = {
+    ...baseEnv(),
+    LANDING_ASSETS: {
+      async fetch(request) {
+        const pathname = new URL(request.url).pathname;
+        assetCalls.push(pathname);
+        if (pathname === '/beta-tester.html') {
+          return new Response('<!doctype html><title>FretTrack Beta Testing Checklist</title><a href="/downloads/frettrack-beta-tester-checklist.csv">Download</a>', {
+            headers: { 'content-type': 'text/html; charset=utf-8' }
+          });
+        }
+        if (pathname === '/downloads/frettrack-beta-tester-checklist.csv') {
+          return new Response('"Section","Test ID"', {
+            headers: { 'content-type': 'text/csv; charset=utf-8' }
+          });
+        }
+        return new Response('not found', { status: 404 });
+      }
+    }
+  };
+
+  const pageResponse = await worker.fetch(new Request('https://frettrack-app.com/beta-tester'), env);
+  const pageHtml = await pageResponse.text();
+  assert.equal(pageResponse.status, 200);
+  assert.match(pageResponse.headers.get('content-type') || '', /text\/html/);
+  assert.match(pageHtml, /FretTrack Beta Testing Checklist/);
+
+  const csvResponse = await worker.fetch(new Request('https://frettrack-app.com/downloads/frettrack-beta-tester-checklist.csv'), env);
+  const csvText = await csvResponse.text();
+  assert.equal(csvResponse.status, 200);
+  assert.match(csvResponse.headers.get('content-type') || '', /text\/csv/);
+  assert.equal(csvResponse.headers.get('cache-control'), 'public, max-age=3600');
+  assert.match(csvText, /"Section","Test ID"/);
+  assert.deepEqual(assetCalls, [
+    '/beta-tester.html',
+    '/downloads/frettrack-beta-tester-checklist.csv'
+  ]);
 }
 
 async function testSuccessfulApplication() {
