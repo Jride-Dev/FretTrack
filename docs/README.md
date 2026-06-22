@@ -32,6 +32,7 @@ Core shipped beta areas now include:
 
 - customer and subcontractor management
 - public launch landing page refresh with bundled favicon and product screenshot assets
+- public Privacy Policy and Support / FAQ pages on the landing site
 - work-order and invoice email flow
 - mobile and PWA readiness
 - legacy WebKit compatibility for older iPad browser versions, with readable fallback messaging instead of black screens
@@ -74,6 +75,8 @@ Current docs:
 - [Deployment notes](DEPLOYMENT_NOTES.md)
 - [Beta operations](BETA_OPERATIONS.md)
 - [Beta tester checklist](BETA_TESTER_CHECKLIST.md)
+- Public Privacy Policy: `https://frettrack-app.com/privacy`
+- Public Support / FAQ: `https://frettrack-app.com/support`
 - [Beta access approval](BETA_ACCESS_APPROVAL.md)
 - [Beta operator dashboard](BETA_OPERATOR_DASHBOARD.md)
 - [Beta messaging](BETA_MESSAGING.md)

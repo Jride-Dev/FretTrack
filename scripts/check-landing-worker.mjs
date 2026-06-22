@@ -43,6 +43,8 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /https:\/\/devglobe\.app\/projects\/frettrack\?utm_source=badge&utm_medium=embed/);
   assert.match(html, /Launched on DevGlobe/);
   assert.match(html, /href="\/beta-tester"/);
+  assert.match(html, /href="\/support"/);
+  assert.match(html, /href="\/privacy"/);
   assert.match(html, /Beta Tester Checklist/);
 }
 
@@ -82,6 +84,16 @@ async function testBetaTesterChecklistRoutes() {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
+        if (pathname === '/privacy.html') {
+          return new Response('<!doctype html><title>Privacy Policy | FretTrack</title><h1>Privacy Policy</h1>', {
+            headers: { 'content-type': 'text/html; charset=utf-8' }
+          });
+        }
+        if (pathname === '/support.html') {
+          return new Response('<!doctype html><title>Support | FretTrack</title><h1>Support</h1>', {
+            headers: { 'content-type': 'text/html; charset=utf-8' }
+          });
+        }
         if (pathname === '/downloads/frettrack-beta-tester-workbook.xlsx') {
           return new Response('workbook-bytes', {
             headers: { 'content-type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
@@ -117,10 +129,35 @@ async function testBetaTesterChecklistRoutes() {
   assert.match(csvResponse.headers.get('content-type') || '', /text\/csv/);
   assert.equal(csvResponse.headers.get('cache-control'), 'public, max-age=3600');
   assert.match(csvText, /"Section","Test ID"/);
+
+  const privacyResponse = await worker.fetch(new Request('https://frettrack-app.com/privacy'), env);
+  const privacyHtml = await privacyResponse.text();
+  assert.equal(privacyResponse.status, 200);
+  assert.match(privacyResponse.headers.get('content-type') || '', /text\/html/);
+  assert.match(privacyHtml, /Privacy Policy/);
+
+  const privacyHtmlResponse = await worker.fetch(new Request('https://frettrack-app.com/privacy.html'), env);
+  assert.equal(privacyHtmlResponse.status, 200);
+  assert.match(privacyHtmlResponse.headers.get('content-type') || '', /text\/html/);
+
+  const supportResponse = await worker.fetch(new Request('https://frettrack-app.com/support'), env);
+  const supportHtml = await supportResponse.text();
+  assert.equal(supportResponse.status, 200);
+  assert.match(supportResponse.headers.get('content-type') || '', /text\/html/);
+  assert.match(supportHtml, /Support/);
+
+  const supportHtmlResponse = await worker.fetch(new Request('https://frettrack-app.com/support.html'), env);
+  assert.equal(supportHtmlResponse.status, 200);
+  assert.match(supportHtmlResponse.headers.get('content-type') || '', /text\/html/);
+
   assert.deepEqual(assetCalls, [
     '/beta-tester.html',
     '/downloads/frettrack-beta-tester-workbook.xlsx',
-    '/downloads/frettrack-beta-tester-checklist.csv'
+    '/downloads/frettrack-beta-tester-checklist.csv',
+    '/privacy.html',
+    '/privacy.html',
+    '/support.html',
+    '/support.html'
   ]);
 }
 
