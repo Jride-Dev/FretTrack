@@ -1291,6 +1291,7 @@ export default function App() {
               customers={customers}
               entitlementSnapshot={billingAccess}
               jobs={jobs}
+              onOpenJob={handleSelectJob}
               shopId={membership?.shopId || getSelectedShop().shopId}
               shopProfile={shopProfile}
               onNotice={setNotice}

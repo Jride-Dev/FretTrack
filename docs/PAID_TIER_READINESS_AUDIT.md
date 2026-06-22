@@ -4,7 +4,7 @@ Date: 2026-05-25
 
 Scope: audit and planning only. No billing implementation is included here.
 
-Current note, 2026-06-16: this audit is historical planning context. Paid Access Lifecycle Phase 1 supersedes the earlier unpaid fallback recommendation. Beta access approval and paid trial access are separate systems; expired trials preserve data and memberships, block writes, and require restored access. Later 0.2.8 inventory work also supersedes the old no-inventory-module gap statements: the current foundation covers parts, vendors, purchase orders, receiving, barcode labels, purchase history, inbound PO shipping, and landed-cost allocation, while deeper inventory automation remains future work.
+Current note, 2026-06-21: this audit is historical planning context. Paid Access Lifecycle Phase 1 supersedes the earlier unpaid fallback recommendation. Beta access approval and paid trial access are separate systems; expired trials preserve data and memberships, block writes, and require restored access. Later 0.2.8 inventory work also supersedes the old no-inventory-module gap statements: the current foundation covers parts, vendors, purchase orders, receiving, barcode labels, purchase history, inbound PO shipping, and landed-cost allocation, while deeper inventory automation remains future work. Pro Reports Dashboard Phase 2 now expands Advanced Reporting with operational job, inventory, purchase-order, landed-cost, work-log, and scheduling tables, but Stripe, Checkout, Billing Portal, payment links, billing webhooks, charts, exports, and PDF reports remain separate future work.
 
 ## Executive Summary
 

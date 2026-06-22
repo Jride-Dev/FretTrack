@@ -2527,6 +2527,91 @@ th.internal-only {
   font-size: 1.35rem;
 }
 
+.report-metric-card.warning {
+  border-color: var(--warning);
+}
+
+.report-detail-section {
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+}
+
+.report-detail-section summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  justify-content: space-between;
+}
+
+.report-detail-section summary span {
+  font-weight: 800;
+}
+
+.report-detail-section summary small {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.report-table-wrap {
+  overflow-x: auto;
+}
+
+.report-table {
+  min-width: 760px;
+}
+
+.report-table th,
+.report-table td {
+  vertical-align: top;
+}
+
+.priority-report-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.priority-report-card {
+  background: var(--surface-muted);
+  border: 1px solid var(--border-soft);
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+}
+
+.priority-report-card > div {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.priority-report-card strong {
+  font-size: 1.25rem;
+}
+
+.priority-report-card ul {
+  display: grid;
+  gap: 0.45rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.priority-report-card li {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.priority-report-card li span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
 .empty,
 .empty-state {
   color: var(--text-subtle);
@@ -3230,6 +3315,7 @@ th.internal-only {
   .billing-summary-grid,
   .accounting-summary-grid,
   .report-card-grid,
+  .priority-report-grid,
   .image-grid,
   .discount-controls,
   .payment-form,
@@ -3352,6 +3438,7 @@ th.internal-only {
   .billing-summary-grid,
   .accounting-summary-grid,
   .report-card-grid,
+  .priority-report-grid,
   .customer-filter-bar,
   .customer-summary-grid {
     grid-template-columns: 1fr;

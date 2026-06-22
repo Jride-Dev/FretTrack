@@ -4,6 +4,12 @@
 
 FretTrack `0.2.8-beta.0` moves the beta into the Inventory Operations release: vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, landed-cost allocation, and hardened receiving RPCs are now documented alongside the existing Trial/Shop/Pro access model, SECURITY DEFINER RPC hardening, and a clarified new-job-draft-only offline scope.
 
+## 0.2.9-A Pro Reports Dashboard Phase 2
+
+Advanced Reporting now has a Pro-gated operational dashboard built from existing shop data. Pro-enabled shops can review shop overview counts, jobs by status, priority breakdowns, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock parts based on desired stock levels, open purchase orders, purchase history with landed-cost fields, and upcoming schedule workload.
+
+This pass does not add charts, exports, PDFs, Stripe, Checkout, Billing Portal, payment links, webhooks, SMS, public document links, or supplier integrations. Shop and expired-trial lock states continue to rely on the existing entitlement and paid-access lifecycle foundation.
+
 ## Public Launch Site Refresh - In Progress
 
 The public `frettrack-app.com` landing Worker has been redesigned around a launch-ready SaaS page: product screenshot
