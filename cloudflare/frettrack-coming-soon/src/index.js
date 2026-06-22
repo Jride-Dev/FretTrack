@@ -10,8 +10,15 @@ const BUNDLED_ASSET_PATHS = new Set([
   '/android-chrome-512x512.png',
   '/site.webmanifest',
   '/beta-tester.html',
+  '/privacy.html',
+  '/support.html',
   '/downloads/frettrack-beta-tester-workbook.xlsx',
   '/downloads/frettrack-beta-tester-checklist.csv'
+]);
+const STATIC_PAGE_ROUTES = new Map([
+  ['/beta-tester', '/beta-tester.html'],
+  ['/privacy', '/privacy.html'],
+  ['/support', '/support.html']
 ]);
 
 function landingPage() {
@@ -818,6 +825,7 @@ function landingPage() {
           <a href="#security">Security</a>
           <a href="#pricing">Pricing</a>
           <a href="#beta">Beta</a>
+          <a href="/support">Support</a>
           <a href="/beta-tester">Tester Checklist</a>
           <a class="login" href="${APP_URL}">Login</a>
         </div>
@@ -1000,6 +1008,8 @@ function landingPage() {
         </a>
         <div class="footer-links">
           <a href="${APP_URL}">App Login</a>
+          <a href="/support">Support</a>
+          <a href="/privacy">Privacy</a>
           <a href="/beta-tester">Beta Tester Checklist</a>
           <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
         </div>
@@ -1168,9 +1178,10 @@ export default {
       return serveBundledAsset(request, env);
     }
 
-    if (url.pathname === '/beta-tester') {
+    const staticPagePath = STATIC_PAGE_ROUTES.get(url.pathname);
+    if (staticPagePath) {
       const assetUrl = new URL(request.url);
-      assetUrl.pathname = '/beta-tester.html';
+      assetUrl.pathname = staticPagePath;
       return serveBundledAsset(new Request(assetUrl.toString(), request), env);
     }
 

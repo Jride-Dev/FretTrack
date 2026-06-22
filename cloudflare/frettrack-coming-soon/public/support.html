@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Support | FretTrack</title>
+    <meta name="description" content="FretTrack beta support, FAQ, troubleshooting, and bug reporting guidance.">
+    <link rel="canonical" href="https://frettrack-app.com/support">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17202b;
+        --muted: #566171;
+        --paper: #f7f3ea;
+        --panel: #ffffff;
+        --line: #d9d1c2;
+        --accent: #9a4d14;
+        --accent-dark: #6e3510;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      a {
+        color: var(--accent-dark);
+        font-weight: 800;
+      }
+
+      .shell {
+        margin: 0 auto;
+        max-width: 1060px;
+        padding: 28px 18px 52px;
+      }
+
+      .nav {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 42px;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .brand {
+        align-items: center;
+        color: var(--ink);
+        display: flex;
+        gap: 10px;
+        text-decoration: none;
+      }
+
+      .brand img {
+        height: 36px;
+        width: 36px;
+      }
+
+      .hero,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 18px 60px rgba(23, 32, 43, 0.08);
+      }
+
+      .hero {
+        display: grid;
+        gap: 16px;
+        padding: clamp(24px, 5vw, 48px);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(2.35rem, 7vw, 5rem);
+        line-height: 0.95;
+      }
+
+      h2 {
+        font-size: clamp(1.35rem, 2.5vw, 2rem);
+        line-height: 1.15;
+      }
+
+      h3 {
+        font-size: 1.05rem;
+      }
+
+      .lede {
+        color: var(--muted);
+        font-size: 1.08rem;
+        max-width: 780px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .button {
+        background: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 999px;
+        color: #fff;
+        display: inline-flex;
+        padding: 11px 16px;
+        text-decoration: none;
+      }
+
+      .button.secondary {
+        background: transparent;
+        color: var(--accent-dark);
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 28px;
+      }
+
+      .panel {
+        display: grid;
+        gap: 10px;
+        padding: 20px;
+      }
+
+      .section {
+        margin-top: 28px;
+      }
+
+      .topic-list {
+        columns: 2;
+        gap: 28px;
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .topic-list li {
+        break-inside: avoid;
+        margin-bottom: 8px;
+      }
+
+      details {
+        border-top: 1px solid var(--line);
+        padding: 12px 0;
+      }
+
+      details:first-of-type {
+        border-top: 0;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 900;
+      }
+
+      details p {
+        color: var(--muted);
+        margin-top: 8px;
+      }
+
+      footer {
+        color: var(--muted);
+        margin-top: 34px;
+      }
+
+      @media (max-width: 760px) {
+        .nav,
+        .nav-links,
+        .actions {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .topic-list {
+          columns: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <nav class="nav" aria-label="Support navigation">
+        <a class="brand" href="/">
+          <img src="/android-chrome-192x192.png" alt="">
+          <strong>FretTrack</strong>
+        </a>
+        <div class="nav-links">
+          <a href="/privacy">Privacy</a>
+          <a href="/beta-tester">Beta Tester Checklist</a>
+          <a href="/">Back to FretTrack</a>
+        </div>
+      </nav>
+
+      <header class="hero">
+        <h1>Support</h1>
+        <p class="lede">FretTrack is currently in beta. The fastest way to report an in-app problem is to use the Report Issue button inside FretTrack when available.</p>
+        <div class="actions">
+          <a class="button" href="mailto:support@frettrack-app.com">Email Support</a>
+          <a class="button secondary" href="https://app.frettrack-app.com/">Open FretTrack</a>
+          <a class="button secondary" href="/beta-tester">Beta Tester Workbook</a>
+        </div>
+      </header>
+
+      <main>
+        <section class="section panel">
+          <h2>Support areas</h2>
+          <ul class="topic-list">
+            <li>Getting Started</li>
+            <li>Login and Account Access</li>
+            <li>Shops and Roles</li>
+            <li>Jobs and Customers</li>
+            <li>Photos and Damage Map</li>
+            <li>Inventory, Vendors, and Purchase Orders</li>
+            <li>Reports and Advanced Reporting</li>
+            <li>Beta Testing</li>
+            <li>Billing and Plans</li>
+            <li>Troubleshooting</li>
+            <li>Reporting Bugs</li>
+            <li>Contact Support</li>
+          </ul>
+        </section>
+
+        <section class="section grid">
+          <div class="panel">
+            <h2>Getting Started</h2>
+            <details open>
+              <summary>How do I request beta access?</summary>
+              <p>Use the beta access form on the public FretTrack site. After applying, watch your email for confirmation and approval messages. If you do not see the email, check spam or junk mail.</p>
+            </details>
+            <details>
+              <summary>How do I log in?</summary>
+              <p>Go to <a href="https://app.frettrack-app.com/">app.frettrack-app.com</a> and sign in with the email address approved for beta access.</p>
+            </details>
+            <details>
+              <summary>What should I do if I cannot log in?</summary>
+              <p>Confirm your beta access is approved, check whether your email is verified, try a hard refresh, and make sure browser privacy settings are not blocking the sign-in flow. If it still fails, email support with your browser, device, and account email.</p>
+            </details>
+          </div>
+
+          <div class="panel">
+            <h2>Shops and Roles</h2>
+            <details open>
+              <summary>How do roles work?</summary>
+              <p>FretTrack uses shop roles to limit access. Owners and admins manage shop operations and settings, techs perform repair workflow tasks, and viewers are read-only. Platform operator tools are separate and should not appear for normal shop users.</p>
+            </details>
+            <details>
+              <summary>What can Owners/Admins/Techs/Viewers do?</summary>
+              <p>Owners and admins can manage most shop data. Techs can work on jobs, customers, photos, scheduling, and inventory where allowed. Viewers can inspect records but should not create, edit, delete, receive, upload, or manage settings.</p>
+            </details>
+          </div>
+        </section>
+
+        <section class="section grid">
+          <div class="panel">
+            <h2>Jobs and Customers</h2>
+            <details open>
+              <summary>How do I create a new job?</summary>
+              <p>Open FretTrack, choose New Job, enter or select the customer, complete the instrument and repair intake details, then save the job. Use realistic shop data during beta, but avoid private test data unless your shop is prepared to manage it.</p>
+            </details>
+            <details>
+              <summary>How do I add or edit a customer?</summary>
+              <p>Use the Customers area or the customer section during New Job intake. Customer contact fields, email/SMS preferences, and address details should stay attached to the selected customer record.</p>
+            </details>
+            <details>
+              <summary>How do I add work logs?</summary>
+              <p>Open a job and use the work log or history area to record repair notes, updates, and technician activity. Work logs should persist with the job history.</p>
+            </details>
+          </div>
+
+          <div class="panel">
+            <h2>Photos and Damage Map</h2>
+            <details open>
+              <summary>How do I add photos to a job?</summary>
+              <p>Open the job photos area, upload the relevant image, and wait for the saved preview to appear. Saved photos should reopen from durable links, not temporary local previews.</p>
+            </details>
+            <details>
+              <summary>How do I use the Damage Map?</summary>
+              <p>Use the Damage Map views to document scratches, dents, finish damage, fret wear, serial-number photos, and other intake conditions. Customer-facing reports should show only appropriate repair documentation.</p>
+            </details>
+          </div>
+        </section>
+
+        <section class="section grid">
+          <div class="panel">
+            <h2>Inventory, Vendors, and Purchase Orders</h2>
+            <details open>
+              <summary>How do I create inventory parts?</summary>
+              <p>Use the Inventory area to create parts with names, stock quantities, pricing, location, reorder or desired stock values, vendor details, SKU, and barcode identity where available.</p>
+            </details>
+            <details>
+              <summary>How do purchase orders and receiving work?</summary>
+              <p>Create a purchase order for a vendor, add line items, then receive full or partial quantities when the items arrive. Receiving should update stock, receipt history, purchase order status, and inventory movement records.</p>
+            </details>
+            <details>
+              <summary>How does landed cost work?</summary>
+              <p>When shipping is added to cost, FretTrack can allocate shipping across received items so landed unit cost reflects both item cost and shipping allocation.</p>
+            </details>
+          </div>
+
+          <div class="panel">
+            <h2>Reports and Advanced Reporting</h2>
+            <details open>
+              <summary>How do I use Reports / Advanced Reporting?</summary>
+              <p>Open Reports from the app navigation. Available metrics depend on your shop plan or beta/trial entitlement and the data currently entered in FretTrack.</p>
+            </details>
+            <details>
+              <summary>Why is Advanced Reporting locked?</summary>
+              <p>Advanced Reporting is a Pro-level feature. If it is locked, your shop may not currently have a Pro plan, Pro trial, or operator-granted entitlement.</p>
+            </details>
+          </div>
+        </section>
+
+        <section class="section grid">
+          <div class="panel">
+            <h2>Beta Testing</h2>
+            <details open>
+              <summary>Where do I download the beta tester workbook?</summary>
+              <p>Download the recommended workbook from <a href="/downloads/frettrack-beta-tester-workbook.xlsx">/downloads/frettrack-beta-tester-workbook.xlsx</a>. The CSV fallback is available at <a href="/downloads/frettrack-beta-tester-checklist.csv">/downloads/frettrack-beta-tester-checklist.csv</a>.</p>
+            </details>
+            <details>
+              <summary>What browsers/devices are recommended?</summary>
+              <p>Use a current desktop browser when possible. FretTrack also includes legacy WebKit compatibility work for older iPad browsers, but very old or unsupported devices may have security, performance, or browser feature limits.</p>
+            </details>
+          </div>
+
+          <div class="panel">
+            <h2>Billing and Plans</h2>
+            <details open>
+              <summary>How does billing work?</summary>
+              <p>Billing and paid plan management are being prepared for the paid beta period. If billing is available to your shop, use the Billing or Plan area inside FretTrack. If you have questions, contact support.</p>
+            </details>
+          </div>
+        </section>
+
+        <section class="section grid">
+          <div class="panel">
+            <h2>Troubleshooting</h2>
+            <details open>
+              <summary>What should I do if the app looks cached or outdated?</summary>
+              <p>Refresh the page, sign out and back in, or clear site data for FretTrack if needed. If a deploy just happened, a hard refresh may be needed on some browsers.</p>
+            </details>
+          </div>
+
+          <div class="panel">
+            <h2>Reporting Bugs</h2>
+            <details open>
+              <summary>How do I report a bug?</summary>
+              <p>Use the in-app Report Issue button first when available. For public-site, login, or access problems, email <a href="mailto:support@frettrack-app.com">support@frettrack-app.com</a>.</p>
+            </details>
+            <details>
+              <summary>What should I include in a bug report?</summary>
+              <p>Include what happened, what you expected, the page or workflow, your shop role, browser/device, account email, steps to reproduce, whether it happens after refresh, and screenshots or video when useful.</p>
+            </details>
+            <details>
+              <summary>How do I contact support?</summary>
+              <p>Email <a href="mailto:support@frettrack-app.com">support@frettrack-app.com</a>. If you are an invited beta tester, also use the beta feedback channel provided with your invite.</p>
+            </details>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>FretTrack Systems | <a href="/privacy">Privacy Policy</a> | <a href="/beta-tester">Beta Tester Checklist</a></p>
+      </footer>
+    </div>
+  </body>
+</html>
