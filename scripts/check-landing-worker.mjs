@@ -78,8 +78,13 @@ async function testBetaTesterChecklistRoutes() {
         const pathname = new URL(request.url).pathname;
         assetCalls.push(pathname);
         if (pathname === '/beta-tester.html') {
-          return new Response('<!doctype html><title>FretTrack Beta Testing Checklist</title><a href="/downloads/frettrack-beta-tester-checklist.csv">Download</a>', {
+          return new Response('<!doctype html><title>FretTrack Beta Testing Checklist</title><a href="/downloads/frettrack-beta-tester-workbook.xlsx">Download workbook</a><a href="/downloads/frettrack-beta-tester-checklist.csv">CSV fallback</a>', {
             headers: { 'content-type': 'text/html; charset=utf-8' }
+          });
+        }
+        if (pathname === '/downloads/frettrack-beta-tester-workbook.xlsx') {
+          return new Response('workbook-bytes', {
+            headers: { 'content-type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
           });
         }
         if (pathname === '/downloads/frettrack-beta-tester-checklist.csv') {
@@ -97,6 +102,14 @@ async function testBetaTesterChecklistRoutes() {
   assert.equal(pageResponse.status, 200);
   assert.match(pageResponse.headers.get('content-type') || '', /text\/html/);
   assert.match(pageHtml, /FretTrack Beta Testing Checklist/);
+  assert.match(pageHtml, /frettrack-beta-tester-workbook\.xlsx/);
+  assert.match(pageHtml, /frettrack-beta-tester-checklist\.csv/);
+
+  const workbookResponse = await worker.fetch(new Request('https://frettrack-app.com/downloads/frettrack-beta-tester-workbook.xlsx'), env);
+  assert.equal(workbookResponse.status, 200);
+  assert.match(workbookResponse.headers.get('content-type') || '', /spreadsheetml\.sheet/);
+  assert.equal(workbookResponse.headers.get('cache-control'), 'public, max-age=3600');
+  assert.equal(await workbookResponse.text(), 'workbook-bytes');
 
   const csvResponse = await worker.fetch(new Request('https://frettrack-app.com/downloads/frettrack-beta-tester-checklist.csv'), env);
   const csvText = await csvResponse.text();
@@ -106,6 +119,7 @@ async function testBetaTesterChecklistRoutes() {
   assert.match(csvText, /"Section","Test ID"/);
   assert.deepEqual(assetCalls, [
     '/beta-tester.html',
+    '/downloads/frettrack-beta-tester-workbook.xlsx',
     '/downloads/frettrack-beta-tester-checklist.csv'
   ]);
 }

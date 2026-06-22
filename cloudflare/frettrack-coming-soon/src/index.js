@@ -10,6 +10,7 @@ const BUNDLED_ASSET_PATHS = new Set([
   '/android-chrome-512x512.png',
   '/site.webmanifest',
   '/beta-tester.html',
+  '/downloads/frettrack-beta-tester-workbook.xlsx',
   '/downloads/frettrack-beta-tester-checklist.csv'
 ]);
 

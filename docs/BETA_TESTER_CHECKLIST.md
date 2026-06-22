@@ -1,14 +1,26 @@
 # FretTrack Beta Tester Checklist
 
-Use this checklist while testing FretTrack as a real repair-shop workflow tool. The spreadsheet version is meant for Excel or Google Sheets; the Markdown version below is the readable source copy for the repository.
+Use this checklist while testing FretTrack as a real repair-shop workflow tool. The Excel workbook is the recommended tester file because it includes a compact checklist, detailed test references, dropdowns, and a bug log. The CSV remains available as a fallback for spreadsheet tools that cannot open the workbook.
 
 Public tester page:
 
 - `https://frettrack-app.com/beta-tester`
 
-Spreadsheet download:
+Recommended workbook download:
+
+- `/downloads/frettrack-beta-tester-workbook.xlsx`
+
+CSV fallback download:
 
 - `/downloads/frettrack-beta-tester-checklist.csv`
+
+## Workbook Sheets
+
+- `Start Here`: Testing instructions, status/severity guide, and feedback notes.
+- `Quick Checklist`: Compact pass/fail testing sheet for normal beta testing.
+- `Detailed Tests`: Longer expected-result reference sheet when a row needs more context.
+- `Bug Log`: Longer bug details, reproduction steps, actual/expected behavior, and issue links.
+- `Lists`: Dropdown values for status, severity, reproducibility, report channel, and role.
 
 ## Who Should Use It
 
@@ -19,8 +31,9 @@ Use this checklist if you are testing FretTrack as a shop owner, admin, tech, vi
 1. Sign in with the beta account and shop role you were asked to test.
 2. Work through each row in order, or focus on the sections assigned to you.
 3. Try to use realistic repair-shop data, but avoid private customer information.
-4. Record the browser/device, status, severity, notes, and screenshot/video link for each row you test.
+4. Use the `Quick Checklist` sheet first, then open `Detailed Tests` only when you need the longer expected result.
 5. If a failure blocks the rest of a section, mark the blocked rows as `Blocked`.
+6. Use the in-app **Report Issue** button first when available, then paste the issue link or reference back into the workbook.
 
 ## Status Values
 
