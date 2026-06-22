@@ -8,7 +8,9 @@ const BUNDLED_ASSET_PATHS = new Set([
   '/apple-touch-icon.png',
   '/android-chrome-192x192.png',
   '/android-chrome-512x512.png',
-  '/site.webmanifest'
+  '/site.webmanifest',
+  '/beta-tester.html',
+  '/downloads/frettrack-beta-tester-checklist.csv'
 ]);
 
 function landingPage() {
@@ -815,6 +817,7 @@ function landingPage() {
           <a href="#security">Security</a>
           <a href="#pricing">Pricing</a>
           <a href="#beta">Beta</a>
+          <a href="/beta-tester">Tester Checklist</a>
           <a class="login" href="${APP_URL}">Login</a>
         </div>
       </nav>
@@ -980,7 +983,10 @@ function landingPage() {
             <h2>Shop owners wanted for beta testing.</h2>
             <p>Apply for invite-only access, then watch your email for the confirmation and approval messages. If you do not see a reply, check spam or junk mail; domain authentication is being tightened as launch approaches.</p>
           </div>
-          <a class="button" href="#application-modal">Apply for Beta</a>
+          <div class="hero-actions">
+            <a class="button" href="#application-modal">Apply for Beta</a>
+            <a class="button secondary" href="/beta-tester">Beta Tester Checklist</a>
+          </div>
         </div>
       </section>
     </main>
@@ -993,6 +999,7 @@ function landingPage() {
         </a>
         <div class="footer-links">
           <a href="${APP_URL}">App Login</a>
+          <a href="/beta-tester">Beta Tester Checklist</a>
           <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
         </div>
       </div>
@@ -1158,6 +1165,12 @@ export default {
 
     if (isBundledAssetPath(url.pathname)) {
       return serveBundledAsset(request, env);
+    }
+
+    if (url.pathname === '/beta-tester') {
+      const assetUrl = new URL(request.url);
+      assetUrl.pathname = '/beta-tester.html';
+      return serveBundledAsset(new Request(assetUrl.toString(), request), env);
     }
 
     if (url.pathname.startsWith('/assets/')) {
