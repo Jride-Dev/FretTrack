@@ -12,13 +12,15 @@ const BUNDLED_ASSET_PATHS = new Set([
   '/beta-tester.html',
   '/privacy.html',
   '/support.html',
+  '/terms.html',
   '/downloads/frettrack-beta-tester-workbook.xlsx',
   '/downloads/frettrack-beta-tester-checklist.csv'
 ]);
 const STATIC_PAGE_ROUTES = new Map([
   ['/beta-tester', '/beta-tester.html'],
   ['/privacy', '/privacy.html'],
-  ['/support', '/support.html']
+  ['/support', '/support.html'],
+  ['/terms', '/terms.html']
 ]);
 
 function landingPage() {
@@ -826,6 +828,7 @@ function landingPage() {
           <a href="#pricing">Pricing</a>
           <a href="#beta">Beta</a>
           <a href="/support">Support</a>
+          <a href="/terms">Terms</a>
           <a href="/beta-tester">Tester Checklist</a>
           <a class="login" href="${APP_URL}">Login</a>
         </div>
@@ -1008,6 +1011,7 @@ function landingPage() {
         </a>
         <div class="footer-links">
           <a href="${APP_URL}">App Login</a>
+          <a href="/terms">Terms</a>
           <a href="/support">Support</a>
           <a href="/privacy">Privacy</a>
           <a href="/beta-tester">Beta Tester Checklist</a>

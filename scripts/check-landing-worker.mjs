@@ -45,6 +45,7 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /href="\/beta-tester"/);
   assert.match(html, /href="\/support"/);
   assert.match(html, /href="\/privacy"/);
+  assert.match(html, /href="\/terms"/);
   assert.match(html, /Beta Tester Checklist/);
 }
 
@@ -91,6 +92,11 @@ async function testBetaTesterChecklistRoutes() {
         }
         if (pathname === '/support.html') {
           return new Response('<!doctype html><title>Support | FretTrack</title><h1>Support</h1>', {
+            headers: { 'content-type': 'text/html; charset=utf-8' }
+          });
+        }
+        if (pathname === '/terms.html') {
+          return new Response('<!doctype html><title>Terms of Service | FretTrack</title><h1>Terms of Service</h1>', {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
@@ -150,6 +156,16 @@ async function testBetaTesterChecklistRoutes() {
   assert.equal(supportHtmlResponse.status, 200);
   assert.match(supportHtmlResponse.headers.get('content-type') || '', /text\/html/);
 
+  const termsResponse = await worker.fetch(new Request('https://frettrack-app.com/terms'), env);
+  const termsHtml = await termsResponse.text();
+  assert.equal(termsResponse.status, 200);
+  assert.match(termsResponse.headers.get('content-type') || '', /text\/html/);
+  assert.match(termsHtml, /Terms of Service/);
+
+  const termsHtmlResponse = await worker.fetch(new Request('https://frettrack-app.com/terms.html'), env);
+  assert.equal(termsHtmlResponse.status, 200);
+  assert.match(termsHtmlResponse.headers.get('content-type') || '', /text\/html/);
+
   assert.deepEqual(assetCalls, [
     '/beta-tester.html',
     '/downloads/frettrack-beta-tester-workbook.xlsx',
@@ -157,7 +173,9 @@ async function testBetaTesterChecklistRoutes() {
     '/privacy.html',
     '/privacy.html',
     '/support.html',
-    '/support.html'
+    '/support.html',
+    '/terms.html',
+    '/terms.html'
   ]);
 }
 
