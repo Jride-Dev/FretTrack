@@ -30,6 +30,8 @@ Stripe and automated subscription management are planned later. The current goal
 
 Beta tester feedback should directly shape pricing, included features, limits, and the order of future modules.
 
+The 0.2.9-B0 plan-status UI foundation adds plan-aware branding and display only. FretTrack can now show Trial / Shop / Pro / Expired labels, Pro emblem branding for Pro-enabled shops, trial and renewal countdowns, and a Shop Settings Plan / Subscription panel. Pro and Trial Pro accounts must use the Pro emblem and Pro labels as their primary identity; they must not display the regular Shop identity except in comparison copy. Stripe Checkout, Customer Portal, webhooks, automated renewals, payment collection, and customer self-service billing remain future work.
+
 ## Current Trial / Shop / Pro Split
 
 Phase 1 defines the product boundary without adding pricing, plan caps, Stripe, billing webhooks, payment forms, SMS limits, storage enforcement, or multi-shop restrictions.
@@ -74,6 +76,8 @@ Shop is the normal paid operating plan for repair shops. Phase 1 currently unloc
 - Photo Editor
 - Team Members
 
+Shop subscriptions and Shop trials use the original FretTrack emblem with labels such as `Trial: Shop`, `Shop Monthly`, or `Shop Yearly`. When a period-end timestamp is available later from Stripe sync, the UI can show renewal or access-ending countdowns without assuming a fixed month length.
+
 Team Members is backend-enforced. Existing staff memberships are preserved when trial access expires, but non-owner staff access and member changes are inactive until Shop or Pro access is restored.
 
 ### Pro
@@ -81,6 +85,8 @@ Team Members is backend-enforced. Existing staff memberships are preserved when 
 Pro is the advanced reporting and automation tier. Phase 1 currently unlocks:
 
 - Advanced Reporting
+
+Pro subscriptions and Pro trials use the FretTrack Pro emblem and labels such as `Trial: Pro`, `Pro Monthly`, `Pro Yearly`, or `Pro, canceling`. Trial Pro access keeps Advanced Reporting unlocked through the existing entitlement snapshot; non-Pro shops continue to see the Pro locked state.
 
 The current Pro reporting dashboard includes operational tables for shop overview counts, jobs by status, priority, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock inventory by desired stock level, open purchase orders, landed-cost purchase history, and upcoming schedule workload. These reports use existing shop data and do not add Stripe, billing automation, charts, PDF generation, or export workflows yet.
 

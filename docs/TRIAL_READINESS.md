@@ -94,6 +94,21 @@ Beta access approval is separate from paid access trial state. A user may be app
 12. Restore a Shop or Pro trial and confirm preserved staff memberships regain access without recreating them.
 13. Confirm viewer users remain read-only.
 14. Confirm Stripe, billing webhooks, and payment collection are not shown as connected.
+15. Run `npm run check:plan-branding` and confirm the normalized plan display checks pass.
+16. Confirm the header, version area, Shop Settings, Billing, and Reports display the expected plan label and countdown:
+   - `Trial: Shop` with the standard emblem and trial countdown.
+   - `Trial: Pro` with the Pro emblem and trial countdown.
+   - `Shop Monthly` with the standard emblem and renewal countdown.
+   - `Shop Yearly` with the standard emblem and renewal countdown.
+   - `Pro Monthly` with the Pro emblem and renewal countdown.
+   - `Pro Yearly` with the Pro emblem and renewal countdown.
+   - `Pro, canceling` with the Pro emblem and access-ending countdown.
+   - `Expired` with the standard/dimmed emblem and upgrade/renew messaging.
+17. Confirm a Pro or Trial Pro customer never sees `FretTrack Shop`, plain `Shop`, or the standard Shop emblem as the primary plan identity.
+18. Confirm the original FretTrack emblem appears for Shop, Trial Shop, internal Free compatibility, and expired states.
+19. Confirm the Pro emblem appears only for Pro subscriptions or Pro trials.
+20. Open Shop Settings and confirm the Plan / Subscription panel shows current plan, billing interval, subscription status, trial end, current period end, countdown, Advanced Reporting availability, and locked premium feature count.
+21. Confirm Manage billing and Upgrade plan controls are disabled/placeholders until Stripe Checkout, Customer Portal, and webhooks are implemented.
 
 ## Test Job Creation Flow
 

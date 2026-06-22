@@ -140,6 +140,33 @@ The Billing page is owner/admin only and shows:
 
 The app shell now fetches an entitlement snapshot when shop access loads and shows a banner for `grace`, `read_only`, `canceled`, and `expired` states. Trial expiry shows upgrade-required messaging and blocks create/edit/send/upload actions through centralized permissions.
 
+Plan Branding + Subscription Status UI Foundation adds a centralized plan-status normalizer for UI display. It supports Trial, Shop, Pro, internal Free compatibility, expired/inactive, canceled, past-due, and unknown states; uses the Pro emblem only for Pro-enabled access; and formats trial, renewal, access-ending, and expired countdown labels from stored timestamps. The normalized object exposes `effectivePlan`, `planLabel`, `hasProBranding`, `emblem`, `hasAdvancedReporting`, `billingInterval`, and `countdownLabel` so individual components do not invent their own branding rules. The app header, version area, Billing page, Shop Settings Plan / Subscription panel, and Advanced Reporting lock/unlock state now use this normalized display state.
+
+Primary display labels are:
+
+- `Trial: Shop`
+- `Trial: Pro`
+- `Shop Monthly`
+- `Shop Yearly`
+- `Pro Monthly`
+- `Pro Yearly`
+- `Pro, canceling`
+- `Expired`
+
+Pro and Trial Pro use `FretTrack Pro` and the Pro emblem as the primary plan identity. They must not display `FretTrack Shop`, plain `Shop`, or the standard Shop emblem except in comparison copy. `npm run check:plan-branding` verifies the supported display states.
+
+Shop Settings now shows:
+
+- Current plan
+- Billing interval
+- Subscription status
+- Trial end
+- Current period end
+- Countdown
+- Advanced Reporting availability
+- Locked premium feature count
+- Disabled Manage Billing and Upgrade Plan placeholders while Stripe billing remains unwired
+
 ### Gating
 
 High-cost writes now check the central entitlement/access snapshot:

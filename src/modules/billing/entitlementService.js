@@ -408,7 +408,10 @@ export function getBillingStatusLabel(status) {
     [BILLING_STATUSES.CANCELED]: 'Canceled',
     [BILLING_STATUSES.CANCELLED]: 'Cancelled',
     [BILLING_STATUSES.EXPIRED]: 'Expired',
-    [BILLING_STATUSES.BETA_BYPASS]: 'Beta bypass'
+    [BILLING_STATUSES.BETA_BYPASS]: 'Beta bypass',
+    inactive: 'Inactive',
+    past_due: 'Past due',
+    unknown: 'Unknown'
   };
   return labels[status] || status || 'Unknown';
 }
