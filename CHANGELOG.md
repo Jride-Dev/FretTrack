@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.8-beta.0 - Current Beta Candidate
 
+- Added 0.2.9-B0 plan branding and subscription status UI foundation: the app header, version area, Shop Settings subscription panel, Billing page, and Advanced Reporting lock/unlock state now use one normalized plan object for Trial / Shop / Pro / Expired labels, countdowns, and emblem choice. Pro and Trial Pro shops use the Pro emblem and Pro labels, never the primary FretTrack Shop identity, and `npm run check:plan-branding` verifies the key display states without adding Stripe Checkout, Customer Portal, webhooks, or billing secrets.
 - Added 0.2.9-A Pro Reports Dashboard Phase 2 with Pro-gated operational reporting for shop overview counts, jobs by status, priority, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock inventory by desired stock level, purchase order status, landed-cost purchase history, and upcoming schedule workload.
 - Redesigned the public `frettrack-app.com` landing Worker for launch readiness with a product screenshot hero, workflow, security, Trial/Shop/Pro pricing preview, and beta application sections.
 - Added bundled landing Worker static assets for the FretTrack favicon package and product screenshots, plus `npm run check:landing-worker` coverage for the landing HTML and favicon route.

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat';
 import { money } from '../../shared/utils/money';
 import { canUseAdvancedReporting } from '../billing/entitlementService';
+import { getPlanStatus } from '../billing/planStatus';
 import { getCurrentShopId, getShopMoneyOptions } from '../shops/shopConfig';
 import {
   buildAdvancedOperationalReport,
@@ -18,7 +19,8 @@ export default function AdvancedReportsPage({
   shopId = getCurrentShopId(),
   shopProfile = null
 }) {
-  const isEntitled = canUseAdvancedReporting(entitlementSnapshot);
+  const planStatus = getPlanStatus(entitlementSnapshot || {});
+  const isEntitled = canUseAdvancedReporting(entitlementSnapshot) || planStatus.hasAdvancedReporting;
   const [reportData, setReportData] = useState({
     parts: [],
     vendors: [],
@@ -99,13 +101,14 @@ export default function AdvancedReportsPage({
         <div className="panel-heading">
           <div>
             <h2>Reports</h2>
-            <p className="muted-text">Advanced Reporting is available on Pro. Trial and Shop access keep core shop workflow separate from Pro reporting.</p>
+            <p className="muted-text">Advanced Reporting is available on Pro. Current plan: {planStatus.planLabel || 'Unknown'}.</p>
           </div>
-          <span className="billing-status">Pro</span>
+          <span className={`plan-badge ${planStatus.badgeTone}`}>{planStatus.planLabel || 'Pro'}</span>
         </div>
         <section className="premium-placeholder">
           <h3>Advanced Reporting</h3>
           <p>Pro unlocks job aging, overdue work, low-stock inventory, purchase history, landed cost, schedule workload, and operational reporting for this shop.</p>
+          <p className="muted-text">Advanced Reporting is available on Pro.</p>
           <p className="muted-text">Billing self-service is not connected yet. An operator can enable Pro access during beta.</p>
         </section>
       </section>
@@ -117,9 +120,12 @@ export default function AdvancedReportsPage({
       <div className="panel-heading">
         <div>
           <h2>Reports</h2>
-          <p className="muted-text">Pro operational dashboard. Real shop data only: no charts, exports, PDFs, Stripe, or billing actions in this phase.</p>
+          <p className="muted-text">Pro operational dashboard. Advanced Reporting: Yes. Real shop data only: no charts, exports, PDFs, Stripe, or billing actions in this phase.</p>
         </div>
-        {isLoadingReports && <span className="muted-text">Loading reports...</span>}
+        <div className="mode-actions">
+          <span className={`plan-badge ${planStatus.badgeTone}`}>{planStatus.planLabel || 'Pro'}</span>
+          {isLoadingReports && <span className="muted-text">Loading reports...</span>}
+        </div>
       </div>
 
       {loadError && (

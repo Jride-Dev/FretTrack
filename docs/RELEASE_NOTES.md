@@ -10,6 +10,16 @@ Advanced Reporting now has a Pro-gated operational dashboard built from existing
 
 This pass does not add charts, exports, PDFs, Stripe, Checkout, Billing Portal, payment links, webhooks, SMS, public document links, or supplier integrations. Shop and expired-trial lock states continue to rely on the existing entitlement and paid-access lifecycle foundation.
 
+## 0.2.9-B0 Plan Branding And Subscription Status UI Foundation
+
+FretTrack now has a centralized plan-status normalizer for Trial, Shop, Pro, Free/internal compatibility, expired, canceled, past-due, and unknown billing states. The app header, version area, Shop Settings subscription panel, Billing page, and Advanced Reporting lock/unlock state now use the same plan labels and countdown wording for trial ends, renewals, access-ending states, and expired access.
+
+Pro-enabled shops and Pro trials now use the Pro emblem asset plus Pro labels as their primary identity. They must not fall back to `FretTrack Shop`, `Shop`, or the standard Shop emblem except in comparison copy such as "Pro includes everything in Shop." Shop, Trial Shop, expired, inactive, and internal Free compatibility states keep the original FretTrack emblem. Shop Settings now includes a Plan / Subscription section with current plan, billing interval, status, trial end, current period end, countdown, Advanced Reporting availability, locked premium feature count, and disabled Manage Billing / Upgrade Plan placeholders.
+
+The display states are covered by `npm run check:plan-branding`: Trial Shop, Trial Pro, Shop Monthly, Shop Yearly, Pro Monthly, Pro Yearly, canceling Pro with active access, and Expired.
+
+This pass does not add Stripe Checkout, Customer Portal, webhooks, billing routes, billing secrets, pricing enforcement, or payment collection. Stripe billing integration remains the next pass.
+
 ## Public Launch Site Refresh - In Progress
 
 The public `frettrack-app.com` landing Worker has been redesigned around a launch-ready SaaS page: product screenshot

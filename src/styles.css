@@ -607,6 +607,16 @@ h1 {
   width: 68px;
 }
 
+.brand-header img.is-pro {
+  border-color: color-mix(in srgb, #d6dde7 58%, var(--accent));
+  box-shadow: 0 0 0 1px color-mix(in srgb, #d6dde7 20%, transparent), 0 0 22px color-mix(in srgb, #38bdf8 18%, transparent);
+}
+
+.brand-header img.is-expired {
+  filter: grayscale(0.85);
+  opacity: 0.72;
+}
+
 .brand-copy {
   display: grid;
   gap: 2px;
@@ -630,6 +640,59 @@ h1 {
   display: block;
   font-size: 12px;
   margin-top: 3px;
+}
+
+.plan-line {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 6px;
+}
+
+.plan-badge {
+  background: var(--surface-muted);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  color: var(--text-muted);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.1;
+  padding: 5px 9px;
+  white-space: nowrap;
+}
+
+.plan-badge.trial {
+  background: color-mix(in srgb, #38bdf8 18%, var(--surface) 82%);
+  border-color: color-mix(in srgb, #38bdf8 52%, var(--border));
+  color: #7dd3fc;
+}
+
+.plan-badge.shop {
+  background: color-mix(in srgb, var(--success) 16%, var(--surface) 84%);
+  border-color: color-mix(in srgb, var(--success) 52%, var(--border));
+  color: var(--success);
+}
+
+.plan-badge.pro {
+  background: color-mix(in srgb, #d6dde7 16%, var(--surface) 84%);
+  border-color: color-mix(in srgb, #f5c542 52%, var(--border));
+  color: #f5c542;
+}
+
+.plan-badge.warning {
+  background: color-mix(in srgb, var(--warning) 18%, var(--surface) 82%);
+  border-color: color-mix(in srgb, var(--warning) 54%, var(--border));
+  color: var(--warning);
+}
+
+.plan-badge.danger {
+  background: color-mix(in srgb, var(--danger) 18%, var(--surface) 82%);
+  border-color: color-mix(in srgb, var(--danger) 54%, var(--border));
+  color: var(--danger);
 }
 
 h2 {

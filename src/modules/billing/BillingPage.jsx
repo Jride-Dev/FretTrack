@@ -3,9 +3,9 @@ import {
   formatStorage,
   getBillingStatusLabel,
   getEnabledFeatureLabels,
-  getEntitlement,
-  getSubscriptionTierLabel
+  getEntitlement
 } from './entitlementService';
+import { getPlanStatus } from './planStatus';
 
 export default function BillingPage({ canManageShop = false, entitlementSnapshot, shopProfile = null }) {
   if (!canManageShop) {
@@ -24,7 +24,7 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
   const enabledFeatures = getEnabledFeatureLabels(snapshot);
   const storageLimit = Number(getEntitlement(snapshot, 'max_storage_bytes', 0)) || 0;
   const userLimit = Number(getEntitlement(snapshot, 'max_users', 0)) || 0;
-  const planLabel = getSubscriptionTierLabel(subscription.effectiveTier || subscription.tier || plan.id);
+  const planStatus = getPlanStatus(snapshot);
 
   return (
     <section className="panel billing-page">
@@ -33,13 +33,16 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
           <h2>Billing</h2>
           <p className="muted-text">Paid tier controls are being prepared. Stripe is not connected yet.</p>
         </div>
-        <span className="billing-status">{getBillingStatusLabel(subscription.effectiveStatus || subscription.status)}</span>
+        <span className={`plan-badge ${planStatus.badgeTone}`}>{planStatus.planLabel}</span>
       </div>
 
       <div className="billing-summary-grid">
-        <BillingCard label="Current Plan" value={planLabel || 'Trial'} detail={plan.id || subscription.tier || 'trial'} />
-        <BillingCard label="Status" value={getBillingStatusLabel(subscription.effectiveStatus || subscription.status)} detail={`Stored: ${getBillingStatusLabel(subscription.status)}`} />
-        <BillingCard label="Trial Ends" value={formatDate(subscription.trialEndsAt)} />
+        <BillingCard label="Current Plan" value={planStatus.currentPlanLabel} detail={planStatus.planLabel || plan.id || subscription.tier || 'trial'} />
+        <BillingCard label="Billing Interval" value={formatInterval(planStatus.billingInterval)} />
+        <BillingCard label="Status" value={getBillingStatusLabel(planStatus.status || subscription.effectiveStatus || subscription.status)} detail={`Stored: ${getBillingStatusLabel(subscription.status)}`} />
+        <BillingCard label="Trial Ends" value={formatDate(planStatus.trialEndsAt || subscription.trialEndsAt)} />
+        <BillingCard label="Current Period End" value={formatDate(planStatus.currentPeriodEnd)} />
+        <BillingCard label="Countdown" value={planStatus.countdownLabel} detail={planStatus.inactiveActionLabel} />
         <BillingCard label="Grace Ends" value={formatDate(subscription.graceEndsAt)} />
         <BillingCard label="Billing Email" value={subscription.billingEmail || shopProfile?.email || '-'} />
         <BillingCard label="Users" value={`${usage.userCount || 0}${userLimit ? ` / ${userLimit}` : ''}`} />
@@ -82,4 +85,13 @@ function formatDate(value) {
     return '-';
   }
   return formatShopDate(value, undefined) || '-';
+}
+
+function formatInterval(value) {
+  const labels = {
+    monthly: 'Monthly',
+    trial: 'Trial',
+    yearly: 'Yearly'
+  };
+  return labels[value] || '-';
 }

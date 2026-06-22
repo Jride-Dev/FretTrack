@@ -47,6 +47,7 @@ import {
   isGraceStatus,
   isReadOnlyStatus
 } from '../modules/billing/entitlementService';
+import { getPlanStatus, getPlanVersionText } from '../modules/billing/planStatus';
 import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService';
 import { isCurrentOperator } from '../modules/operator/operatorService';
 import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
@@ -100,6 +101,8 @@ export default function App() {
   const manualSignOutRef = useRef(false);
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
   const billingAccess = entitlementSnapshot || getDefaultEntitlementSnapshot(membership?.shopId);
+  const planStatus = getPlanStatus(billingAccess);
+  const appVersionText = getPlanVersionText(APP_VERSION, planStatus);
   const canWrite = getShopWriteAccess({
     role: membership?.role,
     entitlementSnapshot: billingAccess,
@@ -1092,12 +1095,21 @@ export default function App() {
     <main className="app app-shell">
       <header>
         <div className="brand-header">
-          <img src="/frettrack-emblem.png" alt="" aria-hidden="true" />
+          <img
+            src={planStatus.emblemSrc}
+            alt=""
+            aria-hidden="true"
+            className={planStatus.emblemClassName}
+          />
           <div className="brand-copy">
-            <h1>{APP_NAME}</h1>
+            <h1>{planStatus.headerLabel || APP_NAME}</h1>
             <small>{APP_TAGLINE}</small>
             <strong>{shopName}</strong>
-            <span className="app-version">Version {APP_VERSION}</span>
+            <span className="plan-line">
+              <span className={`plan-badge ${planStatus.badgeTone}`}>{planStatus.planLabel || 'Trial'}</span>
+              {planStatus.countdownLabel && <span>{planStatus.countdownLabel}</span>}
+            </span>
+            <span className="app-version">{appVersionText}</span>
           </div>
         </div>
         <div className="mode-actions no-print header-actions">
