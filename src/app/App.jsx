@@ -52,7 +52,7 @@ import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService'
 import { isCurrentOperator } from '../modules/operator/operatorService';
 import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
 
-const APP_VERSION = '0.2.8-beta.0';
+const APP_VERSION = '0.2.9-beta.0';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';

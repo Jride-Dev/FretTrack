@@ -8,7 +8,7 @@
 
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
-Current version: `0.2.8-beta.0`
+Current version: `0.2.9-beta.0`
 
 FretTrack is a guitar and bass repair shop check-in and work order system for real bench workflow: customer intake, instrument details, inspection notes, damage photos, parts and services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
@@ -72,7 +72,9 @@ browser tab icon and landing imagery do not depend on manual local files.
 - Expired trials preserve shop data and memberships, allow login/view access where safe, block writes, and lock premium entitlements.
 - Paid Access Lifecycle Phase 1 removes permanent public unpaid-plan wording. Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration.
 - Shop access unlocks Photo Editor and Team Members. Pro access unlocks Advanced Reporting.
-- Advanced Reporting Phase 1 adds premium-gated dashboard metrics for revenue, jobs, customers, and inventory.
+- Pro Reports Dashboard Phase 2 adds Pro-gated operational reporting for shop overview, job status, priority, overdue promise dates, pickup readiness, waiting-on-parts work, job aging, work-log activity, low stock, purchase order status, landed-cost purchase history, and upcoming schedule workload.
+- Pro plan branding/status UI now keeps Trial Pro and Pro shops on the FretTrack Pro emblem and Pro labels, including monthly/yearly, canceling, renewal, access-ending, and expired countdown states.
+- Beta tester workbook/checklist downloads and public Terms, Privacy, and Support pages are available from the public site.
 - Photo Editor Phase 1 adds repair-shop photo markup, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
 - Print output has been improved for beta use, with a dedicated print renderer rebuild still planned for the Customer Damage Report and damage-map output.
 

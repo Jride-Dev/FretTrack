@@ -1,11 +1,13 @@
 # Changelog
 
-Current version: `0.2.8-beta.0`
+Current version: `0.2.9-beta.0`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.8-beta.0 - Current Beta Candidate
+## v0.2.9-beta.0 - Current Beta Candidate
 
+- Bumped package metadata and the in-app version display to `0.2.9-beta.0`.
+- Finalized the 0.2.9 beta release marker for Pro Reports Dashboard Phase 2, Pro branding/status UI hardening, Pro emblem support, beta tester workbook/checklist delivery, public Terms/Privacy/Support readiness, and paid beta preparation before Stripe Billing Foundation begins.
 - Added 0.2.9-B0 plan branding and subscription status UI foundation: the app header, version area, Shop Settings subscription panel, Billing page, and Advanced Reporting lock/unlock state now use one normalized plan object for Trial / Shop / Pro / Expired labels, countdowns, and emblem choice. Pro and Trial Pro shops use the Pro emblem and Pro labels, never the primary FretTrack Shop identity, and `npm run check:plan-branding` verifies the key display states without adding Stripe Checkout, Customer Portal, webhooks, or billing secrets.
 - Added 0.2.9-A Pro Reports Dashboard Phase 2 with Pro-gated operational reporting for shop overview counts, jobs by status, priority, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock inventory by desired stock level, purchase order status, landed-cost purchase history, and upcoming schedule workload.
 - Redesigned the public `frettrack-app.com` landing Worker for launch readiness with a product screenshot hero, workflow, security, Trial/Shop/Pro pricing preview, and beta application sections.
@@ -14,7 +16,6 @@ This file tracks what changed in each release, including fixes that were added b
 - Added 0.2.8-B inventory polish with printable barcode labels, `FT-PART-` lookup support, purchase order filters/actions, clearer receiving quantities/costs, expanded purchase history, and tighter receiving RPC validation.
 - Fixed purchase order new-part line items so they create and link real inventory parts at quantity 0 before receiving, and hardened PO receiving to repair legacy null-part lines before stock, receipt history, and movement rows are written.
 - Added 0.2.8-C offline mode audit documentation, clarified user-facing offline scope, and kept offline inventory receiving, purchase orders, photo queues, and existing-job edits out of scope until a real sync architecture exists.
-- Bumped package metadata and the in-app version display to `0.2.8-beta.0`.
 - Added SECURITY DEFINER RPC hardening for flagged Supabase RPCs with explicit grants, locked search paths, stronger inventory/accounting input validation, and documented callable-role intent.
 - Added Paid Access Lifecycle Phase 1 so public product language is Trial, Shop, and Pro, expired trials preserve data while blocking writes, and legacy internal unpaid values remain compatibility-only during migration.
 - Added Shop Tier Foundation Phase 1: Shop unlocks Photo Editor and Team Members, and Pro remains the advanced reporting/automation tier.
