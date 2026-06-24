@@ -1,8 +1,8 @@
 # Release Notes
 
-## GitHub Release Summary: v0.2.8-beta.0
+## GitHub Release Summary: v0.2.9-beta.0
 
-FretTrack `0.2.8-beta.0` moves the beta into the Inventory Operations release: vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, landed-cost allocation, and hardened receiving RPCs are now documented alongside the existing Trial/Shop/Pro access model, SECURITY DEFINER RPC hardening, and a clarified new-job-draft-only offline scope.
+FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
 ## 0.2.9-A Pro Reports Dashboard Phase 2
 
