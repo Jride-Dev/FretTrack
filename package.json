@@ -17,6 +17,7 @@
     "migration:check": "node scripts/check-supabase-migrations.mjs",
     "migration:check:strict": "node scripts/check-supabase-migrations.mjs --strict",
     "backup:supabase": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backup-hosted-supabase.ps1",
+    "backup:register-task": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/register-daily-backup-task.ps1",
     "db:local:refresh-from-backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/refresh-local-db-from-hosted-backup.ps1",
     "db:local:apply": "node scripts/apply-local-migrations.mjs",
     "seed:local-test-shops": "node scripts/seed-local-test-shops.mjs --reset",
