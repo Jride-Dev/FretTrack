@@ -2,7 +2,10 @@ param(
   [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [string]$BackupRoot = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')).Path 'backups'),
   [string]$DockerVolumeName = 'supabase_db_FretTrack',
+  [string]$LogRoot,
   [int]$RetentionDays = 30,
+  [int]$StorageCopyJobs = 4,
+  [switch]$SkipStorageBackup,
   [switch]$SkipDockerVolumeBackup
 )
 
@@ -28,9 +31,42 @@ function Invoke-Checked {
   )
 
   Write-Host "+ $FilePath $($Arguments -join ' ')"
-  & $FilePath @Arguments
-  if ($LASTEXITCODE -ne 0) {
-    throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $($Arguments -join ' ')"
+  Push-Location $WorkingDirectory
+  try {
+    & $FilePath @Arguments
+    if ($LASTEXITCODE -ne 0) {
+      throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $($Arguments -join ' ')"
+    }
+  } finally {
+    Pop-Location
+  }
+}
+
+function Invoke-CapturedChecked {
+  param(
+    [string]$FilePath,
+    [string[]]$Arguments,
+    [string]$WorkingDirectory = $ProjectRoot
+  )
+
+  Write-Host "+ $FilePath $($Arguments -join ' ')"
+  Push-Location $WorkingDirectory
+  try {
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+      $output = & $FilePath @Arguments 2>&1
+      $exitCode = $LASTEXITCODE
+    } finally {
+      $ErrorActionPreference = $previousErrorActionPreference
+    }
+    $output | ForEach-Object { Write-Host $_ }
+    if ($exitCode -ne 0) {
+      throw "Command failed with exit code ${exitCode}: $FilePath $($Arguments -join ' ')"
+    }
+    return @($output | ForEach-Object { [string]$_ })
+  } finally {
+    Pop-Location
   }
 }
 
@@ -283,6 +319,125 @@ function Backup-DockerVolume {
   return Join-Path $volumeBackupDir $archiveName
 }
 
+function Get-StorageBucketNames {
+  $lines = Invoke-CapturedChecked -FilePath supabase -Arguments @(
+    'storage',
+    'ls',
+    'ss:///',
+    '--linked',
+    '--experimental'
+  )
+
+  $buckets = @()
+  foreach ($line in $lines) {
+    $text = ([string]$line).Trim()
+    if ($text -match '^([A-Za-z0-9][A-Za-z0-9._-]*)/$') {
+      $buckets += $Matches[1]
+    }
+  }
+
+  return $buckets | Sort-Object -Unique
+}
+
+function Get-StorageObjectPaths {
+  param([string]$BucketName)
+
+  $lines = Invoke-CapturedChecked -FilePath supabase -Arguments @(
+    'storage',
+    'ls',
+    '-r',
+    "ss:///$BucketName",
+    '--linked',
+    '--experimental'
+  )
+
+  $prefix = "/$BucketName/"
+  $objects = @()
+  foreach ($line in $lines) {
+    $text = ([string]$line).Trim()
+    if ($text.StartsWith($prefix, [System.StringComparison]::Ordinal)) {
+      $objects += $text.TrimStart('/')
+    }
+  }
+
+  return $objects | Sort-Object -Unique
+}
+
+function Copy-StorageObject {
+  param(
+    [string]$ObjectPath,
+    [string]$StorageBackupDir,
+    [int]$MaxAttempts = 3
+  )
+
+  $localRelativePath = $ObjectPath.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+  $localDir = Split-Path -Path (Join-Path $StorageBackupDir $localRelativePath) -Parent
+  if (-not (Test-Path -LiteralPath $localDir)) {
+    New-Item -ItemType Directory -Path $localDir -Force | Out-Null
+  }
+
+  $attempt = 0
+  while ($attempt -lt $MaxAttempts) {
+    $attempt += 1
+    try {
+      Invoke-Checked -FilePath supabase -WorkingDirectory $StorageBackupDir -Arguments @(
+        'storage',
+        'cp',
+        '--workdir',
+        $ProjectRoot,
+        '--linked',
+        '--experimental',
+        "ss:///$ObjectPath",
+        $localRelativePath
+      )
+      return
+    } catch {
+      if ($attempt -ge $MaxAttempts) {
+        throw
+      }
+      Write-Step "Retrying Storage object $ObjectPath after failed attempt $attempt"
+      Start-Sleep -Seconds (2 * $attempt)
+    }
+  }
+}
+
+function Backup-StorageBuckets {
+  param(
+    [string]$SnapshotDir,
+    [int]$Jobs
+  )
+
+  $storageBackupDir = Join-Path $SnapshotDir 'storage-buckets'
+  New-Item -ItemType Directory -Path $storageBackupDir -Force | Out-Null
+
+  Write-Step "Listing hosted Supabase Storage buckets"
+  $buckets = @(Get-StorageBucketNames)
+  $buckets | Set-Content -LiteralPath (Join-Path $storageBackupDir 'bucket-list.txt') -Encoding UTF8
+
+  if (-not $buckets.Count) {
+    Write-Step "No Supabase Storage buckets found"
+    return
+  }
+
+  foreach ($bucket in $buckets) {
+    $bucketDir = Join-Path $storageBackupDir $bucket
+    New-Item -ItemType Directory -Path $bucketDir -Force | Out-Null
+    Write-Step "Listing Supabase Storage objects in bucket $bucket"
+    $objects = @(Get-StorageObjectPaths -BucketName $bucket)
+    $objects | Set-Content -LiteralPath (Join-Path $bucketDir '_object-list.txt') -Encoding UTF8
+
+    if (-not $objects.Count) {
+      Write-Step "No Supabase Storage objects found in bucket $bucket"
+      continue
+    }
+
+    Write-Step "Backing up $($objects.Count) Supabase Storage object(s) from bucket $bucket"
+    foreach ($object in $objects) {
+      Copy-StorageObject -ObjectPath $object -StorageBackupDir $storageBackupDir
+    }
+  }
+}
+
 function Apply-Retention {
   param(
     [string]$Root,
@@ -304,33 +459,49 @@ function Apply-Retention {
     }
 }
 
-Require-Command supabase
-
 $ProjectRoot = (Resolve-Path $ProjectRoot).Path
 if (-not (Test-Path -LiteralPath $BackupRoot)) {
   New-Item -ItemType Directory -Path $BackupRoot -Force | Out-Null
 }
 $BackupRoot = (Resolve-Path $BackupRoot).Path
+if (-not $LogRoot) {
+  $LogRoot = Join-Path $BackupRoot 'logs'
+}
+if (-not (Test-Path -LiteralPath $LogRoot)) {
+  New-Item -ItemType Directory -Path $LogRoot -Force | Out-Null
+}
+$LogRoot = (Resolve-Path $LogRoot).Path
 
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+$transcriptPath = Join-Path $LogRoot "hosted-supabase-backup-$stamp.log"
 $snapshotDir = Join-Path $BackupRoot "hosted-supabase-$stamp"
-New-Item -ItemType Directory -Path $snapshotDir -Force | Out-Null
-$repoSnapshotDir = Join-Path $snapshotDir 'supabase'
-New-Item -ItemType Directory -Path $repoSnapshotDir -Force | Out-Null
-
-$previousManifestPath = Get-ChildItem -LiteralPath $BackupRoot -Directory -Filter 'hosted-supabase-*' |
-  Where-Object { $_.FullName -ne $snapshotDir -and (Test-Path -LiteralPath (Join-Path $_.FullName 'manifest.json')) } |
-  Sort-Object LastWriteTime -Descending |
-  Select-Object -First 1 |
-  ForEach-Object { Join-Path $_.FullName 'manifest.json' }
-
-$previousManifest = $null
-if ($previousManifestPath) {
-  $previousManifest = Get-Content -LiteralPath $previousManifestPath -Raw | ConvertFrom-Json
-}
-
-Push-Location $ProjectRoot
+$transcriptStarted = $false
+$locationPushed = $false
 try {
+  Start-Transcript -LiteralPath $transcriptPath -Force | Out-Null
+  $transcriptStarted = $true
+  Write-Step "Transcript started at $transcriptPath"
+
+  Require-Command supabase
+
+  New-Item -ItemType Directory -Path $snapshotDir -Force | Out-Null
+  $repoSnapshotDir = Join-Path $snapshotDir 'supabase'
+  New-Item -ItemType Directory -Path $repoSnapshotDir -Force | Out-Null
+
+  $previousManifestPath = Get-ChildItem -LiteralPath $BackupRoot -Directory -Filter 'hosted-supabase-*' |
+    Where-Object { $_.FullName -ne $snapshotDir -and (Test-Path -LiteralPath (Join-Path $_.FullName 'manifest.json')) } |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1 |
+    ForEach-Object { Join-Path $_.FullName 'manifest.json' }
+
+  $previousManifest = $null
+  if ($previousManifestPath) {
+    $previousManifest = Get-Content -LiteralPath $previousManifestPath -Raw | ConvertFrom-Json
+  }
+
+  Push-Location $ProjectRoot
+  $locationPushed = $true
+
   Write-Step "Creating hosted Supabase backup in $snapshotDir"
   Invoke-Checked -FilePath supabase -Arguments @('db', 'dump', '--linked', '--role-only', '--file', (Join-Path $snapshotDir 'roles.sql'))
   Invoke-Checked -FilePath supabase -Arguments @('db', 'dump', '--linked', '--schema', 'public,auth,storage', '--file', (Join-Path $snapshotDir 'schema.sql'))
@@ -340,6 +511,10 @@ try {
 
   Copy-Item -LiteralPath (Join-Path $ProjectRoot 'supabase\migrations') -Destination (Join-Path $repoSnapshotDir 'migrations') -Recurse -Force
   Copy-Item -LiteralPath (Join-Path $ProjectRoot 'supabase\functions') -Destination (Join-Path $repoSnapshotDir 'functions') -Recurse -Force
+
+  if (-not $SkipStorageBackup) {
+    Backup-StorageBuckets -SnapshotDir $snapshotDir -Jobs $StorageCopyJobs
+  }
 
   $manifest = Write-Manifest -SnapshotDir $snapshotDir -ProjectRoot $ProjectRoot
   Write-CompareReport -SnapshotDir $snapshotDir -CurrentManifest $manifest -PreviousManifest $previousManifest
@@ -354,6 +529,23 @@ try {
   Write-Step "Backup complete"
   Write-Host "Snapshot: $snapshotDir"
   Write-Host "Compare report: $(Join-Path $snapshotDir 'compare-report.md')"
+} catch {
+  $failureMessage = @(
+    "Backup failed at $(Get-Date -Format o)"
+    "Snapshot: $snapshotDir"
+    "Transcript: $transcriptPath"
+    "Error: $($_.Exception.Message)"
+  )
+  if (Test-Path -LiteralPath $snapshotDir) {
+    $failureMessage | Set-Content -LiteralPath (Join-Path $snapshotDir 'FAILED.txt') -Encoding UTF8
+  }
+  Write-Error ($failureMessage -join [Environment]::NewLine)
+  throw
 } finally {
-  Pop-Location
+  if ($locationPushed) {
+    Pop-Location
+  }
+  if ($transcriptStarted) {
+    Stop-Transcript | Out-Null
+  }
 }
