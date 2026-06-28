@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import CustomerDetail from './CustomerDetail.jsx';
 import CustomerForm from './CustomerForm.jsx';
+import CustomerImportPreviewPanel from './CustomerImportPreviewPanel.jsx';
 import CustomerLookup from './CustomerLookup.jsx';
 import { buildCustomerDirectory } from './customerInsights';
 import { normalizePhone, normalizeText } from './customerNormalize';
@@ -15,6 +16,7 @@ export default function CustomerManager({
   customers = [],
   jobs = [],
   canWrite = true,
+  canPreviewCustomerImport = false,
   dateOptions = {},
   moneyOptions = {},
   onCustomerSaved,
@@ -26,6 +28,7 @@ export default function CustomerManager({
   const [filters, setFilters] = useState(initialFilters);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [customerModalCustomer, setCustomerModalCustomer] = useState(undefined);
+  const [isImportPreviewOpen, setIsImportPreviewOpen] = useState(false);
   const [isCustomerFormDirty, setIsCustomerFormDirty] = useState(false);
 
   const directoryCustomers = useMemo(() => buildCustomerDirectory(customers, jobs), [customers, jobs]);
@@ -96,6 +99,15 @@ export default function CustomerManager({
     setCustomerModalCustomer(null);
   }
 
+  function openImportPreview() {
+    if (isCustomerFormDirty && !window.confirm('You have unsaved changes. Leave without saving?')) {
+      return;
+    }
+
+    setIsCustomerFormDirty(false);
+    setIsImportPreviewOpen(true);
+  }
+
   function openEditCustomerModal(customer) {
     if (isCustomerFormDirty && !window.confirm('You have unsaved changes. Leave without saving?')) {
       return;
@@ -142,9 +154,19 @@ export default function CustomerManager({
           </p>
         </div>
         <div className="customer-module-actions no-print">
+          {canPreviewCustomerImport && <button type="button" className="button-tertiary" onClick={openImportPreview}>CSV Import Preview</button>}
           {canWrite && <button type="button" className="primary-action" onClick={openNewCustomerModal}>Add Customer</button>}
         </div>
       </header>
+
+      {isImportPreviewOpen && (
+        <CustomerImportPreviewPanel
+          canPreview={canPreviewCustomerImport}
+          existingCustomers={directoryCustomers}
+          onClose={() => setIsImportPreviewOpen(false)}
+          onNotice={onNotice}
+        />
+      )}
 
       <div className="customer-module-toolbar">
         <input

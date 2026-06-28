@@ -26,6 +26,7 @@ import {
   canManageTeamMembers as canManageTeamMembersForRole,
   canManageShopSettings,
   canOverwritePhotos as canOverwritePhotosForRole,
+  canPreviewCustomerImport as canPreviewCustomerImportForRole,
   canUploadPhotos as canUploadPhotosForRole,
   getShopWriteAccess
 } from '../modules/auth/permissionService';
@@ -111,6 +112,7 @@ export default function App() {
   const canManageShop = !hasSupabaseConfig || canManageShopSettings({ role: membership?.role });
   const canEditShopSettings = canManageShop && canWrite;
   const canManageTeamMembers = !hasSupabaseConfig || canManageTeamMembersForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
+  const canPreviewCustomerImport = !hasSupabaseConfig || canPreviewCustomerImportForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canUploadPhotos = !hasSupabaseConfig || canUploadPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canEditPhotos = !hasSupabaseConfig || canEditPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canOverwritePhotos = !hasSupabaseConfig || canOverwritePhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
@@ -1285,6 +1287,7 @@ export default function App() {
               customers={customers}
               jobs={jobs}
               canWrite={canWrite}
+              canPreviewCustomerImport={canPreviewCustomerImport}
               dateOptions={dateOptions}
               moneyOptions={moneyOptions}
               onCustomerSaved={handleCustomerSaved}
