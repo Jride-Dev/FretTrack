@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "check:plan-branding": "node scripts/check-plan-branding.mjs",
+    "check:reports": "node scripts/check-reports-load.mjs",
     "check:permissions": "node scripts/check-permission-hardening.mjs && node scripts/check-rpc-security.mjs",
     "check:tiers": "node scripts/check-tier-split.mjs",
     "check:landing-worker": "node scripts/check-landing-worker.mjs",

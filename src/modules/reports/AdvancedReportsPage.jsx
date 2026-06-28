@@ -447,6 +447,10 @@ function formatDate(value, dateOptions) {
   return formatShopDate(value, dateOptions) || '-';
 }
 
+function formatDateTime(value, dateOptions) {
+  return formatShopDateTime(value, dateOptions) || '—';
+}
+
 function formatStatus(value = '') {
   return String(value || '')
     .replace(/_/g, ' ')
