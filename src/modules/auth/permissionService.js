@@ -65,6 +65,14 @@ export function canEditScheduling({ role, entitlementSnapshot } = {}) {
   return canWriteShop({ role, entitlementSnapshot });
 }
 
+export function canManageShipments({ role, entitlementSnapshot } = {}) {
+  return canWriteShop({ role, entitlementSnapshot });
+}
+
+export function canVoidShipments({ role, entitlementSnapshot } = {}) {
+  return SHOP_MANAGE_ROLES.has(normalizeRole(role)) && !isReadOnlyStatus(entitlementSnapshot);
+}
+
 export function canUploadPhotos({ role, entitlementSnapshot } = {}) {
   return canWriteShop({ role, entitlementSnapshot }) && entitlementSnapshot?.access?.canUploadPhotos !== false;
 }

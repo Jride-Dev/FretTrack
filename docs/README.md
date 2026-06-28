@@ -16,6 +16,7 @@ Start here for the current product path:
 - [Deployment notes](DEPLOYMENT_NOTES.md)
 - [Reports](REPORTS.md)
 - [Inventory purchasing notes](INVENTORY_PURCHASING.md)
+- [Shipping foundation](SHIPPING.md)
 - [Photo editor](PHOTO_EDITOR.md)
 - [Architecture review beta 14](ARCHITECTURE_REVIEW_BETA14.md)
 - [Print renderer rebuild plan](PRINT_RENDERER_REBUILD_PLAN.md)
@@ -40,6 +41,7 @@ Core shipped beta areas now include:
 - offline new-job draft queue with 0.2.8 scope audit
 - editable job-level parts and services
 - inventory purchasing foundation with parts, vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, landed-cost allocation, and transactional receiving RPCs
+- outbound job shipping foundation with `job_shipments`, address snapshots, carrier/tracking fields, RLS, and a small service module; UI, carrier APIs, labels/rates, and shipment notifications are still future work
 - Scheduling / Calendar Phase 1
 - unsaved-changes protection foundation
 - premium entitlement foundation
@@ -88,6 +90,7 @@ Current docs:
 - [Customer module plan](CUSTOMER_MODULE_PLAN.md)
 - [Image optimization](IMAGE_OPTIMIZATION.md)
 - [Inventory purchasing notes](INVENTORY_PURCHASING.md)
+- [Shipping foundation](SHIPPING.md)
 - [Reports](REPORTS.md)
 - [Photo editor](PHOTO_EDITOR.md)
 - [Mobile/tablet readiness audit](MOBILE_TABLET_READINESS_AUDIT.md)
