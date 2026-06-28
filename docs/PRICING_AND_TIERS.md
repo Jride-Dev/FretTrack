@@ -90,6 +90,8 @@ Pro subscriptions and Pro trials use the FretTrack Pro emblem and labels such as
 
 The current Pro reporting dashboard includes operational tables for shop overview counts, jobs by status, priority, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock inventory by desired stock level, open purchase orders, landed-cost purchase history, and upcoming schedule workload. These reports use existing shop data and do not add Stripe, billing automation, charts, PDF generation, or export workflows yet.
 
+The 0.2.9-D Reports hardening pass adds Pro report browser printing, per-section CSV exports, a summary CSV export, simple job-status/date filters, 25-row previews, 250-row show-all safety, 1,000-row export caps, and section-level error containment. Browser print / Save as PDF is the current printable output path; direct PDF generation and server-side report aggregation remain future work.
+
 Future Pro candidates are documented only and are not implemented in this phase:
 
 - CSV export boundary

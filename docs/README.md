@@ -14,6 +14,7 @@ Start here for the current product path:
 - [Release notes](RELEASE_NOTES.md)
 - [Roadmap](../ROADMAP.md)
 - [Deployment notes](DEPLOYMENT_NOTES.md)
+- [Reports](REPORTS.md)
 - [Inventory purchasing notes](INVENTORY_PURCHASING.md)
 - [Photo editor](PHOTO_EDITOR.md)
 - [Architecture review beta 14](ARCHITECTURE_REVIEW_BETA14.md)
@@ -47,6 +48,7 @@ Core shipped beta areas now include:
 - Shop Tier Foundation Phase 1
 - Paid Access Lifecycle Phase 1
 - Advanced Reporting Phase 1
+- Pro Reports export, print, row-cap, and large-dataset safety behavior
 - beta approval applicant notifications
 - Photo Editor Phase 1
 
@@ -85,6 +87,7 @@ Current docs:
 - [Customer module plan](CUSTOMER_MODULE_PLAN.md)
 - [Image optimization](IMAGE_OPTIMIZATION.md)
 - [Inventory purchasing notes](INVENTORY_PURCHASING.md)
+- [Reports](REPORTS.md)
 - [Photo editor](PHOTO_EDITOR.md)
 - [Mobile/tablet readiness audit](MOBILE_TABLET_READINESS_AUDIT.md)
 - [Release notes](RELEASE_NOTES.md)
