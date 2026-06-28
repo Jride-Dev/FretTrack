@@ -2,7 +2,7 @@
 
 ## GitHub Release Summary: v0.2.9-beta.0
 
-FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
+FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
 ## 0.2.9-A Pro Reports Dashboard Phase 2
 
@@ -29,6 +29,12 @@ This pass intentionally does not add a Customers page import button, import moda
 The Customers module now includes an Owner/Admin-only CSV Import Preview panel. Owners and admins can download the template, upload a CSV, preview mapped and normalized customer rows, review required-name and email validation errors, see duplicate warnings, and download skipped/error rows as CSV. Large-file safety is intentionally boring: the visible table is capped at 100 rows and files over 1,000 nonblank rows are blocked from preview.
 
 This pass still does not add customer database writes, an active import/save button, Supabase calls, customer service changes, migrations, XLSX support, vendor import, or inventory import. Write-enabled customer import remains a later phase after preview testing.
+
+## 0.2.9-H Shipping Foundation
+
+FretTrack now has the database and service foundation for outbound job/customer shipping. The new `job_shipments` table stores shop-scoped shipment records linked to jobs and optional customers, with direction, pickup/ship fulfillment method, shipment status, carrier/service/tracking fields, shipping cost/charge fields, shipped/delivered timestamps, and ship-to address snapshots so shipment history stays accurate even if a customer address later changes.
+
+This pass adds RLS using existing shop membership and write-access helpers, keeps hard deletes out of normal user access, adds narrow shipment permission helpers, and adds `npm run check:shipping` coverage. It does not add shipping UI, carrier APIs, label/rate purchasing, Stripe integration, email/SMS automation, or shipping reports. Manual tracking/status UI is planned next.
 
 ## 0.2.9-B0 Plan Branding And Subscription Status UI Foundation
 
