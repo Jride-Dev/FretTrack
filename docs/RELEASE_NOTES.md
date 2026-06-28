@@ -24,6 +24,12 @@ Customer import has been rebuilt as a narrow parser/template foundation after th
 
 This pass intentionally does not add a Customers page import button, import modal, import route, Supabase calls, customer database writes, customer service changes, App.jsx changes, XLSX support, vendor import, inventory import, rollback behavior, or deployment changes. Owner/Admin preview UI and write-enabled import are planned later after parser behavior has been tested safely.
 
+## 0.2.9-G Customer Import Preview UI
+
+The Customers module now includes an Owner/Admin-only CSV Import Preview panel. Owners and admins can download the template, upload a CSV, preview mapped and normalized customer rows, review required-name and email validation errors, see duplicate warnings, and download skipped/error rows as CSV. Large-file safety is intentionally boring: the visible table is capped at 100 rows and files over 1,000 nonblank rows are blocked from preview.
+
+This pass still does not add customer database writes, an active import/save button, Supabase calls, customer service changes, migrations, XLSX support, vendor import, or inventory import. Write-enabled customer import remains a later phase after preview testing.
+
 ## 0.2.9-B0 Plan Branding And Subscription Status UI Foundation
 
 FretTrack now has a centralized plan-status normalizer for Trial, Shop, Pro, Free/internal compatibility, expired, canceled, past-due, and unknown billing states. The app header, version area, Shop Settings subscription panel, Billing page, and Advanced Reporting lock/unlock state now use the same plan labels and countdown wording for trial ends, renewals, access-ending states, and expired access.

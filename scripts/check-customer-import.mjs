@@ -4,6 +4,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import Papa from 'papaparse';
 import {
+  CUSTOMER_IMPORT_MAX_ROWS,
+  CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT,
   buildCustomerCsvIssueCsv,
   buildCustomerCsvIssueRows,
   buildCustomerCsvPreview,
@@ -16,9 +18,8 @@ import {
 const root = process.cwd();
 const templatePath = join(root, 'public/templates/frettrack-customer-import-template.csv');
 const previewHelperPath = join(root, 'src/modules/customers/customerCsvPreview.js');
-const appPath = join(root, 'src/app/App.jsx');
+const previewComponentPath = join(root, 'src/modules/customers/CustomerImportPreviewPanel.jsx');
 const customerServicePath = join(root, 'src/modules/customers/customerService.js');
-const stylesPath = join(root, 'src/styles.css');
 
 assert.equal(typeof Papa.parse, 'function', 'PapaParse import must resolve.');
 assert.equal(existsSync(templatePath), true, 'Customer import CSV template must exist.');
@@ -30,16 +31,26 @@ const previewHelper = readFileSync(previewHelperPath, 'utf8');
 assert.doesNotMatch(previewHelper, /customerService/i, 'Preview helper must not import customerService.');
 assert.doesNotMatch(previewHelper, /supabase/i, 'Preview helper must not import or call Supabase.');
 assert.doesNotMatch(previewHelper, /\.from\s*\(\s*['"`]/, 'Preview helper must not contain database calls.');
+assert.equal(CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT, 100, 'Customer import preview table should stay capped at 100 rows.');
+assert.equal(CUSTOMER_IMPORT_MAX_ROWS, 1000, 'Customer import preview should block CSVs over 1000 nonblank rows.');
+
+const previewComponent = readFileSync(previewComponentPath, 'utf8');
+assert.doesNotMatch(previewComponent, /customerService/i, 'Preview component must not import customerService.');
+assert.doesNotMatch(previewComponent, /supabase/i, 'Preview component must not import or call Supabase.');
+assert.doesNotMatch(previewComponent, /\baddCustomer\b/, 'Preview component must not call addCustomer.');
+assert.doesNotMatch(previewComponent, /\b(insert|update|upsert)\s*\(/, 'Preview component must not write customer records.');
+assert.ok(previewComponent.includes('CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT'), 'Preview component must use the preview row limit.');
+assert.ok(previewComponent.includes('CUSTOMER_IMPORT_MAX_ROWS'), 'Preview component must use the max row guard.');
+assert.ok(previewComponent.includes('nonblankRows.length > CUSTOMER_IMPORT_MAX_ROWS'), 'Preview component must block over-limit files.');
+assert.ok(previewComponent.includes('CUSTOMER_IMPORT_TEMPLATE_PATH'), 'Preview component must reference the CSV template path.');
 
 const untouchedDiff = execFileSync('git', [
   'diff',
   '--name-only',
   '--',
-  appPath,
-  customerServicePath,
-  stylesPath
+  customerServicePath
 ], { encoding: 'utf8' }).trim();
-assert.equal(untouchedDiff, '', 'App.jsx, customerService.js, and styles.css must stay untouched in this foundation pass.');
+assert.equal(untouchedDiff, '', 'customerService.js must stay untouched in customer import preview passes.');
 
 const mapping = detectCustomerCsvMapping([
   'Customer Name',

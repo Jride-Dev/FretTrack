@@ -1,6 +1,8 @@
 import Papa from 'papaparse';
 
 export const CUSTOMER_IMPORT_TEMPLATE_PATH = '/templates/frettrack-customer-import-template.csv';
+export const CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT = 100;
+export const CUSTOMER_IMPORT_MAX_ROWS = 1000;
 
 export const customerCsvPreviewFields = [
   {

@@ -2,7 +2,7 @@
 
 FretTrack has a customer CSV import foundation for parsing, mapping, validation, duplicate detection, and skipped/error CSV output.
 
-This is a preview/parser foundation only. It does not add an import modal, route, customer database writes, Supabase calls, XLSX support, vendor import, inventory import, or rollback behavior.
+The Customers module now includes an Owner/Admin-only CSV Import Preview panel. This is still preview only. It does not add customer database writes, Supabase calls, XLSX support, vendor import, inventory import, or rollback behavior.
 
 ## Template
 
@@ -34,7 +34,7 @@ If `first_name` and `last_name` are present but `name` is not, the preview helpe
 
 ## Current Behavior
 
-The isolated preview helper can:
+The preview helper and Customers page panel can:
 
 - parse CSV text with quoted values, commas, and multiline cells
 - normalize headers
@@ -46,6 +46,8 @@ The isolated preview helper can:
 - detect duplicate rows inside the uploaded file
 - warn about likely duplicates against supplied existing customer records
 - prepare skipped/error CSV output
+- cap the visible preview table at 100 rows
+- block preview for CSV files with more than 1,000 nonblank rows
 
 Preview rows are classified as:
 
@@ -57,16 +59,19 @@ Preview rows are classified as:
 
 Each preview row includes the source row number, original row, mapped row, normalized row, status, errors, and warnings.
 
+## Access
+
+Owners and admins can open the preview panel from Customers. Tech and viewer roles cannot access the preview entry point. Expired or read-only lifecycle states do not allow customer import preview actions.
+
 ## Not Live Yet
 
-Customer import does not write to the database yet. The Customers page does not expose an import UI in this phase.
+Customer import does not write to the database yet. The preview panel has no save/import action.
 
 Planned next phases:
 
-1. Customers page preview-only importer for owners/admins.
-2. Authenticated role smoke testing for owner, admin, tech, and viewer.
-3. Write-enabled customer import after preview behavior is stable.
-4. Later import batch history, rollback, XLSX support, vendor import, and inventory import.
+1. Authenticated role smoke testing for owner, admin, tech, and viewer.
+2. Write-enabled customer import after preview behavior is stable.
+3. Later import batch history, rollback, XLSX support, vendor import, and inventory import.
 
 ## Validation
 

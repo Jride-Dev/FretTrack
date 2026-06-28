@@ -1,5 +1,6 @@
 export { default as CustomerDetail } from './CustomerDetail.jsx';
 export { default as CustomerForm } from './CustomerForm.jsx';
+export { default as CustomerImportPreviewPanel } from './CustomerImportPreviewPanel.jsx';
 export { default as CustomerLookup } from './CustomerLookup.jsx';
 export { default as CustomerManager } from './CustomerManager.jsx';
 export * from './customerInsights';
