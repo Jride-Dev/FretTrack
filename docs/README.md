@@ -77,6 +77,7 @@ Current docs:
 - [Deployment notes](DEPLOYMENT_NOTES.md)
 - [Beta operations](BETA_OPERATIONS.md)
 - [Beta tester checklist](BETA_TESTER_CHECKLIST.md)
+- [Customer import](CUSTOMER_IMPORT.md)
 - Public Terms of Service: `https://frettrack-app.com/terms`
 - Public Privacy Policy: `https://frettrack-app.com/privacy`
 - Public Support / FAQ: `https://frettrack-app.com/support`

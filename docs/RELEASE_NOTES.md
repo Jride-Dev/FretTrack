@@ -18,6 +18,12 @@ Large dataset safety is now explicit: table previews show 25 rows by default, `S
 
 This pass does not add PDF generation dependencies, charts, scheduled report emails, Stripe revenue analytics, or server-side report aggregation RPCs. Browser print / Save as PDF is the current printable output path.
 
+## 0.2.9-F Customer Import Parser + Template Foundation
+
+Customer import has been rebuilt as a narrow parser/template foundation after the reverted all-in-one MVP. This pass adds the public CSV template, an isolated PapaParse-backed preview helper, alias mapping for common customer-list headers, first/last name combination, required-name and email validation, duplicate detection within a file, existing-customer duplicate warnings when records are supplied to the helper, skipped/error CSV output, and `npm run check:customer-import` coverage.
+
+This pass intentionally does not add a Customers page import button, import modal, import route, Supabase calls, customer database writes, customer service changes, App.jsx changes, XLSX support, vendor import, inventory import, rollback behavior, or deployment changes. Owner/Admin preview UI and write-enabled import are planned later after parser behavior has been tested safely.
+
 ## 0.2.9-B0 Plan Branding And Subscription Status UI Foundation
 
 FretTrack now has a centralized plan-status normalizer for Trial, Shop, Pro, Free/internal compatibility, expired, canceled, past-due, and unknown billing states. The app header, version area, Shop Settings subscription panel, Billing page, and Advanced Reporting lock/unlock state now use the same plan labels and countdown wording for trial ends, renewals, access-ending states, and expired access.
