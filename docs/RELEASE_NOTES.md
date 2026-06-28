@@ -10,6 +10,14 @@ Advanced Reporting now has a Pro-gated operational dashboard built from existing
 
 This pass does not add charts, exports, PDFs, Stripe, Checkout, Billing Portal, payment links, webhooks, SMS, public document links, or supplier integrations. Shop and expired-trial lock states continue to rely on the existing entitlement and paid-access lifecycle foundation.
 
+## 0.2.9-D Reports Export, Print, And Large Dataset Safety
+
+Pro Reports now include browser print support, per-section CSV export buttons, a summary CSV export, simple status/date filters for job status summary, recent work-log activity, and purchase history, and section-level error containment so one broken report section does not trigger the global app fallback.
+
+Large dataset safety is now explicit: table previews show 25 rows by default, `Show all visible rows` is available only when a section has 250 rows or fewer, CSV exports are capped at 1,000 rows, and the reports check script exercises a 1,500-row mock dataset plus CSV escaping for commas, quotes, and newlines.
+
+This pass does not add PDF generation dependencies, charts, scheduled report emails, Stripe revenue analytics, or server-side report aggregation RPCs. Browser print / Save as PDF is the current printable output path.
+
 ## 0.2.9-B0 Plan Branding And Subscription Status UI Foundation
 
 FretTrack now has a centralized plan-status normalizer for Trial, Shop, Pro, Free/internal compatibility, expired, canceled, past-due, and unknown billing states. The app header, version area, Shop Settings subscription panel, Billing page, and Advanced Reporting lock/unlock state now use the same plan labels and countdown wording for trial ends, renewals, access-ending states, and expired access.
