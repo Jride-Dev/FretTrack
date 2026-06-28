@@ -1,4 +1,4 @@
-import { normalizeCustomerTypeValue } from './customerTypes';
+import { normalizeCustomerTypeValue } from './customerTypes.js';
 
 export function normalizeText(value) {
   return String(value || '').trim().toLowerCase();

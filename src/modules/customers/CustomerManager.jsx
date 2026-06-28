@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import CustomerDetail from './CustomerDetail.jsx';
 import CustomerForm from './CustomerForm.jsx';
+import CustomerImportModal from './CustomerImportModal.jsx';
 import CustomerLookup from './CustomerLookup.jsx';
 import { buildCustomerDirectory } from './customerInsights';
 import { normalizePhone, normalizeText } from './customerNormalize';
@@ -15,6 +16,7 @@ export default function CustomerManager({
   customers = [],
   jobs = [],
   canWrite = true,
+  canImportCustomers = false,
   dateOptions = {},
   moneyOptions = {},
   onCustomerSaved,
@@ -26,6 +28,7 @@ export default function CustomerManager({
   const [filters, setFilters] = useState(initialFilters);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [customerModalCustomer, setCustomerModalCustomer] = useState(undefined);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCustomerFormDirty, setIsCustomerFormDirty] = useState(false);
 
   const directoryCustomers = useMemo(() => buildCustomerDirectory(customers, jobs), [customers, jobs]);
@@ -96,6 +99,15 @@ export default function CustomerManager({
     setCustomerModalCustomer(null);
   }
 
+  function openImportModal() {
+    if (isCustomerFormDirty && !window.confirm('You have unsaved changes. Leave without saving?')) {
+      return;
+    }
+
+    setIsCustomerFormDirty(false);
+    setIsImportModalOpen(true);
+  }
+
   function openEditCustomerModal(customer) {
     if (isCustomerFormDirty && !window.confirm('You have unsaved changes. Leave without saving?')) {
       return;
@@ -123,6 +135,14 @@ export default function CustomerManager({
     await onCustomerSaved?.(savedCustomer);
   }
 
+  async function handleCustomerImportComplete(savedCustomers = []) {
+    const firstSavedCustomer = savedCustomers[0];
+    if (firstSavedCustomer?.id) {
+      setSelectedCustomerId(firstSavedCustomer.id);
+    }
+    await onCustomerSaved?.(firstSavedCustomer || null);
+  }
+
   function handleCreateJob(customer) {
     onCreateJobForCustomer?.(customer);
   }
@@ -142,6 +162,7 @@ export default function CustomerManager({
           </p>
         </div>
         <div className="customer-module-actions no-print">
+          {canImportCustomers && <button type="button" className="button-tertiary" onClick={openImportModal}>Import Customers</button>}
           {canWrite && <button type="button" className="primary-action" onClick={openNewCustomerModal}>Add Customer</button>}
         </div>
       </header>
@@ -233,6 +254,16 @@ export default function CustomerManager({
             />
           </div>
         </div>
+      )}
+
+      {isImportModalOpen && (
+        <CustomerImportModal
+          canImport={canImportCustomers}
+          existingCustomers={directoryCustomers}
+          onClose={() => setIsImportModalOpen(false)}
+          onImportComplete={handleCustomerImportComplete}
+          onNotice={onNotice}
+        />
       )}
     </section>
   );

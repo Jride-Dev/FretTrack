@@ -1,4 +1,4 @@
-import { normalizeCustomer, normalizeEmail, normalizePhone, normalizeText } from './customerNormalize';
+import { normalizeCustomer, normalizeEmail, normalizePhone, normalizeText } from './customerNormalize.js';
 
 export function findDuplicateCustomer(customers, candidate) {
   return findDuplicateCustomers(customers, candidate)[0] || null;

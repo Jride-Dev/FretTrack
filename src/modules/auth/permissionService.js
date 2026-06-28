@@ -57,6 +57,10 @@ export function canEditCustomers({ role, entitlementSnapshot } = {}) {
   return canWriteShop({ role, entitlementSnapshot });
 }
 
+export function canImportData({ role, entitlementSnapshot } = {}) {
+  return SHOP_MANAGE_ROLES.has(normalizeRole(role)) && !isReadOnlyStatus(entitlementSnapshot);
+}
+
 export function canEditScheduling({ role, entitlementSnapshot } = {}) {
   return canWriteShop({ role, entitlementSnapshot });
 }

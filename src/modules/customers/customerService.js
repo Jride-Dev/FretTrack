@@ -63,6 +63,7 @@ export async function getCustomers(jobs = [], options = {}) {
 
 export async function addCustomer(customer, options = {}) {
   const activeShopId = getActiveShopId(options);
+  const saveLocalBeforeRemote = options.saveLocalBeforeRemote !== false;
   const now = new Date().toISOString();
   const normalizedCustomer = normalizeCustomer({
     ...customer,
@@ -72,10 +73,14 @@ export async function addCustomer(customer, options = {}) {
   });
 
   const localCustomers = getLocalCustomers({ shopId: activeShopId });
-  saveLocalCustomers(upsertCustomer(localCustomers, normalizedCustomer), { shopId: activeShopId });
 
   if (!hasSupabaseConfig || !supabase) {
+    saveLocalCustomers(upsertCustomer(localCustomers, normalizedCustomer), { shopId: activeShopId });
     return normalizedCustomer;
+  }
+
+  if (saveLocalBeforeRemote) {
+    saveLocalCustomers(upsertCustomer(localCustomers, normalizedCustomer), { shopId: activeShopId });
   }
 
   const { data, error } = await supabase
@@ -86,7 +91,8 @@ export async function addCustomer(customer, options = {}) {
 
   if (error) {
     console.error('Supabase addCustomer failed. Local copy saved only.', error);
-    throw new Error(`Remote customer save failed: ${error.message}. Local copy was saved only on this browser.`);
+    const fallbackText = saveLocalBeforeRemote ? ' Local copy was saved only on this browser.' : '';
+    throw new Error(`Remote customer save failed: ${error.message}.${fallbackText}`);
   }
 
   const savedCustomer = fromDbCustomer(data);
