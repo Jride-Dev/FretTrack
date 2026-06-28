@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "check:customer-import": "node scripts/check-customer-import.mjs",
     "check:plan-branding": "node scripts/check-plan-branding.mjs",
     "check:permissions": "node scripts/check-permission-hardening.mjs && node scripts/check-rpc-security.mjs",
     "check:tiers": "node scripts/check-tier-split.mjs",
@@ -27,6 +28,7 @@
     "@supabase/supabase-js": "^2.108.2",
     "heic2any": "^0.0.4",
     "jsbarcode": "^3.12.3",
+    "papaparse": "^5.5.3",
     "postgres": "^3.4.9",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"

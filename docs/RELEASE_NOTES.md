@@ -4,6 +4,14 @@
 
 FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
+## 0.2.9-C Customer CSV Import MVP
+
+Customer CSV Import MVP adds the first real data-import workflow for paid-beta onboarding. Owners and admins can open Customers, download the CSV template, upload a customer list, review or adjust column mappings, preview valid rows, warnings, duplicates, and errors, confirm the import, and download skipped/error rows as CSV.
+
+Imported rows use the existing customer save path and shop-scoped Supabase RLS. Each confirmed import writes `import_source = csv` and one shared UUID `import_batch_id` for the imported customers. Tech and viewer roles do not see the import entry point, and direct access to the import panel shows an access-denied state.
+
+This pass supports CSV customer records only. It does not add XLSX import, vendor import, inventory/parts import, purchase-order import, rollback UI, a separate import-batch table, or service-role browser writes.
+
 ## 0.2.9-A Pro Reports Dashboard Phase 2
 
 Advanced Reporting now has a Pro-gated operational dashboard built from existing shop data. Pro-enabled shops can review shop overview counts, jobs by status, priority breakdowns, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock parts based on desired stock levels, open purchase orders, purchase history with landed-cost fields, and upcoming schedule workload.

@@ -445,6 +445,26 @@ main {
   color: var(--text);
 }
 
+.button-like {
+  align-items: center;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 88%, white 12%), var(--surface-2));
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 12px;
+  text-decoration: none;
+}
+
+.button-like:hover,
+.button-like:focus-visible {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
 .button-fab,
 .fab {
   aspect-ratio: 1;
@@ -1290,6 +1310,98 @@ label {
   box-shadow: none;
   max-width: none;
   padding: 0;
+}
+
+.customer-import-modal {
+  max-height: 92vh;
+  max-width: 1180px;
+  overflow: auto;
+  width: calc(100% - 24px);
+}
+
+.customer-import-flow {
+  display: grid;
+  gap: 14px;
+}
+
+.customer-import-step {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+.customer-import-step:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.customer-import-step h3 {
+  margin-bottom: 0;
+}
+
+.customer-import-mapping-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.customer-import-mapping-grid label {
+  display: grid;
+  gap: 6px;
+}
+
+.customer-import-preview-heading {
+  align-items: end;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.customer-import-summary {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+}
+
+.customer-import-chip {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 2px;
+  padding: 9px 10px;
+}
+
+.customer-import-chip strong {
+  font-size: 18px;
+}
+
+.customer-import-table {
+  min-width: 860px;
+}
+
+.customer-import-table th,
+.customer-import-table td {
+  font-size: 12px;
+}
+
+.customer-import-status.valid {
+  background: #e9f6ee;
+  border-color: #97c9a8;
+  color: #205532;
+}
+
+.customer-import-status.warning,
+.customer-import-status.duplicate {
+  background: color-mix(in srgb, var(--warning) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--warning) 60%, var(--border));
+  color: #8a4f00;
+}
+
+.customer-import-status.error {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
 }
 
 .modal-close {
@@ -3581,8 +3693,14 @@ th.internal-only {
   }
 
   .customer-module-actions,
+  .customer-import-preview-heading,
   .customer-module-header {
     width: 100%;
+  }
+
+  .customer-import-preview-heading {
+    align-items: stretch;
+    display: grid;
   }
 
   .customer-module-actions button {

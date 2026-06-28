@@ -1,4 +1,4 @@
-import { normalizeCustomer, normalizeText } from './customerNormalize';
+import { normalizeCustomer, normalizeText } from './customerNormalize.js';
 
 export function hasRecommendedContactMethod(customer = {}) {
   const normalizedCustomer = normalizeCustomer(customer);
