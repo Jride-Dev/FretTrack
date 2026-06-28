@@ -14,7 +14,6 @@ Start here for the current product path:
 - [Release notes](RELEASE_NOTES.md)
 - [Roadmap](../ROADMAP.md)
 - [Deployment notes](DEPLOYMENT_NOTES.md)
-- [Customer CSV import](CUSTOMER_IMPORT.md)
 - [Inventory purchasing notes](INVENTORY_PURCHASING.md)
 - [Photo editor](PHOTO_EDITOR.md)
 - [Architecture review beta 14](ARCHITECTURE_REVIEW_BETA14.md)
@@ -32,7 +31,6 @@ Start here for the current product path:
 Core shipped beta areas now include:
 
 - customer and subcontractor management
-- owner/admin Customer CSV Import MVP for paid-beta onboarding
 - public launch landing page refresh with bundled favicon and product screenshot assets
 - public Terms of Service, Privacy Policy, and Support / FAQ pages on the landing site
 - work-order and invoice email flow
@@ -85,7 +83,6 @@ Current docs:
 - [Beta messaging](BETA_MESSAGING.md)
 - [Domain and email setup](DOMAIN_EMAIL_SETUP.md)
 - [Customer module plan](CUSTOMER_MODULE_PLAN.md)
-- [Customer CSV import](CUSTOMER_IMPORT.md)
 - [Image optimization](IMAGE_OPTIMIZATION.md)
 - [Inventory purchasing notes](INVENTORY_PURCHASING.md)
 - [Photo editor](PHOTO_EDITOR.md)
