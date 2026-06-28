@@ -76,9 +76,6 @@ For useful bug reports, include:
 | Login and Shop Access | LOGIN-004 | Confirm pending or unapproved access messaging if using a not-yet-approved account. | The tester sees clear pending approval guidance and cannot create a shop early. | Tester |
 | Customers | CUSTOMER-001 | Create a customer record. | Customer saves with name, phone/email, contact preferences, and address details intact. | Owner/Admin/Tech |
 | Customers | CUSTOMER-002 | Select an existing customer from New Job intake. | Customer fields fill correctly without duplicating or overwriting existing details. | Owner/Admin/Tech |
-| Customers | CUSTOMER-003 | Import customers from CSV as Owner/Admin. | Template downloads, CSV uploads, headers map, preview shows valid/warning/error/duplicate rows, and confirmed import saves valid customers only. | Owner/Admin |
-| Customers | CUSTOMER-004 | Attempt Customer CSV Import as Tech/Viewer. | Import entry point is hidden or access denied; normal customer viewing remains available by role. | Tech/Viewer |
-| Customers | CUSTOMER-005 | Download skipped/error rows from customer import. | Duplicate, missing-name, invalid-email, or failed-save rows download as a cleanup CSV with row number and issue details. | Owner/Admin |
 | New Job Intake | JOB-001 | Create a new repair job. | Job saves with a job number and appears in the job list. | Owner/Admin/Tech |
 | New Job Intake | JOB-002 | Fill Instrument Details. | Instrument Type, Brand, Model, Year, Serial Number, Color, Finish, and Orientation remain clear and optional where intended. | Owner/Admin/Tech |
 | New Job Intake | JOB-003 | Use Brand/Model suggestions. | Brand suggestions appear and Model suggestions filter by selected brand. | Owner/Admin/Tech |

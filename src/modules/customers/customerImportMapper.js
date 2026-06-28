@@ -1,6 +1,6 @@
-import { findDuplicateCustomers } from './customerDuplicateDetection.js';
-import { getCustomerDisplayName, normalizeCustomer, normalizeEmail, normalizePhone, normalizeText } from './customerNormalize.js';
-import { validateCustomerDraft } from './customerValidation.js';
+import { findDuplicateCustomers } from './customerDuplicateDetection';
+import { getCustomerDisplayName, normalizeCustomer, normalizeEmail, normalizePhone, normalizeText } from './customerNormalize';
+import { validateCustomerDraft } from './customerValidation';
 
 export const customerImportFields = [
   'displayName',

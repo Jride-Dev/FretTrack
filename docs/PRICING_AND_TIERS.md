@@ -32,8 +32,6 @@ Beta tester feedback should directly shape pricing, included features, limits, a
 
 The 0.2.9-B0 plan-status UI foundation adds plan-aware branding and display only. FretTrack can now show Trial / Shop / Pro / Expired labels, Pro emblem branding for Pro-enabled shops, trial and renewal countdowns, and a Shop Settings Plan / Subscription panel. Pro and Trial Pro accounts must use the Pro emblem and Pro labels as their primary identity; they must not display the regular Shop identity except in comparison copy. Stripe Checkout, Customer Portal, webhooks, automated renewals, payment collection, and customer self-service billing remain future work.
 
-The 0.2.9-C Customer CSV Import MVP adds owner/admin customer-list import for paid-beta onboarding. It supports CSV customer records with template download, column mapping, preview validation, duplicate warnings, skipped/error row export, and `import_source=csv` / `import_batch_id` metadata. Tech and viewer roles cannot import. XLSX import, vendor import, inventory/parts import, rollback history, and automated billing remain future work.
-
 ## Current Trial / Shop / Pro Split
 
 Phase 1 defines the product boundary without adding pricing, plan caps, Stripe, billing webhooks, payment forms, SMS limits, storage enforcement, or multi-shop restrictions.

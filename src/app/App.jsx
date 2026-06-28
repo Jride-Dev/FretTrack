@@ -23,7 +23,6 @@ import {
   canAccessShopAsMember,
   canDeletePhotos as canDeletePhotosForRole,
   canEditPhotos as canEditPhotosForRole,
-  canImportData as canImportDataForRole,
   canManageTeamMembers as canManageTeamMembersForRole,
   canManageShopSettings,
   canOverwritePhotos as canOverwritePhotosForRole,
@@ -112,7 +111,6 @@ export default function App() {
   const canManageShop = !hasSupabaseConfig || canManageShopSettings({ role: membership?.role });
   const canEditShopSettings = canManageShop && canWrite;
   const canManageTeamMembers = !hasSupabaseConfig || canManageTeamMembersForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
-  const canImportCustomers = !hasSupabaseConfig || canImportDataForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canUploadPhotos = !hasSupabaseConfig || canUploadPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canEditPhotos = !hasSupabaseConfig || canEditPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canOverwritePhotos = !hasSupabaseConfig || canOverwritePhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
@@ -1287,7 +1285,6 @@ export default function App() {
               customers={customers}
               jobs={jobs}
               canWrite={canWrite}
-              canImportCustomers={canImportCustomers}
               dateOptions={dateOptions}
               moneyOptions={moneyOptions}
               onCustomerSaved={handleCustomerSaved}
