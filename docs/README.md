@@ -51,12 +51,14 @@ Core shipped beta areas now include:
 - Paid Access Lifecycle Phase 1
 - Advanced Reporting Phase 1
 - Pro Reports export, print, row-cap, and large-dataset safety behavior
+- first-shop bootstrap reliability: approved/confirmed users create shop profile, owner membership, and default trial subscription together before the app loads real shop access
 - beta approval applicant notifications
 - Photo Editor Phase 1
 
 Current permission and premium-trial behavior:
 
 - Beta access approval and paid trial access are separate systems.
+- New shop bootstrap requires confirmed email plus approved beta access or operator access; it creates the shop profile, owner membership, and default trial subscription atomically.
 - Operators can start, extend, and end 7/14/30-day Shop or Pro trials.
 - Expired trials preserve data and memberships, allow safe viewing, block writes, and lock premium entitlements.
 - Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration and should not be marketed as public plans.

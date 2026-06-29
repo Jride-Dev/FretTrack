@@ -407,7 +407,7 @@ export default function App() {
     }
   }
 
-  async function loadShopAccess(preferredShopId = getSelectedShop().shopId) {
+  async function loadShopAccess(preferredShopId = getSelectedShop().shopId, options = {}) {
     setIsMembershipLoading(true);
     try {
       const availableMemberships = await getCurrentUserShopMemberships();
@@ -447,6 +447,9 @@ export default function App() {
         type: 'error',
         message: getErrorMessage(error, 'Unable to load shop membership.')
       });
+      if (options.rethrow) {
+        throw error;
+      }
     } finally {
       setIsShopProfileLoading(false);
       setIsMembershipLoading(false);
@@ -454,6 +457,10 @@ export default function App() {
   }
 
   async function handleBootstrapOwner() {
+    if (isMembershipLoading) {
+      return;
+    }
+
     const shopNameValue = newShopName.trim();
     if (!shopNameValue) {
       setNotice({ type: 'error', message: 'Enter a shop name first.' });
@@ -474,15 +481,9 @@ export default function App() {
     setIsMembershipLoading(true);
     setNotice(null);
     try {
-      const ownerMembership = await bootstrapCurrentUserAsOwner(shopId);
-      const ownerShop = { ...ownerMembership, shopName: shopNameValue };
-      setSelectedShop(ownerShop);
-      setMembership(ownerShop);
-      setMemberships([ownerShop]);
-      setEntitlementSnapshot(getDefaultEntitlementSnapshot(ownerShop.shopId));
-      setShopName(shopNameValue);
+      await bootstrapCurrentUserAsOwner(shopId, shopNameValue);
+      await loadShopAccess(shopId, { rethrow: true });
       setNewShopName('');
-      await checkSupabaseConnection();
       setNotice({ type: 'success', message: 'Shop owner access created.' });
     } catch (error) {
       setNotice({
