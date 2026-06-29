@@ -15,7 +15,7 @@ Beta access approval and premium trial entitlement are separate systems.
 - Expired trials use internal compatibility entitlements and ignore feature overrides until the lifecycle is started, extended, or otherwise restored by an operator.
 - Explicit administrative `read_only` or cancellation states can still pause core write operations.
 - Shop Tier Foundation Phase 1 makes `photo_editor`, `advanced_reporting`, and `team_members` explicit entitlements across internal compatibility, Shop, and Pro.
-- Shop unlocks Photo Editor and Team Members. Pro unlocks Advanced Reporting.
+- Current product behavior keeps Shop on the paid core workflow. Pro unlocks Photo Editor, Team Members, and Advanced Reporting.
 - Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration. Existing `free + active` beta shops are preserved for now.
 - Stripe, billing webhooks, and payment collection are still not connected.
 
@@ -97,10 +97,10 @@ Shop Tier Foundation Phase 1 adds migration `20260612233321_shop_tier_foundation
 - Adds the `shop` plan identifier.
 - Keeps legacy `free`, `solo`, and previously seeded `enterprise` accepted for compatibility, but current product-facing plans are Trial, Shop, and Pro.
 - Updates the shop profile subscription-tier constraint and entitlement snapshot allow-lists to include `shop`.
-- Seeds Shop entitlements so Photo Editor and Team Members are enabled while Advanced Reporting remains locked until Pro.
+- Originally seeded Shop entitlements for Photo Editor and Team Members, then `20260629155417_live_demo_bug_polish_phase_1.sql` moved Photo Editor and Team Members to Pro-only to match the current product model.
 - Does not create a Business tier or add new Enterprise entitlements.
 - Operator-managed trials now support Shop or Pro starts and extensions.
-- Updates team-member RPC rejection wording from Pro to Shop.
+- Updates team-member RPC rejection wording for the Shop-era split; the 0.2.9-J live-demo polish migration updates current rejection wording to Pro.
 
 RLS is enabled on all new tables. Authenticated owners/admins can read billing tables for their own shops. Normal authenticated users cannot update plan, subscription, Stripe ID, entitlement override, or authoritative usage state.
 
@@ -176,13 +176,10 @@ High-cost writes now check the central entitlement/access snapshot:
 - Customer SMS sends
 - General write access when the shop is read-only/canceled
 
-Shop feature gates:
+Pro feature gates:
 
 - Photo Editor
 - Team Members
-
-Pro feature gates:
-
 - Advanced Reporting
 
 Advanced Reporting now includes the Pro Reports Dashboard Phase 2 operational view: shop overview cards, jobs by status, priority report, overdue/promise-date list, ready-for-pickup list, waiting-on-parts list, job aging, recent work-log activity, low-stock inventory by desired stock level, purchase-order status, landed-cost purchase history, and upcoming schedule workload. This remains a read/reporting surface only and does not add Stripe, billing automation, charts, exports, PDFs, SMS, public document links, or supplier integrations.

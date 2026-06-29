@@ -62,8 +62,8 @@ Current permission and premium-trial behavior:
 - Operators can start, extend, and end 7/14/30-day Shop or Pro trials.
 - Expired trials preserve data and memberships, allow safe viewing, block writes, and lock premium entitlements.
 - Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration and should not be marketed as public plans.
-- Shop currently unlocks Photo Editor and Team Members.
-- Pro currently unlocks Advanced Reporting.
+- Shop currently covers the paid core workflow.
+- Pro currently unlocks Photo Editor, Team Members, and Advanced Reporting.
 - Photo permissions are split across upload, edit, overwrite, delete, and customer-report selection.
 - Shop owners/admins can view subscription status but cannot manage premium trials unless they are also platform operators.
 

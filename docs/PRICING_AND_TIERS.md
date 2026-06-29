@@ -42,8 +42,8 @@ Phase 1 defines the product boundary without adding pricing, plan caps, Stripe, 
 
 Trial is a lifecycle state, not a permanent public plan. An active unpaid trial is assigned either Shop or Pro entitlements by an operator:
 
-- Active Shop trial: core workflow, Photo Editor, and Team Members are writable.
-- Active Pro trial: everything in Shop plus Advanced Reporting.
+- Active Shop trial: paid core workflow is writable.
+- Active Pro trial: everything in Shop plus Photo Editor, Team Members, and Advanced Reporting.
 - Expired trial: data and memberships are preserved, login/view access remains where safe, and writes are blocked until access is restored.
 
 Core workflow includes:
@@ -75,20 +75,22 @@ Shop is the normal paid operating plan for repair shops. Phase 1 currently unloc
 - work logs
 - inventory purchasing basics
 - scheduling
-- Photo Editor
-- Team Members
 
 Shop subscriptions and Shop trials use the original FretTrack emblem with labels such as `Trial: Shop`, `Shop Monthly`, or `Shop Yearly`. When a period-end timestamp is available later from Stripe sync, the UI can show renewal or access-ending countdowns without assuming a fixed month length.
 
-Team Members is backend-enforced. Existing staff memberships are preserved when trial access expires, but non-owner staff access and member changes are inactive until Shop or Pro access is restored.
+Shop is currently single-user in the entitlement snapshot. Existing staff memberships are preserved when trial access expires, but non-owner staff access and member changes remain inactive until Pro access is restored.
 
 ### Pro
 
 Pro is the advanced reporting and automation tier. Phase 1 currently unlocks:
 
+- Photo Editor
+- Team Members
 - Advanced Reporting
 
 Pro subscriptions and Pro trials use the FretTrack Pro emblem and labels such as `Trial: Pro`, `Pro Monthly`, `Pro Yearly`, or `Pro, canceling`. Trial Pro access keeps Advanced Reporting unlocked through the existing entitlement snapshot; non-Pro shops continue to see the Pro locked state.
+
+Team Members is backend-enforced. Existing staff memberships are preserved when trial access expires, but non-owner staff access and member changes are inactive until Pro access is restored.
 
 The current Pro reporting dashboard includes operational tables for shop overview counts, jobs by status, priority, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock inventory by desired stock level, open purchase orders, landed-cost purchase history, and upcoming schedule workload. These reports use existing shop data and do not add Stripe, billing automation, charts, PDF generation, or export workflows yet.
 
@@ -156,7 +158,7 @@ Included:
 - Tax/VAT support
 - Mobile and tablet access
 - Backups and data export rights
-- 1-2 users
+- Historical research allowed 1-2 users; the current Shop entitlement is single-user, and Team Members is Pro-only.
 
 Suggested limits:
 

@@ -4,6 +4,14 @@
 
 FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
+## 0.2.9-J Live Demo Bug Polish
+
+Live-demo polish tightens the day-one beta experience without adding Stripe or new feature surfaces. New Job intake now keeps customer phone/email/address/city/state/zip in the saved job payload so reopening Intake repopulates the fields, instrument type persists through save/reopen, and string gauge presets now cover Electric, Acoustic, Bass, and Nylon/Classical categories.
+
+Plan wording and gates now match the current product model: Shop is the paid core workflow, while Photo Editor, Team Members, and Advanced Reporting are Pro-only upgraded features. The Photos and Shop Settings lock states now say `Available in Pro`, Shop no longer advertises a two-user limit, and the entitlement check script enforces the Pro-only boundary.
+
+The pass also fixes small live-demo UI annoyances: Billing/Customers/Scheduling header navigation stays highlighted for the active page, Scheduling date/time fields stay inside the Add/Edit Event form, and long customer emails wrap instead of spilling out of customer cards/details.
+
 ## 0.2.9-A Pro Reports Dashboard Phase 2
 
 Advanced Reporting now has a Pro-gated operational dashboard built from existing shop data. Pro-enabled shops can review shop overview counts, jobs by status, priority breakdowns, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock parts based on desired stock levels, open purchase orders, purchase history with landed-cost fields, and upcoming schedule workload.
