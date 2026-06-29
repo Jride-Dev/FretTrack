@@ -369,6 +369,8 @@ textarea {
   background: var(--control-bg);
   border: 1px solid var(--control-border);
   color: var(--text);
+  max-width: 100%;
+  min-width: 0;
   padding: 8px;
   width: 100%;
 }
@@ -443,6 +445,26 @@ main {
   border-color: var(--border);
   box-shadow: none;
   color: var(--text);
+}
+
+.header-actions button.header-nav-active:not(:disabled) {
+  background: var(--button-primary-bg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--button-primary-bg) 78%, white 22%), var(--button-primary-bg));
+  border-color: var(--button-primary-border);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent), 0 6px 14px color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--button-primary-text);
+  -webkit-text-fill-color: var(--button-primary-text);
+}
+
+.header-actions button.header-nav-active:hover:not(:disabled),
+.header-actions button.header-nav-active:focus-visible:not(:disabled) {
+  background: var(--button-primary-hover-bg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--button-primary-hover-bg) 78%, white 22%), var(--button-primary-hover-bg));
+  border-color: var(--button-primary-hover-border);
+  color: var(--button-primary-text);
+  -webkit-text-fill-color: var(--button-primary-text);
 }
 
 .button-fab,
@@ -1209,11 +1231,22 @@ label {
 .customer-card div {
   display: grid;
   gap: 4px;
+  min-width: 0;
 }
 
 .customer-card span {
   color: var(--text-muted);
   font-size: 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.customer-card strong,
+.customer-detail-heading h2,
+.customer-detail-heading p,
+.customer-contact-grid strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .customer-detail {
@@ -1246,6 +1279,10 @@ label {
 
 .customer-contact-grid {
   margin-top: 0;
+}
+
+.customer-contact-grid {
+  min-width: 0;
 }
 
 .customer-section-title {
@@ -4090,6 +4127,18 @@ th.internal-only {
   display: grid;
   gap: 12px;
   padding: 14px;
+}
+
+.schedule-editor .form-grid,
+.schedule-editor .form-grid label {
+  min-width: 0;
+}
+
+.schedule-editor input[type="datetime-local"] {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
 }
 
 .schedule-quick-form {

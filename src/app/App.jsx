@@ -681,7 +681,7 @@ export default function App() {
 
   async function handleShopSelected(selectedMembership) {
     if (selectedMembership?.effectiveMemberAccess === false) {
-      setNotice({ type: 'error', message: 'Staff access for this shop is available on Shop.' });
+      setNotice({ type: 'error', message: 'Staff access for this shop is available in Pro.' });
       return;
     }
 
@@ -1017,7 +1017,7 @@ export default function App() {
           <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
           <section className="panel auth-panel">
             <h1>Shop Access Locked</h1>
-            <p>Trial access keeps the owner account active. Staff access is available on Shop while access is active.</p>
+            <p>Trial access keeps the owner account active. Staff access is available in Pro while access is active.</p>
             <p className="muted-text">{session.user?.email}</p>
             <div className="shop-picker-list">
               {memberships.map((shopMembership) => (
@@ -1094,6 +1094,13 @@ export default function App() {
     );
   }
 
+  const isJobMode = mode === 'new' || mode === 'detail';
+  const getHeaderNavClass = (targetMode, baseClass = '') => [
+    baseClass,
+    mode === targetMode ? 'header-nav-active' : ''
+  ].filter(Boolean).join(' ') || undefined;
+  const saveJobButtonClass = isJobMode ? 'primary-action header-nav-active' : 'button-tertiary';
+
   return (
     <main className="app app-shell">
       <header>
@@ -1142,22 +1149,22 @@ export default function App() {
           {shouldShowPwaInstallButton && (
             <button type="button" onClick={handleInstallApp}>Install App</button>
           )}
-          <button type="button" className="primary-action" onClick={saveCurrentJob} disabled={isSaving || !canWrite}>
+          <button type="button" className={saveJobButtonClass} onClick={saveCurrentJob} disabled={isSaving || !canWrite}>
             {isSaving ? 'Saving...' : 'Save Job'}
           </button>
-          <button type="button" onClick={() => showNewJob()}>New Job</button>
-          <button type="button" onClick={() => navigateTo('list')}>Current Jobs</button>
-          <button type="button" onClick={() => navigateTo('customers')}>Customers</button>
-          <button type="button" onClick={() => navigateTo('inventory')}>Inventory</button>
-          <button type="button" onClick={() => navigateTo('scheduling')}>Scheduling</button>
-          <button type="button" onClick={() => navigateTo('reports')}>Reports</button>
-          <button type="button" onClick={() => navigateTo('accounting')}>Accounting / Reports</button>
+          <button type="button" className={getHeaderNavClass('new')} onClick={() => showNewJob()}>New Job</button>
+          <button type="button" className={getHeaderNavClass('list')} onClick={() => navigateTo('list')}>Current Jobs</button>
+          <button type="button" className={getHeaderNavClass('customers')} onClick={() => navigateTo('customers')}>Customers</button>
+          <button type="button" className={getHeaderNavClass('inventory')} onClick={() => navigateTo('inventory')}>Inventory</button>
+          <button type="button" className={getHeaderNavClass('scheduling')} onClick={() => navigateTo('scheduling')}>Scheduling</button>
+          <button type="button" className={getHeaderNavClass('reports')} onClick={() => navigateTo('reports')}>Reports</button>
+          <button type="button" className={getHeaderNavClass('accounting')} onClick={() => navigateTo('accounting')}>Accounting / Reports</button>
           {(canWrite || offlineDraftCount > 0) && (
-            <button type="button" onClick={() => navigateTo('drafts')}>Local Drafts{offlineDraftCount ? ` (${offlineDraftCount})` : ''}</button>
+            <button type="button" className={getHeaderNavClass('drafts')} onClick={() => navigateTo('drafts')}>Local Drafts{offlineDraftCount ? ` (${offlineDraftCount})` : ''}</button>
           )}
-          <button type="button" onClick={() => navigateTo('settings')}>Shop Settings</button>
-          {canManageShop && <button type="button" onClick={() => navigateTo('billing')}>Billing</button>}
-          {canAccessOperatorDashboard({ isOperator }) && <button type="button" onClick={() => navigateTo('operator')}>Operator</button>}
+          <button type="button" className={getHeaderNavClass('settings')} onClick={() => navigateTo('settings')}>Shop Settings</button>
+          {canManageShop && <button type="button" className={getHeaderNavClass('billing')} onClick={() => navigateTo('billing')}>Billing</button>}
+          {canAccessOperatorDashboard({ isOperator }) && <button type="button" className={getHeaderNavClass('operator')} onClick={() => navigateTo('operator')}>Operator</button>}
           {session && (
             <FeedbackReporter selectedJob={selectedJob} onNotice={setNotice} />
           )}

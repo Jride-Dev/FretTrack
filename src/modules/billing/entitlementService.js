@@ -80,7 +80,7 @@ const defaultEntitlements = {
   cross_location_inventory: false,
   centralized_reporting: false,
   enterprise_administration: false,
-  max_users: 2,
+  max_users: 1,
   max_storage_bytes: 5 * 1024 * 1024 * 1024,
   monthly_email_limit: 1000,
   monthly_sms_limit: 0
@@ -94,8 +94,7 @@ const tierEntitlements = {
     ...defaultEntitlements
   },
   [SUBSCRIPTION_TIERS.SHOP]: {
-    photo_editor: true,
-    team_members: true
+    max_users: 1
   },
   [SUBSCRIPTION_TIERS.PRO]: {
     photo_editor: true,
@@ -133,17 +132,11 @@ const tierEntitlements = {
 
 export const premiumFeatureGroups = [
   {
-    tier: SUBSCRIPTION_TIERS.SHOP,
-    label: 'Shop',
-    features: [
-      [PREMIUM_FEATURES.PHOTO_EDITOR, 'Photo Editor'],
-      [PREMIUM_FEATURES.TEAM_MEMBERS, 'Team Members']
-    ]
-  },
-  {
     tier: SUBSCRIPTION_TIERS.PRO,
     label: 'Pro',
     features: [
+      [PREMIUM_FEATURES.PHOTO_EDITOR, 'Photo Editor'],
+      [PREMIUM_FEATURES.TEAM_MEMBERS, 'Team Members'],
       [PREMIUM_FEATURES.ADVANCED_REPORTING, 'Advanced Reporting']
     ]
   }

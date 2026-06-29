@@ -60,8 +60,8 @@ These should be resolved before broad paid launch.
 3. Trial expiration is undefined.
    The current onboarding flow creates/signs into shops, but there is no expired-trial state, read-only grace period, upgrade prompt, or beta bypass flag.
 
-4. Member administration is incomplete.
-   The schema supports shop members, but the app does not yet expose an owner/admin member management screen or invite flow. This blocks paid limits such as `max_users`.
+4. Member administration was incomplete in the original audit.
+   Superseded note: the app now exposes owner/admin shop-member controls, but Team Members and multi-user access are Pro-only in the current entitlement model. Future billing work still needs polished invitation/onboarding flow and `max_users` enforcement UX.
 
 5. Storage quota tracking is absent.
    Photos are a high-cost feature. The app stores images privately, but there is no per-shop storage usage accounting, max storage, quota warning, or upload block.
@@ -102,7 +102,7 @@ Included:
 
 - 14 or 30 day free trial.
 - Full repair workflow: jobs, customers, inspection, photos, parts/services, payments, print sheets.
-- 1 shop, up to 2 users.
+- Historical research allowed 1 shop with up to 2 users; the current Shop entitlement is single-user, and Team Members is Pro-only.
 - Limited photo storage, for example 1 GB.
 - Accounting / Reports enabled, with CSV export allowed during beta.
 - Email enabled if configured; SMS disabled unless explicitly approved.

@@ -103,6 +103,13 @@ const stringGaugePresets = [
     gauges: ['.013', '.017', '.026', '.035', '.045', '.056']
   },
   {
+    id: 'acoustic-12-light-10-47',
+    instrumentType: 'Acoustic',
+    stringCount: 12,
+    label: '12-string Light 10-47',
+    gauges: ['.010', '.010', '.014', '.014', '.023', '.009', '.030', '.012', '.039', '.018', '.047', '.027']
+  },
+  {
     id: 'bass-4-custom-light-40-95',
     instrumentType: 'Bass',
     stringCount: 4,
@@ -136,6 +143,27 @@ const stringGaugePresets = [
     stringCount: 5,
     label: '5-string Medium / Heavy 50-135',
     gauges: ['.050', '.070', '.085', '.105', '.135']
+  },
+  {
+    id: 'bass-6-standard-light-32-130',
+    instrumentType: 'Bass',
+    stringCount: 6,
+    label: '6-string Standard Light 32-130',
+    gauges: ['.032', '.045', '.065', '.085', '.105', '.130']
+  },
+  {
+    id: 'classical-6-normal-tension',
+    instrumentType: 'Classical',
+    stringCount: 6,
+    label: 'Nylon / Classical Normal Tension',
+    gauges: ['.028', '.032', '.040', '.029', '.035', '.043']
+  },
+  {
+    id: 'classical-6-hard-tension',
+    instrumentType: 'Classical',
+    stringCount: 6,
+    label: 'Nylon / Classical Hard Tension',
+    gauges: ['.029', '.033', '.041', '.030', '.036', '.044']
   }
 ];
 

@@ -27,7 +27,7 @@ Shipped or current-branch foundations:
 - Advanced Reporting Phase 1 with premium-gated dashboard metric cards
 - beta approval applicant email notifications through `notify-beta-approval`
 - Photo Editor Phase 1 with freehand markup, shapes, arrows, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup
-- Shop Tier Foundation Phase 1 with Trial, Shop, and Pro entitlement boundaries: Shop unlocks Photo Editor and Team Members, Pro unlocks Advanced Reporting, and internal unpaid compatibility rows remain preserved for migration safety
+- Shop Tier Foundation Phase 1 with Trial, Shop, and Pro entitlement boundaries: Shop covers the paid core workflow, Pro unlocks Photo Editor, Team Members, and Advanced Reporting, and internal unpaid compatibility rows remain preserved for migration safety
 
 Known weak spots:
 
@@ -83,7 +83,7 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - beta access approval and premium trial access kept as separate systems
 - Trial, Shop, and Pro are the public product states; internal unpaid compatibility rows remain migration-only
 - expired trials preserve data and memberships, allow safe viewing, block writes, and show upgrade-required messaging
-- Shop entitlement boundaries are explicit for Photo Editor and Team Members, and Pro entitlement boundaries are explicit for Advanced Reporting
+- Pro entitlement boundaries are explicit for Photo Editor, Team Members, and Advanced Reporting
 - practical shop settings for currency, tax labels, date formats, and measurement preferences
 - known launch limitations documented clearly
 

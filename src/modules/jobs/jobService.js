@@ -104,6 +104,17 @@ const defaultTechDetails = {
   measurementSystem: 'imperial',
   lengthUnit: 'in',
   notes: '',
+  contact: {
+    phone: '',
+    email: '',
+    emailOptIn: false,
+    smsOptIn: false,
+    preferredContactMethod: 'email',
+    addressLine1: '',
+    city: '',
+    region: '',
+    postalCode: ''
+  },
   includedPartIds: [],
   workOrderImageIds: [],
   discountType: 'none',
@@ -667,7 +678,12 @@ function normalizeJob(job, jobs = []) {
   const dailySequence = parsedSequence || null;
   const services = job.services || job.labor || [];
   const instrumentType = normalizeInstrumentType(job.instrumentType || job.techDetails?.instrumentType || 'Electric');
-  const techDetails = normalizeTechDetails(job.techDetails, instrumentType);
+  const normalizedTechDetails = normalizeTechDetails(job.techDetails, instrumentType);
+  const contactDetails = normalizeContactDetails(normalizedTechDetails.contact, job);
+  const techDetails = {
+    ...normalizedTechDetails,
+    contact: contactDetails
+  };
   const splitName = splitCustomerName(job.customerName || job.customer_name || '');
   const customerFirstName = job.customerFirstName || job.customer_first_name || splitName.customerFirstName;
   const customerLastName = job.customerLastName || job.customer_last_name || splitName.customerLastName;
@@ -685,15 +701,15 @@ function normalizeJob(job, jobs = []) {
     customerName,
     customerFirstName,
     customerLastName,
-    phone: job.phone || '',
-    email: job.email || '',
-    emailOptIn: Boolean(job.emailOptIn ?? job.email_opt_in),
-    smsOptIn: Boolean(job.smsOptIn ?? job.sms_opt_in),
-    preferredContactMethod: job.preferredContactMethod || job.preferred_contact_method || 'email',
-    addressLine1: job.addressLine1 || job.address_line1 || job.address || '',
-    city: job.city || '',
-    region: job.region || job.state || '',
-    postalCode: job.postalCode || job.postal_code || job.zipCode || job.zip_code || '',
+    phone: contactDetails.phone,
+    email: contactDetails.email,
+    emailOptIn: contactDetails.emailOptIn,
+    smsOptIn: contactDetails.smsOptIn,
+    preferredContactMethod: contactDetails.preferredContactMethod,
+    addressLine1: contactDetails.addressLine1,
+    city: contactDetails.city,
+    region: contactDetails.region,
+    postalCode: contactDetails.postalCode,
     guitarBrand: job.guitarBrand || '',
     model: job.model || '',
     serial: job.serial || '',
@@ -763,12 +779,42 @@ function normalizeTechDetails(techDetails = {}, instrumentType = 'Guitar') {
     measurementSystem: normalizeMeasurementSystem(techDetails.measurementSystem, getDefaultMeasurementPreferences(techDetails.tax || {}).measurementSystem),
     lengthUnit: normalizeLengthUnit(techDetails.lengthUnit, getDefaultMeasurementPreferences(techDetails.tax || {}).lengthUnit),
     payments: Array.isArray(techDetails.payments) ? techDetails.payments.map(normalizePayment) : [],
+    contact: normalizeContactDetails(techDetails.contact),
     includedPartIds: techDetails.includedPartIds || [],
     workOrderImageIds: techDetails.workOrderImageIds || [],
     discountType: techDetails.discountType || 'none',
     discountValue: techDetails.discountValue ?? '',
     stringGauges
   };
+}
+
+function normalizeContactDetails(contact = {}, source = {}) {
+  const sourcePhone = firstPresentValue(source, ['phone']);
+  const sourceEmail = firstPresentValue(source, ['email']);
+  const sourceEmailOptIn = firstPresentValue(source, ['emailOptIn', 'email_opt_in']);
+  const sourceSmsOptIn = firstPresentValue(source, ['smsOptIn', 'sms_opt_in']);
+  const sourcePreferredContactMethod = firstPresentValue(source, ['preferredContactMethod', 'preferred_contact_method']);
+  const sourceAddressLine1 = firstPresentValue(source, ['addressLine1', 'address_line1', 'address']);
+  const sourceCity = firstPresentValue(source, ['city']);
+  const sourceRegion = firstPresentValue(source, ['region', 'state']);
+  const sourcePostalCode = firstPresentValue(source, ['postalCode', 'postal_code', 'zipCode', 'zip_code']);
+
+  return {
+    phone: sourcePhone ?? contact.phone ?? '',
+    email: sourceEmail ?? contact.email ?? '',
+    emailOptIn: Boolean(sourceEmailOptIn ?? contact.emailOptIn ?? contact.email_opt_in),
+    smsOptIn: Boolean(sourceSmsOptIn ?? contact.smsOptIn ?? contact.sms_opt_in),
+    preferredContactMethod: sourcePreferredContactMethod ?? contact.preferredContactMethod ?? contact.preferred_contact_method ?? 'email',
+    addressLine1: sourceAddressLine1 ?? contact.addressLine1 ?? contact.address_line1 ?? contact.address ?? '',
+    city: sourceCity ?? contact.city ?? '',
+    region: sourceRegion ?? contact.region ?? contact.state ?? '',
+    postalCode: sourcePostalCode ?? contact.postalCode ?? contact.postal_code ?? contact.zipCode ?? contact.zip_code ?? ''
+  };
+}
+
+function firstPresentValue(source = {}, keys = []) {
+  const matchingKey = keys.find((key) => Object.prototype.hasOwnProperty.call(source, key));
+  return matchingKey === undefined ? undefined : source[matchingKey];
 }
 
 function normalizeDamageMap(damageMap = {}) {
@@ -950,6 +996,8 @@ function toLegacyDbJob(job) {
   const customerFirstName = job.customerFirstName || splitName.customerFirstName;
   const customerLastName = job.customerLastName || splitName.customerLastName;
   const customerName = combineCustomerName(customerFirstName, customerLastName) || job.customerName || '';
+  const instrumentType = normalizeInstrumentType(job.instrumentType || job.techDetails?.instrumentType || 'Electric');
+  const contact = normalizeContactDetails(job.techDetails?.contact, job);
 
   return {
     id: job.id,
@@ -971,7 +1019,8 @@ function toLegacyDbJob(job) {
     status: toLegacyJobStatus(job.status),
     tech_details: {
       ...(job.techDetails || {}),
-      instrumentType: normalizeInstrumentType(job.instrumentType || 'Electric'),
+      contact,
+      instrumentType,
       includedPartIds: (job.parts || []).filter((part) => part.includedInService).map((part) => part.id),
       discountType: job.discountType || 'none',
       discountValue: job.discountValue ?? ''

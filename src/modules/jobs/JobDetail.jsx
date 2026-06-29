@@ -821,7 +821,7 @@ export default function JobDetail({
 
   function handleImageEdit(image) {
     if (!canEditPhotos) {
-      onNotice?.({ type: 'error', message: 'Photo Editor is available on Shop.' });
+      onNotice?.({ type: 'error', message: 'Photo Editor is available in Pro.' });
       return;
     }
 
