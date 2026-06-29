@@ -36,6 +36,12 @@ FretTrack now has the database and service foundation for outbound job/customer 
 
 This pass adds RLS using existing shop membership and write-access helpers, keeps hard deletes out of normal user access, adds narrow shipment permission helpers, and adds `npm run check:shipping` coverage. It does not add shipping UI, carrier APIs, label/rate purchasing, Stripe integration, email/SMS automation, or shipping reports. Manual tracking/status UI is planned next.
 
+## 0.2.9-I Shop Bootstrap Reliability
+
+First-shop creation now uses the bootstrap RPC as the single authority for creating the shop profile, owner membership, and default trial subscription in one transaction. The RPC still requires an authenticated user, confirmed email, and approved beta access or operator status, keeps `SECURITY DEFINER` with a locked search path, and does not disable or loosen RLS.
+
+After the RPC succeeds, the frontend reloads real shop access, profile, and entitlement state before letting the user continue. It no longer fakes the final membership or entitlement snapshot locally, which avoids the partial-shop state that could lead to follow-up RLS errors after a new user created their first shop.
+
 ## 0.2.9-B0 Plan Branding And Subscription Status UI Foundation
 
 FretTrack now has a centralized plan-status normalizer for Trial, Shop, Pro, Free/internal compatibility, expired, canceled, past-due, and unknown billing states. The app header, version area, Shop Settings subscription panel, Billing page, and Advanced Reporting lock/unlock state now use the same plan labels and countdown wording for trial ends, renewals, access-ending states, and expired access.

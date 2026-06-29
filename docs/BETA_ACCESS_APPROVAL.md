@@ -10,12 +10,14 @@ FretTrack beta access is intentionally controlled. A Supabase Auth user may sign
 - Pending or rejected users see the Pending Approval screen before any shop bootstrap or job loading runs.
 - Operators bypass the gate and can approve or reject users from the Beta Operator Dashboard.
 - Approved users can continue into normal onboarding and create or access a shop workspace.
+- First-shop creation runs through `public.bootstrap_current_user_as_owner`, which creates the shop profile, default trial subscription, and owner membership together before the app reloads real shop access.
 - If a logged-out applicant is approved before signing up, the approval links to their Auth user when they later sign in with the same email.
 - Existing shop members and active operators are backfilled as approved by the migration.
 
 ## Server-Side Controls
 
-- `shop_members_insert_bootstrap_owner` now requires approved beta access or operator access before creating the first owner membership.
+- `public.bootstrap_current_user_as_owner` requires approved beta access or operator access before creating the first owner membership.
+- The bootstrap RPC requires confirmed email, rejects reused shop ids, creates `shop_profiles`, ensures the default `shop_subscriptions` trial row, and then inserts the owner `shop_members` row in one transaction.
 - Normal authenticated users can read their own beta access request and create their own pending request.
 - Only operators can update request status.
 - Approval uses `public.update_beta_access_request`, which verifies operator status server-side.

@@ -83,13 +83,14 @@ export async function getCurrentShopMembership(shopId = getCurrentShopId()) {
   return data ? fromDbMembership(data) : null;
 }
 
-export async function bootstrapCurrentUserAsOwner(shopId = getCurrentShopId()) {
+export async function bootstrapCurrentUserAsOwner(shopId = getCurrentShopId(), shopName = '') {
   if (!hasSupabaseConfig || !supabase) {
     return null;
   }
 
   const { data, error } = await supabase.rpc('bootstrap_current_user_as_owner', {
-    target_shop_id: shopId
+    target_shop_id: shopId,
+    target_shop_name: shopName
   });
 
   if (error) {
