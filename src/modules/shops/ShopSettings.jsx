@@ -3,10 +3,24 @@ import UserSettings from '../auth/UserSettings.jsx';
 import { SUPPORTED_DATE_FORMATS, getDefaultDateFormatForLocale } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences } from '../../shared/utils/measurements';
 import { SUPPORTED_CURRENCIES, getDefaultLocaleForCurrency, getSupportedCurrency } from '../../shared/utils/money';
-import { getShopSettings, saveShopSettings } from './shopConfig';
+import { getShopSettings, normalizePresetArray, normalizeShippingLabelSettings, saveShopSettings } from './shopConfig';
 import { saveShopProfile, uploadShopLogo } from './shopProfileService';
 import ShopMembersPanel from './ShopMembersPanel.jsx';
 import SubscriptionSettingsSection from './SubscriptionSettingsSection.jsx';
+
+const SHIPPING_LABEL_PRESETS = [
+  { value: 'parts_bin_2_25x1_25', label: '2.25 x 1.25 parts/bin label' },
+  { value: 'shipping_4x6', label: '4 x 6 thermal shipping label' },
+  { value: 'letter', label: 'Letter / plain paper' }
+];
+
+function presetsToTextarea(values) {
+  return normalizePresetArray(values).join('\n');
+}
+
+function textareaToPresets(value) {
+  return normalizePresetArray(String(value || '').split('\n'));
+}
 
 export default function ShopSettings({
   canManageShop = true,
@@ -56,6 +70,23 @@ export default function ShopSettings({
 
       return { ...current, [name]: type === 'checkbox' ? checked : value };
     });
+  }
+
+  function updatePresetField(field, value) {
+    setSettings((current) => ({
+      ...current,
+      [field]: textareaToPresets(value)
+    }));
+  }
+
+  function updateShippingLabelPreset(value) {
+    setSettings((current) => ({
+      ...current,
+      shippingLabelSettings: normalizeShippingLabelSettings({
+        ...current.shippingLabelSettings,
+        preset: value
+      })
+    }));
   }
 
   async function handleSubmit(event) {
@@ -212,6 +243,47 @@ export default function ShopSettings({
             Print Footer Text
             <textarea name="printFooterText" value={settings.printFooterText} onChange={updateField} rows="3" disabled={!canManageShop || isSaving} />
           </label>
+          <div className="wide shop-settings-subsection">
+            <h4>Inventory / Vendor Controls</h4>
+            <p className="muted-text">Define shop presets used by inventory parts. Existing part text values are still preserved and shown.</p>
+            <div className="form-grid">
+              <label>
+                Inventory Locations
+                <textarea
+                  value={presetsToTextarea(settings.inventoryLocationPresets)}
+                  onChange={(event) => updatePresetField('inventoryLocationPresets', event.target.value)}
+                  rows="4"
+                  disabled={!canManageShop || isSaving}
+                  placeholder={'Bench A\nParts Cabinet\nCase Storage'}
+                />
+                <small>One location per line.</small>
+              </label>
+              <label>
+                Inventory Categories
+                <textarea
+                  value={presetsToTextarea(settings.inventoryCategoryPresets)}
+                  onChange={(event) => updatePresetField('inventoryCategoryPresets', event.target.value)}
+                  rows="4"
+                  disabled={!canManageShop || isSaving}
+                  placeholder={'Strings\nElectronics\nHardware'}
+                />
+                <small>One category per line.</small>
+              </label>
+              <label>
+                Shipping / Label Printer Preset
+                <select
+                  value={normalizeShippingLabelSettings(settings.shippingLabelSettings).preset}
+                  onChange={(event) => updateShippingLabelPreset(event.target.value)}
+                  disabled={!canManageShop || isSaving}
+                >
+                  {SHIPPING_LABEL_PRESETS.map((preset) => (
+                    <option key={preset.value} value={preset.value}>{preset.label}</option>
+                  ))}
+                </select>
+                <small>Used by inventory barcode labels now; future customer shipping labels can reuse this preference.</small>
+              </label>
+            </div>
+          </div>
           <button type="submit" disabled={!canManageShop || isSaving}>{isSaving ? 'Saving...' : requireCompletion ? 'Finish Shop Setup' : 'Save Shop Settings'}</button>
         </form>
       </section>

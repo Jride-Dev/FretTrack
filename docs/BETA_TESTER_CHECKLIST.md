@@ -94,9 +94,13 @@ For useful bug reports, include:
 | Photos and Damage Map | PHOTO-004 | Include photos in customer-facing report. | Selected photos appear in the report without internal-only fields. | Owner/Admin/Tech |
 | Scheduling | SCHED-001 | Create a schedule event. | Event saves with date/time, type, title, status, and optional job link. | Owner/Admin/Tech |
 | Scheduling | SCHED-002 | Review upcoming schedule workload. | Upcoming events display in calendar/panels/reports within the expected date range. | Owner/Admin/Tech/Viewer |
-| Inventory Parts | INV-001 | Create an inventory part. | Part saves with name, quantity, reorder/desired stock, vendor, SKU/barcode, prices, and location. | Owner/Admin/Tech |
-| Inventory Parts | INV-002 | Trigger low stock. | Part shows low-stock state when quantity on hand is at or below desired/reorder level. | Owner/Admin/Tech/Viewer |
+| Inventory Parts | INV-001 | Create an inventory part. | Part saves with name, quantity, reorder/desired stock, vendor, UPC/barcode, prices, and preset location/category. | Owner/Admin/Tech |
+| Inventory Parts | INV-002 | Trigger low stock. | Normal stocked part shows low-stock state when quantity on hand is at or below desired/reorder level. | Owner/Admin/Tech/Viewer |
 | Inventory Parts | INV-003 | Use manual receive or adjust. | Stock changes correctly and records a movement row. | Owner/Admin/Tech |
+| Inventory Parts | INV-004 | Mark a part as Special Order Part. | Desired stock is ignored, low-stock nags do not appear, and the part remains usable on jobs/POs/receiving. | Owner/Admin/Tech |
+| Inventory Parts | INV-005 | Attach a valid small part image. | Image 300x300 px or smaller saves and previews on the part. | Owner/Admin/Tech |
+| Inventory Parts | INV-006 | Try attaching an oversized part image. | Larger image is rejected clearly without resizing, compression, or storage. | Owner/Admin/Tech |
+| Inventory Parts | INV-007 | Manage inventory presets in Shop Settings. | Owner/Admin can set Location and Category preset lists; parts use those dropdown values while old saved text remains visible. | Owner/Admin |
 | Vendors, Purchase Orders, and Receiving | PO-001 | Create a vendor with Company and Sales Rep details. | Vendor saves company/contact details with clear labels. | Owner/Admin/Tech |
 | Vendors, Purchase Orders, and Receiving | PO-002 | Mark a vendor Online Only. | Online-only behavior is clear and does not destroy existing address/phone data. | Owner/Admin/Tech |
 | Vendors, Purchase Orders, and Receiving | PO-003 | Create a purchase order. | PO saves with vendor, line items, quantities, unit costs, status, and expected dates. | Owner/Admin/Tech |
@@ -108,6 +112,7 @@ For useful bug reports, include:
 | Vendors, Purchase Orders, and Receiving | PO-009 | Review purchase history. | Purchase history shows received date, part, vendor, quantity, unit cost, shipping allocation, and landed cost. | Owner/Admin/Tech/Viewer |
 | Barcode Labels | BARCODE-001 | Confirm barcode identity. | Part shows stable `FT-PART-{barcode_code}` identity. | Owner/Admin/Tech/Viewer |
 | Barcode Labels | BARCODE-002 | Print barcode labels. | Labels render readable part name, barcode, and identifier without layout clipping. | Owner/Admin/Tech |
+| Barcode Labels | BARCODE-003 | Change shipping/label printer preset. | Shop Settings supports 2.25 x 1.25 parts/bin, 4 x 6 thermal, and Letter/plain paper presets for label output. | Owner/Admin |
 | Reports / Advanced Reporting | REPORT-001 | Open Advanced Reporting as Pro or Pro trial. | Reports dashboard is visible and shows real shop metrics/tables. | Owner/Admin |
 | Reports / Advanced Reporting | REPORT-002 | Open Advanced Reporting as Shop/non-Pro. | Pro lock state appears and does not expose report data. | Owner/Admin |
 | Reports / Advanced Reporting | REPORT-003 | Review Pro report sections. | Overview, status, priority, overdue, aging, low stock, PO, landed cost, and schedule sections match shop data. | Owner/Admin |

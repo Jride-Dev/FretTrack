@@ -52,7 +52,7 @@ export function buildAdvancedReportMetrics({
       repeatCustomers: countRepeatCustomers(scopedJobs)
     },
     inventory: {
-      lowStockCount: scopedParts.filter((part) => part.isActive !== false && Number(part.quantityOnHand ?? part.quantity_on_hand ?? 0) <= Number(part.reorderPoint ?? part.reorder_point ?? 0)).length,
+      lowStockCount: scopedParts.filter((part) => part.isActive !== false && !isSpecialOrderPart(part) && Number(part.quantityOnHand ?? part.quantity_on_hand ?? 0) <= Number(part.reorderPoint ?? part.reorder_point ?? 0)).length,
       totalParts: scopedParts.length,
       inventoryValueEstimate: scopedParts.reduce((total, part) => {
         const quantity = Number(part.quantityOnHand ?? part.quantity_on_hand ?? 0) || 0;
@@ -133,7 +133,7 @@ export function buildAdvancedOperationalReport({
     .filter((job) => normalizeJobPriority(job.priority || job.techDetails?.priority) === 'high')
     .map((job) => buildJobRow(job, today));
   const lowStockParts = parts
-    .filter((part) => part.isActive !== false)
+    .filter((part) => part.isActive !== false && !isSpecialOrderPart(part))
     .map((part) => buildLowStockPartRow(part, vendorsById))
     .filter((part) => part.onHand <= part.desiredStockLevel)
     .sort((a, b) => (a.onHand - a.desiredStockLevel) - (b.onHand - b.desiredStockLevel) || a.name.localeCompare(b.name));
@@ -299,6 +299,10 @@ function getAgeDays(job, today) {
     return 0;
   }
   return Math.floor((today.getTime() - receivedDate.getTime()) / 86400000);
+}
+
+function isSpecialOrderPart(part = {}) {
+  return part.specialOrder === true || part.special_order === true;
 }
 
 function buildLowStockPartRow(part, vendorsById) {

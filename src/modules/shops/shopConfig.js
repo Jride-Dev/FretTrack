@@ -10,6 +10,9 @@ const DEFAULT_LOCALE = 'en-US';
 const DEFAULT_TAX_LABEL = 'Sales Tax';
 const DEFAULT_MEASUREMENT_SYSTEM = 'imperial';
 const DEFAULT_LENGTH_UNIT = 'in';
+const DEFAULT_SHIPPING_LABEL_SETTINGS = {
+  preset: 'parts_bin_2_25x1_25'
+};
 
 export const defaultShopSettings = {
   shopId: DEFAULT_SHOP_ID,
@@ -34,7 +37,10 @@ export const defaultShopSettings = {
   subscriptionTier: 'free',
   subscriptionStatus: 'active',
   trialEndsAt: '',
-  featureOverrides: {}
+  featureOverrides: {},
+  inventoryLocationPresets: [],
+  inventoryCategoryPresets: [],
+  shippingLabelSettings: DEFAULT_SHIPPING_LABEL_SETTINGS
 };
 
 export function getShopSettings() {
@@ -81,14 +87,25 @@ export function getShopSettings() {
     subscriptionTier: savedSettingsMatchShop ? savedSettings.subscriptionTier || 'free' : 'free',
     subscriptionStatus: savedSettingsMatchShop ? savedSettings.subscriptionStatus || 'active' : 'active',
     trialEndsAt: savedSettingsMatchShop ? savedSettings.trialEndsAt || '' : '',
-    featureOverrides: savedSettingsMatchShop ? savedSettings.featureOverrides || {} : {}
+    featureOverrides: savedSettingsMatchShop ? savedSettings.featureOverrides || {} : {},
+    inventoryLocationPresets: savedSettingsMatchShop ? normalizePresetArray(savedSettings.inventoryLocationPresets) : [],
+    inventoryCategoryPresets: savedSettingsMatchShop ? normalizePresetArray(savedSettings.inventoryCategoryPresets) : [],
+    shippingLabelSettings: savedSettingsMatchShop
+      ? normalizeShippingLabelSettings(savedSettings.shippingLabelSettings)
+      : DEFAULT_SHIPPING_LABEL_SETTINGS
   };
 }
 
 export function saveShopSettings(settings) {
-  const nextSettings = {
+  const mergedSettings = {
     ...getShopSettings(),
     ...settings
+  };
+  const nextSettings = {
+    ...mergedSettings,
+    inventoryLocationPresets: normalizePresetArray(mergedSettings.inventoryLocationPresets),
+    inventoryCategoryPresets: normalizePresetArray(mergedSettings.inventoryCategoryPresets),
+    shippingLabelSettings: normalizeShippingLabelSettings(mergedSettings.shippingLabelSettings)
   };
 
   localStorage.setItem(SHOP_SETTINGS_STORAGE_KEY, JSON.stringify(nextSettings));
@@ -175,6 +192,35 @@ export function clearSelectedShop() {
 function normalizeCurrencyCode(currencyCode) {
   const code = String(currencyCode || DEFAULT_CURRENCY_CODE).toUpperCase();
   return code === 'GBP' ? 'GBP' : 'USD';
+}
+
+export function normalizePresetArray(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const seen = new Set();
+  const presets = [];
+  for (const entry of value) {
+    const label = String(entry || '').trim();
+    const key = label.toLowerCase();
+    if (!label || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    presets.push(label);
+  }
+  return presets;
+}
+
+export function normalizeShippingLabelSettings(value = {}) {
+  const preset = String(value?.preset || DEFAULT_SHIPPING_LABEL_SETTINGS.preset);
+  const allowedPresets = new Set(['parts_bin_2_25x1_25', 'shipping_4x6', 'letter']);
+  return {
+    ...DEFAULT_SHIPPING_LABEL_SETTINGS,
+    ...(value && typeof value === 'object' && !Array.isArray(value) ? value : {}),
+    preset: allowedPresets.has(preset) ? preset : DEFAULT_SHIPPING_LABEL_SETTINGS.preset
+  };
 }
 
 export { DEFAULT_SHOP_ID, DEFAULT_SHOP_NAME, SHOP_SETTINGS_STORAGE_KEY, SHOP_SELECTION_STORAGE_KEY };

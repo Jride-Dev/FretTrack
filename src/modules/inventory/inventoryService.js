@@ -2,6 +2,9 @@ import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { getCurrentShopId } from '../shops/shopConfig';
 import { logJobEventSafe } from '../jobs/jobEventsService';
 
+const PART_IMAGES_BUCKET = 'part-images';
+const MAX_PART_IMAGE_DIMENSION = 300;
+
 function cleanText(value) {
   return String(value || '').trim();
 }
@@ -24,6 +27,7 @@ function normalizeBarcodeSearch(value) {
 }
 
 function toDbPart(shopId, payload = {}) {
+  const specialOrder = payload.specialOrder ?? payload.special_order ?? false;
   return {
     shop_id: shopId,
     vendor_id: cleanText(payload.vendorId || payload.vendor_id) || null,
@@ -40,8 +44,9 @@ function toDbPart(shopId, payload = {}) {
     retail_price: moneyNumber(payload.retailPrice ?? payload.retail_price),
     quantity_on_hand: integerNumber(payload.quantityOnHand ?? payload.quantity_on_hand),
     reorder_point: integerNumber(payload.reorderPoint ?? payload.reorder_point),
-    desired_stock_level: integerNumber(payload.desiredStockLevel ?? payload.desired_stock_level),
+    desired_stock_level: specialOrder ? 0 : integerNumber(payload.desiredStockLevel ?? payload.desired_stock_level),
     location: cleanText(payload.location) || null,
+    special_order: Boolean(specialOrder),
     is_active: payload.isActive ?? payload.is_active ?? true
   };
 }
@@ -66,6 +71,11 @@ function fromDbPart(row = {}) {
     quantityOnHand: integerNumber(row.quantity_on_hand),
     reorderPoint: integerNumber(row.reorder_point),
     desiredStockLevel: integerNumber(row.desired_stock_level),
+    specialOrder: row.special_order === true,
+    imagePath: row.image_path || '',
+    imageMimeType: row.image_mime_type || '',
+    imageWidth: row.image_width == null ? null : integerNumber(row.image_width),
+    imageHeight: row.image_height == null ? null : integerNumber(row.image_height),
     lastCost: row.last_cost === null || row.last_cost === undefined ? null : moneyNumber(row.last_cost),
     averageCost: row.average_cost === null || row.average_cost === undefined ? null : moneyNumber(row.average_cost),
     location: row.location || '',
@@ -247,7 +257,7 @@ export async function listParts(shopId = getCurrentShopId(), filters = {}) {
   }
   const parts = (data || []).map(fromDbPart);
   return filters.lowStockOnly
-    ? parts.filter((part) => part.quantityOnHand <= part.reorderPoint)
+    ? parts.filter((part) => !part.specialOrder && part.quantityOnHand <= part.reorderPoint)
     : parts;
 }
 
@@ -305,6 +315,112 @@ export async function updatePart(partId, payload = {}) {
     throw error;
   }
   return fromDbPart(data);
+}
+
+export async function uploadPartImage(part, file) {
+  if (!part?.id || !part?.shopId) {
+    throw new Error('Save the part before adding a part image.');
+  }
+  if (!file) {
+    return part;
+  }
+
+  const dimensions = await readImageDimensions(file);
+  if (dimensions.width > MAX_PART_IMAGE_DIMENSION || dimensions.height > MAX_PART_IMAGE_DIMENSION) {
+    throw new Error(`Part image must already be ${MAX_PART_IMAGE_DIMENSION}x${MAX_PART_IMAGE_DIMENSION} px or smaller. This image is ${dimensions.width}x${dimensions.height} px.`);
+  }
+  if (!String(file.type || '').startsWith('image/')) {
+    throw new Error('Part image must be an image file.');
+  }
+
+  if (!hasSupabaseConfig || !supabase) {
+    return {
+      ...part,
+      imagePath: '',
+      imageMimeType: file.type || '',
+      imageWidth: dimensions.width,
+      imageHeight: dimensions.height,
+      imageUrl: URL.createObjectURL(file)
+    };
+  }
+
+  const filePath = `${part.shopId}/parts/${part.id}/${Date.now()}-${safeStorageFileName(file.name || 'part-image')}`;
+  const { error: uploadError } = await supabase.storage
+    .from(PART_IMAGES_BUCKET)
+    .upload(filePath, file, {
+      contentType: file.type || 'application/octet-stream',
+      cacheControl: '31536000',
+      upsert: true
+    });
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const { data, error } = await supabase
+    .from('parts')
+    .update({
+      image_path: filePath,
+      image_mime_type: file.type || null,
+      image_width: dimensions.width,
+      image_height: dimensions.height
+    })
+    .eq('id', part.id)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return {
+    ...fromDbPart(data),
+    imageUrl: await createPartImageObjectUrl(filePath)
+  };
+}
+
+export async function createPartImageObjectUrl(storagePath) {
+  if (!storagePath || !hasSupabaseConfig || !supabase) {
+    return '';
+  }
+
+  const { data, error } = await supabase.storage
+    .from(PART_IMAGES_BUCKET)
+    .download(storagePath);
+
+  if (error) {
+    throw error;
+  }
+
+  return URL.createObjectURL(data);
+}
+
+function readImageDimensions(file) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve({
+        width: image.naturalWidth || image.width,
+        height: image.naturalHeight || image.height
+      });
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Unable to read part image dimensions.'));
+    };
+    image.src = objectUrl;
+  });
+}
+
+function safeStorageFileName(fileName) {
+  const cleaned = String(fileName || 'part-image')
+    .trim()
+    .replace(/[^a-z0-9._-]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+  return cleaned || 'part-image';
 }
 
 export async function deactivatePart(partId) {

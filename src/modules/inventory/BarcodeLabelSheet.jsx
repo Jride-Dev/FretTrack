@@ -5,8 +5,15 @@ function getBarcodeValue(part) {
   return part?.barcodeCode ? `FT-PART-${part.barcodeCode}` : '';
 }
 
-export default function BarcodeLabelSheet({ parts = [] }) {
+function normalizeLabelPreset(value) {
+  return ['parts_bin_2_25x1_25', 'shipping_4x6', 'letter'].includes(value)
+    ? value
+    : 'parts_bin_2_25x1_25';
+}
+
+export default function BarcodeLabelSheet({ parts = [], labelPreset = 'parts_bin_2_25x1_25' }) {
   const refs = useRef(new Map());
+  const normalizedPreset = normalizeLabelPreset(labelPreset);
 
   useEffect(() => {
     for (const part of parts) {
@@ -32,14 +39,14 @@ export default function BarcodeLabelSheet({ parts = [] }) {
 
   if (!parts.length) {
     return (
-      <section className="barcode-label-print-area">
+      <section className={`barcode-label-print-area barcode-label-preset-${normalizedPreset}`}>
         <p className="muted-text">Select one or more parts to preview barcode labels.</p>
       </section>
     );
   }
 
   return (
-    <section className="barcode-label-print-area" aria-label="Printable barcode labels">
+    <section className={`barcode-label-print-area barcode-label-preset-${normalizedPreset}`} aria-label="Printable barcode labels">
       <div className="barcode-label-grid">
         {parts.map((part) => {
           const barcodeValue = getBarcodeValue(part);
@@ -57,7 +64,7 @@ export default function BarcodeLabelSheet({ parts = [] }) {
                 }}
               />
               <code>{barcodeValue || 'Barcode missing'}</code>
-              <small>{[part.sku, part.partNumber].filter(Boolean).join(' / ') || 'No SKU or part number'}</small>
+              <small>{[part.sku, part.partNumber].filter(Boolean).join(' / ') || 'No UPC or part number'}</small>
               <small>{part.location ? `Location: ${part.location}` : 'No location'}</small>
             </article>
           );
