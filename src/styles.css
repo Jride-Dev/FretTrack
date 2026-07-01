@@ -1578,6 +1578,18 @@ form.panel button {
   padding: 6px;
 }
 
+.shop-settings-subsection {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 12px;
+}
+
+.shop-settings-subsection h4 {
+  margin: 0;
+}
+
 .shop-members-settings {
   border-top: 1px solid var(--border);
   display: grid;
@@ -3935,6 +3947,33 @@ th.internal-only {
   gap: 3px;
 }
 
+.inventory-image-field {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.inventory-part-image-preview {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 10px;
+}
+
+.inventory-part-image-preview img {
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  height: 84px;
+  object-fit: contain;
+  width: 84px;
+}
+
 .inventory-subsection {
   border-top: 1px solid var(--border);
   display: grid;
@@ -4024,6 +4063,18 @@ th.internal-only {
   color: #333;
   font-size: 10px;
   line-height: 1.15;
+}
+
+.barcode-label-preset-shipping_4x6 .barcode-label-grid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 4in));
+}
+
+.barcode-label-preset-shipping_4x6 .barcode-label-card {
+  min-height: 2.2in;
+}
+
+.barcode-label-preset-letter .barcode-label-grid {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
 }
 
 .inventory-picker-form {
@@ -4548,5 +4599,20 @@ th.internal-only {
     break-inside: avoid;
     min-height: 1.15in;
     padding: 0.08in;
+  }
+
+  body.barcode-label-printing .barcode-label-preset-shipping_4x6 .barcode-label-grid {
+    gap: 0;
+    grid-template-columns: 4in;
+  }
+
+  body.barcode-label-printing .barcode-label-preset-shipping_4x6 .barcode-label-card {
+    min-height: 6in;
+    padding: 0.18in;
+  }
+
+  body.barcode-label-printing .barcode-label-preset-letter .barcode-label-grid {
+    gap: 0.125in;
+    grid-template-columns: repeat(3, 2.45in);
   }
 }

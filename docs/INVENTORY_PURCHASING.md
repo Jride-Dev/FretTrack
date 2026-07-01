@@ -10,8 +10,17 @@ Current inventory documentation covers the 0.2.8 purchasing foundation:
 - transactional receiving RPCs that keep stock, receipts, costs, purchase-order status, and part movements in sync
 - stable `FT-PART-{barcode_code}` identities and printable barcode label sheets
 - inbound purchase-order Shipping Cost and optional landed-cost allocation
+- shop-defined inventory Location and Category presets managed from Shop Settings
+- Special Order Part handling for non-stocked items
+- small part-image attachment support using the private `part-images` Storage bucket
 
 Inventory receiving and purchase-order work remain online-only until a future offline sync/outbox design exists.
+
+## Shop Inventory Presets
+
+Shop owners/admins can manage Inventory Locations and Inventory Categories in Shop Settings under Inventory / Vendor Controls.
+
+The Parts editor uses dropdowns populated from those shop presets and also includes any old saved text values from existing parts. This preserves historical location/category data while nudging new entries toward consistent shop-defined values.
 
 ## Barcode Labels
 
@@ -30,7 +39,24 @@ To print labels:
 3. Open Barcode Labels.
 4. Print the preview sheet from the browser.
 
-Labels include the barcode, part name, optional SKU or part number, and location/bin when available.
+Labels include the barcode, part name, optional UPC or part number, and location/bin when available.
+
+Shop Settings also includes a shipping/label printer preset used by the current browser-based barcode label sheet:
+
+- `2.25 x 1.25 parts/bin label`
+- `4 x 6 thermal shipping label`
+- `Letter / plain paper`
+
+These are print-layout preferences only. FretTrack does not buy carrier labels or call carrier APIs in this pass.
+
+## UPC And Vendor Wording
+
+The inventory UI now uses UPC-facing labels for the existing part identifier fields:
+
+- `parts.sku` displays as UPC.
+- `purchase_order_items.vendor_sku` and the matching part field display as Vendor UPC.
+
+The database column names are intentionally preserved for compatibility with existing beta data and migrations.
 
 ## Vendors
 
@@ -42,6 +68,31 @@ The vendor UI uses shop-friendly labels while preserving the original database c
 Vendor records can store email, phone, website, address line 1, address line 2, city, state/region, postal code, country, notes, active state, and Online Only state.
 
 When Online Only is checked, FretTrack collapses the phone and address fields in the editor. Existing phone and address values are preserved unless a user manually clears them.
+
+## Special Order Parts
+
+Parts can be marked as Special Order Part when they are not normal stocked inventory.
+
+Special-order parts:
+
+- remain usable on jobs
+- remain usable on purchase orders and receiving
+- do not count as low-stock stocked items
+- ignore Desired Stock Level and save it as `0`
+
+Normal stocked parts keep the existing Desired Stock Level, Reorder Point, low-stock, receiving, adjustment, and job-usage behavior.
+
+## Part Images
+
+Inventory parts can store one small reference image.
+
+Rules:
+
+- The image must already be 300x300 px or smaller.
+- FretTrack rejects larger images with a clear error.
+- FretTrack does not resize, compress, convert, or edit inventory part images.
+- Images are stored in the private `part-images` Supabase Storage bucket under a shop-scoped path.
+- Part rows store image path, MIME type, width, and height metadata.
 
 ## Receiving
 

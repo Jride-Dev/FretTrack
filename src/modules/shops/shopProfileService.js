@@ -3,7 +3,13 @@ import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { getDefaultDateFormatForLocale, normalizeDateFormat } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences, normalizeLengthUnit, normalizeMeasurementSystem } from '../../shared/utils/measurements';
 import { getDefaultLocaleForCurrency, getSupportedCurrency } from '../../shared/utils/money';
-import { getCurrentShopId, getShopSettings, saveShopSettings } from './shopConfig';
+import {
+  getCurrentShopId,
+  getShopSettings,
+  normalizePresetArray,
+  normalizeShippingLabelSettings,
+  saveShopSettings
+} from './shopConfig';
 
 const SHOP_ASSETS_BUCKET = 'shop-assets';
 
@@ -149,7 +155,16 @@ function normalizeShopSettings(settings = {}) {
     subscriptionTier: String(settings.subscriptionTier || settings.subscription_tier || currentSettings.subscriptionTier || 'free').toLowerCase(),
     subscriptionStatus: String(settings.subscriptionStatus || settings.subscription_status || currentSettings.subscriptionStatus || 'active').toLowerCase(),
     trialEndsAt: settings.trialEndsAt || settings.trial_ends_at || currentSettings.trialEndsAt || '',
-    featureOverrides: normalizeFeatureOverrides(settings.featureOverrides || settings.feature_overrides || currentSettings.featureOverrides)
+    featureOverrides: normalizeFeatureOverrides(settings.featureOverrides || settings.feature_overrides || currentSettings.featureOverrides),
+    inventoryLocationPresets: normalizePresetArray(
+      settings.inventoryLocationPresets || settings.inventory_location_presets || currentSettings.inventoryLocationPresets
+    ),
+    inventoryCategoryPresets: normalizePresetArray(
+      settings.inventoryCategoryPresets || settings.inventory_category_presets || currentSettings.inventoryCategoryPresets
+    ),
+    shippingLabelSettings: normalizeShippingLabelSettings(
+      settings.shippingLabelSettings || settings.shipping_label_settings || currentSettings.shippingLabelSettings
+    )
   };
 }
 
@@ -193,6 +208,9 @@ async function fromDbProfile(dbProfile) {
     subscriptionStatus: profile.subscription_status || 'active',
     trialEndsAt: profile.trial_ends_at || '',
     featureOverrides: normalizeFeatureOverrides(profile.feature_overrides),
+    inventoryLocationPresets: normalizePresetArray(profile.inventory_location_presets),
+    inventoryCategoryPresets: normalizePresetArray(profile.inventory_category_presets),
+    shippingLabelSettings: normalizeShippingLabelSettings(profile.shipping_label_settings),
     onboardedAt: profile.onboarded_at || '',
     createdAt: profile.created_at,
     updatedAt: profile.updated_at
@@ -219,6 +237,9 @@ function toDbProfile(settings, userId) {
     sales_tax_rate: Number(settings.salesTaxRate) || 0,
     taxable_parts_default: settings.taxablePartsDefault !== false,
     taxable_services_default: Boolean(settings.taxableServicesDefault),
+    inventory_location_presets: normalizePresetArray(settings.inventoryLocationPresets),
+    inventory_category_presets: normalizePresetArray(settings.inventoryCategoryPresets),
+    shipping_label_settings: normalizeShippingLabelSettings(settings.shippingLabelSettings),
     onboarded_at: new Date().toISOString(),
     created_by: userId || null
   };

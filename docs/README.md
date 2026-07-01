@@ -40,7 +40,7 @@ Core shipped beta areas now include:
 - legacy WebKit compatibility for older iPad browser versions, with readable fallback messaging instead of black screens
 - offline new-job draft queue with 0.2.8 scope audit
 - editable job-level parts and services
-- inventory purchasing foundation with parts, vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, landed-cost allocation, and transactional receiving RPCs
+- inventory purchasing foundation with parts, vendors, purchase orders, receiving, purchase history, barcode labels, inventory Location/Category presets, UPC-facing labels, Special Order Part behavior, small part images, inbound PO shipping, landed-cost allocation, and transactional receiving RPCs
 - outbound job shipping foundation with `job_shipments`, address snapshots, carrier/tracking fields, RLS, and a small service module; UI, carrier APIs, labels/rates, and shipment notifications are still future work
 - Scheduling / Calendar Phase 1
 - unsaved-changes protection foundation

@@ -52,6 +52,16 @@ This foundation does not add:
 - shipping reports
 - offline shipping sync
 
+## Label Printer Preset Foundation
+
+Shop Settings now includes a shipping/label printer preset under Inventory / Vendor Controls:
+
+- `2.25 x 1.25 parts/bin label`
+- `4 x 6 thermal shipping label`
+- `Letter / plain paper`
+
+The current use is the browser-based inventory barcode label sheet. This is a settings/UI foundation only; it does not create carrier labels, rates, postage, tracking purchases, or carrier API calls.
+
 ## Planned Next Phase
 
 The next practical pass should add a small Job Detail shipping card:

@@ -4,6 +4,16 @@
 
 FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
+## Inventory / Vendor / Shipping Polish
+
+Inventory now has shop-defined preset foundations for cleaner paid-shop setup. Owners/admins can manage Inventory Locations and Inventory Categories in Shop Settings, and the Parts form uses dropdowns that combine those presets with any old saved part values so existing records stay visible instead of being destroyed.
+
+The inventory UI now uses UPC-facing labels while preserving the existing `parts.sku` and `purchase_order_items.vendor_sku` database columns. Supplier wording has been cleaned up in the UI in favor of Vendor wording, with the legacy text field displayed as Vendor Text rather than renaming stored columns destructively.
+
+Parts can now be marked as Special Order Part. Special-order parts remain usable on jobs, purchase orders, and receiving, but they are not treated as stocked low-inventory items and their Desired Stock Level is ignored/saved as zero. Advanced Reporting low-stock summaries also skip special-order parts.
+
+Part images can be attached to inventory parts through a new private `part-images` Supabase Storage bucket. Images must already be 300x300 px or smaller; FretTrack rejects larger images and does not resize, compress, or convert them. The pass also adds a shipping/parts label printer preset in Shop Settings with 2.25 x 1.25 parts/bin, 4 x 6 thermal, and Letter/plain paper options for the browser-based label sheet foundation.
+
 ## 0.2.9-J Live Demo Bug Polish
 
 Live-demo polish tightens the day-one beta experience without adding Stripe or new feature surfaces. New Job intake now keeps customer phone/email/address/city/state/zip in the saved job payload so reopening Intake repopulates the fields, instrument type persists through save/reopen, and string gauge presets now cover Electric, Acoustic, Bass, and Nylon/Classical categories.

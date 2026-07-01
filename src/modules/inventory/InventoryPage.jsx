@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { money } from '../../shared/utils/money';
-import { getCurrentShopId, getShopMoneyOptions } from '../shops/shopConfig';
+import { getCurrentShopId, getShopMoneyOptions, getShopSettings, normalizeShippingLabelSettings } from '../shops/shopConfig';
 import {
   adjustPart,
+  createPartImageObjectUrl,
   createPart,
   createPurchaseOrder,
   createVendor,
@@ -18,7 +19,8 @@ import {
   receivePurchaseOrderItems,
   updatePart,
   updatePurchaseOrderStatus,
-  updateVendor
+  updateVendor,
+  uploadPartImage
 } from './inventoryService';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
@@ -41,6 +43,7 @@ const emptyPartForm = {
   reorderPoint: '0',
   desiredStockLevel: '0',
   location: '',
+  specialOrder: false,
   isActive: true
 };
 
@@ -165,6 +168,24 @@ function purchaseOrderTotals(order) {
   };
 }
 
+function mergePresetOptions(...optionSources) {
+  const seen = new Set();
+  const options = [];
+  for (const source of optionSources) {
+    const values = Array.isArray(source) ? source : [source];
+    for (const value of values) {
+      const label = String(value || '').trim();
+      const key = label.toLowerCase();
+      if (!label || seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      options.push(label);
+    }
+  }
+  return options.sort((left, right) => left.localeCompare(right));
+}
+
 export default function InventoryPage({ canWrite = true, shopId = getCurrentShopId(), onNotice, onDirtyChange }) {
   const [activeTab, setActiveTab] = useState('parts');
   const [parts, setParts] = useState([]);
@@ -179,6 +200,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
   const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState('');
   const [selectedLabelPartIds, setSelectedLabelPartIds] = useState([]);
   const [partForm, setPartForm] = useState(emptyPartForm);
+  const [partImageFile, setPartImageFile] = useState(null);
+  const [partImagePreviewUrl, setPartImagePreviewUrl] = useState('');
   const [vendorForm, setVendorForm] = useState(emptyVendorForm);
   const [purchaseOrderForm, setPurchaseOrderForm] = useState(emptyPurchaseOrderForm);
   const [receiveForm, setReceiveForm] = useState({ quantity: '1', cost: '', note: '' });
@@ -195,6 +218,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
   const { isDirty, markDirty, markClean, confirmIfDirty } = useUnsavedChanges();
   const [saveStatus, setSaveStatus] = useState('saved');
   const moneyOptions = getShopMoneyOptions();
+  const shopSettings = getShopSettings();
+  const shippingLabelSettings = normalizeShippingLabelSettings(shopSettings.shippingLabelSettings);
 
   const selectedPart = useMemo(
     () => parts.find((part) => part.id === selectedPartId) || null,
@@ -223,6 +248,22 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       ? purchaseOrders
       : purchaseOrders.filter((order) => order.status === poStatusFilter),
     [purchaseOrders, poStatusFilter]
+  );
+  const categoryOptions = useMemo(
+    () => mergePresetOptions(
+      shopSettings.inventoryCategoryPresets,
+      parts.map((part) => part.category),
+      partForm.category
+    ),
+    [shopSettings.inventoryCategoryPresets, parts, partForm.category]
+  );
+  const locationOptions = useMemo(
+    () => mergePresetOptions(
+      shopSettings.inventoryLocationPresets,
+      parts.map((part) => part.location),
+      partForm.location
+    ),
+    [shopSettings.inventoryLocationPresets, parts, partForm.location]
   );
 
   useEffect(() => {
@@ -276,6 +317,39 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       document.body.classList.remove('barcode-label-printing');
     };
   }, [isPrintingLabels]);
+
+  useEffect(() => {
+    let objectUrl = '';
+    let isCancelled = false;
+
+    if (!selectedPart?.imagePath) {
+      setPartImagePreviewUrl('');
+      return undefined;
+    }
+
+    createPartImageObjectUrl(selectedPart.imagePath)
+      .then((url) => {
+        if (isCancelled) {
+          if (url) {
+            URL.revokeObjectURL(url);
+          }
+          return;
+        }
+        objectUrl = url;
+        setPartImagePreviewUrl(url);
+      })
+      .catch((error) => {
+        console.error('Part image preview failed.', error);
+        setPartImagePreviewUrl('');
+      });
+
+    return () => {
+      isCancelled = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [selectedPart?.imagePath]);
 
   async function loadInventoryPage() {
     setIsLoading(true);
@@ -349,8 +423,10 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       reorderPoint: String(part.reorderPoint ?? 0),
       desiredStockLevel: String(part.desiredStockLevel ?? 0),
       location: part.location || '',
+      specialOrder: part.specialOrder === true,
       isActive: part.isActive !== false
     });
+    setPartImageFile(null);
     setReceiveForm({ quantity: '1', cost: String(part.unitCost ?? ''), note: '' });
     setAdjustForm({ quantityDelta: '0', note: '' });
     markClean();
@@ -372,6 +448,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
 
     setSelectedPartId('');
     setPartForm(emptyPartForm);
+    setPartImageFile(null);
     setReceiveForm({ quantity: '1', cost: '', note: '' });
     setAdjustForm({ quantityDelta: '0', note: '' });
     markClean();
@@ -391,10 +468,14 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     setIsSaving(true);
     setSaveStatus('saving');
     try {
-      const savedPart = selectedPart
+      let savedPart = selectedPart
         ? await updatePart(selectedPart.id, partForm)
         : await createPart(shopId, partForm);
+      if (partImageFile) {
+        savedPart = await uploadPartImage(savedPart, partImageFile);
+      }
       onNotice?.({ type: 'success', message: selectedPart ? 'Part updated.' : 'Part created.' });
+      setPartImageFile(null);
       markClean();
       setSaveStatus('saved');
       resetForm({ skipDirtyGuard: true });
@@ -410,6 +491,15 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       onNotice?.({ type: 'error', message: error.message || 'Unable to save part.' });
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  function handlePartImageChange(event) {
+    const file = event.target.files?.[0] || null;
+    setPartImageFile(file);
+    if (file) {
+      markDirty();
+      setSaveStatus('unsaved');
     }
   }
 
@@ -773,7 +863,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       <>
         <form className="row-form inventory-search" onSubmit={handleSearch}>
           <input
-            placeholder="Search name, SKU, barcode, vendor SKU, category, or supplier"
+            placeholder="Search name, UPC, barcode, vendor UPC, category, or vendor"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -809,7 +899,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               <thead>
                 <tr>
                   <th>Label</th>
-                  <th>SKU</th>
+                  <th>UPC</th>
                   <th>Name</th>
                   <th>Barcode</th>
                   <th>On hand</th>
@@ -822,7 +912,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               </thead>
               <tbody>
                 {parts.map((part) => {
-                  const isLowStock = part.quantityOnHand <= part.reorderPoint;
+                  const isLowStock = !part.specialOrder && part.quantityOnHand <= part.reorderPoint;
                   return (
                     <tr
                       key={part.id}
@@ -843,12 +933,12 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                       <td><code>{getBarcodeLabel(part)}</code></td>
                       <td>{part.quantityOnHand}</td>
                       <td>{part.reorderPoint}</td>
-                      <td>{part.desiredStockLevel}</td>
+                      <td>{part.specialOrder ? '-' : part.desiredStockLevel}</td>
                       <td>{money(part.retailPrice, moneyOptions)}</td>
                       <td>{part.location || '-'}</td>
                       <td>
                         <span className={`status-pill ${part.isActive ? (isLowStock ? 'warning' : 'success') : 'muted'}`}>
-                          {part.isActive ? (isLowStock ? 'Low stock' : 'Active') : 'Inactive'}
+                          {part.isActive ? (part.specialOrder ? 'Special order' : isLowStock ? 'Low stock' : 'Active') : 'Inactive'}
                         </span>
                       </td>
                     </tr>
@@ -883,12 +973,19 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                     ))}
                   </select>
                 </label>
-                <label>SKU<input disabled={!canWrite} value={partForm.sku} onChange={(event) => updatePartForm('sku', event.target.value)} /></label>
+                <label>UPC<input disabled={!canWrite} value={partForm.sku} onChange={(event) => updatePartForm('sku', event.target.value)} /></label>
                 <label>Name<input disabled={!canWrite} value={partForm.name} onChange={(event) => updatePartForm('name', event.target.value)} required /></label>
                 <label>Description<input disabled={!canWrite} value={partForm.description} onChange={(event) => updatePartForm('description', event.target.value)} /></label>
-                <label>Category<input disabled={!canWrite} value={partForm.category} onChange={(event) => updatePartForm('category', event.target.value)} /></label>
-                <label>Supplier<input disabled={!canWrite} value={partForm.supplier} onChange={(event) => updatePartForm('supplier', event.target.value)} /></label>
-                <label>Vendor SKU<input disabled={!canWrite} value={partForm.vendorSku} onChange={(event) => updatePartForm('vendorSku', event.target.value)} /></label>
+                <label>Category
+                  <select disabled={!canWrite} value={partForm.category} onChange={(event) => updatePartForm('category', event.target.value)}>
+                    <option value="">No category</option>
+                    {categoryOptions.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>Vendor Text<input disabled={!canWrite} value={partForm.supplier} onChange={(event) => updatePartForm('supplier', event.target.value)} /></label>
+                <label>Vendor UPC<input disabled={!canWrite} value={partForm.vendorSku} onChange={(event) => updatePartForm('vendorSku', event.target.value)} /></label>
                 <label>Barcode code<input disabled={!canWrite} value={partForm.barcodeCode} onChange={(event) => updatePartForm('barcodeCode', event.target.value)} /></label>
                 <label>Manufacturer<input disabled={!canWrite} value={partForm.manufacturer} onChange={(event) => updatePartForm('manufacturer', event.target.value)} /></label>
                 <label>Part number<input disabled={!canWrite} value={partForm.partNumber} onChange={(event) => updatePartForm('partNumber', event.target.value)} /></label>
@@ -896,18 +993,66 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                 <label>Retail price<input disabled={!canWrite} type="number" min="0" step="0.01" value={partForm.retailPrice} onChange={(event) => updatePartForm('retailPrice', event.target.value)} /></label>
                 <label>Quantity on hand<input disabled={!canWrite} type="number" step="1" value={partForm.quantityOnHand} onChange={(event) => updatePartForm('quantityOnHand', event.target.value)} /></label>
                 <label>Reorder point<input disabled={!canWrite} type="number" min="0" step="1" value={partForm.reorderPoint} onChange={(event) => updatePartForm('reorderPoint', event.target.value)} /></label>
-                <label>Desired stock<input disabled={!canWrite} type="number" min="0" step="1" value={partForm.desiredStockLevel} onChange={(event) => updatePartForm('desiredStockLevel', event.target.value)} /></label>
-                <label>Location<input disabled={!canWrite} value={partForm.location} onChange={(event) => updatePartForm('location', event.target.value)} /></label>
+                <label>Desired stock
+                  <input
+                    disabled={!canWrite || partForm.specialOrder}
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={partForm.specialOrder ? '0' : partForm.desiredStockLevel}
+                    onChange={(event) => updatePartForm('desiredStockLevel', event.target.value)}
+                  />
+                  {partForm.specialOrder && <small>Special order parts are not treated as stocked items.</small>}
+                </label>
+                <label>Location
+                  <select disabled={!canWrite} value={partForm.location} onChange={(event) => updatePartForm('location', event.target.value)}>
+                    <option value="">No location</option>
+                    {locationOptions.map((location) => (
+                      <option key={location} value={location}>{location}</option>
+                    ))}
+                  </select>
+                </label>
               </div>
+              <label className="table-checkbox">
+                <input
+                  disabled={!canWrite}
+                  type="checkbox"
+                  checked={partForm.specialOrder}
+                  onChange={(event) => updatePartForm('specialOrder', event.target.checked)}
+                />
+                Special Order Part
+              </label>
+              <label className="inventory-image-field">
+                Part Image
+                <input
+                  disabled={!canWrite}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePartImageChange}
+                />
+                <small>Must already be 300x300 px or smaller. FretTrack will reject larger images and will not resize or compress.</small>
+              </label>
+              {(partImagePreviewUrl || selectedPart?.imagePath || partImageFile) && (
+                <div className="inventory-part-image-preview">
+                  {partImagePreviewUrl ? (
+                    <img src={partImagePreviewUrl} alt={`${selectedPart?.name || partForm.name || 'Part'} preview`} />
+                  ) : (
+                    <span>{partImageFile ? partImageFile.name : 'Part image saved.'}</span>
+                  )}
+                  {selectedPart?.imageWidth && selectedPart?.imageHeight && (
+                    <small>{selectedPart.imageWidth}x{selectedPart.imageHeight} px</small>
+                  )}
+                </div>
+              )}
               {selectedPart && (
                 <div className="inventory-meta-grid">
                   <span>Barcode label <strong><code>{getBarcodeLabel(selectedPart)}</code></strong></span>
                   <span>Vendor <strong>{vendorsById.get(selectedPart.vendorId)?.name || '-'}</strong></span>
-                  <span>Vendor SKU <strong>{selectedPart.vendorSku || '-'}</strong></span>
+                  <span>Vendor UPC <strong>{selectedPart.vendorSku || '-'}</strong></span>
                   <span>Location <strong>{selectedPart.location || '-'}</strong></span>
                   <span>On hand <strong>{selectedPart.quantityOnHand}</strong></span>
                   <span>Reorder point <strong>{selectedPart.reorderPoint}</strong></span>
-                  <span>Desired stock <strong>{selectedPart.desiredStockLevel}</strong></span>
+                  <span>Desired stock <strong>{selectedPart.specialOrder ? 'Special order' : selectedPart.desiredStockLevel}</strong></span>
                   <span>Last cost <strong>{selectedPart.lastCost === null ? '-' : money(selectedPart.lastCost, moneyOptions)}</strong></span>
                   <span>Average cost <strong>{selectedPart.averageCost === null ? '-' : money(selectedPart.averageCost, moneyOptions)}</strong></span>
                 </div>
@@ -1170,7 +1315,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                     ))}
                   </select>
                   <input disabled={!canWrite} placeholder="Description" value={item.description} onChange={(event) => updatePurchaseOrderItem(index, 'description', event.target.value)} />
-                  <input disabled={!canWrite} placeholder="Vendor SKU" value={item.vendorSku} onChange={(event) => updatePurchaseOrderItem(index, 'vendorSku', event.target.value)} />
+                  <input disabled={!canWrite} placeholder="Vendor UPC" value={item.vendorSku} onChange={(event) => updatePurchaseOrderItem(index, 'vendorSku', event.target.value)} />
                   <input disabled={!canWrite} type="number" min="1" step="1" placeholder="Qty" value={item.quantityOrdered} onChange={(event) => updatePurchaseOrderItem(index, 'quantityOrdered', event.target.value)} />
                   <input disabled={!canWrite} type="number" min="0" step="0.01" placeholder="Unit cost" value={item.unitCost} onChange={(event) => updatePurchaseOrderItem(index, 'unitCost', event.target.value)} />
                   {canWrite && <button type="button" onClick={() => removePurchaseOrderItem(index)}>Remove</button>}
@@ -1227,7 +1372,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                     <div className="receive-item-row" key={item.id}>
                       <span>
                         <strong>{item.description}</strong>
-                        <small>{item.vendorSku || 'No vendor SKU'} - ordered {item.quantityOrdered} - received {item.quantityReceived} - remaining {remaining}</small>
+                        <small>{item.vendorSku || 'No vendor UPC'} - ordered {item.quantityOrdered} - received {item.quantityReceived} - remaining {remaining}</small>
                       </span>
                       <input
                         disabled={!canWrite || remaining <= 0 || selectedPurchaseOrder.status === 'cancelled'}
@@ -1361,7 +1506,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
             </div>
           </div>
           <p className="muted-text">Labels use stable barcode identity only. Prices, quantities, and other mutable stock data are not encoded.</p>
-          <BarcodeLabelSheet parts={selectedLabelParts} />
+          <p className="muted-text">Current printer preset: {shippingLabelSettings.preset === 'shipping_4x6' ? '4 x 6 thermal shipping label' : shippingLabelSettings.preset === 'letter' ? 'Letter / plain paper' : '2.25 x 1.25 parts/bin label'}.</p>
+          <BarcodeLabelSheet parts={selectedLabelParts} labelPreset={shippingLabelSettings.preset} />
         </section>
       </div>
     );

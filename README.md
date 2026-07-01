@@ -62,7 +62,7 @@ browser tab icon and landing imagery do not depend on manual local files.
 - The app now has mobile/tablet readiness improvements and PWA install support.
 - Legacy WebKit compatibility work lets FretTrack load and run on older iPad browser versions, including older iOS Chrome/Brave WebKit shells, with graceful fallbacks instead of black screens.
 - New work orders can be saved as local offline drafts and synced manually after reconnecting; this is not full offline mode.
-- Inventory purchasing foundation adds stock counts, movements, low-stock visibility, job attachment, vendors with Company/Sales Rep/address/Online Only fields, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping cost, optional landed-cost allocation, and receiving RPC hardening.
+- Inventory purchasing foundation adds stock counts, movements, low-stock visibility, job attachment, vendors with Company/Sales Rep/address/Online Only fields, purchase orders, receiving, purchase history, barcode labels, inventory Location/Category presets, UPC-facing labels, Special Order Part handling, small part images, inbound PO shipping cost, optional landed-cost allocation, and receiving RPC hardening.
 - Scheduling Phase 1 adds internal shop scheduling for due dates, intake appointments, pickups, follow-ups, and shop blocks.
 - Unsaved-changes protection now warns before losing manual edits on high-risk forms.
 - Premium entitlement checks now centralize future paid-feature gating without blocking core shop workflow.
