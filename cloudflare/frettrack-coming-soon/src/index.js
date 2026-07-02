@@ -1,6 +1,22 @@
 const APP_URL = 'https://app.frettrack-app.com';
 const SUPPORT_EMAIL = 'support@frettrack-app.com';
 const BANNER_URL = '/assets/frettrack-banner.png';
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://*.supabase.co",
+  "font-src 'self' data:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "worker-src 'self' blob:",
+  "media-src 'self' blob: https://*.supabase.co",
+  "manifest-src 'self'"
+].join('; ');
+const PERMISSIONS_POLICY = 'camera=(), microphone=(), geolocation=()';
 const BUNDLED_ASSET_PATHS = new Set([
   '/favicon.ico',
   '/favicon-16x16.png',
@@ -1205,12 +1221,10 @@ export default {
     }
 
     return new Response(landingPage(), {
-      headers: {
+      headers: htmlHeaders({
         'content-type': 'text/html; charset=utf-8',
-        'cache-control': 'no-store',
-        'referrer-policy': 'strict-origin-when-cross-origin',
-        'x-content-type-options': 'nosniff'
-      }
+        'cache-control': 'no-store'
+      })
     });
   }
 };
@@ -1552,13 +1566,17 @@ async function serveAsset(pathname, env) {
   const object = await env.FRETTRACK_APP_ASSETS.get(key);
 
   if (!object) {
-    return new Response('Asset not found', { status: 404 });
+    return new Response('Asset not found', {
+      status: 404,
+      headers: baselineHeaders({ 'cache-control': 'no-store' })
+    });
   }
 
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set('etag', object.httpEtag);
   headers.set('cache-control', object.httpMetadata?.cacheControl || 'public, max-age=300');
+  addBaselineSecurityHeaders(headers);
 
   return new Response(object.body, { headers });
 }
@@ -1571,10 +1589,10 @@ async function serveBundledAsset(request, env) {
   if (!env.LANDING_ASSETS) {
     return new Response('Asset service not configured', {
       status: 404,
-      headers: {
+      headers: baselineHeaders({
         'cache-control': 'no-store',
         'x-content-type-options': 'nosniff'
-      }
+      })
     });
   }
 
@@ -1582,18 +1600,25 @@ async function serveBundledAsset(request, env) {
   if (response.status === 404) {
     return new Response('Asset not found', {
       status: 404,
-      headers: {
+      headers: baselineHeaders({
         'cache-control': 'no-store',
         'x-content-type-options': 'nosniff'
-      }
+      })
     });
   }
 
   const headers = new Headers(response.headers);
   const pathname = new URL(request.url).pathname;
   const longLivedAsset = /\.(ico|png|jpe?g|webp)$/i.test(pathname);
-  headers.set('cache-control', longLivedAsset ? 'public, max-age=31536000, immutable' : 'public, max-age=3600');
-  headers.set('x-content-type-options', 'nosniff');
+  const contentType = headers.get('content-type') || '';
+  const isHtml = contentType.includes('text/html') || pathname.endsWith('.html');
+  headers.set('cache-control', isHtml
+    ? 'no-store'
+    : longLivedAsset ? 'public, max-age=31536000, immutable' : 'public, max-age=3600');
+  addBaselineSecurityHeaders(headers);
+  if (isHtml) {
+    addHtmlSecurityHeaders(headers);
+  }
 
   return new Response(response.body, {
     status: response.status,
@@ -1633,10 +1658,32 @@ function escapeHtml(value) {
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: {
+    headers: baselineHeaders({
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
       'x-content-type-options': 'nosniff'
-    }
+    })
   });
+}
+
+function htmlHeaders(init = {}) {
+  const headers = baselineHeaders(init);
+  addHtmlSecurityHeaders(headers);
+  return headers;
+}
+
+function baselineHeaders(init = {}) {
+  const headers = new Headers(init);
+  addBaselineSecurityHeaders(headers);
+  return headers;
+}
+
+function addBaselineSecurityHeaders(headers) {
+  headers.set('referrer-policy', 'strict-origin-when-cross-origin');
+  headers.set('x-content-type-options', 'nosniff');
+  headers.set('permissions-policy', PERMISSIONS_POLICY);
+}
+
+function addHtmlSecurityHeaders(headers) {
+  headers.set('content-security-policy', CONTENT_SECURITY_POLICY);
 }
