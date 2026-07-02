@@ -8,7 +8,7 @@ FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Repor
 
 Inventory now has shop-defined preset foundations for cleaner paid-shop setup. Owners/admins can manage Inventory Locations and Inventory Categories in Shop Settings, and the Parts form uses dropdowns that combine those presets with any old saved part values so existing records stay visible instead of being destroyed.
 
-The inventory UI now uses UPC-facing labels while preserving the existing `parts.sku` and `purchase_order_items.vendor_sku` database columns. Supplier wording has been cleaned up in the UI in favor of Vendor wording, with the legacy text field displayed as Vendor Text rather than renaming stored columns destructively.
+The inventory UI now uses UPC-facing labels while preserving the existing `parts.sku` and `purchase_order_items.vendor_sku` database columns. Supplier wording has been cleaned up in the UI in favor of Vendor wording, with the legacy text field displayed as Vendor SKU rather than renaming stored columns destructively.
 
 Parts can now be marked as Special Order Part. Special-order parts remain usable on jobs, purchase orders, and receiving, but they are not treated as stocked low-inventory items and their Desired Stock Level is ignored/saved as zero. Advanced Reporting low-stock summaries also skip special-order parts.
 
