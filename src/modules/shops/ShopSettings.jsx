@@ -33,12 +33,16 @@ export default function ShopSettings({
   onNotice
 }) {
   const [settings, setSettings] = useState(() => initialSettings || getShopSettings());
+  const [inventoryLocationPresetText, setInventoryLocationPresetText] = useState(() => presetsToTextarea(settings.inventoryLocationPresets));
+  const [inventoryCategoryPresetText, setInventoryCategoryPresetText] = useState(() => presetsToTextarea(settings.inventoryCategoryPresets));
   const [logoFile, setLogoFile] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (initialSettings) {
       setSettings(initialSettings);
+      setInventoryLocationPresetText(presetsToTextarea(initialSettings.inventoryLocationPresets));
+      setInventoryCategoryPresetText(presetsToTextarea(initialSettings.inventoryCategoryPresets));
     }
   }, [initialSettings?.shopId, initialSettings?.updatedAt]);
 
@@ -72,13 +76,6 @@ export default function ShopSettings({
     });
   }
 
-  function updatePresetField(field, value) {
-    setSettings((current) => ({
-      ...current,
-      [field]: textareaToPresets(value)
-    }));
-  }
-
   function updateShippingLabelPreset(value) {
     setSettings((current) => ({
       ...current,
@@ -108,7 +105,11 @@ export default function ShopSettings({
 
     setIsSaving(true);
     try {
-      let nextSettings = { ...settings };
+      let nextSettings = {
+        ...settings,
+        inventoryLocationPresets: textareaToPresets(inventoryLocationPresetText),
+        inventoryCategoryPresets: textareaToPresets(inventoryCategoryPresetText)
+      };
       if (logoFile) {
         const logo = await uploadShopLogo(logoFile, nextSettings.shopId);
         nextSettings = {
@@ -124,6 +125,8 @@ export default function ShopSettings({
       const savedSettings = await saveShopProfile(nextSettings);
       saveShopSettings(savedSettings);
       setSettings(savedSettings);
+      setInventoryLocationPresetText(presetsToTextarea(savedSettings.inventoryLocationPresets));
+      setInventoryCategoryPresetText(presetsToTextarea(savedSettings.inventoryCategoryPresets));
       setLogoFile(null);
       onNotice?.({ type: 'success', message: requireCompletion ? 'Shop onboarding complete.' : 'Shop settings saved.' });
       onSave?.(savedSettings);
@@ -250,22 +253,22 @@ export default function ShopSettings({
               <label>
                 Inventory Locations
                 <textarea
-                  value={presetsToTextarea(settings.inventoryLocationPresets)}
-                  onChange={(event) => updatePresetField('inventoryLocationPresets', event.target.value)}
+                  value={inventoryLocationPresetText}
+                  onChange={(event) => setInventoryLocationPresetText(event.target.value)}
                   rows="4"
                   disabled={!canManageShop || isSaving}
-                  placeholder={'Bench A\nParts Cabinet\nCase Storage'}
+                  placeholder={'Black Bag\nPlastic Bin\nWhite top drawer'}
                 />
                 <small>One location per line.</small>
               </label>
               <label>
                 Inventory Categories
                 <textarea
-                  value={presetsToTextarea(settings.inventoryCategoryPresets)}
-                  onChange={(event) => updatePresetField('inventoryCategoryPresets', event.target.value)}
+                  value={inventoryCategoryPresetText}
+                  onChange={(event) => setInventoryCategoryPresetText(event.target.value)}
                   rows="4"
                   disabled={!canManageShop || isSaving}
-                  placeholder={'Strings\nElectronics\nHardware'}
+                  placeholder={'Guitar Parts\nStrings\nElectronics'}
                 />
                 <small>One category per line.</small>
               </label>

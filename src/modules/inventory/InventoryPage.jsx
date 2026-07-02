@@ -549,7 +549,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     setIsSaving(true);
     try {
       const updatedPart = await fixMissingPartBarcodeCode(selectedPart);
-      onNotice?.({ type: 'success', message: 'Barcode code generated.' });
+      onNotice?.({ type: 'success', message: 'Barcode generated.' });
       const loadedParts = await loadPartsOnly({ search, activeOnly: !showInactive, lowStockOnly });
       const nextPart = loadedParts.find((part) => part.id === updatedPart.id);
       if (nextPart) {
@@ -863,7 +863,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       <>
         <form className="row-form inventory-search" onSubmit={handleSearch}>
           <input
-            placeholder="Search name, UPC, barcode, vendor UPC, category, or vendor"
+            placeholder="Search name, manufacturer UPC, barcode, vendor SKU, vendor UPC, category, or vendor"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -973,9 +973,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                     ))}
                   </select>
                 </label>
-                <label>UPC<input disabled={!canWrite} value={partForm.sku} onChange={(event) => updatePartForm('sku', event.target.value)} /></label>
-                <label>Name<input disabled={!canWrite} value={partForm.name} onChange={(event) => updatePartForm('name', event.target.value)} required /></label>
-                <label>Description<input disabled={!canWrite} value={partForm.description} onChange={(event) => updatePartForm('description', event.target.value)} /></label>
+                <label>Part Name<input disabled={!canWrite} value={partForm.name} onChange={(event) => updatePartForm('name', event.target.value)} required /></label>
+                <label>Part Number<input disabled={!canWrite} value={partForm.partNumber} onChange={(event) => updatePartForm('partNumber', event.target.value)} /></label>
                 <label>Category
                   <select disabled={!canWrite} value={partForm.category} onChange={(event) => updatePartForm('category', event.target.value)}>
                     <option value="">No category</option>
@@ -983,26 +982,6 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                       <option key={category} value={category}>{category}</option>
                     ))}
                   </select>
-                </label>
-                <label>Vendor Text<input disabled={!canWrite} value={partForm.supplier} onChange={(event) => updatePartForm('supplier', event.target.value)} /></label>
-                <label>Vendor UPC<input disabled={!canWrite} value={partForm.vendorSku} onChange={(event) => updatePartForm('vendorSku', event.target.value)} /></label>
-                <label>Barcode code<input disabled={!canWrite} value={partForm.barcodeCode} onChange={(event) => updatePartForm('barcodeCode', event.target.value)} /></label>
-                <label>Manufacturer<input disabled={!canWrite} value={partForm.manufacturer} onChange={(event) => updatePartForm('manufacturer', event.target.value)} /></label>
-                <label>Part number<input disabled={!canWrite} value={partForm.partNumber} onChange={(event) => updatePartForm('partNumber', event.target.value)} /></label>
-                {canWrite && <label>Unit cost<input type="number" min="0" step="0.01" value={partForm.unitCost} onChange={(event) => updatePartForm('unitCost', event.target.value)} /></label>}
-                <label>Retail price<input disabled={!canWrite} type="number" min="0" step="0.01" value={partForm.retailPrice} onChange={(event) => updatePartForm('retailPrice', event.target.value)} /></label>
-                <label>Quantity on hand<input disabled={!canWrite} type="number" step="1" value={partForm.quantityOnHand} onChange={(event) => updatePartForm('quantityOnHand', event.target.value)} /></label>
-                <label>Reorder point<input disabled={!canWrite} type="number" min="0" step="1" value={partForm.reorderPoint} onChange={(event) => updatePartForm('reorderPoint', event.target.value)} /></label>
-                <label>Desired stock
-                  <input
-                    disabled={!canWrite || partForm.specialOrder}
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={partForm.specialOrder ? '0' : partForm.desiredStockLevel}
-                    onChange={(event) => updatePartForm('desiredStockLevel', event.target.value)}
-                  />
-                  {partForm.specialOrder && <small>Special order parts are not treated as stocked items.</small>}
                 </label>
                 <label>Location
                   <select disabled={!canWrite} value={partForm.location} onChange={(event) => updatePartForm('location', event.target.value)}>
@@ -1012,16 +991,39 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                     ))}
                   </select>
                 </label>
+                <label>Description<input disabled={!canWrite} value={partForm.description} onChange={(event) => updatePartForm('description', event.target.value)} /></label>
+                <label>Vendor SKU<input disabled={!canWrite} value={partForm.supplier} onChange={(event) => updatePartForm('supplier', event.target.value)} /></label>
+                <label>Vendor UPC<input disabled={!canWrite} value={partForm.vendorSku} onChange={(event) => updatePartForm('vendorSku', event.target.value)} /></label>
+                <label>Barcode<input disabled={!canWrite} value={partForm.barcodeCode} onChange={(event) => updatePartForm('barcodeCode', event.target.value)} /></label>
+                <label>Manufacturer<input disabled={!canWrite} value={partForm.manufacturer} onChange={(event) => updatePartForm('manufacturer', event.target.value)} /></label>
+                <label>Manufacturer UPC<input disabled={!canWrite} value={partForm.sku} onChange={(event) => updatePartForm('sku', event.target.value)} /></label>
+                {canWrite && <label>Unit Cost<input type="number" min="0" step="0.01" value={partForm.unitCost} onChange={(event) => updatePartForm('unitCost', event.target.value)} /></label>}
+                <label>Retail Price<input disabled={!canWrite} type="number" min="0" step="0.01" value={partForm.retailPrice} onChange={(event) => updatePartForm('retailPrice', event.target.value)} /></label>
+                <label>QTY On Hand<input disabled={!canWrite} type="number" step="1" value={partForm.quantityOnHand} onChange={(event) => updatePartForm('quantityOnHand', event.target.value)} /></label>
+                <label>Reorder Point<input disabled={!canWrite} type="number" min="0" step="1" value={partForm.reorderPoint} onChange={(event) => updatePartForm('reorderPoint', event.target.value)} /></label>
+                <div className="inventory-stock-policy-field">
+                  <label>Desired Stock
+                  <input
+                    disabled={!canWrite || partForm.specialOrder}
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={partForm.specialOrder ? '0' : partForm.desiredStockLevel}
+                    onChange={(event) => updatePartForm('desiredStockLevel', event.target.value)}
+                  />
+                  {partForm.specialOrder && <small>Special order parts are not treated as stocked items.</small>}
+                  </label>
+                  <label className="table-checkbox">
+                    <input
+                      disabled={!canWrite}
+                      type="checkbox"
+                      checked={partForm.specialOrder}
+                      onChange={(event) => updatePartForm('specialOrder', event.target.checked)}
+                    />
+                    Special Order Part
+                  </label>
+                </div>
               </div>
-              <label className="table-checkbox">
-                <input
-                  disabled={!canWrite}
-                  type="checkbox"
-                  checked={partForm.specialOrder}
-                  onChange={(event) => updatePartForm('specialOrder', event.target.checked)}
-                />
-                Special Order Part
-              </label>
               <label className="inventory-image-field">
                 Part Image
                 <input
@@ -1059,7 +1061,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               )}
               {selectedPart && !selectedPart.barcodeCode && canWrite && (
                 <div className="mode-actions">
-                  <button type="button" onClick={handleGenerateBarcodeCode} disabled={isSaving}>Generate Barcode Code</button>
+                  <button type="button" onClick={handleGenerateBarcodeCode} disabled={isSaving}>Generate Barcode</button>
                 </div>
               )}
               <label className="table-checkbox">

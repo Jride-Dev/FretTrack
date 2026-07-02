@@ -3953,6 +3953,11 @@ th.internal-only {
   margin: 10px 0;
 }
 
+.inventory-stock-policy-field {
+  display: grid;
+  gap: 8px;
+}
+
 .inventory-part-image-preview {
   align-items: center;
   background: var(--surface);
