@@ -13,6 +13,7 @@ import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx
 import AdvancedReportsPage from '../modules/reports/AdvancedReportsPage.jsx';
 import SchedulingPage from '../modules/scheduling/SchedulingPage.jsx';
 import UpcomingSchedulePanel from '../modules/scheduling/UpcomingSchedulePanel.jsx';
+import ShippingDashboard from '../modules/shipping/ShippingDashboard.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import FeedbackReporter from '../modules/system/FeedbackReporter.jsx';
 import SystemAnnouncements from '../modules/system/SystemAnnouncements.jsx';
@@ -23,6 +24,7 @@ import {
   canAccessShopAsMember,
   canDeletePhotos as canDeletePhotosForRole,
   canEditPhotos as canEditPhotosForRole,
+  canManageShipments as canManageShipmentsForRole,
   canManageTeamMembers as canManageTeamMembersForRole,
   canManageShopSettings,
   canOverwritePhotos as canOverwritePhotosForRole,
@@ -112,6 +114,7 @@ export default function App() {
   const canManageShop = !hasSupabaseConfig || canManageShopSettings({ role: membership?.role });
   const canEditShopSettings = canManageShop && canWrite;
   const canManageTeamMembers = !hasSupabaseConfig || canManageTeamMembersForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
+  const canManageShipments = !hasSupabaseConfig || canManageShipmentsForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canPreviewCustomerImport = !hasSupabaseConfig || canPreviewCustomerImportForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canUploadPhotos = !hasSupabaseConfig || canUploadPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
   const canEditPhotos = !hasSupabaseConfig || canEditPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
@@ -1156,6 +1159,7 @@ export default function App() {
           <button type="button" className={getHeaderNavClass('list')} onClick={() => navigateTo('list')}>Current Jobs</button>
           <button type="button" className={getHeaderNavClass('customers')} onClick={() => navigateTo('customers')}>Customers</button>
           <button type="button" className={getHeaderNavClass('inventory')} onClick={() => navigateTo('inventory')}>Inventory</button>
+          <button type="button" className={getHeaderNavClass('shipping')} onClick={() => navigateTo('shipping')}>Shipping</button>
           <button type="button" className={getHeaderNavClass('scheduling')} onClick={() => navigateTo('scheduling')}>Scheduling</button>
           <button type="button" className={getHeaderNavClass('reports')} onClick={() => navigateTo('reports')}>Reports</button>
           <button type="button" className={getHeaderNavClass('accounting')} onClick={() => navigateTo('accounting')}>Accounting / Reports</button>
@@ -1330,6 +1334,17 @@ export default function App() {
             />
           )}
 
+          {mode === 'shipping' && (
+            <ShippingDashboard
+              canWrite={canManageShipments}
+              customers={customers}
+              jobs={jobs}
+              shopId={membership?.shopId || getSelectedShop().shopId}
+              shopProfile={shopProfile}
+              onNotice={setNotice}
+            />
+          )}
+
           {mode === 'scheduling' && (
             <SchedulingPage
               canWrite={canWrite}
@@ -1448,6 +1463,7 @@ function isAllowedWorkspaceMode(mode, { isOperator = false, canManageShop = fals
     'accounting',
     'reports',
     'inventory',
+    'shipping',
     'scheduling'
   ].includes(mode);
 }

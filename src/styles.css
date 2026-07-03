@@ -3886,6 +3886,11 @@ th.internal-only {
   color: var(--warning);
 }
 
+.status-pill.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
 .status-pill.muted {
   color: var(--text-muted);
 }
@@ -3908,6 +3913,61 @@ th.internal-only {
 
 .inventory-editor h3 {
   margin: 0 0 10px;
+}
+
+.shipping-dashboard-page {
+  display: grid;
+  gap: 16px;
+}
+
+.shipping-dashboard-layout {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1.35fr);
+}
+
+.shipping-record-form {
+  position: sticky;
+  top: 12px;
+}
+
+.shipping-dashboard-groups {
+  display: grid;
+  gap: 16px;
+}
+
+.shipping-dashboard-group {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.shipping-record-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.shipping-custody-log {
+  border-left: 3px solid var(--border);
+  color: var(--text-muted);
+  display: grid;
+  font-size: 13px;
+  gap: 4px;
+  padding-left: 10px;
+}
+
+.shipping-record-actions {
+  align-items: end;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(140px, 180px) auto minmax(180px, 1fr) auto;
 }
 
 .editor-heading {
@@ -4224,7 +4284,16 @@ th.internal-only {
   }
 
   .inventory-layout-wide,
-  .inventory-history-grid {
+  .inventory-history-grid,
+  .shipping-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .shipping-record-form {
+    position: static;
+  }
+
+  .shipping-record-actions {
     grid-template-columns: 1fr;
   }
 
