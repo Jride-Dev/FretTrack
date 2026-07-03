@@ -41,7 +41,7 @@ Core shipped beta areas now include:
 - offline new-job draft queue with 0.2.8 scope audit
 - editable job-level parts and services
 - inventory purchasing foundation with parts, vendors, purchase orders, receiving, purchase history, barcode labels, inventory Location/Category presets, UPC-facing labels, Special Order Part behavior, small part images, inbound PO shipping, landed-cost allocation, and transactional receiving RPCs
-- outbound job shipping foundation with `job_shipments`, address snapshots, carrier/tracking fields, RLS, and a small service module; UI, carrier APIs, labels/rates, and shipment notifications are still future work
+- shipping / receiving / chain-of-custody foundation with `job_shipments`, `shipping_items`, custody events, manual carrier/tracking and label-reference fields, a grouped Shipping dashboard, and reuse of inventory Location/Category presets; carrier APIs, label/rate purchasing, and automatic shipment notifications are still future work
 - Scheduling / Calendar Phase 1
 - unsaved-changes protection foundation
 - premium entitlement foundation

@@ -4,6 +4,16 @@
 
 FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
+## Shipping / Receiving / Chain of Custody Foundation
+
+FretTrack now has a manual Shipping dashboard for vendor inbound receiving records, customer inbound check-ins, customer outbound returns, vendor returns, inventory outbound shipments, and internal transfer tracking. The dashboard groups records by Pending Arrival, Arrived / Needs Check-In, At Bench, Ready to Ship, In Transit, and Exceptions so the shop can see where instruments, parts, packages, and problem shipments are sitting.
+
+The database extends `job_shipments` so records no longer have to be tied to a job, adds vendor and purchase-order links, manual tracking fields, label reference / label URL placeholders, declared value, insurance/signature flags, assigned Location/Category, condition and packing notes, and customer-notified status. New `shipping_items` and `custody_events` tables record item-level destinations such as stock, specific job, tech bench, hold/quarantine, return-to-vendor, outbound package, and timestamped custody history when records are created, received, assigned, packed, shipped, delivered, or marked as exceptions.
+
+Shipping and receiving reuse the existing Shop Settings Inventory Location and Inventory Category presets. Multi-word values such as `Black Bag`, `Plastic Bin`, `White top drawer`, and `Guitar Parts` remain display values; they are not split, slugified, or duplicated into another preset system.
+
+This pass intentionally does not call FedEx, UPS, USPS, ShipStation, Pirate Ship, or other carrier APIs. FretTrack does not buy labels or rate-shop carriers in this phase. Shops keep using their own shipping tools/accounts and paste tracking numbers, tracking URLs, label references, or label/document links into FretTrack.
+
 ## Inventory / Vendor / Shipping Polish
 
 Inventory now has shop-defined preset foundations for cleaner paid-shop setup. Owners/admins can manage Inventory Locations and Inventory Categories in Shop Settings, and the Parts form uses dropdowns that combine those presets with any old saved part values so existing records stay visible instead of being destroyed.
