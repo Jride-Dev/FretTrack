@@ -488,7 +488,7 @@ export default function ShippingDashboard({
             <label>Label Reference
               <input disabled={!canWrite} value={shippingForm.labelReference} onChange={(event) => updateShippingForm('labelReference', event.target.value)} />
             </label>
-            <label>Label URL / Upload Placeholder
+            <label>Label URL / Document Link
               <input disabled={!canWrite} value={shippingForm.labelUrl} onChange={(event) => updateShippingForm('labelUrl', event.target.value)} />
             </label>
             <label>Declared Value
@@ -517,7 +517,7 @@ export default function ShippingDashboard({
             <label>Packing Notes
               <input disabled={!canWrite} value={shippingForm.packingNotes} onChange={(event) => updateShippingForm('packingNotes', event.target.value)} />
             </label>
-            <label>Internal Notes
+            <label>Shop Notes
               <input disabled={!canWrite} value={shippingForm.notes} onChange={(event) => updateShippingForm('notes', event.target.value)} />
             </label>
           </div>

@@ -41,6 +41,24 @@ assert.ok(reportsPage.includes('ReportSectionErrorBoundary'), 'Reports must cont
 assert.ok(reportsPage.includes('ReportFilterBar'), 'Reports must contain report filter controls.');
 assert.ok(reportsPage.includes('jobStatusMode'), 'Reports must include a status summary filter.');
 assert.ok(reportsPage.includes('buildReportExportSections'), 'Reports must define export sections.');
+assert.ok(
+  reportsPage.includes('Track estimates, jobs, inventory activity, and shop performance from one dashboard.'),
+  'Reports page must use the product-facing dashboard subtitle.'
+);
+[
+  'Advanced Reporting: Yes',
+  'Real shop data only',
+  'no charts, exports, PDFs',
+  'Stripe, or billing actions',
+  'in this phase',
+  'Phase 1 metrics'
+].forEach((leakedPhrase) => {
+  assert.equal(
+    reportsPage.includes(leakedPhrase),
+    false,
+    `Reports page must not expose internal/release-note copy: ${leakedPhrase}`
+  );
+});
 assert.ok(styles.includes('@media print'), 'Print stylesheet must exist.');
 assert.ok(styles.includes('.advanced-reports-page'), 'Reports print/screen CSS must target the reports page.');
 

@@ -232,7 +232,7 @@ function copyForMode(mode) {
 
   if (mode === 'sign-up') {
     return {
-      description: 'Create a beta login account. Shop workspace access starts after operator approval.',
+      description: 'Create a beta login account. Shop workspace access starts after FretTrack approval.',
       submit: 'Create Login Account'
     };
   }

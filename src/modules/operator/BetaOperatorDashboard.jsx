@@ -190,7 +190,7 @@ export default function BetaOperatorDashboard({ onNotice }) {
       <div className="operator-header">
         <div>
           <h2>Beta Operator Dashboard</h2>
-          <p className="muted-text">Internal beta support view. Customer-facing analytics this is not.</p>
+          <p className="muted-text">Review beta access, shop status, trial access, and support activity.</p>
         </div>
         <button type="button" onClick={loadDashboard} disabled={isLoading}>
           {isLoading ? 'Refreshing...' : 'Refresh'}

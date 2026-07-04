@@ -31,7 +31,7 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
       <div className="panel-heading">
         <div>
           <h2>Billing</h2>
-          <p className="muted-text">Paid tier controls are being prepared. Stripe is not connected yet.</p>
+          <p className="muted-text">Review your shop plan, account status, usage, and enabled features.</p>
         </div>
         <span className={`plan-badge ${planStatus.badgeTone}`}>{planStatus.planLabel}</span>
       </div>
@@ -39,7 +39,7 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
       <div className="billing-summary-grid">
         <BillingCard label="Current Plan" value={planStatus.currentPlanLabel} detail={planStatus.planLabel || plan.id || subscription.tier || 'trial'} />
         <BillingCard label="Billing Interval" value={formatInterval(planStatus.billingInterval)} />
-        <BillingCard label="Status" value={getBillingStatusLabel(planStatus.status || subscription.effectiveStatus || subscription.status)} detail={`Stored: ${getBillingStatusLabel(subscription.status)}`} />
+        <BillingCard label="Status" value={getBillingStatusLabel(planStatus.status || subscription.effectiveStatus || subscription.status)} />
         <BillingCard label="Trial Ends" value={formatDate(planStatus.trialEndsAt || subscription.trialEndsAt)} />
         <BillingCard label="Current Period End" value={formatDate(planStatus.currentPeriodEnd)} />
         <BillingCard label="Countdown" value={planStatus.countdownLabel} detail={planStatus.inactiveActionLabel} />
@@ -57,13 +57,13 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
             {enabledFeatures.map((feature) => <span key={feature}>{feature}</span>)}
           </div>
         ) : (
-          <p className="muted-text">No enabled features were returned for this shop.</p>
+          <p className="muted-text">No premium features are active for this shop.</p>
         )}
       </section>
 
       <section className="billing-placeholder">
         <h3>Upgrade / Contact Support</h3>
-        <p>Upgrade and billing portal actions will be added after the access rules, trial states, and entitlement checks are stable.</p>
+        <p>Plan changes are handled by FretTrack support during beta.</p>
         <a href="mailto:support@frettrack-app.com">Contact support@frettrack-app.com</a>
       </section>
     </section>

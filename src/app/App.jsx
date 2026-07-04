@@ -477,7 +477,7 @@ export default function App() {
     }
 
     if (hasSupabaseConfig && !isOperator && betaAccess?.status !== 'approved') {
-      setNotice({ type: 'error', message: 'An operator must approve your beta access before you can create a shop.' });
+      setNotice({ type: 'error', message: 'FretTrack must approve your beta access before you can create a shop.' });
       return;
     }
 
@@ -1386,7 +1386,7 @@ export default function App() {
           {mode === 'operator' && !canAccessOperatorDashboard({ isOperator }) && (
             <section className="panel empty-state">
               <h2>Operator Access Required</h2>
-              <p>This internal area is not available for your account.</p>
+              <p>This area is not available for your account.</p>
             </section>
           )}
 
@@ -1529,7 +1529,7 @@ function PendingApprovalScreen({ betaAccess, email, onRetry, onSignOut }) {
   const isRejected = betaAccess?.status === 'rejected';
   const message = isRejected
     ? 'Your FretTrack beta access request is not active. Contact support if you believe this is a mistake.'
-    : 'Your FretTrack beta access request has been received. An operator must approve your account before shop setup unlocks.';
+    : 'Your FretTrack beta access request has been received. Approval is required before shop setup unlocks.';
 
   return (
     <main className="app auth-shell">

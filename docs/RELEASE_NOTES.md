@@ -32,6 +32,10 @@ Plan wording and gates now match the current product model: Shop is the paid cor
 
 The pass also fixes small live-demo UI annoyances: Billing/Customers/Scheduling header navigation stays highlighted for the active page, Scheduling date/time fields stay inside the Add/Edit Event form, and long customer emails wrap instead of spilling out of customer cards/details.
 
+## UI Copy Polish
+
+Reports, Billing, Shop Settings, Shipping, Scheduling, auth, and operator-only screens now use cleaner product-facing copy. The Reports page subtitle now reads: "Track estimates, jobs, inventory activity, and shop performance from one dashboard."
+
 ## 0.2.9-A Pro Reports Dashboard Phase 2
 
 Advanced Reporting now has a Pro-gated operational dashboard built from existing shop data. Pro-enabled shops can review shop overview counts, jobs by status, priority breakdowns, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock parts based on desired stock levels, open purchase orders, purchase history with landed-cost fields, and upcoming schedule workload.
