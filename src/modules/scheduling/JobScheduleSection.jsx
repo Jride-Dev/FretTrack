@@ -99,7 +99,7 @@ export default function JobScheduleSection({ canWrite = true, job, onNotice }) {
       <div className="section-header">
         <div>
           <h3>Scheduling</h3>
-          <p className="muted-text">Internal due dates, pickup appointments, and follow-up reminders for this job.</p>
+          <p className="muted-text">Shop due dates, pickup appointments, and follow-up reminders for this job.</p>
         </div>
       </div>
 

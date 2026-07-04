@@ -31,7 +31,7 @@ export default function SubscriptionSettingsSection({ entitlementSnapshot = null
       <div className="section-header compact">
         <div>
           <h3>Plan / Subscription</h3>
-          <p className="muted-text">Beta access and premium trials are separate. Billing, payment collection, and Stripe are not connected.</p>
+          <p className="muted-text">Review your current plan, trial status, and available premium features.</p>
         </div>
         <span className={`plan-badge ${planStatus.badgeTone}`}>{planStatus.planLabel}</span>
       </div>
@@ -39,18 +39,18 @@ export default function SubscriptionSettingsSection({ entitlementSnapshot = null
       <div className="billing-summary-grid">
         <SubscriptionCard label="Current Plan" value={planStatus.currentPlanLabel} detail={planStatus.planLabel} />
         <SubscriptionCard label="Billing Interval" value={formatInterval(planStatus.billingInterval)} />
-        <SubscriptionCard label="Subscription Status" value={getBillingStatusLabel(planStatus.status || subscription.effectiveStatus || subscription.status)} detail={`Stored: ${getBillingStatusLabel(subscription.status)}`} />
+        <SubscriptionCard label="Subscription Status" value={getBillingStatusLabel(planStatus.status || subscription.effectiveStatus || subscription.status)} />
         <SubscriptionCard label="Trial End" value={formatDate(planStatus.trialEndsAt)} />
         <SubscriptionCard label="Current Period End" value={formatDate(planStatus.currentPeriodEnd)} />
         <SubscriptionCard label="Countdown" value={planStatus.countdownLabel} detail={planStatus.inactiveActionLabel} />
-        <SubscriptionCard label="Advanced Reporting" value={planStatus.hasAdvancedReporting ? 'Yes' : 'No'} detail="Pro feature" />
+        <SubscriptionCard label="Advanced Reporting" value={planStatus.hasAdvancedReporting ? 'Available' : 'Locked'} detail="Pro feature" />
         <SubscriptionCard label="Locked Premium Features" value={String(lockedPremiumFeatures.length)} />
-        <SubscriptionCard label="Feature Overrides" value={String(enabledOverrides.length)} />
+        <SubscriptionCard label="Support Unlocks" value={String(enabledOverrides.length)} />
       </div>
 
       <div className="billing-placeholder subscription-billing-actions">
         <h4>Billing Management</h4>
-        <p className="muted-text">Billing management is being prepared for paid beta. Stripe Checkout, Customer Portal, and webhooks are not connected yet.</p>
+        <p className="muted-text">Plan changes are handled by FretTrack support during beta.</p>
         <div className="mode-actions">
           <button type="button" disabled>Manage billing</button>
           <button type="button" disabled>Upgrade plan</button>

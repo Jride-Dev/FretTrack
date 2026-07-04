@@ -167,7 +167,7 @@ export default function AdvancedReportsPage({
           <h3>Advanced Reporting</h3>
           <p>Pro unlocks job aging, overdue work, low-stock inventory, purchase history, landed cost, schedule workload, and operational reporting for this shop.</p>
           <p className="muted-text">Advanced Reporting is available on Pro.</p>
-          <p className="muted-text">Billing self-service is not connected yet. An operator can enable Pro access during beta.</p>
+          <p className="muted-text">Contact FretTrack support to review Pro access for your shop.</p>
         </section>
       </section>
     );
@@ -178,7 +178,7 @@ export default function AdvancedReportsPage({
       <div className="panel-heading">
         <div>
           <h2>Reports</h2>
-          <p className="muted-text">Pro operational dashboard. Advanced Reporting: Yes. Real shop data only: no charts, exports, PDFs, Stripe, or billing actions in this phase.</p>
+          <p className="muted-text">Track estimates, jobs, inventory activity, and shop performance from one dashboard.</p>
           <div className="reports-print-meta">
             <strong>{shopProfile?.shopName || shopProfile?.shop_name || 'FretTrack Reports'}</strong>
             <span>Generated {formatDateTime(reportGeneratedAt, dateOptions)}</span>
@@ -217,7 +217,7 @@ export default function AdvancedReportsPage({
         <MetricCard label="Year to Date" value={money(metrics.revenue.yearToDate, moneyOptions)} />
       </ReportSection>
 
-      <ReportSection title="Baseline Metrics" description="Phase 1 metrics remain available alongside the operational tables.">
+      <ReportSection title="Core Metrics" description="A quick snapshot of revenue, job flow, customers, and inventory.">
         <MetricCard label="Open Jobs" value={metrics.jobs.openJobs} />
         <MetricCard label="Completed Jobs" value={metrics.jobs.completedJobs} />
         <MetricCard label="Avg Completion Time" value={formatDays(metrics.jobs.averageCompletionTimeDays)} />
