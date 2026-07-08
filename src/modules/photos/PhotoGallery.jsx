@@ -12,12 +12,18 @@ export default function PhotoGallery({
     <div className="image-grid">
       {images.map((image) => (
         <div key={image.id} className="image-tile">
-          <a href={image.url} target="_blank" rel="noreferrer">
-            <img src={image.url} alt={image.name || 'Job upload'} />
-          </a>
+          {image.url ? (
+            <a href={image.url} target="_blank" rel="noreferrer">
+              <img src={image.url} alt={image.name || 'Job upload'} />
+            </a>
+          ) : (
+            <div className="photo-missing-warning">
+              Photo unavailable. Storage path missing.
+            </div>
+          )}
           <div className="image-actions no-print">
             {canEdit && (
-              <button type="button" onClick={() => onEdit?.(image)}>
+              <button type="button" onClick={() => onEdit?.(image)} disabled={!image.url}>
                 Edit Photo
               </button>
             )}
@@ -27,20 +33,24 @@ export default function PhotoGallery({
             {canToggleCustomerReport && (
               <button
                 type="button"
+                disabled={!image.url && !workOrderImageIds.includes(image.id)}
                 onClick={() => onWorkOrderToggle(image.id, !workOrderImageIds.includes(image.id))}
               >
                 {workOrderImageIds.includes(image.id) ? 'Remove from Customer Report' : 'Use in Customer Report'}
               </button>
             )}
-            <a href={image.url} download={image.fileName || image.name || 'job-photo'}>
-              Download
-            </a>
+            {image.url && (
+              <a href={image.url} download={image.fileName || image.name || 'job-photo'}>
+                Download
+              </a>
+            )}
           </div>
           {canToggleCustomerReport && (
             <label className="image-print-toggle no-print">
               <input
                 type="checkbox"
                 checked={workOrderImageIds.includes(image.id)}
+                disabled={!image.url && !workOrderImageIds.includes(image.id)}
                 onChange={(event) => onWorkOrderToggle(image.id, event.target.checked)}
               />
               Add Pictures to Work Order

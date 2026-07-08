@@ -7,7 +7,12 @@ import { formatJobNumber, generateJobNumber, getJobDayCode } from './jobNumber';
 import { logJobEventSafe } from './jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
 import { validateJobForSave } from './jobValidation';
-import { resolveJobImageUrl, resolveJobImageUrls } from '../photos/photoUrls';
+import {
+  getJobImageStoragePath,
+  getPersistableJobImageUrl,
+  resolveJobImageUrl,
+  resolveJobImageUrls
+} from '../photos/photoUrls';
 import { normalizeJobPriority } from './jobPriority';
 import { normalizeJobSource } from './jobSources';
 
@@ -150,7 +155,8 @@ export function getLocalJobs() {
 
 export function saveLocalJobs(jobs) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs.map(normalizeJob)));
+    const persistedJobs = jobs.map((job) => sanitizeJobForPersistence(normalizeJob(job)));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedJobs));
   } catch (error) {
     console.error('Local job save failed. Supabase save will still be attempted when configured.', error);
   }
@@ -847,16 +853,26 @@ function normalizeDamageMap(damageMap = {}) {
 }
 
 function normalizeDamageView(view = {}, marks = []) {
+  const storagePath = getJobImageStoragePath({
+    storagePath: view.storagePath,
+    url: view.imageUrl
+  });
+
   return {
     imageUrl: view.imageUrl || '',
     imageName: view.imageName || '',
     imageId: view.imageId || '',
-    storagePath: view.storagePath || '',
+    storagePath,
     marks: marks.map(normalizeDamageMark)
   };
 }
 
 function normalizeDamageMark(mark) {
+  const storagePath = getJobImageStoragePath({
+    storagePath: mark.storagePath,
+    url: mark.photoUrl
+  });
+
   return {
     id: mark.id || crypto.randomUUID(),
     area: mark.area || 'Body',
@@ -866,7 +882,7 @@ function normalizeDamageMark(mark) {
     photoUrl: mark.photoUrl || '',
     photoName: mark.photoName || '',
     photoId: mark.photoId || '',
-    storagePath: mark.storagePath || '',
+    storagePath,
     x: Number(mark.x) || 0,
     y: Number(mark.y) || 0
   };
@@ -945,11 +961,13 @@ function normalizeService(service) {
 }
 
 function normalizeImage(image) {
+  const storagePath = getJobImageStoragePath(image);
+
   return {
     id: image.id || crypto.randomUUID(),
     jobId: image.jobId || image.job_id || '',
     url: image.url || image.public_url || '',
-    storagePath: image.storagePath || image.storage_path || '',
+    storagePath,
     fileName: image.fileName || image.file_name || image.name || '',
     originalFileName: image.originalFileName || image.original_filename || image.fileName || image.file_name || image.name || '',
     storedFileName: image.storedFileName || image.stored_filename || image.fileName || image.file_name || image.name || '',
@@ -963,6 +981,74 @@ function normalizeImage(image) {
     uploadedAt: image.uploadedAt || image.uploaded_at || image.createdAt || image.created_at || new Date().toISOString(),
     category: image.category || 'job',
     createdAt: image.createdAt || image.created_at || new Date().toISOString()
+  };
+}
+
+function sanitizeJobForPersistence(job) {
+  return {
+    ...job,
+    images: (job.images || []).map(sanitizeJobImageForPersistence),
+    techDetails: sanitizeTechDetailsForPersistence(job.techDetails)
+  };
+}
+
+function sanitizeJobImageForPersistence(image = {}) {
+  const storagePath = getJobImageStoragePath(image);
+
+  return {
+    ...image,
+    url: getPersistableJobImageUrl({ ...image, storagePath }),
+    storagePath
+  };
+}
+
+function sanitizeTechDetailsForPersistence(techDetails = {}) {
+  return {
+    ...techDetails,
+    damageMap: sanitizeDamageMapForPersistence(techDetails.damageMap)
+  };
+}
+
+function sanitizeDamageMapForPersistence(damageMap) {
+  if (!damageMap?.views) {
+    return damageMap;
+  }
+
+  const views = Object.entries(damageMap.views).reduce((nextViews, [viewName, view]) => ({
+    ...nextViews,
+    [viewName]: sanitizeDamageViewForPersistence(view)
+  }), {});
+
+  return {
+    ...damageMap,
+    views
+  };
+}
+
+function sanitizeDamageViewForPersistence(view = {}) {
+  const storagePath = getJobImageStoragePath({
+    storagePath: view.storagePath,
+    url: view.imageUrl
+  });
+
+  return {
+    ...view,
+    imageUrl: getPersistableJobImageUrl({ url: view.imageUrl, storagePath }),
+    storagePath,
+    marks: (view.marks || []).map(sanitizeDamageMarkForPersistence)
+  };
+}
+
+function sanitizeDamageMarkForPersistence(mark = {}) {
+  const storagePath = getJobImageStoragePath({
+    storagePath: mark.storagePath,
+    url: mark.photoUrl
+  });
+
+  return {
+    ...mark,
+    photoUrl: getPersistableJobImageUrl({ url: mark.photoUrl, storagePath }),
+    storagePath
   };
 }
 
@@ -998,6 +1084,7 @@ function toLegacyDbJob(job) {
   const customerName = combineCustomerName(customerFirstName, customerLastName) || job.customerName || '';
   const instrumentType = normalizeInstrumentType(job.instrumentType || job.techDetails?.instrumentType || 'Electric');
   const contact = normalizeContactDetails(job.techDetails?.contact, job);
+  const techDetails = sanitizeTechDetailsForPersistence(job.techDetails || {});
 
   return {
     id: job.id,
@@ -1018,7 +1105,7 @@ function toLegacyDbJob(job) {
     job_number: job.jobNumber || '',
     status: toLegacyJobStatus(job.status),
     tech_details: {
-      ...(job.techDetails || {}),
+      ...techDetails,
       contact,
       instrumentType,
       includedPartIds: (job.parts || []).filter((part) => part.includedInService).map((part) => part.id),
@@ -1102,25 +1189,33 @@ function fromDbJob(job) {
       retail: Number(service.retail || 0),
       createdAt: service.created_at
     })),
-    images: (job.job_images || []).map((image) => ({
-      id: image.id,
-      jobId: image.job_id,
-      url: image.url || image.public_url,
-      storagePath: image.storage_path,
-      fileName: image.file_name,
-      originalFileName: image.original_filename || image.file_name,
-      storedFileName: image.stored_filename || image.file_name,
-      originalSizeBytes: Number(image.original_size_bytes || 0),
-      optimizedSizeBytes: Number(image.optimized_size_bytes || 0),
-      mimeType: image.mime_type || '',
-      width: Number(image.width || 0),
-      height: Number(image.height || 0),
-      optimizationVersion: image.optimization_version || '',
-      name: image.file_name,
-      uploadedAt: image.uploaded_at || image.created_at,
-      category: image.category || 'job',
-      createdAt: image.created_at
-    })),
+    images: (job.job_images || []).map((image) => {
+      const storagePath = getJobImageStoragePath({
+        storagePath: image.storage_path,
+        url: image.url,
+        public_url: image.public_url
+      });
+
+      return {
+        id: image.id,
+        jobId: image.job_id,
+        url: storagePath ? '' : image.url || image.public_url,
+        storagePath,
+        fileName: image.file_name,
+        originalFileName: image.original_filename || image.file_name,
+        storedFileName: image.stored_filename || image.file_name,
+        originalSizeBytes: Number(image.original_size_bytes || 0),
+        optimizedSizeBytes: Number(image.optimized_size_bytes || 0),
+        mimeType: image.mime_type || '',
+        width: Number(image.width || 0),
+        height: Number(image.height || 0),
+        optimizationVersion: image.optimization_version || '',
+        name: image.file_name,
+        uploadedAt: image.uploaded_at || image.created_at,
+        category: image.category || 'job',
+        createdAt: image.created_at
+      };
+    }),
     messages: (job.customer_messages || []).map(fromDbCustomerMessage),
     events: (job.job_events || []).map(fromDbJobEvent).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
     createdAt: job.created_at,
@@ -1158,21 +1253,34 @@ async function hydrateDamageMapImageUrls(damageMap) {
 
   const hydratedViews = {};
   for (const [viewName, view] of Object.entries(damageMap.views)) {
-    const viewImageUrl = await resolveJobImageUrl({
+    const viewStoragePath = getJobImageStoragePath({
       storagePath: view.storagePath,
       url: view.imageUrl
     });
+    const viewImageUrl = await resolveJobImageUrl({
+      storagePath: viewStoragePath,
+      url: view.imageUrl
+    });
 
-    const marks = await Promise.all((view.marks || []).map(async (mark) => ({
-      ...mark,
-      photoUrl: await resolveJobImageUrl({
+    const marks = await Promise.all((view.marks || []).map(async (mark) => {
+      const markStoragePath = getJobImageStoragePath({
         storagePath: mark.storagePath,
         url: mark.photoUrl
-      })
-    })));
+      });
+
+      return {
+        ...mark,
+        storagePath: markStoragePath,
+        photoUrl: await resolveJobImageUrl({
+          storagePath: markStoragePath,
+          url: mark.photoUrl
+        })
+      };
+    }));
 
     hydratedViews[viewName] = {
       ...view,
+      storagePath: viewStoragePath,
       imageUrl: viewImageUrl,
       marks
     };
