@@ -3,7 +3,7 @@ import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { ensureRemoteJob, getLocalJobs, saveLocalJobs, updateJob } from '../jobs/jobService';
 import { logJobEventSafe } from '../jobs/jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
-import { createJobImageSignedUrl } from './photoUrls';
+import { createJobImageSignedUrl, getJobImageStoragePath } from './photoUrls';
 
 export async function uploadJobImages(job, files, options = {}) {
   const fileList = Array.from(files || []);
@@ -173,7 +173,7 @@ export async function deleteJobImage(job, image) {
     return nextJob;
   }
 
-  const storagePath = image.storagePath || getStoragePathFromPublicUrl(image.url);
+  const storagePath = getJobImageStoragePath(image);
   if (storagePath) {
     const { error: storageError } = await supabase.storage
       .from('job-images')
@@ -208,11 +208,13 @@ function normalizePhotoJob(job) {
 }
 
 function normalizeImage(image) {
+  const storagePath = getJobImageStoragePath(image);
+
   return {
     id: image.id || crypto.randomUUID(),
     jobId: image.jobId || image.job_id || '',
     url: image.url || image.public_url || '',
-    storagePath: image.storagePath || image.storage_path || '',
+    storagePath,
     fileName: image.fileName || image.file_name || image.name || '',
     originalFileName: image.originalFileName || image.original_filename || image.fileName || image.file_name || image.name || '',
     storedFileName: image.storedFileName || image.stored_filename || image.fileName || image.file_name || image.name || '',
@@ -366,7 +368,7 @@ export async function overwriteJobImage(job, sourceImage, editedFile, editMetada
   }
 
   const jobId = normalizedJob.id;
-  const backupStoragePath = sourceImage.storagePath || '';
+  const backupStoragePath = getJobImageStoragePath(sourceImage);
   const fileName = makeEditedImageFileName(sourceImage, 'overwrite');
   const filePath = `${jobId}/edited/${fileName}`;
 
@@ -475,27 +477,6 @@ function safeStorageFileName(fileName) {
     .replace(/[^a-z0-9._-]+/gi, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '') || 'job-image.jpg';
-}
-
-function getStoragePathFromPublicUrl(url) {
-  if (!url || url.startsWith('data:')) {
-    return '';
-  }
-
-  try {
-    const parsedUrl = new URL(url);
-    const publicMarker = '/storage/v1/object/public/job-images/';
-    const signedMarker = '/storage/v1/object/sign/job-images/';
-    const marker = parsedUrl.pathname.includes(publicMarker) ? publicMarker : signedMarker;
-    const markerIndex = parsedUrl.pathname.indexOf(marker);
-    if (markerIndex === -1) {
-      return '';
-    }
-
-    return decodeURIComponent(parsedUrl.pathname.slice(markerIndex + marker.length));
-  } catch {
-    return '';
-  }
 }
 
 function logImageUploaded(job, image) {

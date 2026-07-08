@@ -34,7 +34,7 @@ If browser decoding or HEIC conversion fails, the upload is rejected with a clea
 - `height`
 - `optimization_version`
 
-The storage path and private authenticated download flow remain unchanged.
+The durable source of truth is the Supabase Storage object path. FretTrack regenerates short-lived signed display URLs from that path when a job loads; blob URLs, browser object URLs, and signed URLs are only temporary display state and should not be treated as permanent photo records.
 
 ## Photo Editor Phase 1
 

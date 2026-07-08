@@ -4,6 +4,10 @@
 
 FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
+## Job Photo Persistence Fix
+
+Saved job photos, edited-photo copies, overwritten photos, and damage-map photo references now treat Supabase Storage paths as the source of truth. FretTrack regenerates fresh signed URLs when jobs load instead of preserving old signed URLs, blob URLs, or temporary preview URLs as durable photo state. Older records that still have a recoverable storage path inside a signed/public URL are normalized defensively; records with no storage path are logged clearly instead of disappearing silently.
+
 ## Shipping / Receiving / Chain of Custody Foundation
 
 FretTrack now has a manual Shipping dashboard for vendor inbound receiving records, customer inbound check-ins, customer outbound returns, vendor returns, inventory outbound shipments, and internal transfer tracking. The dashboard groups records by Pending Arrival, Arrived / Needs Check-In, At Bench, Ready to Ship, In Transit, and Exceptions so the shop can see where instruments, parts, packages, and problem shipments are sitting.

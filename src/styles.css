@@ -3111,6 +3111,20 @@ th.internal-only {
   width: 100%;
 }
 
+.photo-missing-warning {
+  align-items: center;
+  background: var(--surface-muted);
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  display: flex;
+  font-size: 12px;
+  font-weight: 700;
+  height: 150px;
+  justify-content: center;
+  padding: 12px;
+  text-align: center;
+}
+
 .image-delete {
   background: var(--danger);
   border: 0;
