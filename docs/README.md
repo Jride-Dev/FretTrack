@@ -2,7 +2,7 @@
 
 This folder is the home for product and technical documentation that does not belong in the root README.
 
-Customer-facing and tester-facing docs should also be reachable from the public FretTrack site at `https://frettrack-app.com/docs`. GitHub Wiki can still be useful for project/developer notes, but beta testers and repair shops should not need GitHub access to read support, legal, or checklist material.
+Customer-facing and tester-facing docs should also be reachable from the public FretTrack site at `https://frettrack-app.com/docs`. The public docs hub now hosts how-to guides for getting started, beta testing, shops/accounts, customers, jobs, estimates, photos/damage maps, inventory, shipping/custody, scheduling, reports, billing basics, roles, troubleshooting, and FAQ. GitHub Wiki can still be useful for project/developer notes, but beta testers and repair shops should not need GitHub access to read support, legal, checklist, or day-to-day user-guide material.
 
 FretTrack's old live baseline is `v0.2.6-beta.14`. Current branch planning uses product milestone versions:
 
@@ -36,7 +36,7 @@ Core shipped beta areas now include:
 
 - customer and subcontractor management
 - public launch landing page refresh with bundled favicon and product screenshot assets
-- public docs hub at `https://frettrack-app.com/docs` for beta tester and customer-facing resources when GitHub Wiki is blocked or inconvenient
+- public docs hub at `https://frettrack-app.com/docs` with customer-facing how-to pages adapted from FretTrack Wiki/user-guide material for beta tester and shop resources when GitHub Wiki is blocked or inconvenient
 - public Terms of Service, Privacy Policy, and Support / FAQ pages on the landing site
 - work-order and invoice email flow
 - mobile and PWA readiness
