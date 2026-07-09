@@ -42,6 +42,7 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /Stripe-powered account management planned/);
   assert.match(html, /https:\/\/devglobe\.app\/projects\/frettrack\?utm_source=badge&utm_medium=embed/);
   assert.match(html, /Launched on DevGlobe/);
+  assert.match(html, /href="\/docs"/);
   assert.match(html, /href="\/beta-tester"/);
   assert.match(html, /href="\/support"/);
   assert.match(html, /href="\/privacy"/);
@@ -85,6 +86,11 @@ async function testBetaTesterChecklistRoutes() {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
+        if (pathname === '/docs.html') {
+          return new Response('<!doctype html><title>Docs | FretTrack</title><h1>FretTrack Docs</h1><a href="/support">Support</a><a href="/beta-tester">Beta Tester Checklist</a>', {
+            headers: { 'content-type': 'text/html; charset=utf-8' }
+          });
+        }
         if (pathname === '/privacy.html') {
           return new Response('<!doctype html><title>Privacy Policy | FretTrack</title><h1>Privacy Policy</h1>', {
             headers: { 'content-type': 'text/html; charset=utf-8' }
@@ -122,6 +128,17 @@ async function testBetaTesterChecklistRoutes() {
   assert.match(pageHtml, /FretTrack Beta Testing Checklist/);
   assert.match(pageHtml, /frettrack-beta-tester-workbook\.xlsx/);
   assert.match(pageHtml, /frettrack-beta-tester-checklist\.csv/);
+
+  const docsResponse = await worker.fetch(new Request('https://frettrack-app.com/docs'), env);
+  const docsHtml = await docsResponse.text();
+  assert.equal(docsResponse.status, 200);
+  assert.match(docsResponse.headers.get('content-type') || '', /text\/html/);
+  assert.match(docsHtml, /FretTrack Docs/);
+  assert.match(docsHtml, /Beta Tester Checklist/);
+
+  const docsHtmlResponse = await worker.fetch(new Request('https://frettrack-app.com/docs.html'), env);
+  assert.equal(docsHtmlResponse.status, 200);
+  assert.match(docsHtmlResponse.headers.get('content-type') || '', /text\/html/);
 
   const workbookResponse = await worker.fetch(new Request('https://frettrack-app.com/downloads/frettrack-beta-tester-workbook.xlsx'), env);
   assert.equal(workbookResponse.status, 200);
@@ -168,6 +185,8 @@ async function testBetaTesterChecklistRoutes() {
 
   assert.deepEqual(assetCalls, [
     '/beta-tester.html',
+    '/docs.html',
+    '/docs.html',
     '/downloads/frettrack-beta-tester-workbook.xlsx',
     '/downloads/frettrack-beta-tester-checklist.csv',
     '/privacy.html',

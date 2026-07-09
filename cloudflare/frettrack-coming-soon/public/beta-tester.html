@@ -54,6 +54,12 @@
         margin-bottom: 42px;
       }
 
+      .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
       .brand {
         align-items: center;
         color: var(--ink);
@@ -183,6 +189,7 @@
 
       @media (max-width: 760px) {
         .nav,
+        .nav-links,
         .actions {
           align-items: flex-start;
           flex-direction: column;
@@ -201,7 +208,11 @@
           <img src="/android-chrome-192x192.png" alt="">
           <strong>FretTrack</strong>
         </a>
-        <a href="/">Back to FretTrack</a>
+        <div class="nav-links">
+          <a href="/docs">Docs</a>
+          <a href="/support">Support</a>
+          <a href="/">Back to FretTrack</a>
+        </div>
       </nav>
 
       <header class="hero">
@@ -311,7 +322,7 @@
       </main>
 
       <footer>
-        <p>Send completed checklists, screenshots, and bug reports through the FretTrack beta feedback channel provided with your invite, or email <a href="mailto:support@frettrack-app.com">support@frettrack-app.com</a>.</p>
+        <p><a href="/docs">Docs</a> | <a href="/support">Support</a> | Send completed checklists, screenshots, and bug reports through the FretTrack beta feedback channel provided with your invite, or email <a href="mailto:support@frettrack-app.com">support@frettrack-app.com</a>.</p>
       </footer>
     </div>
   </body>

@@ -18,6 +18,8 @@ FretTrack is a guitar and bass repair shop check-in and work order system for re
 
 The beta is invite-only. Applications are handled on the live FretTrack site.
 
+Public tester/customer docs are available at [frettrack-app.com/docs](https://frettrack-app.com/docs) so users do not need GitHub Wiki access for the beta workbook, support, privacy, or terms pages.
+
 ## Current Status
 
 Current milestone branch: `v0.2.63 beta candidate`
@@ -113,6 +115,7 @@ Legacy device note: older iPadOS/iOS browser versions can be useful for shop-flo
 - [Changelog](CHANGELOG.md)
 - [Roadmap](ROADMAP.md)
 - [Release notes](docs/RELEASE_NOTES.md)
+- [Public docs hub](https://frettrack-app.com/docs)
 - [Photo editor](docs/PHOTO_EDITOR.md)
 - [Offline mode audit](docs/OFFLINE_MODE_AUDIT.md)
 - [Inventory purchasing notes](docs/INVENTORY_PURCHASING.md)

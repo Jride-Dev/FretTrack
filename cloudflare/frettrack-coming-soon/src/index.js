@@ -26,6 +26,7 @@ const BUNDLED_ASSET_PATHS = new Set([
   '/android-chrome-512x512.png',
   '/site.webmanifest',
   '/beta-tester.html',
+  '/docs.html',
   '/privacy.html',
   '/support.html',
   '/terms.html',
@@ -34,6 +35,7 @@ const BUNDLED_ASSET_PATHS = new Set([
 ]);
 const STATIC_PAGE_ROUTES = new Map([
   ['/beta-tester', '/beta-tester.html'],
+  ['/docs', '/docs.html'],
   ['/privacy', '/privacy.html'],
   ['/support', '/support.html'],
   ['/terms', '/terms.html']
@@ -843,6 +845,7 @@ function landingPage() {
           <a href="#security">Security</a>
           <a href="#pricing">Pricing</a>
           <a href="#beta">Beta</a>
+          <a href="/docs">Docs</a>
           <a href="/support">Support</a>
           <a href="/terms">Terms</a>
           <a href="/beta-tester">Tester Checklist</a>
@@ -1027,6 +1030,7 @@ function landingPage() {
         </a>
         <div class="footer-links">
           <a href="${APP_URL}">App Login</a>
+          <a href="/docs">Docs</a>
           <a href="/terms">Terms</a>
           <a href="/support">Support</a>
           <a href="/privacy">Privacy</a>
