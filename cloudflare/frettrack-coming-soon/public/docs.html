@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Docs | FretTrack</title>
+    <meta name="description" content="Public FretTrack docs for beta testers, repair shops, support, privacy, terms, and getting started.">
+    <link rel="canonical" href="https://frettrack-app.com/docs">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17202b;
+        --muted: #566171;
+        --paper: #f7f3ea;
+        --panel: #ffffff;
+        --line: #d9d1c2;
+        --accent: #9a4d14;
+        --accent-dark: #6e3510;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      a {
+        color: var(--accent-dark);
+        font-weight: 800;
+      }
+
+      .shell {
+        margin: 0 auto;
+        max-width: 1060px;
+        padding: 28px 18px 52px;
+      }
+
+      .nav {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 42px;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .brand {
+        align-items: center;
+        color: var(--ink);
+        display: flex;
+        gap: 10px;
+        text-decoration: none;
+      }
+
+      .brand img {
+        height: 36px;
+        width: 36px;
+      }
+
+      .hero,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 18px 60px rgba(23, 32, 43, 0.08);
+      }
+
+      .hero {
+        display: grid;
+        gap: 16px;
+        padding: clamp(24px, 5vw, 48px);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(2.35rem, 7vw, 5rem);
+        line-height: 0.95;
+      }
+
+      h2 {
+        font-size: clamp(1.35rem, 2.5vw, 2rem);
+        line-height: 1.15;
+      }
+
+      h3 {
+        font-size: 1.05rem;
+      }
+
+      .lede {
+        color: var(--muted);
+        font-size: 1.08rem;
+        max-width: 780px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .button {
+        background: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 999px;
+        color: #fff;
+        display: inline-flex;
+        padding: 11px 16px;
+        text-decoration: none;
+      }
+
+      .button.secondary {
+        background: transparent;
+        color: var(--accent-dark);
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 28px;
+      }
+
+      .panel {
+        display: grid;
+        gap: 10px;
+        padding: 20px;
+      }
+
+      .section {
+        margin-top: 28px;
+      }
+
+      .resource-list {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .resource-list li {
+        padding-left: 2px;
+      }
+
+      footer {
+        color: var(--muted);
+        margin-top: 34px;
+      }
+
+      @media (max-width: 760px) {
+        .nav,
+        .nav-links,
+        .actions {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <nav class="nav" aria-label="Docs navigation">
+        <a class="brand" href="/">
+          <img src="/android-chrome-192x192.png" alt="">
+          <strong>FretTrack</strong>
+        </a>
+        <div class="nav-links">
+          <a href="/support">Support</a>
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/beta-tester">Beta Tester Checklist</a>
+          <a href="/">Back to FretTrack</a>
+        </div>
+      </nav>
+
+      <header class="hero">
+        <h1>FretTrack Docs</h1>
+        <p class="lede">Public FretTrack docs live here so testers and repair shops can access the important customer-facing material even when GitHub Wiki or GitHub asset domains are blocked by browser, workplace, school, or device policies.</p>
+        <div class="actions">
+          <a class="button" href="/support">Open Support / FAQ</a>
+          <a class="button secondary" href="/beta-tester">Beta Tester Workbook</a>
+          <a class="button secondary" href="https://app.frettrack-app.com/">Open FretTrack</a>
+        </div>
+      </header>
+
+      <main>
+        <section class="section grid">
+          <div class="panel">
+            <h2>For Beta Testers</h2>
+            <p>Use these links when testing FretTrack on real repair-shop workflows, mobile devices, older tablets, or different browser profiles.</p>
+            <ul class="resource-list">
+              <li><a href="/beta-tester">Beta tester checklist page</a></li>
+              <li><a href="/downloads/frettrack-beta-tester-workbook.xlsx">Recommended Excel workbook</a></li>
+              <li><a href="/downloads/frettrack-beta-tester-checklist.csv">CSV checklist fallback</a></li>
+              <li><a href="/support">Support and bug reporting FAQ</a></li>
+            </ul>
+          </div>
+
+          <div class="panel">
+            <h2>For Shops</h2>
+            <p>Start with support and account guidance, then use the app for workflow-specific help and issue reporting when available.</p>
+            <ul class="resource-list">
+              <li><a href="https://app.frettrack-app.com/">FretTrack app login</a></li>
+              <li><a href="/support">Support / FAQ</a></li>
+              <li><a href="/privacy">Privacy Policy</a></li>
+              <li><a href="/terms">Terms of Service</a></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section grid">
+          <div class="panel">
+            <h2>Browser Policy Note</h2>
+            <p>If Chrome, Brave, Edge, a managed Google account, a school/work device, or a security product blocks GitHub Wiki, use these public FretTrack docs instead. They are served from <strong>frettrack-app.com</strong> and do not require GitHub access.</p>
+          </div>
+
+          <div class="panel">
+            <h2>What Stays on GitHub</h2>
+            <p>GitHub remains useful for developer history, repository notes, and issue/PR context. Customer-facing help, beta testing downloads, support, privacy, and terms should be available from the public FretTrack site.</p>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>FretTrack Systems | <a href="/docs">Docs</a> | <a href="/terms">Terms of Service</a> | <a href="/privacy">Privacy Policy</a> | <a href="/support">Support</a> | <a href="/beta-tester">Beta Tester Checklist</a></p>
+      </footer>
+    </div>
+  </body>
+</html>
