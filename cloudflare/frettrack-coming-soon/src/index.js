@@ -36,6 +36,21 @@ const BUNDLED_ASSET_PATHS = new Set([
 const STATIC_PAGE_ROUTES = new Map([
   ['/beta-tester', '/beta-tester.html'],
   ['/docs', '/docs.html'],
+  ['/docs/getting-started', '/docs/getting-started.html'],
+  ['/docs/beta-tester-guide', '/docs/beta-tester-guide.html'],
+  ['/docs/shops-and-accounts', '/docs/shops-and-accounts.html'],
+  ['/docs/customers', '/docs/customers.html'],
+  ['/docs/jobs', '/docs/jobs.html'],
+  ['/docs/estimates', '/docs/estimates.html'],
+  ['/docs/photos-and-damage-maps', '/docs/photos-and-damage-maps.html'],
+  ['/docs/inventory-and-parts', '/docs/inventory-and-parts.html'],
+  ['/docs/shipping-and-custody', '/docs/shipping-and-custody.html'],
+  ['/docs/scheduling', '/docs/scheduling.html'],
+  ['/docs/reports', '/docs/reports.html'],
+  ['/docs/billing-and-subscriptions', '/docs/billing-and-subscriptions.html'],
+  ['/docs/roles-and-permissions', '/docs/roles-and-permissions.html'],
+  ['/docs/troubleshooting', '/docs/troubleshooting.html'],
+  ['/docs/faq', '/docs/faq.html'],
   ['/privacy', '/privacy.html'],
   ['/support', '/support.html'],
   ['/terms', '/terms.html']
@@ -1586,7 +1601,9 @@ async function serveAsset(pathname, env) {
 }
 
 function isBundledAssetPath(pathname) {
-  return BUNDLED_ASSET_PATHS.has(pathname) || pathname.startsWith('/landing/');
+  return BUNDLED_ASSET_PATHS.has(pathname)
+    || pathname.startsWith('/landing/')
+    || (pathname.startsWith('/docs/') && /\.[a-z0-9]+$/i.test(pathname));
 }
 
 async function serveBundledAsset(request, env) {

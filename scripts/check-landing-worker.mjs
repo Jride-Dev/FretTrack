@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import worker from '../cloudflare/frettrack-coming-soon/src/index.js';
 
 const BASE_URL = 'https://frettrack-app.com/api/beta-application';
@@ -10,10 +12,47 @@ const VALID_BODY = {
   currentTracking: 'Paper and spreadsheets',
   email: 'landing-worker-test@example.com'
 };
+const PUBLIC_DOC_ROUTES = [
+  { route: '/docs/getting-started', assetPath: '/docs/getting-started.html', title: 'Start using FretTrack' },
+  { route: '/docs/beta-tester-guide', assetPath: '/docs/beta-tester-guide.html', title: 'How to test FretTrack' },
+  { route: '/docs/shops-and-accounts', assetPath: '/docs/shops-and-accounts.html', title: 'Manage shop access' },
+  { route: '/docs/customers', assetPath: '/docs/customers.html', title: 'Manage customer records' },
+  { route: '/docs/jobs', assetPath: '/docs/jobs.html', title: 'Create and manage jobs' },
+  { route: '/docs/estimates', assetPath: '/docs/estimates.html', title: 'Document repair estimates' },
+  { route: '/docs/photos-and-damage-maps', assetPath: '/docs/photos-and-damage-maps.html', title: 'Document condition clearly' },
+  { route: '/docs/inventory-and-parts', assetPath: '/docs/inventory-and-parts.html', title: 'Track parts and purchasing' },
+  { route: '/docs/shipping-and-custody', assetPath: '/docs/shipping-and-custody.html', title: 'Track movement through the shop' },
+  { route: '/docs/scheduling', assetPath: '/docs/scheduling.html', title: 'Plan shop time' },
+  { route: '/docs/reports', assetPath: '/docs/reports.html', title: 'Review shop performance' },
+  { route: '/docs/billing-and-subscriptions', assetPath: '/docs/billing-and-subscriptions.html', title: 'Understand plan access' },
+  { route: '/docs/roles-and-permissions', assetPath: '/docs/roles-and-permissions.html', title: 'Give people the right access' },
+  { route: '/docs/troubleshooting', assetPath: '/docs/troubleshooting.html', title: 'Fix common problems' },
+  { route: '/docs/faq', assetPath: '/docs/faq.html', title: 'Frequently asked questions' }
+];
+const PUBLIC_DOC_DENY_PATTERNS = [
+  /\bPhase\s+[12]\b/i,
+  /\bMVP\b/i,
+  /placeholder/i,
+  /\bTODO\b/i,
+  /debug/i,
+  /internal/i,
+  /operator/i,
+  /feature[- ]flag/i,
+  /not implemented/i,
+  /coming later/i,
+  /\bstub\b/i,
+  /scaffold/i,
+  /Advanced Reporting:\s*Yes/i,
+  /Real shop data only/i,
+  /no charts, exports, PDFs/i,
+  /Stripe, or billing actions/i,
+  /in this phase/i
+];
 
 const originalFetch = globalThis.fetch;
 
 try {
+  testPublicDocsCopyDenyList();
   await testLandingPageIncludesLaunchAssets();
   await testBundledFaviconAssetRoute();
   await testBetaTesterChecklistRoutes();
@@ -23,9 +62,27 @@ try {
   await testArchiveFailureDoesNotLoseSavedApplication();
   await testValidationFailureDoesNotCallSupabase();
   await testInvalidJson();
-  console.log('Landing Worker beta application checks passed.');
+  console.log('Landing Worker checks passed.');
 } finally {
   globalThis.fetch = originalFetch;
+}
+
+function testPublicDocsCopyDenyList() {
+  const publicDir = path.resolve('cloudflare/frettrack-coming-soon/public');
+  const docsDir = path.join(publicDir, 'docs');
+  const files = [
+    path.join(publicDir, 'docs.html'),
+    ...fs.readdirSync(docsDir)
+      .filter((fileName) => fileName.endsWith('.html'))
+      .map((fileName) => path.join(docsDir, fileName))
+  ];
+
+  for (const filePath of files) {
+    const text = fs.readFileSync(filePath, 'utf8');
+    for (const pattern of PUBLIC_DOC_DENY_PATTERNS) {
+      assert.doesNotMatch(text, pattern, `${path.relative(process.cwd(), filePath)} contains public-docs copy leak: ${pattern}`);
+    }
+  }
 }
 
 async function testLandingPageIncludesLaunchAssets() {
@@ -91,6 +148,17 @@ async function testBetaTesterChecklistRoutes() {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
+        if (pathname === '/docs/docs.css') {
+          return new Response('body { color: #17202b; }', {
+            headers: { 'content-type': 'text/css; charset=utf-8' }
+          });
+        }
+        const docsPage = PUBLIC_DOC_ROUTES.find((candidate) => candidate.assetPath === pathname);
+        if (docsPage) {
+          return new Response(`<!doctype html><title>${docsPage.title} | FretTrack Docs</title><h1>${docsPage.title}</h1><a href="/docs">Back to Docs</a>`, {
+            headers: { 'content-type': 'text/html; charset=utf-8' }
+          });
+        }
         if (pathname === '/privacy.html') {
           return new Response('<!doctype html><title>Privacy Policy | FretTrack</title><h1>Privacy Policy</h1>', {
             headers: { 'content-type': 'text/html; charset=utf-8' }
@@ -140,6 +208,26 @@ async function testBetaTesterChecklistRoutes() {
   assert.equal(docsHtmlResponse.status, 200);
   assert.match(docsHtmlResponse.headers.get('content-type') || '', /text\/html/);
 
+  const docsCssResponse = await worker.fetch(new Request('https://frettrack-app.com/docs/docs.css'), env);
+  assert.equal(docsCssResponse.status, 200);
+  assert.match(docsCssResponse.headers.get('content-type') || '', /text\/css/);
+  assert.equal(docsCssResponse.headers.get('cache-control'), 'public, max-age=3600');
+
+  for (const docsPage of PUBLIC_DOC_ROUTES) {
+    const cleanResponse = await worker.fetch(new Request(`https://frettrack-app.com${docsPage.route}`), env);
+    const cleanHtml = await cleanResponse.text();
+    assert.equal(cleanResponse.status, 200, docsPage.route);
+    assert.match(cleanResponse.headers.get('content-type') || '', /text\/html/);
+    assert.match(cleanHtml, new RegExp(escapeRegExp(docsPage.title)));
+    assert.match(cleanHtml, /Back to Docs/);
+
+    const htmlResponse = await worker.fetch(new Request(`https://frettrack-app.com${docsPage.assetPath}`), env);
+    const htmlText = await htmlResponse.text();
+    assert.equal(htmlResponse.status, 200, docsPage.assetPath);
+    assert.match(htmlResponse.headers.get('content-type') || '', /text\/html/);
+    assert.match(htmlText, new RegExp(escapeRegExp(docsPage.title)));
+  }
+
   const workbookResponse = await worker.fetch(new Request('https://frettrack-app.com/downloads/frettrack-beta-tester-workbook.xlsx'), env);
   assert.equal(workbookResponse.status, 200);
   assert.match(workbookResponse.headers.get('content-type') || '', /spreadsheetml\.sheet/);
@@ -183,19 +271,19 @@ async function testBetaTesterChecklistRoutes() {
   assert.equal(termsHtmlResponse.status, 200);
   assert.match(termsHtmlResponse.headers.get('content-type') || '', /text\/html/);
 
-  assert.deepEqual(assetCalls, [
+  for (const expectedPath of [
     '/beta-tester.html',
     '/docs.html',
-    '/docs.html',
+    '/docs/docs.css',
     '/downloads/frettrack-beta-tester-workbook.xlsx',
     '/downloads/frettrack-beta-tester-checklist.csv',
     '/privacy.html',
-    '/privacy.html',
-    '/support.html',
     '/support.html',
     '/terms.html',
-    '/terms.html'
-  ]);
+    ...PUBLIC_DOC_ROUTES.flatMap((docsPage) => [docsPage.assetPath])
+  ]) {
+    assert.ok(assetCalls.includes(expectedPath), `Expected bundled asset request for ${expectedPath}`);
+  }
 }
 
 async function testSuccessfulApplication() {
@@ -375,4 +463,8 @@ function assertApplicantConfirmationEmail(calls) {
   assert.match(applicantCall.body.html, /Thank you for signing up for the FretTrack Beta!/);
   assert.match(applicantCall.body.html, /FretTrack beta login/);
   assert.match(applicantCall.body.html, /spam or junk folder/i);
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

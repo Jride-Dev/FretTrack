@@ -8,6 +8,8 @@ FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Repor
 
 The landing site now includes `https://frettrack-app.com/docs` as a public hub for customer-facing and tester-facing resources. It links beta testing downloads, support / FAQ, app login, privacy, and terms from FretTrack's own domain so testers are not dependent on GitHub Wiki or GitHub asset access when browser, workplace, school, or device policies block GitHub.
 
+The docs hub now includes real how-to pages for getting started, beta testing, shops and accounts, customers, jobs, estimates, photos and damage maps, inventory and parts, shipping and chain of custody, scheduling, reports, billing and subscriptions, roles and permissions, troubleshooting, and FAQ. These pages adapt the existing FretTrack Wiki/user-guide material into public static docs with clean routes under `/docs/...`.
+
 ## Job Photo Persistence Fix
 
 Saved job photos, edited-photo copies, overwritten photos, and damage-map photo references now treat Supabase Storage paths as the source of truth. FretTrack regenerates fresh signed URLs when jobs load instead of preserving old signed URLs, blob URLs, or temporary preview URLs as durable photo state. Older records that still have a recoverable storage path inside a signed/public URL are normalized defensively; records with no storage path are logged clearly instead of disappearing silently.
