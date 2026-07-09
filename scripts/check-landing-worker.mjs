@@ -48,11 +48,23 @@ const PUBLIC_DOC_DENY_PATTERNS = [
   /Stripe, or billing actions/i,
   /in this phase/i
 ];
+const REQUIRED_DOC_SECURITY_HEADERS = [
+  'content-security-policy',
+  'permissions-policy',
+  'referrer-policy',
+  'x-content-type-options'
+];
+const REQUIRED_DOC_WORKER_FIRST_ROUTES = [
+  '/docs',
+  '/docs.html',
+  '/docs/*'
+];
 
 const originalFetch = globalThis.fetch;
 
 try {
   testPublicDocsCopyDenyList();
+  testDocsRunWorkerFirstConfig();
   await testLandingPageIncludesLaunchAssets();
   await testBundledFaviconAssetRoute();
   await testBetaTesterChecklistRoutes();
@@ -82,6 +94,19 @@ function testPublicDocsCopyDenyList() {
     for (const pattern of PUBLIC_DOC_DENY_PATTERNS) {
       assert.doesNotMatch(text, pattern, `${path.relative(process.cwd(), filePath)} contains public-docs copy leak: ${pattern}`);
     }
+  }
+}
+
+function testDocsRunWorkerFirstConfig() {
+  const wranglerConfig = fs.readFileSync('cloudflare/frettrack-coming-soon/wrangler.jsonc', 'utf8');
+  assert.match(wranglerConfig, /"run_worker_first"\s*:/, 'Docs assets must run through the Worker before static asset serving.');
+
+  for (const route of REQUIRED_DOC_WORKER_FIRST_ROUTES) {
+    assert.match(
+      wranglerConfig,
+      new RegExp(`"${escapeRegExp(route)}"`),
+      `Docs Worker-first config is missing ${route}.`
+    );
   }
 }
 
@@ -201,12 +226,14 @@ async function testBetaTesterChecklistRoutes() {
   const docsHtml = await docsResponse.text();
   assert.equal(docsResponse.status, 200);
   assert.match(docsResponse.headers.get('content-type') || '', /text\/html/);
+  assertRequiredDocSecurityHeaders(docsResponse, '/docs');
   assert.match(docsHtml, /FretTrack Docs/);
   assert.match(docsHtml, /Beta Tester Checklist/);
 
   const docsHtmlResponse = await worker.fetch(new Request('https://frettrack-app.com/docs.html'), env);
   assert.equal(docsHtmlResponse.status, 200);
   assert.match(docsHtmlResponse.headers.get('content-type') || '', /text\/html/);
+  assertRequiredDocSecurityHeaders(docsHtmlResponse, '/docs.html');
 
   const docsCssResponse = await worker.fetch(new Request('https://frettrack-app.com/docs/docs.css'), env);
   assert.equal(docsCssResponse.status, 200);
@@ -218,6 +245,7 @@ async function testBetaTesterChecklistRoutes() {
     const cleanHtml = await cleanResponse.text();
     assert.equal(cleanResponse.status, 200, docsPage.route);
     assert.match(cleanResponse.headers.get('content-type') || '', /text\/html/);
+    assertRequiredDocSecurityHeaders(cleanResponse, docsPage.route);
     assert.match(cleanHtml, new RegExp(escapeRegExp(docsPage.title)));
     assert.match(cleanHtml, /Back to Docs/);
 
@@ -225,6 +253,7 @@ async function testBetaTesterChecklistRoutes() {
     const htmlText = await htmlResponse.text();
     assert.equal(htmlResponse.status, 200, docsPage.assetPath);
     assert.match(htmlResponse.headers.get('content-type') || '', /text\/html/);
+    assertRequiredDocSecurityHeaders(htmlResponse, docsPage.assetPath);
     assert.match(htmlText, new RegExp(escapeRegExp(docsPage.title)));
   }
 
@@ -463,6 +492,17 @@ function assertApplicantConfirmationEmail(calls) {
   assert.match(applicantCall.body.html, /Thank you for signing up for the FretTrack Beta!/);
   assert.match(applicantCall.body.html, /FretTrack beta login/);
   assert.match(applicantCall.body.html, /spam or junk folder/i);
+}
+
+function assertRequiredDocSecurityHeaders(response, route) {
+  for (const header of REQUIRED_DOC_SECURITY_HEADERS) {
+    assert.ok(response.headers.get(header), `${route} is missing ${header}.`);
+  }
+
+  assert.match(response.headers.get('content-security-policy') || '', /default-src 'self'/, `${route} has an unexpected CSP.`);
+  assert.match(response.headers.get('permissions-policy') || '', /camera=\(\), microphone=\(\), geolocation=\(\)/, `${route} has an unexpected Permissions-Policy.`);
+  assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin', `${route} has an unexpected Referrer-Policy.`);
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff', `${route} has an unexpected X-Content-Type-Options.`);
 }
 
 function escapeRegExp(value) {
