@@ -36,6 +36,7 @@ const BUNDLED_ASSET_PATHS = new Set([
 const STATIC_PAGE_ROUTES = new Map([
   ['/beta-tester', '/beta-tester.html'],
   ['/docs', '/docs.html'],
+  ['/docs/', '/docs.html'],
   ['/docs/getting-started', '/docs/getting-started.html'],
   ['/docs/beta-tester-guide', '/docs/beta-tester-guide.html'],
   ['/docs/shops-and-accounts', '/docs/shops-and-accounts.html'],

@@ -10,7 +10,7 @@ The landing site now includes `https://frettrack-app.com/docs` as a public hub f
 
 The docs hub now includes real how-to pages for getting started, beta testing, shops and accounts, customers, jobs, estimates, photos and damage maps, inventory and parts, shipping and chain of custody, scheduling, reports, billing and subscriptions, roles and permissions, troubleshooting, and FAQ. These pages adapt the existing FretTrack Wiki/user-guide material into public static docs with clean routes under `/docs/...`.
 
-Landing Worker docs routing now forces docs paths through the Worker before static asset serving, so `/docs`, `/docs.html`, and clean `/docs/...` pages consistently receive the same CSP, Permissions-Policy, Referrer-Policy, and X-Content-Type-Options headers.
+Landing Worker docs routing now forces docs paths through the Worker before static asset serving and disables asset-layer HTML canonical redirects. `/docs`, `/docs/`, `/docs.html`, and clean `/docs/...` pages now return 200 directly and consistently receive the same CSP, Permissions-Policy, Referrer-Policy, and X-Content-Type-Options headers.
 
 ## Job Photo Persistence Fix
 

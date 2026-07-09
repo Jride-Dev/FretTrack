@@ -54,10 +54,16 @@ const REQUIRED_DOC_SECURITY_HEADERS = [
   'referrer-policy',
   'x-content-type-options'
 ];
-const REQUIRED_DOC_WORKER_FIRST_ROUTES = [
+const REQUIRED_DIRECT_ROUTES = [
+  '/',
   '/docs',
+  '/docs/',
   '/docs.html',
-  '/docs/*'
+  '/docs/getting-started',
+  '/docs/jobs',
+  '/docs/inventory-and-parts',
+  '/docs/shipping-and-custody',
+  '/docs/faq'
 ];
 
 const originalFetch = globalThis.fetch;
@@ -99,15 +105,8 @@ function testPublicDocsCopyDenyList() {
 
 function testDocsRunWorkerFirstConfig() {
   const wranglerConfig = fs.readFileSync('cloudflare/frettrack-coming-soon/wrangler.jsonc', 'utf8');
-  assert.match(wranglerConfig, /"run_worker_first"\s*:/, 'Docs assets must run through the Worker before static asset serving.');
-
-  for (const route of REQUIRED_DOC_WORKER_FIRST_ROUTES) {
-    assert.match(
-      wranglerConfig,
-      new RegExp(`"${escapeRegExp(route)}"`),
-      `Docs Worker-first config is missing ${route}.`
-    );
-  }
+  assert.match(wranglerConfig, /"run_worker_first"\s*:\s*true/, 'Landing assets must run through the Worker before static asset serving.');
+  assert.match(wranglerConfig, /"html_handling"\s*:\s*"none"/, 'Asset HTML handling must not redirect clean docs routes.');
 }
 
 async function testLandingPageIncludesLaunchAssets() {
@@ -115,6 +114,7 @@ async function testLandingPageIncludesLaunchAssets() {
   const html = await response.text();
 
   assert.equal(response.status, 200);
+  assertNoRedirect(response, '/');
   assert.match(response.headers.get('content-type') || '', /text\/html/);
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.match(html, /<link rel="icon" href="\/favicon\.ico" sizes="any">/);
@@ -225,6 +225,7 @@ async function testBetaTesterChecklistRoutes() {
   const docsResponse = await worker.fetch(new Request('https://frettrack-app.com/docs'), env);
   const docsHtml = await docsResponse.text();
   assert.equal(docsResponse.status, 200);
+  assertNoRedirect(docsResponse, '/docs');
   assert.match(docsResponse.headers.get('content-type') || '', /text\/html/);
   assertRequiredDocSecurityHeaders(docsResponse, '/docs');
   assert.match(docsHtml, /FretTrack Docs/);
@@ -232,6 +233,7 @@ async function testBetaTesterChecklistRoutes() {
 
   const docsHtmlResponse = await worker.fetch(new Request('https://frettrack-app.com/docs.html'), env);
   assert.equal(docsHtmlResponse.status, 200);
+  assertNoRedirect(docsHtmlResponse, '/docs.html');
   assert.match(docsHtmlResponse.headers.get('content-type') || '', /text\/html/);
   assertRequiredDocSecurityHeaders(docsHtmlResponse, '/docs.html');
 
@@ -244,6 +246,7 @@ async function testBetaTesterChecklistRoutes() {
     const cleanResponse = await worker.fetch(new Request(`https://frettrack-app.com${docsPage.route}`), env);
     const cleanHtml = await cleanResponse.text();
     assert.equal(cleanResponse.status, 200, docsPage.route);
+    assertNoRedirect(cleanResponse, docsPage.route);
     assert.match(cleanResponse.headers.get('content-type') || '', /text\/html/);
     assertRequiredDocSecurityHeaders(cleanResponse, docsPage.route);
     assert.match(cleanHtml, new RegExp(escapeRegExp(docsPage.title)));
@@ -252,6 +255,7 @@ async function testBetaTesterChecklistRoutes() {
     const htmlResponse = await worker.fetch(new Request(`https://frettrack-app.com${docsPage.assetPath}`), env);
     const htmlText = await htmlResponse.text();
     assert.equal(htmlResponse.status, 200, docsPage.assetPath);
+    assertNoRedirect(htmlResponse, docsPage.assetPath);
     assert.match(htmlResponse.headers.get('content-type') || '', /text\/html/);
     assertRequiredDocSecurityHeaders(htmlResponse, docsPage.assetPath);
     assert.match(htmlText, new RegExp(escapeRegExp(docsPage.title)));
@@ -312,6 +316,12 @@ async function testBetaTesterChecklistRoutes() {
     ...PUBLIC_DOC_ROUTES.flatMap((docsPage) => [docsPage.assetPath])
   ]) {
     assert.ok(assetCalls.includes(expectedPath), `Expected bundled asset request for ${expectedPath}`);
+  }
+
+  for (const route of REQUIRED_DIRECT_ROUTES) {
+    const response = await worker.fetch(new Request(`https://frettrack-app.com${route === '/' ? '' : route}`), env);
+    assert.equal(response.status, 200, `${route} must return 200 directly.`);
+    assertNoRedirect(response, route);
   }
 }
 
@@ -503,6 +513,11 @@ function assertRequiredDocSecurityHeaders(response, route) {
   assert.match(response.headers.get('permissions-policy') || '', /camera=\(\), microphone=\(\), geolocation=\(\)/, `${route} has an unexpected Permissions-Policy.`);
   assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin', `${route} has an unexpected Referrer-Policy.`);
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff', `${route} has an unexpected X-Content-Type-Options.`);
+}
+
+function assertNoRedirect(response, route) {
+  assert.ok(response.status < 300 || response.status >= 400, `${route} returned redirect status ${response.status}.`);
+  assert.equal(response.headers.get('location'), null, `${route} returned a Location header.`);
 }
 
 function escapeRegExp(value) {
