@@ -15,7 +15,12 @@
   ],
   "assets": {
     "directory": "./public",
-    "binding": "LANDING_ASSETS"
+    "binding": "LANDING_ASSETS",
+    "run_worker_first": [
+      "/docs",
+      "/docs.html",
+      "/docs/*"
+    ]
   },
   "r2_buckets": [
     {
