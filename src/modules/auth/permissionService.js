@@ -7,6 +7,7 @@ import {
 
 const SHOP_WRITE_ROLES = new Set(['owner', 'admin', 'tech']);
 const SHOP_MANAGE_ROLES = new Set(['owner', 'admin']);
+const SHOP_OWNER_ROLES = new Set(['owner']);
 
 function normalizeRole(role) {
   return String(role || '').toLowerCase();
@@ -26,6 +27,14 @@ export function canAccessOperatorDashboard({ isOperator } = {}) {
 
 export function canManageShopSettings({ role } = {}) {
   return SHOP_MANAGE_ROLES.has(normalizeRole(role));
+}
+
+export function canViewBilling({ role } = {}) {
+  return SHOP_MANAGE_ROLES.has(normalizeRole(role));
+}
+
+export function canManageBilling({ role, entitlementSnapshot } = {}) {
+  return SHOP_OWNER_ROLES.has(normalizeRole(role)) && !isReadOnlyStatus(entitlementSnapshot);
 }
 
 export function canAccessShopAsMember({ role, entitlementSnapshot } = {}) {
@@ -53,6 +62,14 @@ export function canManageInventory({ role, entitlementSnapshot } = {}) {
   return canWriteShop({ role, entitlementSnapshot });
 }
 
+export function canManageVendors({ role, entitlementSnapshot } = {}) {
+  return canManageInventory({ role, entitlementSnapshot });
+}
+
+export function canManagePurchaseOrders({ role, entitlementSnapshot } = {}) {
+  return canManageInventory({ role, entitlementSnapshot });
+}
+
 export function canEditCustomers({ role, entitlementSnapshot } = {}) {
   return canWriteShop({ role, entitlementSnapshot });
 }
@@ -65,8 +82,20 @@ export function canEditScheduling({ role, entitlementSnapshot } = {}) {
   return canWriteShop({ role, entitlementSnapshot });
 }
 
+export function canEditJobs({ role, entitlementSnapshot } = {}) {
+  return canWriteShop({ role, entitlementSnapshot });
+}
+
 export function canManageShipments({ role, entitlementSnapshot } = {}) {
   return canWriteShop({ role, entitlementSnapshot });
+}
+
+export function canWriteShipping({ role, entitlementSnapshot } = {}) {
+  return canManageShipments({ role, entitlementSnapshot });
+}
+
+export function canManageCustodyEvents({ role, entitlementSnapshot } = {}) {
+  return canManageShipments({ role, entitlementSnapshot });
 }
 
 export function canVoidShipments({ role, entitlementSnapshot } = {}) {
@@ -109,4 +138,29 @@ export function getShopWriteAccess({ role, entitlementSnapshot, hasSupabaseConfi
   }
 
   return canWriteShop({ role, entitlementSnapshot });
+}
+
+export function getCurrentAccessPermissions({ isOperator, role, entitlementSnapshot } = {}) {
+  const context = { role, entitlementSnapshot };
+  return {
+    canAccessOperatorDashboard: canAccessOperatorDashboard({ isOperator }),
+    canManageBilling: canManageBilling(context),
+    canManageCustodyEvents: canManageCustodyEvents(context),
+    canManageInventory: canManageInventory(context),
+    canManagePurchaseOrders: canManagePurchaseOrders(context),
+    canManageShopSettings: canManageShopSettings(context),
+    canManageTeamMembers: canManageTeamMembers(context),
+    canManageVendors: canManageVendors(context),
+    canViewAdvancedReports: canViewAdvancedReporting(context),
+    canViewBilling: canViewBilling(context),
+    canWriteShipping: canWriteShipping(context),
+    canEditCustomers: canEditCustomers(context),
+    canEditJobs: canEditJobs(context),
+    canEditPhotos: canEditPhotos(context),
+    canEditScheduling: canEditScheduling(context),
+    canDeletePhotos: canDeletePhotos(context),
+    canOverwritePhotos: canOverwritePhotos(context),
+    canUploadPhotos: canUploadPhotos(context),
+    canUsePhotoEditor: canUsePhotoEditor(context)
+  };
 }

@@ -1,6 +1,7 @@
 import DamageMap from '../../components/DamageMap';
 
 export default function DamageMapSection({
+  canWrite = true,
   damageMap,
   instrumentType,
   onChange,
@@ -14,6 +15,7 @@ export default function DamageMapSection({
         damageMap={damageMap}
         onChange={onChange}
         onViewImageUpload={onViewImageUpload}
+        canWrite={canWrite}
       />
     </section>
   );

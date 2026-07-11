@@ -197,6 +197,9 @@ export default function JobDetail({
   });
 
   function patchJob(patch, saveImmediately = false) {
+    if (!canWrite) {
+      return;
+    }
     setDraftJob((current) => {
       const nextJob = { ...current, ...patch };
       setIsDirty(true);
@@ -300,6 +303,9 @@ export default function JobDetail({
   }
 
   function updateTechField(event) {
+    if (!canWrite) {
+      return;
+    }
     const { name, value } = event.target;
     setIsDirty(true);
     setDraftJob((current) => ({
@@ -320,10 +326,16 @@ export default function JobDetail({
   }
 
   async function saveWorkLogChanges() {
+    if (!canWrite) {
+      return;
+    }
     await saveDraftNow().catch(() => {});
   }
 
   async function removeWorkLogEntry(entryId) {
+    if (!canWrite) {
+      return;
+    }
     const confirmed = window.confirm('Delete this work log entry?');
     if (!confirmed) {
       return;
@@ -339,6 +351,9 @@ export default function JobDetail({
   }
 
   async function saveDraftNow(jobToSave = draftJob) {
+    if (!canWrite) {
+      throw new Error('Your shop role is read-only.');
+    }
     setSaveStatus('saving');
     try {
       const savedJob = await onUpdate(jobToSave);
@@ -354,6 +369,9 @@ export default function JobDetail({
   }
 
   function updateNeckInspection(stage, fieldOrPatch, value) {
+    if (!canWrite) {
+      return;
+    }
     const fieldPatch = typeof fieldOrPatch === 'object'
       ? fieldOrPatch
       : { [fieldOrPatch]: value };
@@ -375,6 +393,9 @@ export default function JobDetail({
   }
 
   async function savePaymentChange(nextJob, { immediate = false } = {}) {
+    if (!canWrite) {
+      return;
+    }
     window.clearTimeout(paymentAutosaveTimeoutRef.current);
     setDraftJob(nextJob);
     setIsDirty(true);
@@ -391,6 +412,9 @@ export default function JobDetail({
 
   function addPayment(event) {
     event.preventDefault();
+    if (!canWrite) {
+      return;
+    }
     if (!Number(payment.amount)) {
       return;
     }
@@ -414,6 +438,9 @@ export default function JobDetail({
   }
 
   function updatePayment(paymentId, field, value) {
+    if (!canWrite) {
+      return;
+    }
     const nextJob = {
       ...draftJob,
       techDetails: {
@@ -428,6 +455,9 @@ export default function JobDetail({
   }
 
   function removePayment(paymentId) {
+    if (!canWrite) {
+      return;
+    }
     const nextJob = {
       ...draftJob,
       techDetails: {
@@ -458,6 +488,9 @@ export default function JobDetail({
   }
 
   function updateDamageMap(damageMap) {
+    if (!canWrite) {
+      return;
+    }
     setIsDirty(true);
     setDraftJob((current) => {
       return {
@@ -471,6 +504,9 @@ export default function JobDetail({
   }
 
   function updateStringGauge(index, value) {
+    if (!canWrite) {
+      return;
+    }
     setIsDirty(true);
     setDraftJob((current) => {
       const stringGauges = [...current.techDetails.stringGauges];
@@ -486,6 +522,9 @@ export default function JobDetail({
   }
 
   function updateStringGauges(gauges) {
+    if (!canWrite) {
+      return;
+    }
     setIsDirty(true);
     setDraftJob((current) => ({
       ...current,
@@ -497,6 +536,10 @@ export default function JobDetail({
   }
 
   function handleSaveRequest(event) {
+    if (!canWrite) {
+      event.detail?.reject?.(new Error('Your shop role is read-only.'));
+      return;
+    }
     saveDraftNow()
       .then((savedJob) => event.detail?.resolve?.(savedJob))
       .catch((error) => event.detail?.reject?.(error));
@@ -511,6 +554,9 @@ export default function JobDetail({
 
   async function appendWorkLog(event) {
     event.preventDefault();
+    if (!canWrite) {
+      return;
+    }
     const text = workLogText.trim();
     if (!text) {
       return;
@@ -538,6 +584,9 @@ export default function JobDetail({
 
   function addPart(event) {
     event.preventDefault();
+    if (!canWrite) {
+      return;
+    }
     if (!part.name.trim()) {
       return;
     }
@@ -566,6 +615,9 @@ export default function JobDetail({
   }
 
   async function addInventoryPart(inventoryPart, quantity = 1) {
+    if (!canWrite) {
+      return;
+    }
     const requestedQuantity = Math.max(Number(quantity || 1), 1);
     if (inventoryPart.quantityOnHand < requestedQuantity) {
       const confirmed = window.confirm(`${inventoryPart.name} only has ${inventoryPart.quantityOnHand} on hand. Add ${requestedQuantity} anyway?`);
@@ -608,6 +660,9 @@ export default function JobDetail({
   }
 
   async function updatePart(partId, field, value) {
+    if (!canWrite) {
+      return;
+    }
     const editedPart = parts.find((row) => row.id === partId);
     if (field === 'quantity' && editedPart?.partId) {
       const requestedQuantity = Math.max(Number(value || 1), 1);
@@ -666,6 +721,9 @@ export default function JobDetail({
   }
 
   async function removePart(partId) {
+    if (!canWrite) {
+      return;
+    }
     const removedPart = parts.find((row) => row.id === partId);
     if (removedPart?.partId) {
       const confirmed = window.confirm(`Remove ${removedPart.name} from this job and return it to inventory?`);
@@ -711,6 +769,9 @@ export default function JobDetail({
 
   function addService(event) {
     event.preventDefault();
+    if (!canWrite) {
+      return;
+    }
     if (!service.description.trim()) {
       return;
     }
@@ -721,12 +782,18 @@ export default function JobDetail({
   }
 
   function updateService(serviceId, field, value) {
+    if (!canWrite) {
+      return;
+    }
     patchJob({
       services: services.map((row) => (row.id === serviceId ? { ...row, [field]: value } : row))
     });
   }
 
   function removeService(serviceId) {
+    if (!canWrite) {
+      return;
+    }
     patchJob({
       services: services.filter((row) => row.id !== serviceId)
     });
@@ -881,6 +948,9 @@ export default function JobDetail({
   }
 
   function updateWorkOrderImage(imageId, checked) {
+    if (!canWrite) {
+      return;
+    }
     const nextImageIds = checked
       ? [...new Set([...workOrderImageIds, imageId])]
       : workOrderImageIds.filter((id) => id !== imageId);
@@ -913,6 +983,9 @@ export default function JobDetail({
   }
 
   function openWorkOrderEmail() {
+    if (!canWrite || !canSendEmail) {
+      return;
+    }
     setDocumentEmailDraft({
       kind: 'work_order',
       ...buildWorkOrderEmailDraft(draftJob, {
@@ -926,6 +999,9 @@ export default function JobDetail({
   }
 
   function openInvoiceEmail() {
+    if (!canWrite || !canSendEmail) {
+      return;
+    }
     setDocumentEmailDraft({
       kind: 'invoice',
       ...buildInvoiceEmailDraft(draftJob, {
@@ -954,6 +1030,9 @@ export default function JobDetail({
   }
 
   async function finishJob() {
+    if (!canWrite) {
+      return;
+    }
     const nextJob = {
       ...draftJob,
       status: 'Picked Up',
@@ -1182,6 +1261,8 @@ export default function JobDetail({
 
   const printActions = (
     <PrintActions
+      canSendEmail={canSendEmail}
+      canWrite={canWrite}
       closeDetail={closeDetail}
       emailWorkOrder={openWorkOrderEmail}
       exportJobJson={exportJobJson}
@@ -1219,6 +1300,7 @@ export default function JobDetail({
 
   const intakeSection = (
     <JobInfoSection
+      canWrite={canWrite}
       draftJob={draftJob}
       intakeTypes={intakeTypes}
       normalizeInstrumentType={normalizeInstrumentType}
@@ -1233,6 +1315,7 @@ export default function JobDetail({
   const inspectionSections = (
     <>
       <TechDetailsSection
+        canWrite={canWrite}
         draftJob={draftJob}
         formatMeasurementDelta={formatMeasurementDelta}
         lengthUnit={measurementOptions.lengthUnit}
@@ -1243,6 +1326,7 @@ export default function JobDetail({
         updateTechField={updateTechField}
       />
       <DamageMapSection
+        canWrite={canWrite}
         instrumentType={normalizeInstrumentType(draftJob.instrumentType)}
         damageMap={draftJob.techDetails.damageMap}
         onChange={updateDamageMap}
@@ -1254,6 +1338,7 @@ export default function JobDetail({
   const workSections = (
     <>
       <WorkLogSection
+        canWrite={canWrite}
         appendWorkLog={appendWorkLog}
         draftJob={draftJob}
         removeWorkLogEntry={removeWorkLogEntry}
@@ -1285,6 +1370,8 @@ export default function JobDetail({
       />
       <ServicesList canWrite={canWrite} services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
       <TotalsSection
+        canSendEmail={canSendEmail}
+        canWrite={canWrite}
         addPayment={addPayment}
         draftJob={draftJob}
         emailInvoice={openInvoiceEmail}
@@ -1322,6 +1409,7 @@ export default function JobDetail({
 
   const messagesPanel = (
     <MessagesPanel
+      canWrite={canWrite}
       canSendEmailByPlan={canSendEmail}
       canSendSmsByPlan={canSendSms}
       entitlementMessage={entitlementMessage}
@@ -1372,7 +1460,7 @@ export default function JobDetail({
             {draftJob.guitarBrand} {draftJob.model} {draftJob.jobNumber ? `- Job ${draftJob.jobNumber}` : ''}
           </p>
         </div>
-        <JobStatusSelect value={draftJob.status} onChange={updateField} />
+        <JobStatusSelect canWrite={canWrite} value={draftJob.status} onChange={updateField} />
       </div>
 
       {(isDirty || saveStatus === 'saving' || saveStatus === 'error') && (
@@ -1384,6 +1472,7 @@ export default function JobDetail({
       <JobDetailTabs
         activityTimeline={activityTimeline}
         billingSections={billingSections}
+        canWrite={canWrite}
         draftJob={draftJob}
         imagesSection={imagesSection}
         intakeSection={intakeSection}

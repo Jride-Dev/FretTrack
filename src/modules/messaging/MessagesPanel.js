@@ -5,6 +5,7 @@ import { defaultTemplateKey, instrumentName, messageTemplates, renderTemplate } 
 import { sendCustomerChannelMessage, smsDisabledMessage, smsEnabled } from './messageService';
 
 export default function MessagesPanel({
+  canWrite = true,
   canSendEmailByPlan = true,
   canSendSmsByPlan = true,
   entitlementMessage = '',
@@ -127,14 +128,14 @@ export default function MessagesPanel({
 
       <div className="message-preferences">
         <label className="checkline">
-          <input type="checkbox" checked={Boolean(job.emailOptIn)} onChange={(event) => onPreferenceChange('emailOptIn', event.target.checked)} />
+          <input type="checkbox" checked={Boolean(job.emailOptIn)} onChange={(event) => onPreferenceChange('emailOptIn', event.target.checked)} disabled={!canWrite} />
           Email opt-in
         </label>
         <label className="checkline">
           <input
             type="checkbox"
             checked={Boolean(job.smsOptIn)}
-            disabled={!smsEnabled}
+            disabled={!canWrite || !smsEnabled}
             title={!smsEnabled ? smsDisabledMessage : undefined}
             onChange={(event) => onPreferenceChange('smsOptIn', event.target.checked)}
           />
@@ -142,7 +143,7 @@ export default function MessagesPanel({
         </label>
         <label>
           Preferred Contact
-          <select value={job.preferredContactMethod || 'email'} onChange={(event) => onPreferenceChange('preferredContactMethod', event.target.value)}>
+          <select value={job.preferredContactMethod || 'email'} onChange={(event) => onPreferenceChange('preferredContactMethod', event.target.value)} disabled={!canWrite}>
             <option value="email">Email</option>
             <option value="sms" disabled={!smsEnabled}>SMS</option>
             <option value="none">None</option>
@@ -153,7 +154,7 @@ export default function MessagesPanel({
       <div className="message-form">
         <label className="wide">
           Template
-          <select value={templateKey} onChange={(event) => applyTemplate(event.target.value)}>
+          <select value={templateKey} onChange={(event) => applyTemplate(event.target.value)} disabled={!canWrite}>
             {Object.entries(messageTemplates).map(([key, template]) => (
               <option key={key} value={key}>{template.label}</option>
             ))}
@@ -161,11 +162,11 @@ export default function MessagesPanel({
         </label>
         <label className="wide">
           Subject
-          <input value={subject} onChange={(event) => setSubject(event.target.value)} />
+          <input value={subject} onChange={(event) => setSubject(event.target.value)} disabled={!canWrite} />
         </label>
         <label className="wide">
           Editable Message Preview
-          <textarea value={body} onChange={(event) => setBody(event.target.value)} rows="6" />
+          <textarea value={body} onChange={(event) => setBody(event.target.value)} rows="6" disabled={!canWrite} />
         </label>
         {!smsEnabled && <p className="message-info wide">{smsDisabledMessage}</p>}
         {entitlementMessage && <p className="message-info wide">{entitlementMessage}</p>}
@@ -173,12 +174,12 @@ export default function MessagesPanel({
         {sendState.error && <p className="message-error wide">{sendState.error}</p>}
         {sendState.success && <p className="message-success wide">{sendState.success}</p>}
         <div className="message-actions wide">
-          <button type="button" disabled={Boolean(sendState.sending) || !canSendEmail} onClick={() => handleSend('email')}>
+          <button type="button" disabled={!canWrite || Boolean(sendState.sending) || !canSendEmail} onClick={() => handleSend('email')}>
             {sendState.sending === 'email' ? 'Sending Email...' : 'Send Email'}
           </button>
           <button
             type="button"
-            disabled={Boolean(sendState.sending) || !canSendSms}
+            disabled={!canWrite || Boolean(sendState.sending) || !canSendSms}
             onClick={() => handleSend('sms')}
             title={!smsEnabled ? smsDisabledMessage : undefined}
           >
@@ -186,7 +187,7 @@ export default function MessagesPanel({
           </button>
           <button
             type="button"
-            disabled={Boolean(sendState.sending) || !canSendEmail || !canSendSms}
+            disabled={!canWrite || Boolean(sendState.sending) || !canSendEmail || !canSendSms}
             onClick={() => handleSend('both')}
             title={!smsEnabled ? smsDisabledMessage : undefined}
           >

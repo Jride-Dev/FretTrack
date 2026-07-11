@@ -3,6 +3,8 @@ import { money } from '../../shared/utils/money';
 import { getShopMoneyOptions } from '../shops/shopConfig';
 
 export default function TotalsSection({
+  canSendEmail = true,
+  canWrite = true,
   addPayment,
   draftJob,
   emailInvoice,
@@ -28,7 +30,7 @@ export default function TotalsSection({
       <div className="discount-controls no-print">
         <label>
           Discount Type
-          <select name="discountType" value={draftJob.discountType || 'none'} onChange={updateDiscountField}>
+          <select name="discountType" value={draftJob.discountType || 'none'} onChange={updateDiscountField} disabled={!canWrite}>
             <option value="none">No Discount</option>
             <option value="percent">Percent</option>
             <option value="dollar">Dollar Amount</option>
@@ -43,23 +45,23 @@ export default function TotalsSection({
             name="discountValue"
             value={draftJob.discountValue || ''}
             onChange={updateDiscountField}
-            disabled={(draftJob.discountType || 'none') === 'none'}
+            disabled={!canWrite || (draftJob.discountType || 'none') === 'none'}
           />
         </label>
         <label>
           State
-          <input name="state" value={taxSettings.state || ''} onChange={updateTaxField} />
+          <input name="state" value={taxSettings.state || ''} onChange={updateTaxField} disabled={!canWrite} />
         </label>
         <label>
           {taxLabel} %
-          <input type="number" min="0" step="0.001" name="salesTaxRate" value={taxSettings.salesTaxRate || ''} onChange={updateTaxField} />
+          <input type="number" min="0" step="0.001" name="salesTaxRate" value={taxSettings.salesTaxRate || ''} onChange={updateTaxField} disabled={!canWrite} />
         </label>
         <label className="checkline">
-          <input type="checkbox" name="taxableParts" checked={taxSettings.taxableParts !== false} onChange={updateTaxField} />
+          <input type="checkbox" name="taxableParts" checked={taxSettings.taxableParts !== false} onChange={updateTaxField} disabled={!canWrite} />
           Tax Parts
         </label>
         <label className="checkline">
-          <input type="checkbox" name="taxableServices" checked={Boolean(taxSettings.taxableServices)} onChange={updateTaxField} />
+          <input type="checkbox" name="taxableServices" checked={Boolean(taxSettings.taxableServices)} onChange={updateTaxField} disabled={!canWrite} />
           Tax Services
         </label>
       </div>
@@ -70,9 +72,10 @@ export default function TotalsSection({
         removePayment={removePayment}
         setPayment={setPayment}
         updatePayment={updatePayment}
+        canWrite={canWrite}
       />
       <div className="mode-actions no-print totals-actions">
-        <button type="button" onClick={emailInvoice}>Email Invoice</button>
+        <button type="button" onClick={emailInvoice} disabled={!canWrite || !canSendEmail}>Email Invoice</button>
       </div>
       <div className="totals">
         <span>Billable Parts</span>

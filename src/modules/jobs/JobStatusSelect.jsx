@@ -7,11 +7,11 @@ export const JOB_STATUSES = [
   "Cancelled"
 ];
 
-export default function JobStatusSelect({ value, onChange }) {
+export default function JobStatusSelect({ canWrite = true, value, onChange }) {
   return (
     <label>
       Status
-      <select name="status" value={value} onChange={onChange}>
+      <select name="status" value={value} onChange={onChange} disabled={!canWrite}>
         {JOB_STATUSES.map((status) => (
           <option key={status} value={status}>
             {status}

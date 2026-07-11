@@ -2,6 +2,7 @@ import NeckInspectionSection from './NeckInspectionSection';
 import { getGaugeSlotLabel, getInstrumentStringCount, getStringGaugePresets } from '../instruments/instrumentService';
 
 export default function TechDetailsSection({
+  canWrite = true,
   draftJob,
   formatMeasurementDelta,
   lengthUnit,
@@ -25,6 +26,7 @@ export default function TechDetailsSection({
               Gauge Preset
               <select
                 value=""
+                disabled={!canWrite}
                 onChange={(event) => {
                   const preset = gaugePresets.find((option) => option.id === event.target.value);
                   if (preset && updateStringGauges) {
@@ -45,17 +47,18 @@ export default function TechDetailsSection({
               <input
                 value={gauge}
                 onChange={(event) => updateStringGauge(index, event.target.value)}
+                disabled={!canWrite}
               />
             </label>
           ))}
         </fieldset>
         <label>
           New String Brand
-          <input name="newStringBrand" value={draftJob.techDetails.newStringBrand} onChange={updateTechField} />
+          <input name="newStringBrand" value={draftJob.techDetails.newStringBrand} onChange={updateTechField} disabled={!canWrite} />
         </label>
         <label>
           New String Gauge
-          <input name="newStringGauge" value={draftJob.techDetails.newStringGauge} onChange={updateTechField} />
+          <input name="newStringGauge" value={draftJob.techDetails.newStringGauge} onChange={updateTechField} disabled={!canWrite} />
         </label>
         <NeckInspectionSection
           lengthUnit={lengthUnit}
@@ -63,10 +66,11 @@ export default function TechDetailsSection({
           techDetails={draftJob.techDetails}
           formatMeasurementDelta={formatMeasurementDelta}
           updateNeckInspection={updateNeckInspection}
+          canWrite={canWrite}
         />
         <label className="wide">
           Notes
-          <textarea name="notes" value={draftJob.techDetails.notes} onChange={updateTechField} rows="6" />
+          <textarea name="notes" value={draftJob.techDetails.notes} onChange={updateTechField} rows="6" disabled={!canWrite} />
         </label>
       </div>
     </section>

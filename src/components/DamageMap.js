@@ -111,7 +111,7 @@ async function loadHeic2Any() {
   return module.default || module;
 }
 
-export default function DamageMap({ instrumentType = 'Electric', damageMap = {}, onChange, onViewImageUpload }) {
+export default function DamageMap({ canWrite = true, instrumentType = 'Electric', damageMap = {}, onChange, onViewImageUpload }) {
   const [importError, setImportError] = useState('');
   const viewImageInputRef = useRef(null);
   const viewCameraInputRef = useRef(null);
@@ -126,6 +126,9 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
   const canvasClassName = `damage-canvas ${instrumentType.toLowerCase()}-${selectedView}-damage-canvas ${imageUrl ? 'has-damage-image' : 'empty-damage-canvas'}`;
 
   function updateMap(patch) {
+    if (!canWrite) {
+      return;
+    }
     onChange({
       ...damageMap,
       selectedArea,
@@ -158,6 +161,9 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
   }
 
   function addMark(event) {
+    if (!canWrite) {
+      return;
+    }
     const bounds = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - bounds.left) / bounds.width) * 100;
     const y = ((event.clientY - bounds.top) / bounds.height) * 100;
@@ -182,18 +188,27 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
   }
 
   function updateMark(markId, patch) {
+    if (!canWrite) {
+      return;
+    }
     updateCurrentView({
       marks: marks.map((mark) => (mark.id === markId ? { ...mark, ...patch } : mark))
     });
   }
 
   function removeMark(markId) {
+    if (!canWrite) {
+      return;
+    }
     updateCurrentView({
       marks: marks.filter((mark) => mark.id !== markId)
     });
   }
 
   async function attachMarkerPhoto(markId, file) {
+    if (!canWrite) {
+      return;
+    }
     if (!file) {
       return;
     }
@@ -229,6 +244,9 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
   }
 
   async function updateViewImage(file) {
+    if (!canWrite) {
+      return;
+    }
     if (!file) {
       return;
     }
@@ -266,7 +284,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
       <div className="damage-toolbar no-print">
         <label>
           View
-          <select value={selectedView} onChange={(event) => updateMap({ selectedView: event.target.value })}>
+          <select value={selectedView} onChange={(event) => updateMap({ selectedView: event.target.value })} disabled={!canWrite}>
             {viewOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
@@ -274,7 +292,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
         </label>
         <label>
           Area
-          <select value={selectedArea} onChange={(event) => updateMap({ selectedArea: event.target.value })}>
+          <select value={selectedArea} onChange={(event) => updateMap({ selectedArea: event.target.value })} disabled={!canWrite}>
             {damageAreas.map((area) => (
               <option key={area} value={area}>{area}</option>
             ))}
@@ -282,7 +300,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
         </label>
         <label>
           Severity
-          <select value={selectedSeverity} onChange={(event) => updateMap({ selectedSeverity: event.target.value })}>
+          <select value={selectedSeverity} onChange={(event) => updateMap({ selectedSeverity: event.target.value })} disabled={!canWrite}>
             {severities.map((severity) => (
               <option key={severity} value={severity}>{severity}</option>
             ))}
@@ -295,6 +313,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
             type="file"
             className="hidden-file-input"
             accept="image/*,.heic,.heif"
+            disabled={!canWrite}
             onChange={(event) => {
               updateViewImage(event.target.files[0]);
               event.target.value = '';
@@ -306,14 +325,15 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
             className="hidden-file-input"
             accept="image/*"
             capture="environment"
+            disabled={!canWrite}
             onChange={(event) => {
               updateViewImage(event.target.files[0]);
               event.target.value = '';
             }}
           />
           <div className="image-upload-actions damage-import-actions">
-            <button type="button" className="primary-action" onClick={() => viewCameraInputRef.current?.click()}>Take Photo</button>
-            <button type="button" onClick={() => viewImageInputRef.current?.click()}>Import from Device</button>
+            <button type="button" className="primary-action" onClick={() => viewCameraInputRef.current?.click()} disabled={!canWrite}>Take Photo</button>
+            <button type="button" onClick={() => viewImageInputRef.current?.click()} disabled={!canWrite}>Import from Device</button>
           </div>
         </label>
       </div>
@@ -324,6 +344,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
         className={canvasClassName}
         onClick={addMark}
         aria-label={`Mark damage on ${instrumentType} ${selectedView} diagram`}
+        disabled={!canWrite}
       >
         {imageUrl ? (
           <img src={imageUrl} alt={`${instrumentType} ${selectedView} inspection diagram`} draggable="false" />
@@ -355,12 +376,12 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
           {marks.map((mark, index) => (
             <div key={mark.id} className="damage-row damage-row-expanded">
               <strong>{index + 1}</strong>
-              <select value={mark.area} onChange={(event) => updateMark(mark.id, { area: event.target.value })}>
+              <select value={mark.area} onChange={(event) => updateMark(mark.id, { area: event.target.value })} disabled={!canWrite}>
                 {damageAreas.map((area) => (
                   <option key={area} value={area}>{area}</option>
                 ))}
               </select>
-              <select value={mark.severity} onChange={(event) => updateMark(mark.id, { severity: event.target.value })}>
+              <select value={mark.severity} onChange={(event) => updateMark(mark.id, { severity: event.target.value })} disabled={!canWrite}>
                 {severities.map((severity) => (
                   <option key={severity} value={severity}>{severity}</option>
                 ))}
@@ -369,11 +390,13 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
                 value={mark.note || ''}
                 placeholder="Damage note, e.g. finish crack, not wood"
                 onChange={(event) => updateMark(mark.id, { note: event.target.value })}
+                disabled={!canWrite}
               />
               <input
                 value={mark.recommendedRepair || ''}
                 placeholder="Recommended repair"
                 onChange={(event) => updateMark(mark.id, { recommendedRepair: event.target.value })}
+                disabled={!canWrite}
               />
               <label className="marker-photo-control no-print">
                 Photo
@@ -385,12 +408,13 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
                   className="hidden-file-input"
                   accept="image/*,.heic,.heif"
                   capture="environment"
+                  disabled={!canWrite}
                   onChange={(event) => {
                     attachMarkerPhoto(mark.id, event.target.files[0]);
                     event.target.value = '';
                   }}
                 />
-                <button type="button" onClick={() => markerInputRefs.current[mark.id]?.click()}>
+                <button type="button" onClick={() => markerInputRefs.current[mark.id]?.click()} disabled={!canWrite}>
                   {mark.photoUrl ? 'Replace Photo' : 'Import from Device'}
                 </button>
               </label>
@@ -407,6 +431,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
                       photoId: '',
                       storagePath: ''
                     })}
+                    disabled={!canWrite}
                   >
                     Remove Photo
                   </button>
@@ -418,6 +443,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
                 onClick={() => removeMark(mark.id)}
                 aria-label={`Remove damage mark ${index + 1}`}
                 title={`Remove damage mark ${index + 1}`}
+                disabled={!canWrite}
               >
                 X
               </button>
@@ -431,6 +457,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
           type="checkbox"
           checked={Boolean(damageMap.liabilityAcknowledged)}
           onChange={(event) => updateMap({ liabilityAcknowledged: event.target.checked })}
+          disabled={!canWrite}
         />
         Customer acknowledges documented condition and authorizes repair intake.
       </label>
@@ -440,6 +467,7 @@ export default function DamageMap({ instrumentType = 'Electric', damageMap = {},
           value={damageMap.liabilityText || ''}
           onChange={(event) => updateMap({ liabilityText: event.target.value })}
           rows="3"
+          disabled={!canWrite}
         />
       </label>
     </div>
