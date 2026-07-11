@@ -2,7 +2,7 @@
 
 This folder is the home for product and technical documentation that does not belong in the root README.
 
-Customer-facing and tester-facing docs should also be reachable from the public FretTrack site at `https://frettrack-app.com/docs`. The public docs hub now hosts how-to guides for getting started, beta testing, shops/accounts, customers, jobs, estimates, photos/damage maps, inventory, shipping/custody, scheduling, reports, billing basics, roles, troubleshooting, and FAQ. GitHub Wiki can still be useful for project/developer notes, but beta testers and repair shops should not need GitHub access to read support, legal, checklist, or day-to-day user-guide material.
+Customer-facing and tester-facing docs should also be reachable from the public FretTrack site at `https://frettrack-app.com/docs`. The public docs hub now hosts a complete screenshot-backed how-to manual at `https://frettrack-app.com/docs/how-to-use-frettrack`, plus shorter topic guides for getting started, beta testing, shops/accounts, customers, jobs, estimates, photos/damage maps, inventory, shipping/custody, scheduling, reports, billing basics, roles, troubleshooting, and FAQ. GitHub Wiki can still be useful for project/developer notes, but beta testers and repair shops should not need GitHub access to read support, legal, checklist, or day-to-day user-guide material.
 
 FretTrack's old live baseline is `v0.2.6-beta.14`. Current branch planning uses product milestone versions:
 
@@ -36,7 +36,7 @@ Core shipped beta areas now include:
 
 - customer and subcontractor management
 - public launch landing page refresh with bundled favicon and product screenshot assets
-- public docs hub at `https://frettrack-app.com/docs` with customer-facing how-to pages adapted from FretTrack Wiki/user-guide material for beta tester and shop resources when GitHub Wiki is blocked or inconvenient
+- public docs hub at `https://frettrack-app.com/docs` with a complete screenshot-backed how-to manual and customer-facing topic pages adapted from FretTrack Wiki/user-guide material for beta tester and shop resources when GitHub Wiki is blocked or inconvenient
 - public Terms of Service, Privacy Policy, and Support / FAQ pages on the landing site
 - work-order and invoice email flow
 - mobile and PWA readiness
@@ -88,6 +88,7 @@ Current docs:
 - Public Terms of Service: `https://frettrack-app.com/terms`
 - Public Privacy Policy: `https://frettrack-app.com/privacy`
 - Public Docs hub: `https://frettrack-app.com/docs`
+- Public complete how-to guide: `https://frettrack-app.com/docs/how-to-use-frettrack`
 - Public Support / FAQ: `https://frettrack-app.com/support`
 - [Beta access approval](BETA_ACCESS_APPROVAL.md)
 - [Beta operator dashboard](BETA_OPERATOR_DASHBOARD.md)
