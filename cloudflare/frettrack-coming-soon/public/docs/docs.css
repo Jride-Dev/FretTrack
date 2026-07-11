@@ -403,7 +403,7 @@ h3 {
 .figure-grid {
   display: grid;
   gap: 20px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .split > div {
@@ -437,6 +437,44 @@ h3 {
   display: block;
   height: auto;
   width: 100%;
+}
+
+.screenshot-link {
+  cursor: zoom-in;
+  display: block;
+  overflow: hidden;
+  position: relative;
+}
+
+.screenshot-link::after {
+  background: rgba(8, 13, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 7px;
+  bottom: 12px;
+  color: #fff;
+  content: "Open full size ↗";
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  opacity: 0.9;
+  padding: 7px 10px;
+  pointer-events: none;
+  position: absolute;
+  right: 12px;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.screenshot-link:hover::after,
+.screenshot-link:focus-visible::after {
+  background: #111827;
+  border-color: var(--amber-bright);
+  transform: translateY(-2px);
+}
+
+.screenshot-link:focus-visible {
+  border-radius: 8px 8px 0 0;
+  outline: 3px solid var(--amber);
+  outline-offset: -3px;
 }
 
 .figure-card figcaption {
