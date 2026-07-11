@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Complete How-To Guide | FretTrack Docs</title>
+    <meta name="description" content="A complete customer-facing guide for using FretTrack, with screenshots, workflow chapters, checklists, and troubleshooting.">
+    <link rel="canonical" href="https://frettrack-app.com/docs/how-to-use-frettrack">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="stylesheet" href="/docs/docs.css">
+  </head>
+  <body>
+    <div class="shell">
+      <nav class="nav" aria-label="Docs navigation">
+        <a class="brand" href="/"><img src="/android-chrome-192x192.png" alt=""><strong>FretTrack</strong></a>
+        <div class="nav-links"><a href="/docs">Back to Docs</a><a href="https://app.frettrack-app.com/">Open FretTrack app</a><a href="/support">Support</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/beta-tester">Beta Tester Checklist</a></div>
+      </nav>
+
+      <header class="hero">
+        <p class="doc-meta">Complete user manual with screenshots</p>
+        <h1>How to use FretTrack</h1>
+        <p class="lede">This guide walks through FretTrack from shop setup and intake through jobs, photos, work logs, inventory, purchase orders, receiving, barcode labels, shipping, scheduling, reports, roles, and troubleshooting. It is written for testers, shop owners, technicians, and staff who need to use the app in a real repair shop.</p>
+        <div class="actions">
+          <a class="button" href="https://app.frettrack-app.com/">Open FretTrack</a>
+          <a class="button secondary" href="/docs/beta-tester-guide">Beta tester guide</a>
+          <a class="button secondary" href="/support">Get support</a>
+        </div>
+      </header>
+
+      <main class="manual-layout">
+        <aside class="chapter-nav" aria-label="Guide chapters">
+          <strong>Guide chapters</strong>
+          <a href="#workflow">Workflow overview</a>
+          <a href="#access">Sign in and shop access</a>
+          <a href="#new-job">Create a new job</a>
+          <a href="#instrument">Instrument details</a>
+          <a href="#jobs">Manage jobs</a>
+          <a href="#work-logs">Work logs</a>
+          <a href="#photos">Photos and damage maps</a>
+          <a href="#customers">Customers</a>
+          <a href="#inventory">Inventory and parts</a>
+          <a href="#vendors">Vendors</a>
+          <a href="#purchase-orders">Purchase orders</a>
+          <a href="#receiving">Receiving</a>
+          <a href="#barcodes">Barcode labels</a>
+          <a href="#shipping">Shipping and custody</a>
+          <a href="#scheduling">Scheduling</a>
+          <a href="#reports">Reports</a>
+          <a href="#roles">Roles and permissions</a>
+          <a href="#billing">Billing basics</a>
+          <a href="#daily-routine">Daily routine</a>
+          <a href="#troubleshooting">Troubleshooting</a>
+        </aside>
+
+        <div class="manual-content">
+          <section id="workflow" class="manual-section">
+            <h2>Workflow overview</h2>
+            <p>FretTrack is built around the repair job. A normal shop workflow starts when a customer contacts the shop or drops off an instrument, then moves through intake, documentation, repair notes, parts, scheduling, customer communication, completion, pickup, or shipping.</p>
+            <table class="workflow-table">
+              <thead>
+                <tr><th>Step</th><th>What you do</th><th>Why it matters</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>1. Customer</td><td>Create or select the customer record.</td><td>Keeps contact details, preferences, and job history tied together.</td></tr>
+                <tr><td>2. Intake</td><td>Create the job and enter instrument details.</td><td>Creates the shop record for the repair.</td></tr>
+                <tr><td>3. Condition</td><td>Add photos, serial number images, and damage notes.</td><td>Protects the shop and gives the customer a clear record.</td></tr>
+                <tr><td>4. Work</td><td>Add work logs, update status, assign parts, and record approvals.</td><td>Shows what happened, who did it, and what still needs attention.</td></tr>
+                <tr><td>5. Schedule</td><td>Add promise dates, pickups, follow-ups, and shop blocks.</td><td>Helps the shop see workload and deadlines.</td></tr>
+                <tr><td>6. Finish</td><td>Review notes, photos, parts, totals, and customer documents.</td><td>Creates a clean handoff for pickup or shipment.</td></tr>
+              </tbody>
+            </table>
+            <p class="muted">The best habit is simple: if it matters to the repair, the customer, the instrument, inventory, or another staff member, put it on the job.</p>
+          </section>
+
+          <section id="access" class="manual-section">
+            <h2>Sign in and shop access</h2>
+            <div class="split">
+              <div>
+                <h3>First access</h3>
+                <ol class="steps">
+                  <li>Go to <a href="https://app.frettrack-app.com/">app.frettrack-app.com</a>.</li>
+                  <li>Sign in with the email address approved for your shop.</li>
+                  <li>If email verification is requested, open your email and verify the account.</li>
+                  <li>If you are waiting for access, stay on the pending approval screen and check your email for the next message.</li>
+                  <li>After access is active, choose your shop and open the main workspace.</li>
+                </ol>
+              </div>
+              <div>
+                <h3>If you do not see your shop</h3>
+                <ul class="check-list">
+                  <li>Confirm you used the same email address that was approved.</li>
+                  <li>Check that your email verification is complete.</li>
+                  <li>Refresh the page after approval.</li>
+                  <li>Try signing out and signing back in.</li>
+                  <li>Contact your shop owner or FretTrack support if you still cannot see access.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="new-job" class="manual-section">
+            <h2>Create a new job</h2>
+            <p>Use New Job when an instrument arrives for setup, repair, inspection, modification, or evaluation. The form moves from customer information into instrument details, job details, photos, tech details, and notes.</p>
+            <div class="figure-grid">
+              <figure class="figure-card">
+                <img src="/docs/screenshots/new-job1.png" alt="New Job customer and intake fields">
+                <figcaption>Start a new job by entering or selecting customer information, contact details, and intake information.</figcaption>
+              </figure>
+              <figure class="figure-card">
+                <img src="/docs/screenshots/new-job2.png" alt="New Job instrument and job detail fields">
+                <figcaption>Continue the intake with instrument identity, requested work, priority, source, and repair notes.</figcaption>
+              </figure>
+            </div>
+            <h3>Recommended intake order</h3>
+            <ol class="steps">
+              <li>Open New Job.</li>
+              <li>Search for an existing customer before creating a new one.</li>
+              <li>Enter customer contact details and communication preferences.</li>
+              <li>Choose instrument type, brand, and model.</li>
+              <li>Add year, serial number, color, finish, and orientation when available.</li>
+              <li>Write the requested work in plain language.</li>
+              <li>Select Date Received, Promise Date if one was given, job source, and priority.</li>
+              <li>Add photos and damage documentation before work begins.</li>
+              <li>Save the job before leaving the page.</li>
+            </ol>
+            <div class="mini-index">
+              <strong>Good requested-work examples</strong>
+              <p>Full setup with 10-46 strings. Check fret buzz around 7th fret. Replace output jack if needed. Customer says bridge pickup cuts out.</p>
+              <p>Bad example: Fix guitar.</p>
+            </div>
+          </section>
+
+          <section id="instrument" class="manual-section">
+            <h2>Instrument details</h2>
+            <p>Instrument details help the shop identify exactly what came in. The brand and model fields support suggestions, but custom entries are allowed for boutique, vintage, imported, modified, or unusual instruments.</p>
+            <div class="figure-grid">
+              <figure class="figure-card">
+                <img src="/docs/screenshots/brand_list.png" alt="Brand suggestion list">
+                <figcaption>Brand suggestions speed up intake, but you can still type a custom brand.</figcaption>
+              </figure>
+              <figure class="figure-card">
+                <img src="/docs/screenshots/model_list.png" alt="Model suggestion list">
+                <figcaption>Model suggestions can narrow after a brand is chosen. Custom model names are still valid.</figcaption>
+              </figure>
+            </div>
+            <h3>Fields to capture when possible</h3>
+            <ul class="check-list">
+              <li><strong>Instrument Type:</strong> Acoustic, electric, bass, or the closest available type.</li>
+              <li><strong>Brand and Model:</strong> Use suggestions for common instruments or type the exact customer instrument.</li>
+              <li><strong>Year:</strong> Use a year, decade, Unknown, or other shop-friendly value.</li>
+              <li><strong>Serial Number:</strong> Add the serial number when readable. If not readable, say Unknown or Not provided.</li>
+              <li><strong>Color and Finish:</strong> Use clear free text, such as 3-Color Sunburst, Natural, Satin, Poly, or Nitro.</li>
+              <li><strong>Orientation:</strong> Right-handed, left-handed, or unknown.</li>
+            </ul>
+          </section>
+
+          <section id="jobs" class="manual-section">
+            <h2>Manage jobs after intake</h2>
+            <p>After a job is created, the job detail screen becomes the main record. Use it to update status, add notes, document work, attach parts, review photos, and prepare customer-facing documents.</p>
+            <div class="split">
+              <div>
+                <h3>During repair</h3>
+                <ul class="check-list">
+                  <li>Update the status when the job moves into active work, waiting on parts, waiting on customer, ready for pickup, or complete.</li>
+                  <li>Add work logs each time something meaningful happens.</li>
+                  <li>Add parts from inventory when stock should be reduced.</li>
+                  <li>Use manual parts only when the item should not affect inventory.</li>
+                  <li>Add schedule events for due dates, pickups, or follow-ups.</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Before completion</h3>
+                <ul class="check-list">
+                  <li>Review customer and instrument information.</li>
+                  <li>Confirm requested work and final work notes.</li>
+                  <li>Check photos and damage documentation.</li>
+                  <li>Confirm parts, services, discounts, taxes, and balance.</li>
+                  <li>Confirm pickup, delivery, or shipping instructions.</li>
+                </ul>
+              </div>
+            </div>
+            <p class="muted">A job should be complete enough that another technician can understand what happened without asking around the shop.</p>
+          </section>
+
+          <section id="work-logs" class="manual-section">
+            <h2>Work logs and job history</h2>
+            <p>Work logs are the repair timeline. They should explain diagnosis, approval, repair progress, installed parts, customer communication, final setup, and handoff notes.</p>
+            <figure class="figure-card">
+              <img src="/docs/screenshots/work_log.png" alt="Work log section on a job">
+              <figcaption>Use work logs to leave a clear repair trail for yourself, other staff, and future job history.</figcaption>
+            </figure>
+            <h3>Useful work log entries</h3>
+            <ul class="check-list">
+              <li>Customer approved fret level by phone.</li>
+              <li>Found loose output jack ground wire. Re-soldered and tested.</li>
+              <li>Installed new 10-46 strings and set action to customer preference.</li>
+              <li>Waiting on bridge saddles from vendor.</li>
+              <li>Final check complete. No buzz through normal playing range.</li>
+            </ul>
+            <h3>When to add a work log</h3>
+            <p>Add a note whenever the job changes direction, a customer approves work, a part is used, a problem is discovered, a technician hands off the job, or the job is ready for pickup.</p>
+          </section>
+
+          <section id="photos" class="manual-section">
+            <h2>Photos and damage maps</h2>
+            <p>Photos and damage maps document the condition of the instrument before, during, and after repair. This protects the shop, helps the customer understand the work, and makes future job history more useful.</p>
+            <figure class="figure-card">
+              <img src="/docs/screenshots/damage_map_generic.png" alt="Damage map with condition markers">
+              <figcaption>Use the damage map to mark scratches, cracks, dents, finish damage, hardware concerns, and other visible condition notes.</figcaption>
+            </figure>
+            <div class="split">
+              <div>
+                <h3>Recommended intake photos</h3>
+                <ul class="check-list">
+                  <li>Front</li>
+                  <li>Back</li>
+                  <li>Headstock</li>
+                  <li>Serial number</li>
+                  <li>Existing damage</li>
+                  <li>Bridge, nut, frets, electronics, or case when relevant</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Photo editor basics</h3>
+                <ul class="check-list">
+                  <li>Use markup to point out condition or repair areas.</li>
+                  <li>Add captions when the image needs context.</li>
+                  <li>Crop or brighten dark shop photos when needed.</li>
+                  <li>Save as copy unless you intentionally want to replace the original.</li>
+                </ul>
+              </div>
+            </div>
+            <p class="muted">Customer-facing reports should show useful condition and repair documentation. Shop-only notes should stay in the shop record.</p>
+          </section>
+
+          <section id="customers" class="manual-section">
+            <h2>Customers</h2>
+            <p>Customer records keep contact information, communication preferences, and job history together. Always search before creating a new customer so the shop does not split a returning customer's history across duplicates.</p>
+            <div class="split">
+              <div>
+                <h3>Create or update a customer</h3>
+                <ol class="steps">
+                  <li>Open Customers or use the customer area during New Job intake.</li>
+                  <li>Search by name, email, or phone.</li>
+                  <li>If no matching record exists, create a new customer.</li>
+                  <li>Add first name, last name, phone, email, address, notes, and contact preferences.</li>
+                  <li>Save the record and use it on the job.</li>
+                </ol>
+              </div>
+              <div>
+                <h3>Customer record habits</h3>
+                <ul class="check-list">
+                  <li>Keep contact details current.</li>
+                  <li>Use notes for shop-relevant context.</li>
+                  <li>Respect SMS and email preferences.</li>
+                  <li>Check job history before quoting or recommending work.</li>
+                  <li>Merge or clean up duplicates through the safest available shop workflow.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="inventory" class="manual-section">
+            <h2>Inventory and parts</h2>
+            <p>Inventory tracks the parts a shop wants to manage across jobs, stock counts, vendors, purchase orders, receiving, barcode labels, and purchase history.</p>
+            <div class="figure-grid">
+              <figure class="figure-card">
+                <img src="/docs/screenshots/inventory_parts.png" alt="Inventory parts list">
+                <figcaption>The parts list shows active stock, categories, locations, costs, retail price, reorder points, and special-order parts.</figcaption>
+              </figure>
+              <figure class="figure-card">
+                <img src="/docs/screenshots/parts_picture.png" alt="Part image on inventory part">
+                <figcaption>Part images help identify similar small parts, especially in bins, bags, and drawers.</figcaption>
+              </figure>
+            </div>
+            <h3>Part fields</h3>
+            <p>A part can include Vendor, Part Name, Part Number, Category, Location, Description, Vendor SKU, Vendor UPC, Barcode, Manufacturer, Manufacturer UPC, Unit Cost, Retail Price, QTY On Hand, Reorder Point, Desired Stock, Special Order status, and Part Image.</p>
+            <h3>Using parts on jobs</h3>
+            <ol class="steps">
+              <li>Add the part from inventory when the item should affect stock.</li>
+              <li>Enter the quantity used.</li>
+              <li>Save the job or part change.</li>
+              <li>FretTrack records the job part and stock movement.</li>
+              <li>If the quantity is reduced or the part is removed, stock should be returned through the tracked workflow.</li>
+            </ol>
+          </section>
+
+          <section id="vendors" class="manual-section">
+            <h2>Vendors</h2>
+            <p>Vendors store the supplier details used for purchase orders, receiving, cost history, and inventory organization.</p>
+            <figure class="figure-card">
+              <img src="/docs/screenshots/vendor_add_screen.png" alt="Add vendor form">
+              <figcaption>Vendor records can include company, sales rep, email, phone, website, address, online-only status, and notes.</figcaption>
+            </figure>
+            <h3>When to create a vendor</h3>
+            <ul class="check-list">
+              <li>The shop orders parts from the supplier repeatedly.</li>
+              <li>The supplier appears on purchase orders.</li>
+              <li>You want purchase history grouped by supplier.</li>
+              <li>You need to track a sales rep, vendor website, or vendor notes.</li>
+            </ul>
+            <p>Use Online Only for vendors where a physical address is not useful to the shop. That setting should not erase saved address fields unless a user clears them.</p>
+          </section>
+
+          <section id="purchase-orders" class="manual-section">
+            <h2>Purchase orders</h2>
+            <p>Purchase orders help the shop track parts that have been ordered but not necessarily received. They are useful for shop stock, special-order items, job-specific parts, vendor shipping, and purchase history.</p>
+            <div class="figure-grid">
+              <figure class="figure-card">
+                <img src="/docs/screenshots/new_purchase_order.png" alt="New purchase order form">
+                <figcaption>Create a purchase order by selecting a vendor, adding items, quantities, costs, shipping, and notes.</figcaption>
+              </figure>
+              <figure class="figure-card">
+                <img src="/docs/screenshots/purchase_order.png" alt="Purchase order list and status">
+                <figcaption>Purchase order status helps the shop see draft, ordered, partially received, received, and cancelled orders.</figcaption>
+              </figure>
+            </div>
+            <h3>Create a purchase order</h3>
+            <ol class="steps">
+              <li>Open Inventory.</li>
+              <li>Go to Purchase Orders.</li>
+              <li>Create a new purchase order.</li>
+              <li>Select the vendor.</li>
+              <li>Add existing parts or create new part lines from the order.</li>
+              <li>Enter quantity ordered, unit cost, vendor SKU, and notes.</li>
+              <li>Add shipping cost when the vendor charged inbound shipping.</li>
+              <li>Choose whether shipping should be added into part cost.</li>
+              <li>Save the purchase order.</li>
+            </ol>
+          </section>
+
+          <section id="receiving" class="manual-section">
+            <h2>Receiving and purchase history</h2>
+            <p>Receiving is the stock-changing step. Ordering a part does not mean the shop physically has it. Receiving records the item arrival, increases quantity on hand, updates cost history, and creates purchase history.</p>
+            <div class="figure-grid">
+              <figure class="figure-card">
+                <img src="/docs/screenshots/receive_po.png" alt="Receive purchase order items">
+                <figcaption>Receive full or partial quantities when vendor items arrive.</figcaption>
+              </figure>
+              <figure class="figure-card">
+                <img src="/docs/screenshots/purchase_order_history.png" alt="Purchase order history">
+                <figcaption>Purchase history shows received quantities, vendor context, costs, landed cost, and receipt details.</figcaption>
+              </figure>
+            </div>
+            <h3>Partial receiving</h3>
+            <p>If a vendor ships part of an order, receive only the quantity that arrived. The purchase order remains open for the remaining quantity. When the rest arrives, receive the rest.</p>
+            <h3>Shipping and landed cost</h3>
+            <p>Inbound vendor shipping can be tracked on the purchase order. If Add shipping to cost is enabled, FretTrack can allocate that shipping into the received item cost so purchase history reflects landed cost.</p>
+          </section>
+
+          <section id="barcodes" class="manual-section">
+            <h2>Barcode labels</h2>
+            <p>Barcode labels make inventory lookup faster and make parts easier to identify in bins, bags, drawers, and storage areas. FretTrack barcode identity uses the stable format <strong>FT-PART-{barcode_code}</strong>.</p>
+            <div class="figure-grid">
+              <figure class="figure-card">
+                <img src="/docs/screenshots/bar_code_labels.png" alt="Barcode label sheet">
+                <figcaption>Print barcode labels for parts, drawers, bins, and common stock areas.</figcaption>
+              </figure>
+              <figure class="figure-card">
+                <img src="/docs/screenshots/bar_code_labels2.png" alt="Alternate barcode label layout">
+                <figcaption>Label layouts can support shop organization and quick lookup by part identity.</figcaption>
+              </figure>
+            </div>
+            <h3>Barcode label habits</h3>
+            <ul class="check-list">
+              <li>Put labels on storage locations where possible, not only on tiny parts.</li>
+              <li>Use the same location names in Shop Settings and inventory records.</li>
+              <li>Search by the full FT-PART value or the raw barcode code.</li>
+              <li>Do not encode changing details, such as quantity, into the barcode identity.</li>
+            </ul>
+          </section>
+
+          <section id="shipping" class="manual-section">
+            <h2>Shipping, receiving, and chain of custody</h2>
+            <p>Shipping and custody records help the shop track packages, instruments, vendor items, customer returns, outbound shipments, and in-shop movement. This is manual tracking for shop workflow and does not replace a carrier account.</p>
+            <div class="figure-grid">
+              <figure class="figure-card">
+                <img src="/docs/screenshots/shipping_UI.png" alt="Shipping dashboard">
+                <figcaption>The Shipping dashboard groups records so the shop can see what is arriving, at the bench, ready to ship, in transit, or needs attention.</figcaption>
+              </figure>
+              <figure class="figure-card">
+                <img src="/docs/screenshots/ship_receive_chainofcustody_Screen.png" alt="Shipping and custody detail screen">
+                <figcaption>Use custody events, condition notes, packing notes, tracking details, and destination fields to record movement.</figcaption>
+              </figure>
+            </div>
+            <h3>Useful shipping fields</h3>
+            <ul class="check-list">
+              <li>Direction and fulfillment method</li>
+              <li>Status</li>
+              <li>Carrier, service level, tracking number, and tracking URL</li>
+              <li>Ship-to name and address snapshot</li>
+              <li>Shipping cost and shipping charge</li>
+              <li>Declared value, insurance, and signature requirement</li>
+              <li>Condition notes, packing notes, and customer notification status</li>
+            </ul>
+            <p>For purchase order receiving, use the inventory receiving workflow to change stock. Use shipping and custody records to document movement and package status.</p>
+          </section>
+
+          <section id="scheduling" class="manual-section">
+            <h2>Scheduling</h2>
+            <p>Scheduling helps the shop plan intake, pickup, due dates, follow-ups, shop blocks, and other calendar events. Scheduling is especially useful when promise dates, customer pickups, or staff availability affect the repair plan.</p>
+            <div class="split">
+              <div>
+                <h3>Common event types</h3>
+                <ul class="check-list">
+                  <li>Intake appointment</li>
+                  <li>Pickup appointment</li>
+                  <li>Due date</li>
+                  <li>Follow-up</li>
+                  <li>Shop block</li>
+                  <li>Other shop event</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Scheduling tips</h3>
+                <ul class="check-list">
+                  <li>Use promise dates for expected completion dates.</li>
+                  <li>Use schedule events for calendar actions.</li>
+                  <li>Attach events to jobs when they relate to a specific instrument.</li>
+                  <li>Use shop blocks to reserve bench time or unavailable time.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="reports" class="manual-section">
+            <h2>Reports</h2>
+            <p>Reports help eligible shops review workload, job status, priority, overdue work, pickup readiness, parts issues, inventory, purchase orders, landed cost history, work-log activity, and upcoming schedule load.</p>
+            <div class="figure-grid">
+              <figure class="figure-card">
+                <img src="/docs/screenshots/reports1.png" alt="Reports dashboard overview">
+                <figcaption>Overview cards summarize the shop workload and activity.</figcaption>
+              </figure>
+              <figure class="figure-card">
+                <img src="/docs/screenshots/reports2.png" alt="Reports job status sections">
+                <figcaption>Job reports help identify status, priority, overdue work, and ready-for-pickup jobs.</figcaption>
+              </figure>
+              <figure class="figure-card">
+                <img src="/docs/screenshots/reports3.png" alt="Reports inventory and purchasing sections">
+                <figcaption>Inventory and purchasing reports help identify low stock, purchase order status, and purchase history.</figcaption>
+              </figure>
+              <figure class="figure-card">
+                <img src="/docs/screenshots/reports4.png" alt="Reports schedule and activity sections">
+                <figcaption>Schedule and activity sections help the shop understand upcoming workload and recent work-log activity.</figcaption>
+              </figure>
+            </div>
+            <h3>Using report output</h3>
+            <ul class="check-list">
+              <li>Use filters to narrow the visible rows.</li>
+              <li>Print a report page when you need a simple paper copy.</li>
+              <li>Export CSV when you need spreadsheet review.</li>
+              <li>Treat reports as a shop management aid, not a replacement for bookkeeping review.</li>
+            </ul>
+          </section>
+
+          <section id="roles" class="manual-section">
+            <h2>Roles and permissions</h2>
+            <p>Roles control what each user can see and change. This protects shop data while letting staff work in the areas they need.</p>
+            <table class="workflow-table">
+              <thead>
+                <tr><th>Role</th><th>Typical access</th><th>Best use</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Owner</td><td>Full shop operations, settings, people, plan status, and workflow control.</td><td>Shop owner or primary manager.</td></tr>
+                <tr><td>Admin</td><td>Most shop operations and settings.</td><td>Manager or trusted staff member.</td></tr>
+                <tr><td>Tech</td><td>Jobs, customers, inventory, scheduling, and photos where shop access allows.</td><td>Repair technician or bench staff.</td></tr>
+                <tr><td>Viewer</td><td>Read-only shop access.</td><td>Bookkeeper, helper, or user who should not edit records.</td></tr>
+              </tbody>
+            </table>
+            <p>If a button is missing or disabled, your role, trial status, or plan access may not allow that action.</p>
+          </section>
+
+          <section id="billing" class="manual-section">
+            <h2>Billing and subscription basics</h2>
+            <p>FretTrack uses plan access to decide which shop features are available. Public plan wording is Trial, Shop, and Pro. The app can show current plan, trial status, expiration, renewal timing, and locked feature messaging.</p>
+            <div class="split">
+              <div>
+                <h3>Shop</h3>
+                <p>Shop is the paid core workflow for running the repair shop: customers, jobs, photos, work logs, inventory basics, scheduling, team workflow where available, printing, and email documents.</p>
+              </div>
+              <div>
+                <h3>Pro</h3>
+                <p>Pro includes Shop workflow and adds upgraded tools such as Advanced Reporting and other higher-end shop features where available.</p>
+              </div>
+            </div>
+            <p>Expired access should preserve data and allow safe viewing, but write actions or upgraded features may be locked until access is restored.</p>
+          </section>
+
+          <section id="daily-routine" class="manual-section">
+            <h2>Recommended daily routine</h2>
+            <div class="split">
+              <div>
+                <h3>Opening the shop</h3>
+                <ul class="check-list">
+                  <li>Open Dashboard or Jobs and review active work.</li>
+                  <li>Check Scheduling for pickups, due dates, and blocked time.</li>
+                  <li>Review waiting-on-parts jobs.</li>
+                  <li>Review low-stock and purchase order status if you manage inventory.</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Closing the day</h3>
+                <ul class="check-list">
+                  <li>Save any open job edits.</li>
+                  <li>Add work logs for completed bench work.</li>
+                  <li>Update statuses for ready, waiting, or completed jobs.</li>
+                  <li>Receive any arrived parts.</li>
+                  <li>Check that customer pickups or shipments are documented.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="troubleshooting" class="manual-section">
+            <h2>Troubleshooting</h2>
+            <div class="split">
+              <div>
+                <h3>I cannot save a job</h3>
+                <ul class="check-list">
+                  <li>Check required fields.</li>
+                  <li>Check your internet connection.</li>
+                  <li>Confirm your role allows editing jobs.</li>
+                  <li>Confirm your shop access is active.</li>
+                  <li>Look for visible save or validation messages.</li>
+                </ul>
+                <h3>Inventory did not update</h3>
+                <ul class="check-list">
+                  <li>Confirm the part was selected from inventory.</li>
+                  <li>Manual parts do not change stock.</li>
+                  <li>Confirm the quantity change saved successfully.</li>
+                  <li>Check whether your role can edit inventory.</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Photos are not loading</h3>
+                <ul class="check-list">
+                  <li>Refresh the job.</li>
+                  <li>Check whether the upload finished.</li>
+                  <li>Try another browser or device.</li>
+                  <li>Report the job number and photo label if the issue continues.</li>
+                </ul>
+                <h3>What to include in a support report</h3>
+                <ul class="check-list">
+                  <li>Screen or page name.</li>
+                  <li>What you clicked.</li>
+                  <li>Expected result.</li>
+                  <li>Actual result.</li>
+                  <li>Browser, device, and role.</li>
+                  <li>Screenshot or short video if possible.</li>
+                </ul>
+              </div>
+            </div>
+            <p class="muted">Clear reports help problems get fixed faster. Include the job number, customer name, or part name only when it helps identify the issue.</p>
+          </section>
+        </div>
+      </main>
+
+      <footer>
+        <p>FretTrack Systems | <a href="/docs">Docs</a> | <a href="/support">Support</a> | <a href="/privacy">Privacy</a> | <a href="/terms">Terms</a> | <a href="/beta-tester">Beta Tester Checklist</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

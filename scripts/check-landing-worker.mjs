@@ -13,6 +13,7 @@ const VALID_BODY = {
   email: 'landing-worker-test@example.com'
 };
 const PUBLIC_DOC_ROUTES = [
+  { route: '/docs/how-to-use-frettrack', assetPath: '/docs/how-to-use-frettrack.html', title: 'How to use FretTrack' },
   { route: '/docs/getting-started', assetPath: '/docs/getting-started.html', title: 'Start using FretTrack' },
   { route: '/docs/beta-tester-guide', assetPath: '/docs/beta-tester-guide.html', title: 'How to test FretTrack' },
   { route: '/docs/shops-and-accounts', assetPath: '/docs/shops-and-accounts.html', title: 'Manage shop access' },
@@ -59,6 +60,7 @@ const REQUIRED_DIRECT_ROUTES = [
   '/docs',
   '/docs/',
   '/docs.html',
+  '/docs/how-to-use-frettrack',
   '/docs/getting-started',
   '/docs/jobs',
   '/docs/inventory-and-parts',
@@ -169,7 +171,7 @@ async function testBetaTesterChecklistRoutes() {
           });
         }
         if (pathname === '/docs.html') {
-          return new Response('<!doctype html><title>Docs | FretTrack</title><h1>FretTrack Docs</h1><a href="/support">Support</a><a href="/beta-tester">Beta Tester Checklist</a>', {
+          return new Response('<!doctype html><title>Docs | FretTrack</title><h1>FretTrack Docs</h1><a href="/docs/how-to-use-frettrack">Complete how-to guide</a><a href="/support">Support</a><a href="/beta-tester">Beta Tester Checklist</a>', {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
@@ -229,6 +231,7 @@ async function testBetaTesterChecklistRoutes() {
   assert.match(docsResponse.headers.get('content-type') || '', /text\/html/);
   assertRequiredDocSecurityHeaders(docsResponse, '/docs');
   assert.match(docsHtml, /FretTrack Docs/);
+  assert.match(docsHtml, /Complete how-to guide/);
   assert.match(docsHtml, /Beta Tester Checklist/);
 
   const docsHtmlResponse = await worker.fetch(new Request('https://frettrack-app.com/docs.html'), env);
