@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { isValidEmailAddress } from './emailDocuments';
 
 export default function JobDocumentEmailDialog({
@@ -12,6 +12,7 @@ export default function JobDocumentEmailDialog({
   const [subject, setSubject] = useState(draft?.subject || '');
   const [body, setBody] = useState(draft?.body || '');
   const [sendState, setSendState] = useState({ sending: false, error: '', success: '' });
+  const sendInFlightRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -22,6 +23,21 @@ export default function JobDocumentEmailDialog({
     setBody(draft?.body || '');
     setSendState({ sending: false, error: '', success: '' });
   }, [isOpen, draft?.recipient, draft?.subject, draft?.body, draft?.type]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        onClose?.();
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen || !draft) {
     return null;
@@ -39,6 +55,9 @@ export default function JobDocumentEmailDialog({
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (sendInFlightRef.current) {
+      return;
+    }
     if (!canSend) {
       setSendState({
         sending: false,
@@ -48,33 +67,51 @@ export default function JobDocumentEmailDialog({
       return;
     }
 
+    let shouldClose = false;
+    sendInFlightRef.current = true;
     setSendState({ sending: true, error: '', success: '' });
-    const result = await onSend({
-      type: draft.type,
-      recipient: trimmedRecipient,
-      subject: subject.trim(),
-      body: body.trim()
-    });
+    try {
+      const result = await onSend({
+        type: draft.type,
+        recipient: trimmedRecipient,
+        subject: subject.trim(),
+        body: body.trim()
+      });
 
-    if (!result?.ok) {
+      if (!result?.ok) {
+        setSendState({
+          sending: false,
+          error: result?.error || 'Email send failed.',
+          success: ''
+        });
+        return;
+      }
+
+      shouldClose = true;
+    } catch (error) {
       setSendState({
         sending: false,
-        error: result?.error || 'Email send failed.',
+        error: error?.message || 'Email send failed.',
         success: ''
       });
-      return;
+    } finally {
+      sendInFlightRef.current = false;
+      setSendState((current) => ({ ...current, sending: false }));
+      if (shouldClose) {
+        onClose?.();
+      }
     }
+  }
 
-    setSendState({
-      sending: false,
-      error: '',
-      success: kind === 'invoice' ? 'Invoice email sent and logged.' : 'Work order email sent and logged.'
-    });
+  function handleBackdropClick(event) {
+    if (event.target === event.currentTarget) {
+      onClose?.();
+    }
   }
 
   return (
-    <div className="feedback-backdrop no-print" role="presentation">
-      <form className="feedback-modal document-email-modal" onSubmit={handleSubmit}>
+    <div className="feedback-backdrop no-print" role="presentation" onClick={handleBackdropClick}>
+      <form className="feedback-modal document-email-modal" onSubmit={handleSubmit} onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label={title}>
         <div className="feedback-modal-heading">
           <div>
             <h2>{title}</h2>
@@ -123,7 +160,7 @@ export default function JobDocumentEmailDialog({
         {sendState.success && <p className="message-success">{sendState.success}</p>}
 
         <div className="feedback-actions">
-          <button type="button" className="button-tertiary" onClick={onClose} disabled={sendState.sending}>
+          <button type="button" className="button-tertiary" onClick={onClose}>
             Cancel
           </button>
           <button type="submit" className="primary-action" disabled={!canSend}>
