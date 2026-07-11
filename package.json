@@ -13,6 +13,7 @@
     "check:customer-import": "node scripts/check-customer-import.mjs",
     "check:shop-bootstrap": "node scripts/check-shop-bootstrap.mjs",
     "check:inventory-shipping-polish": "node scripts/check-inventory-shipping-polish.mjs",
+    "check:invoice-email-modal": "node scripts/check-invoice-email-modal.mjs",
     "check:shipping": "node scripts/check-shipping-custody-foundation.mjs",
     "check:plan-branding": "node scripts/check-plan-branding.mjs",
     "check:reports": "node scripts/check-reports-load.mjs",

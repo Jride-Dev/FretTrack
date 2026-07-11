@@ -1229,6 +1229,11 @@ export default function JobDetail({
       return result;
     }
 
+    onNotice?.({
+      type: 'success',
+      message: type === 'invoice' ? 'Invoice email sent.' : 'Work order email sent.'
+    });
+
     logJobEventSafe({
       shopId: jobToSend.shopId,
       jobId: jobToSend.id,

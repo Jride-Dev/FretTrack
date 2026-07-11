@@ -8,6 +8,10 @@ FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Repor
 
 The application now applies the same role intent consistently across its high-risk operational screens. Owners, admins, and techs retain their intended shop workflows; viewers see read-only job, customer, inventory, shipping, scheduling, and photo views. Job Detail no longer leaves editable intake, inspection, damage-map, work-log, payment, job-status, or schedule controls exposed to a read-only user. Expired/read-only lifecycle states also block those changes at the client while existing Supabase RLS remains the backend authority. Billing remains viewable to owners/admins, while owner-only billing-management authority and verified platform-operator tools stay distinct from ordinary shop roles.
 
+## Invoice Email Dialog Reliability
+
+After an invoice or work-order email succeeds, the document dialog now closes automatically and the app confirms delivery action in its normal notice area. A failed or thrown send clears its busy state so the user can retry or dismiss the dialog. Cancel, the close control, Escape, and clicking outside the dialog all dismiss it without being affected by shop write permissions.
+
 ## Public Docs Hub
 
 The landing site now includes `https://frettrack-app.com/docs` as a public hub for customer-facing and tester-facing resources. It links beta testing downloads, support / FAQ, app login, privacy, and terms from FretTrack's own domain so testers are not dependent on GitHub Wiki or GitHub asset access when browser, workplace, school, or device policies block GitHub.
