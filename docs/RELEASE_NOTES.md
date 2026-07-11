@@ -4,6 +4,10 @@
 
 FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
+## Role And Permission Audit
+
+The application now applies the same role intent consistently across its high-risk operational screens. Owners, admins, and techs retain their intended shop workflows; viewers see read-only job, customer, inventory, shipping, scheduling, and photo views. Job Detail no longer leaves editable intake, inspection, damage-map, work-log, payment, job-status, or schedule controls exposed to a read-only user. Expired/read-only lifecycle states also block those changes at the client while existing Supabase RLS remains the backend authority. Billing remains viewable to owners/admins, while owner-only billing-management authority and verified platform-operator tools stay distinct from ordinary shop roles.
+
 ## Public Docs Hub
 
 The landing site now includes `https://frettrack-app.com/docs` as a public hub for customer-facing and tester-facing resources. It links beta testing downloads, support / FAQ, app login, privacy, and terms from FretTrack's own domain so testers are not dependent on GitHub Wiki or GitHub asset access when browser, workplace, school, or device policies block GitHub.

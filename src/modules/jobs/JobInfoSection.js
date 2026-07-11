@@ -12,6 +12,7 @@ import { stateOptionsWithCurrent } from '../../data/usStates';
 import { JOB_PRIORITY_OPTIONS } from './jobPriority';
 
 export default function JobInfoSection({
+  canWrite = true,
   draftJob,
   intakeTypes,
   normalizeInstrumentType,
@@ -49,23 +50,23 @@ export default function JobInfoSection({
       <div className="form-grid">
         <label>
           First Name
-          <input name="customerFirstName" value={draftJob.customerFirstName || ''} onChange={updateField} />
+          <input name="customerFirstName" value={draftJob.customerFirstName || ''} onChange={updateField} disabled={!canWrite} />
         </label>
         <label>
           Last Name
-          <input name="customerLastName" value={draftJob.customerLastName || ''} onChange={updateField} />
+          <input name="customerLastName" value={draftJob.customerLastName || ''} onChange={updateField} disabled={!canWrite} />
         </label>
         <label>
           Address
-          <input name="addressLine1" value={draftJob.addressLine1 || ''} onChange={updateField} />
+          <input name="addressLine1" value={draftJob.addressLine1 || ''} onChange={updateField} disabled={!canWrite} />
         </label>
         <label>
           City
-          <input name="city" value={draftJob.city || ''} onChange={updateField} />
+          <input name="city" value={draftJob.city || ''} onChange={updateField} disabled={!canWrite} />
         </label>
         <label>
           State
-          <select name="region" value={draftJob.region || ''} onChange={updateField}>
+          <select name="region" value={draftJob.region || ''} onChange={updateField} disabled={!canWrite}>
             <option value="">Select state</option>
             {stateOptionsWithCurrent(draftJob.region).map((state) => (
               <option key={state} value={state}>{state}</option>
@@ -74,17 +75,17 @@ export default function JobInfoSection({
         </label>
         <label>
           Zip Code
-          <input name="postalCode" value={draftJob.postalCode || ''} onChange={updateField} inputMode="numeric" />
+          <input name="postalCode" value={draftJob.postalCode || ''} onChange={updateField} inputMode="numeric" disabled={!canWrite} />
         </label>
         <label>
           Phone
-          <input name="phone" value={draftJob.phone} onChange={updateField} />
+          <input name="phone" value={draftJob.phone} onChange={updateField} disabled={!canWrite} />
         </label>
         <label className="checkline">
           <input
             type="checkbox"
             checked={Boolean(draftJob.smsOptIn)}
-            disabled={!smsEnabled}
+            disabled={!canWrite || !smsEnabled}
             title={!smsEnabled ? 'SMS is disabled for this trial build. Email is active.' : undefined}
             onChange={(event) => updateContactPreference('smsOptIn', event.target.checked)}
           />
@@ -92,15 +93,15 @@ export default function JobInfoSection({
         </label>
         <label>
           Email
-          <input name="email" type="email" value={draftJob.email} onChange={updateField} />
+          <input name="email" type="email" value={draftJob.email} onChange={updateField} disabled={!canWrite} />
         </label>
         <label className="checkline">
-          <input type="checkbox" checked={Boolean(draftJob.emailOptIn)} onChange={(event) => updateContactPreference('emailOptIn', event.target.checked)} />
+          <input type="checkbox" checked={Boolean(draftJob.emailOptIn)} onChange={(event) => updateContactPreference('emailOptIn', event.target.checked)} disabled={!canWrite} />
           Email opt-in
         </label>
         <label>
           Preferred Contact
-          <select value={draftJob.preferredContactMethod || 'email'} onChange={(event) => updateContactPreference('preferredContactMethod', event.target.value)}>
+          <select value={draftJob.preferredContactMethod || 'email'} onChange={(event) => updateContactPreference('preferredContactMethod', event.target.value)} disabled={!canWrite}>
             <option value="email">Email</option>
             <option value="sms" disabled={!smsEnabled}>SMS</option>
             <option value="none">None</option>
@@ -108,7 +109,7 @@ export default function JobInfoSection({
         </label>
         <label>
           Job Source
-          <select name="intakeType" value={draftJob.techDetails.intakeType || 'Walk-In'} onChange={updateTechField}>
+          <select name="intakeType" value={draftJob.techDetails.intakeType || 'Walk-In'} onChange={updateTechField} disabled={!canWrite}>
             {intakeTypes.map((source) => (
               <option key={source.value || source} value={source.value || source}>{source.label || source}</option>
             ))}
@@ -121,7 +122,7 @@ export default function JobInfoSection({
             value={draftJob.techDetails.subcontractorName || ''}
             onChange={updateTechField}
             placeholder="Sub-contractor business name"
-            disabled={(draftJob.techDetails.intakeType || 'Walk-In') !== 'Sub-Contract'}
+            disabled={!canWrite || (draftJob.techDetails.intakeType || 'Walk-In') !== 'Sub-Contract'}
           />
         </label>
         <div className="instrument-selector" role="group" aria-label="Instrument Type">
@@ -133,6 +134,7 @@ export default function JobInfoSection({
                 key={option.value}
                 className={instrumentType === option.value ? 'active' : ''}
                 onClick={() => setInstrumentType(option.value)}
+                disabled={!canWrite}
               >
                 {option.label}
               </button>
@@ -150,6 +152,7 @@ export default function JobInfoSection({
                 value={draftJob.guitarBrand}
                 onChange={updateField}
                 placeholder="Fender"
+                disabled={!canWrite}
               />
             </label>
             <label>
@@ -160,6 +163,7 @@ export default function JobInfoSection({
                 value={draftJob.model}
                 onChange={updateField}
                 placeholder="Stratocaster"
+                disabled={!canWrite}
               />
             </label>
             <label>
@@ -170,6 +174,7 @@ export default function JobInfoSection({
                 value={draftJob.techDetails.instrumentYear || ''}
                 onChange={updateTechField}
                 placeholder="1972"
+                disabled={!canWrite}
               />
             </label>
             <label>
@@ -179,6 +184,7 @@ export default function JobInfoSection({
                 value={draftJob.serial}
                 onChange={updateField}
                 placeholder="Z8239242, Unknown, or Not provided"
+                disabled={!canWrite}
               />
             </label>
             <label>
@@ -188,6 +194,7 @@ export default function JobInfoSection({
                 value={draftJob.color}
                 onChange={updateField}
                 placeholder="3-Color Sunburst"
+                disabled={!canWrite}
               />
             </label>
             <label>
@@ -197,11 +204,12 @@ export default function JobInfoSection({
                 value={draftJob.techDetails.finish || ''}
                 onChange={updateTechField}
                 placeholder="Gloss, Nitro, Poly, Satin"
+                disabled={!canWrite}
               />
             </label>
             <label>
               Orientation
-              <select name="orientation" value={draftJob.techDetails.orientation || 'Unknown'} onChange={updateTechField}>
+              <select name="orientation" value={draftJob.techDetails.orientation || 'Unknown'} onChange={updateTechField} disabled={!canWrite}>
                 {getOrientationOptions(draftJob.techDetails.orientation).map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
@@ -211,6 +219,7 @@ export default function JobInfoSection({
               String Count
               <select
                 value={stringCountSelectValue}
+                disabled={!canWrite}
                 onChange={(event) => {
                   const value = event.target.value;
                   setShowCustomStringCount(value === 'custom');
@@ -232,6 +241,7 @@ export default function JobInfoSection({
                   max="24"
                   value={stringCount}
                   onChange={(event) => updateStringCount(event.target.value)}
+                  disabled={!canWrite}
                 />
               </label>
             )}
@@ -239,15 +249,15 @@ export default function JobInfoSection({
         </fieldset>
         <label>
           Date Received
-          <input type="date" name="dateReceived" value={draftJob.dateReceived} onChange={updateField} />
+          <input type="date" name="dateReceived" value={draftJob.dateReceived} onChange={updateField} disabled={!canWrite} />
         </label>
         <label>
           Promise Date
-          <input type="date" name="promiseDate" value={draftJob.promiseDate || ''} onChange={updateField} />
+          <input type="date" name="promiseDate" value={draftJob.promiseDate || ''} onChange={updateField} disabled={!canWrite} />
         </label>
         <label>
           Priority
-          <select name="priority" value={draftJob.priority || 'regular'} onChange={updateField}>
+          <select name="priority" value={draftJob.priority || 'regular'} onChange={updateField} disabled={!canWrite}>
             {JOB_PRIORITY_OPTIONS.map((priority) => (
               <option key={priority.value} value={priority.value}>{priority.label}</option>
             ))}
@@ -259,7 +269,7 @@ export default function JobInfoSection({
         </label>
         <label className="wide">
           Reason For Visit
-          <textarea name="reasonForVisit" value={draftJob.reasonForVisit} onChange={updateField} rows="3" />
+          <textarea name="reasonForVisit" value={draftJob.reasonForVisit} onChange={updateField} rows="3" disabled={!canWrite} />
         </label>
       </div>
     </section>

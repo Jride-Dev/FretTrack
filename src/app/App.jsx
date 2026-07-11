@@ -23,13 +23,19 @@ import {
   canAccessOperatorDashboard,
   canAccessShopAsMember,
   canDeletePhotos as canDeletePhotosForRole,
+  canEditCustomers as canEditCustomersForRole,
+  canEditJobs as canEditJobsForRole,
   canEditPhotos as canEditPhotosForRole,
+  canEditScheduling as canEditSchedulingForRole,
+  canManageInventory as canManageInventoryForRole,
   canManageShipments as canManageShipmentsForRole,
   canManageTeamMembers as canManageTeamMembersForRole,
   canManageShopSettings,
   canOverwritePhotos as canOverwritePhotosForRole,
   canPreviewCustomerImport as canPreviewCustomerImportForRole,
   canUploadPhotos as canUploadPhotosForRole,
+  canViewBilling as canViewBillingForRole,
+  getCurrentAccessPermissions,
   getShopWriteAccess
 } from '../modules/auth/permissionService';
 import { addJob, findRemoteJobByNumber, getJobs, isDuplicateWorkOrderError, updateJob } from '../modules/jobs/jobService';
@@ -106,20 +112,27 @@ export default function App() {
   const billingAccess = entitlementSnapshot || getDefaultEntitlementSnapshot(membership?.shopId);
   const planStatus = getPlanStatus(billingAccess);
   const appVersionText = getPlanVersionText(APP_VERSION, planStatus);
-  const canWrite = getShopWriteAccess({
+  const permissionContext = {
     role: membership?.role,
-    entitlementSnapshot: billingAccess,
-    hasSupabaseConfig
-  });
+    entitlementSnapshot: billingAccess
+  };
+  const canEditJobs = !hasSupabaseConfig || canEditJobsForRole(permissionContext);
+  const canWrite = hasSupabaseConfig
+    ? getShopWriteAccess({ ...permissionContext, hasSupabaseConfig })
+    : canEditJobs;
   const canManageShop = !hasSupabaseConfig || canManageShopSettings({ role: membership?.role });
   const canEditShopSettings = canManageShop && canWrite;
-  const canManageTeamMembers = !hasSupabaseConfig || canManageTeamMembersForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
-  const canManageShipments = !hasSupabaseConfig || canManageShipmentsForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
-  const canPreviewCustomerImport = !hasSupabaseConfig || canPreviewCustomerImportForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
-  const canUploadPhotos = !hasSupabaseConfig || canUploadPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
-  const canEditPhotos = !hasSupabaseConfig || canEditPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
-  const canOverwritePhotos = !hasSupabaseConfig || canOverwritePhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
-  const canDeletePhotos = !hasSupabaseConfig || canDeletePhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess });
+  const canManageTeamMembers = !hasSupabaseConfig || canManageTeamMembersForRole(permissionContext);
+  const canManageInventory = !hasSupabaseConfig || canManageInventoryForRole(permissionContext);
+  const canManageShipments = !hasSupabaseConfig || canManageShipmentsForRole(permissionContext);
+  const canEditCustomers = !hasSupabaseConfig || canEditCustomersForRole(permissionContext);
+  const canEditScheduling = !hasSupabaseConfig || canEditSchedulingForRole(permissionContext);
+  const canPreviewCustomerImport = !hasSupabaseConfig || canPreviewCustomerImportForRole(permissionContext);
+  const canUploadPhotos = !hasSupabaseConfig || canUploadPhotosForRole(permissionContext);
+  const canEditPhotos = !hasSupabaseConfig || canEditPhotosForRole(permissionContext);
+  const canOverwritePhotos = !hasSupabaseConfig || canOverwritePhotosForRole(permissionContext);
+  const canDeletePhotos = !hasSupabaseConfig || canDeletePhotosForRole(permissionContext);
+  const canViewBilling = !hasSupabaseConfig || canViewBillingForRole(permissionContext);
   const canSendEmail = canWrite && billingAccess.access?.canSendEmail !== false;
   const canSendSms = canWrite && billingAccess.access?.canSendSms === true;
   const entitlementMessage = getEntitlementMessage(billingAccess);
@@ -303,10 +316,10 @@ export default function App() {
     if (workspaceState.mode === 'detail' && jobs.some((job) => job.id === workspaceState.selectedJobId)) {
       setSelectedJobId(workspaceState.selectedJobId);
       setMode('detail');
-    } else if (workspaceState.mode && workspaceState.mode !== 'detail' && isAllowedWorkspaceMode(workspaceState.mode, { isOperator, canManageShop, canWrite })) {
+    } else if (workspaceState.mode && workspaceState.mode !== 'detail' && isAllowedWorkspaceMode(workspaceState.mode, { isOperator, canManageShop, canViewBilling, canWrite })) {
       setMode(workspaceState.mode);
     }
-  }, [canManageShop, canWrite, isOperator, membership?.shopId, jobs, selectedJobId]);
+  }, [canManageShop, canViewBilling, canWrite, isOperator, membership?.shopId, jobs, selectedJobId]);
 
   useEffect(() => {
     if (!membership?.shopId) {
@@ -727,7 +740,7 @@ export default function App() {
   }
 
   function navigateTo(nextMode) {
-    if (!isAllowedWorkspaceMode(nextMode, { isOperator, canManageShop, canWrite })) {
+    if (!isAllowedWorkspaceMode(nextMode, { isOperator, canManageShop, canViewBilling, canWrite })) {
       setNotice({ type: 'error', message: 'This area is not available for your account.' });
       setMode('new');
       return;
@@ -1167,7 +1180,7 @@ export default function App() {
             <button type="button" className={getHeaderNavClass('drafts')} onClick={() => navigateTo('drafts')}>Local Drafts{offlineDraftCount ? ` (${offlineDraftCount})` : ''}</button>
           )}
           <button type="button" className={getHeaderNavClass('settings')} onClick={() => navigateTo('settings')}>Shop Settings</button>
-          {canManageShop && <button type="button" className={getHeaderNavClass('billing')} onClick={() => navigateTo('billing')}>Billing</button>}
+          {canViewBilling && <button type="button" className={getHeaderNavClass('billing')} onClick={() => navigateTo('billing')}>Billing</button>}
           {canAccessOperatorDashboard({ isOperator }) && <button type="button" className={getHeaderNavClass('operator')} onClick={() => navigateTo('operator')}>Operator</button>}
           {session && (
             <FeedbackReporter selectedJob={selectedJob} onNotice={setNotice} />
@@ -1205,6 +1218,7 @@ export default function App() {
           entitlementSnapshot={billingAccess}
           isOperator={isOperator}
           membership={membership}
+          permissions={getCurrentAccessPermissions({ ...permissionContext, isOperator })}
           session={session}
         />
       )}
@@ -1232,7 +1246,7 @@ export default function App() {
             <JobForm
               jobs={jobs}
               customers={customers}
-              canWrite={canWrite}
+              canWrite={canEditJobs}
               shopProfile={shopProfile}
               initialCustomer={pendingNewJobCustomer}
               onJobSaved={handleJobSaved}
@@ -1298,7 +1312,7 @@ export default function App() {
             <CustomerManager
               customers={customers}
               jobs={jobs}
-              canWrite={canWrite}
+              canWrite={canEditCustomers}
               canPreviewCustomerImport={canPreviewCustomerImport}
               dateOptions={dateOptions}
               moneyOptions={moneyOptions}
@@ -1327,7 +1341,7 @@ export default function App() {
 
           {mode === 'inventory' && (
             <InventoryPage
-              canWrite={canWrite}
+              canWrite={canManageInventory}
               shopId={membership?.shopId || getSelectedShop().shopId}
               onNotice={setNotice}
               onDirtyChange={setHasUnsavedPageChanges}
@@ -1347,7 +1361,7 @@ export default function App() {
 
           {mode === 'scheduling' && (
             <SchedulingPage
-              canWrite={canWrite}
+              canWrite={canEditScheduling}
               customers={customers}
               jobs={jobs}
               shopId={membership?.shopId || getSelectedShop().shopId}
@@ -1373,7 +1387,7 @@ export default function App() {
 
           {mode === 'billing' && (
             <BillingPage
-              canManageShop={canManageShop}
+              canManageShop={canViewBilling}
               entitlementSnapshot={billingAccess}
               shopProfile={shopProfile}
             />
@@ -1400,7 +1414,7 @@ export default function App() {
               onRefresh={refreshJobs}
               onClose={() => showNewJob(null, { skipDirtyGuard: true })}
               onNotice={setNotice}
-              canWrite={canWrite}
+              canWrite={canEditJobs}
               canUploadPhotos={canUploadPhotos}
               canEditPhotos={canEditPhotos}
               canOverwritePhotos={canOverwritePhotos}
@@ -1441,13 +1455,13 @@ function saveWorkspaceState(shopId, state) {
   }
 }
 
-function isAllowedWorkspaceMode(mode, { isOperator = false, canManageShop = false, canWrite = false } = {}) {
+function isAllowedWorkspaceMode(mode, { isOperator = false, canManageShop = false, canViewBilling = false, canWrite = false } = {}) {
   if (mode === 'operator') {
     return canAccessOperatorDashboard({ isOperator });
   }
 
   if (mode === 'billing') {
-    return Boolean(canManageShop);
+    return Boolean(canViewBilling);
   }
 
   if (mode === 'drafts') {
@@ -1555,7 +1569,7 @@ function PendingApprovalScreen({ betaAccess, email, onRetry, onSignOut }) {
   );
 }
 
-function InternalCurrentAccessPanel({ betaAccess, canWrite, entitlementSnapshot, isOperator, membership, session }) {
+function InternalCurrentAccessPanel({ betaAccess, canWrite, entitlementSnapshot, isOperator, membership, permissions = {}, session }) {
   if (!canAccessOperatorDashboard({ isOperator })) {
     return null;
   }
@@ -1618,6 +1632,18 @@ function InternalCurrentAccessPanel({ betaAccess, canWrite, entitlementSnapshot,
         <div>
           <dt>Can Write</dt>
           <dd>{canWrite ? 'Yes' : 'No'}</dd>
+        </div>
+        <div>
+          <dt>Jobs / Customers / Schedule</dt>
+          <dd>{permissions.canEditJobs && permissions.canEditCustomers && permissions.canEditScheduling ? 'Write' : 'Read only'}</dd>
+        </div>
+        <div>
+          <dt>Inventory / Shipping / Custody</dt>
+          <dd>{permissions.canManageInventory && permissions.canWriteShipping && permissions.canManageCustodyEvents ? 'Write' : 'Read only'}</dd>
+        </div>
+        <div>
+          <dt>Billing</dt>
+          <dd>{permissions.canManageBilling ? 'Manage' : permissions.canViewBilling ? 'View only' : 'No access'}</dd>
         </div>
         <div>
           <dt>Photo Editor</dt>

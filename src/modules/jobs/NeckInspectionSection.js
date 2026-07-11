@@ -1,6 +1,7 @@
 import { getLengthUnitLabel, normalizeLengthUnit, parseLengthInput } from '../../shared/utils/measurements';
 
 export default function NeckInspectionSection({
+  canWrite = true,
   lengthUnit = 'in',
   outerStringLabels = { treble: 'High E', bass: 'Low E' },
   techDetails,
@@ -41,12 +42,14 @@ export default function NeckInspectionSection({
             value={stage.relief || ''}
             onChange={(event) => updateLengthValue(stageKey, 'relief', event.target.value)}
             onBlur={(event) => commitLengthField(stageKey, 'relief', event.target.value, stageLengthUnit)}
+            disabled={!canWrite}
           />
         </label>
         <label>
           Relief Unit
           <select
             value={stage.reliefUnit || stageLengthUnit}
+            disabled={!canWrite}
             onChange={(event) => {
               updateNeckInspection(stageKey, 'reliefUnit', event.target.value);
               updateNeckInspection(stageKey, 'lengthUnit', event.target.value);
@@ -58,7 +61,7 @@ export default function NeckInspectionSection({
         </label>
         <label className="wide">
           Method
-          <input value={stage.reliefMethod || ''} onChange={(event) => updateNeckInspection(stageKey, 'reliefMethod', event.target.value)} />
+          <input value={stage.reliefMethod || ''} onChange={(event) => updateNeckInspection(stageKey, 'reliefMethod', event.target.value)} disabled={!canWrite} />
         </label>
         <label>
           Action {outerStringLabels.treble} @ 3rd ({unitLabel})
@@ -68,6 +71,7 @@ export default function NeckInspectionSection({
             value={stage.nutHighE || ''}
             onChange={(event) => updateLengthValue(stageKey, 'nutHighE', event.target.value)}
             onBlur={(event) => commitLengthField(stageKey, 'nutHighE', event.target.value, stageLengthUnit)}
+            disabled={!canWrite}
           />
         </label>
         <label>
@@ -78,6 +82,7 @@ export default function NeckInspectionSection({
             value={stage.nutLowE || ''}
             onChange={(event) => updateLengthValue(stageKey, 'nutLowE', event.target.value)}
             onBlur={(event) => commitLengthField(stageKey, 'nutLowE', event.target.value, stageLengthUnit)}
+            disabled={!canWrite}
           />
         </label>
         <label>
@@ -88,6 +93,7 @@ export default function NeckInspectionSection({
             value={stage.actionHighE12th || ''}
             onChange={(event) => updateLengthValue(stageKey, 'actionHighE12th', event.target.value)}
             onBlur={(event) => commitLengthField(stageKey, 'actionHighE12th', event.target.value, stageLengthUnit)}
+            disabled={!canWrite}
           />
         </label>
         <label>
@@ -98,11 +104,12 @@ export default function NeckInspectionSection({
             value={stage.actionLowE12th || ''}
             onChange={(event) => updateLengthValue(stageKey, 'actionLowE12th', event.target.value)}
             onBlur={(event) => commitLengthField(stageKey, 'actionLowE12th', event.target.value, stageLengthUnit)}
+            disabled={!canWrite}
           />
         </label>
         <label>
           3rd Fret Height
-          <select value={stage.nutStatus || 'OK'} onChange={(event) => updateNeckInspection(stageKey, 'nutStatus', event.target.value)}>
+          <select value={stage.nutStatus || 'OK'} onChange={(event) => updateNeckInspection(stageKey, 'nutStatus', event.target.value)} disabled={!canWrite}>
             <option value="OK">OK</option>
             <option value="High">High</option>
             <option value="Low">Low</option>
@@ -110,7 +117,7 @@ export default function NeckInspectionSection({
         </label>
         <label>
           Fret Condition
-          <select value={stage.fretCondition || 'Good'} onChange={(event) => updateNeckInspection(stageKey, 'fretCondition', event.target.value)}>
+          <select value={stage.fretCondition || 'Good'} onChange={(event) => updateNeckInspection(stageKey, 'fretCondition', event.target.value)} disabled={!canWrite}>
             <option value="Good">Good</option>
             <option value="Minor wear">Minor wear</option>
             <option value="Needs level">Needs level</option>
@@ -119,7 +126,7 @@ export default function NeckInspectionSection({
         </label>
         <label>
           Neck Condition
-          <select value={stage.neckCondition || 'Straight'} onChange={(event) => updateNeckInspection(stageKey, 'neckCondition', event.target.value)}>
+          <select value={stage.neckCondition || 'Straight'} onChange={(event) => updateNeckInspection(stageKey, 'neckCondition', event.target.value)} disabled={!canWrite}>
             <option value="Straight">Straight</option>
             <option value="Backbow">Backbow</option>
             <option value="Upbow">Upbow</option>
@@ -128,7 +135,7 @@ export default function NeckInspectionSection({
         </label>
         <label>
           Truss Rod
-          <select value={stage.trussRodStatus || 'Unknown'} onChange={(event) => updateNeckInspection(stageKey, 'trussRodStatus', event.target.value)}>
+          <select value={stage.trussRodStatus || 'Unknown'} onChange={(event) => updateNeckInspection(stageKey, 'trussRodStatus', event.target.value)} disabled={!canWrite}>
             <option value="Working">Working</option>
             <option value="Maxed">Maxed</option>
             <option value="Frozen">Frozen</option>
@@ -136,28 +143,28 @@ export default function NeckInspectionSection({
           </select>
         </label>
         <label className="checkline">
-          <input type="checkbox" checked={Boolean(stage.twist)} onChange={(event) => updateNeckInspection(stageKey, 'twist', event.target.checked)} />
+          <input type="checkbox" checked={Boolean(stage.twist)} onChange={(event) => updateNeckInspection(stageKey, 'twist', event.target.checked)} disabled={!canWrite} />
           Twist
         </label>
         <label className="checkline">
-          <input type="checkbox" checked={Boolean(stage.buzzPresent)} onChange={(event) => updateNeckInspection(stageKey, 'buzzPresent', event.target.checked)} />
+          <input type="checkbox" checked={Boolean(stage.buzzPresent)} onChange={(event) => updateNeckInspection(stageKey, 'buzzPresent', event.target.checked)} disabled={!canWrite} />
           Buzz present
         </label>
         <label className="checkline">
-          <input type="checkbox" checked={Boolean(stage.deadSpots)} onChange={(event) => updateNeckInspection(stageKey, 'deadSpots', event.target.checked)} />
+          <input type="checkbox" checked={Boolean(stage.deadSpots)} onChange={(event) => updateNeckInspection(stageKey, 'deadSpots', event.target.checked)} disabled={!canWrite} />
           Dead spots
         </label>
         <label className="checkline">
-          <input type="checkbox" checked={Boolean(stage.highFrets)} onChange={(event) => updateNeckInspection(stageKey, 'highFrets', event.target.checked)} />
+          <input type="checkbox" checked={Boolean(stage.highFrets)} onChange={(event) => updateNeckInspection(stageKey, 'highFrets', event.target.checked)} disabled={!canWrite} />
           High frets
         </label>
         <label className="wide">
           Fret Notes
-          <textarea value={stage.fretNotes || ''} onChange={(event) => updateNeckInspection(stageKey, 'fretNotes', event.target.value)} rows="2" />
+          <textarea value={stage.fretNotes || ''} onChange={(event) => updateNeckInspection(stageKey, 'fretNotes', event.target.value)} rows="2" disabled={!canWrite} />
         </label>
         <label className="wide">
           Notes
-          <textarea value={stage.notes || ''} onChange={(event) => updateNeckInspection(stageKey, 'notes', event.target.value)} rows="3" />
+          <textarea value={stage.notes || ''} onChange={(event) => updateNeckInspection(stageKey, 'notes', event.target.value)} rows="3" disabled={!canWrite} />
         </label>
       </fieldset>
     );

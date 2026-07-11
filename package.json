@@ -17,6 +17,7 @@
     "check:plan-branding": "node scripts/check-plan-branding.mjs",
     "check:reports": "node scripts/check-reports-load.mjs",
     "check:permissions": "node scripts/check-permission-hardening.mjs && node scripts/check-rpc-security.mjs",
+    "check:role-permissions": "node scripts/check-role-permission-audit.mjs",
     "check:tiers": "node scripts/check-tier-split.mjs",
     "check:landing-worker": "node scripts/check-landing-worker.mjs",
     "check:migrations": "node scripts/check-supabase-migrations.mjs",

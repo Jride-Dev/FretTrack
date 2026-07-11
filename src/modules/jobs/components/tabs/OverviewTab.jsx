@@ -4,7 +4,7 @@ import { getShopDateOptions } from '../../../shops/shopConfig.js';
 import { getJobPriorityLabel, getJobPriorityOption } from '../../jobPriority.js';
 import JobStatusSelect from '../../JobStatusSelect.jsx';
 
-export default function OverviewTab({ draftJob, isDirty, updateField, printActions }) {
+export default function OverviewTab({ canWrite = true, draftJob, isDirty, updateField, printActions }) {
   const dateOptions = getShopDateOptions(draftJob.techDetails?.tax);
 
   return (
@@ -14,7 +14,7 @@ export default function OverviewTab({ draftJob, isDirty, updateField, printActio
           <h3>Overview</h3>
           <p>Job {draftJob.jobNumber || 'Not assigned'}</p>
         </div>
-        <JobStatusSelect value={draftJob.status} onChange={updateField} />
+        <JobStatusSelect canWrite={canWrite} value={draftJob.status} onChange={updateField} />
       </div>
       <div className="print-grid">
         <span>Customer</span><strong>{draftJob.customerName || '-'}</strong>
@@ -33,7 +33,7 @@ export default function OverviewTab({ draftJob, isDirty, updateField, printActio
       </div>
       <label className="wide">
         Quick Notes
-        <textarea name="reasonForVisit" value={draftJob.reasonForVisit || ''} onChange={updateField} rows="4" />
+        <textarea name="reasonForVisit" value={draftJob.reasonForVisit || ''} onChange={updateField} rows="4" disabled={!canWrite} />
       </label>
       {printActions}
     </section>

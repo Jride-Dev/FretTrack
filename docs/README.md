@@ -49,6 +49,7 @@ Core shipped beta areas now include:
 - unsaved-changes protection foundation
 - premium entitlement foundation
 - permission hardening with centralized role checks
+- role/permission audit coverage for owner, admin, tech, viewer, expired-access, and verified-operator paths, including viewer-safe Job Detail controls
 - operator-managed Shop and Pro trial controls
 - Shop Tier Foundation Phase 1
 - Paid Access Lifecycle Phase 1

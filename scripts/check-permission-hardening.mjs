@@ -39,8 +39,12 @@ assertIncludes(permissionService, 'canUseAdvancedReporting(entitlementSnapshot)'
 
 assertIncludes(app, "return canAccessOperatorDashboard({ isOperator });", 'Workspace restore must use operator helper.');
 assertIncludes(app, "mode === 'operator' && canAccessOperatorDashboard({ isOperator })", 'Operator route render must use operator helper.');
-assertIncludes(app, 'canUploadPhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess })', 'Photo upload permission must use permission service.');
-assertIncludes(app, 'canOverwritePhotosForRole({ role: membership?.role, entitlementSnapshot: billingAccess })', 'Photo overwrite permission must use permission service.');
+assertIncludes(app, 'canUploadPhotosForRole(permissionContext)', 'Photo upload permission must use permission service.');
+assertIncludes(app, 'canOverwritePhotosForRole(permissionContext)', 'Photo overwrite permission must use permission service.');
+assertIncludes(app, 'canEditJobsForRole(permissionContext)', 'Job writes must use permission service.');
+assertIncludes(app, 'canManageInventoryForRole(permissionContext)', 'Inventory writes must use permission service.');
+assertIncludes(app, 'canEditSchedulingForRole(permissionContext)', 'Scheduling writes must use permission service.');
+assertIncludes(app, 'canEditCustomersForRole(permissionContext)', 'Customer writes must use permission service.');
 assertIncludes(app, '<InternalCurrentAccessPanel', 'Internal access panel should be wired into app shell.');
 assertIncludes(app, 'if (!canAccessOperatorDashboard({ isOperator }))', 'Internal access panel must be operator-only.');
 
@@ -52,6 +56,7 @@ assertIncludes(jobDetail, 'if (!canUploadPhotos)', 'Photo upload handler must en
 assertIncludes(jobDetail, 'if (!canDeletePhotos)', 'Photo delete handler must enforce delete permission.');
 assertIncludes(jobDetail, 'if (!canEditPhotos)', 'Photo edit save must enforce edit permission.');
 assertIncludes(jobDetail, 'if (!canOverwritePhotos)', 'Photo overwrite must enforce overwrite permission.');
+assertIncludes(jobDetail, "throw new Error('Your shop role is read-only.')", 'Job save path must reject read-only writes.');
 
 assertIncludes(imagesSection, 'canUploadPhotos = canWrite', 'ImagesSection must accept granular upload permission.');
 assertIncludes(imagesSection, 'canEditPhotos = canWrite', 'ImagesSection must accept granular edit permission.');

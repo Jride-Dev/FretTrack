@@ -23,6 +23,7 @@ const tabs = [
 export default function JobDetailTabs({
   activityTimeline,
   billingSections,
+  canWrite = true,
   draftJob,
   imagesSection,
   intakeSection,
@@ -55,7 +56,7 @@ export default function JobDetailTabs({
       </div>
 
       {activeTab === 'overview' && (
-        <OverviewTab draftJob={draftJob} isDirty={isDirty} updateField={updateField} printActions={printActions} />
+        <OverviewTab canWrite={canWrite} draftJob={draftJob} isDirty={isDirty} updateField={updateField} printActions={printActions} />
       )}
       {activeTab === 'intake' && <IntakeTab>{intakeSection}</IntakeTab>}
       {activeTab === 'inspection' && <InspectionTab>{inspectionSections}</InspectionTab>}

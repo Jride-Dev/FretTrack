@@ -296,7 +296,7 @@ export default function SchedulingPage({
                     <p>{linkedJobLabel(scheduleEvent.jobId) || linkedCustomerLabel(scheduleEvent.customerId) || scheduleEvent.location || 'No linked job/customer'}</p>
                     <p className="muted-text">{statusLabel(scheduleEvent.status)}</p>
                     <div className="mode-actions no-print">
-                      <button type="button" onClick={() => editEvent(scheduleEvent)}>Edit</button>
+                      {canWrite && <button type="button" onClick={() => editEvent(scheduleEvent)}>Edit</button>}
                       {canWrite && scheduleEvent.status === 'scheduled' && (
                         <>
                           <button type="button" onClick={() => updateEventStatus(scheduleEvent, 'complete')} disabled={isSaving}>Complete</button>
