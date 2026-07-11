@@ -72,6 +72,7 @@ const originalFetch = globalThis.fetch;
 
 try {
   testPublicDocsCopyDenyList();
+  testManualScreenshotsOpenAtFullSize();
   testDocsRunWorkerFirstConfig();
   await testLandingPageIncludesLaunchAssets();
   await testBundledFaviconAssetRoute();
@@ -103,6 +104,21 @@ function testPublicDocsCopyDenyList() {
       assert.doesNotMatch(text, pattern, `${path.relative(process.cwd(), filePath)} contains public-docs copy leak: ${pattern}`);
     }
   }
+}
+
+function testManualScreenshotsOpenAtFullSize() {
+  const manualPath = path.resolve('cloudflare/frettrack-coming-soon/public/docs/how-to-use-frettrack.html');
+  const html = fs.readFileSync(manualPath, 'utf8');
+  const screenshotImages = [...html.matchAll(/<img src="(\/docs\/screenshots\/[^"]+)"/g)];
+  const screenshotLinks = [...html.matchAll(/<a class="screenshot-link" href="(\/docs\/screenshots\/[^"]+)" target="_blank" rel="noopener">/g)];
+
+  assert.equal(screenshotImages.length, 21, 'The complete manual must retain all 21 screenshots.');
+  assert.equal(screenshotLinks.length, screenshotImages.length, 'Every manual screenshot must link to its original file in a new tab.');
+  assert.deepEqual(
+    screenshotLinks.map((match) => match[1]),
+    screenshotImages.map((match) => match[1]),
+    'Each full-size screenshot link must match the image it wraps.'
+  );
 }
 
 function testDocsRunWorkerFirstConfig() {
