@@ -11,6 +11,7 @@ export default function JobDocumentEmailDialog({
   const [recipient, setRecipient] = useState(draft?.recipient || '');
   const [subject, setSubject] = useState(draft?.subject || '');
   const [body, setBody] = useState(draft?.body || '');
+  const [includedDocuments, setIncludedDocuments] = useState({ jobSheet: false, customerReport: false });
   const [sendState, setSendState] = useState({ sending: false, error: '', success: '' });
   const sendInFlightRef = useRef(false);
 
@@ -21,6 +22,7 @@ export default function JobDocumentEmailDialog({
     setRecipient(draft?.recipient || '');
     setSubject(draft?.subject || '');
     setBody(draft?.body || '');
+    setIncludedDocuments({ jobSheet: false, customerReport: false });
     setSendState({ sending: false, error: '', success: '' });
   }, [isOpen, draft?.recipient, draft?.subject, draft?.body, draft?.type]);
 
@@ -75,7 +77,9 @@ export default function JobDocumentEmailDialog({
         type: draft.type,
         recipient: trimmedRecipient,
         subject: subject.trim(),
-        body: body.trim()
+        body: body.trim(),
+        includeJobSheet: includedDocuments.jobSheet,
+        includeCustomerReport: includedDocuments.customerReport
       });
 
       if (!result?.ok) {
@@ -142,6 +146,27 @@ export default function JobDocumentEmailDialog({
           Message Body
           <textarea value={body} onChange={(event) => setBody(event.target.value)} rows={14} required />
         </label>
+
+        <fieldset className="document-email-options">
+          <legend>Include with this email</legend>
+          <label className="document-email-option">
+            <input
+              type="checkbox"
+              checked={includedDocuments.jobSheet}
+              onChange={(event) => setIncludedDocuments((current) => ({ ...current, jobSheet: event.target.checked }))}
+            />
+            <span>Send Job Sheet</span>
+          </label>
+          <label className="document-email-option">
+            <input
+              type="checkbox"
+              checked={includedDocuments.customerReport}
+              onChange={(event) => setIncludedDocuments((current) => ({ ...current, customerReport: event.target.checked }))}
+            />
+            <span>Send Customer Report</span>
+          </label>
+          <p>The selected documents are added as readable sections in the email.</p>
+        </fieldset>
 
         <div className="document-email-preview">
           <strong>{draft.summaryTitle}</strong>

@@ -361,6 +361,7 @@ export async function sendCustomerMessage(job, message) {
       to: recipient,
       subject: message.subject || '',
       body: message.body || '',
+      html: message.html || '',
       template_key: message.templateKey || ''
     }
   });
