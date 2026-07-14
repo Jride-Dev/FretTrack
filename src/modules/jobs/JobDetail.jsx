@@ -36,7 +36,7 @@ import {
 import { generateJobNumber } from './jobNumber';
 import { getJobEvents } from './jobEventsService';
 import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
-import { buildInvoiceEmailDraft, buildWorkOrderEmailDraft } from './emailDocuments';
+import { buildDocumentEmailHtml, buildInvoiceEmailDraft, buildSelectedDocumentEmailContent, buildWorkOrderEmailDraft } from './emailDocuments';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
 import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
@@ -1189,7 +1189,7 @@ export default function JobDetail({
     return result;
   }
 
-  async function handleSendDocumentEmail({ type, recipient, subject, body }) {
+  async function handleSendDocumentEmail({ type, recipient, subject, body, includeJobSheet, includeCustomerReport }) {
     if (!canWrite) {
       return { ok: false, error: 'Your shop role is read-only.' };
     }
@@ -1206,13 +1206,27 @@ export default function JobDetail({
       }
     }
 
+    const documentContent = buildSelectedDocumentEmailContent(jobToSend, {
+      shopSettings,
+      dateOptions,
+      moneyOptions,
+      totals: calculateJobTotals(jobToSend),
+      taxLabel: jobToSend.techDetails?.tax?.taxLabel || shopSettings.taxLabel || 'Sales Tax',
+      instrumentLabel: formatInstrumentLabel(jobToSend)
+    }, {
+      includeJobSheet,
+      includeCustomerReport
+    });
+    const emailBody = [body.trim(), documentContent.text].filter(Boolean).join('\n\n');
+
     const result = await sendCustomerMessage(jobToSend, {
       channel: 'email',
       customerId: jobToSend.customerId || null,
       templateKey: type === 'invoice' ? 'invoice_email' : 'work_order_email',
       to: recipient,
       subject,
-      body
+      body: emailBody,
+      html: documentContent.html ? buildDocumentEmailHtml(body.trim(), documentContent.html) : ''
     });
 
     if (result.message) {

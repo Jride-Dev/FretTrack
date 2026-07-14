@@ -25,6 +25,7 @@ Deno.serve(async (request) => {
   const to = payload.to || payload.message?.recipient || payload.job?.email || '';
   const subject = payload.subject || payload.message?.subject || '';
   const body = payload.body || payload.message?.body || '';
+  const html = typeof payload.html === 'string' ? payload.html : '';
 
   const missing = requiredFields({ job_id: jobId, to, subject, body });
   if (missing.length) {
@@ -82,7 +83,8 @@ Deno.serve(async (request) => {
         from: fromEmail,
         to,
         subject,
-        text: body
+        text: body,
+        ...(html ? { html } : {})
       })
     });
 

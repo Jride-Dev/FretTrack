@@ -1847,6 +1847,36 @@ form.panel button {
   padding: 12px;
 }
 
+.document-email-options {
+  border: 1px solid var(--border-soft);
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+}
+
+.document-email-options legend {
+  font-weight: 700;
+  padding: 0 4px;
+}
+
+.document-email-option {
+  align-items: center;
+  display: flex;
+  font-weight: 700;
+  gap: 8px;
+}
+
+.document-email-option input {
+  flex: 0 0 auto;
+}
+
+.document-email-options p {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin: 0;
+}
+
 .document-email-summary {
   display: grid;
   gap: 8px;

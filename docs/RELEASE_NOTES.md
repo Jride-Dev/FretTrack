@@ -12,6 +12,8 @@ The application now applies the same role intent consistently across its high-ri
 
 After an invoice or work-order email succeeds, the document dialog now closes automatically and the app confirms delivery action in its normal notice area. A failed or thrown send clears its busy state so the user can retry or dismiss the dialog. Cancel, the close control, Escape, and clicking outside the dialog all dismiss it without being affected by shop write permissions.
 
+The document email dialog can now include a Job Sheet and/or Customer Report. Shops select the documents deliberately before sending; FretTrack adds readable customer-facing sections to the email while leaving the message body editable. This does not create a PDF attachment or expose temporary photo URLs.
+
 ## Public Docs Hub
 
 The landing site now includes `https://frettrack-app.com/docs` as a public hub for customer-facing and tester-facing resources. It links beta testing downloads, support / FAQ, app login, privacy, and terms from FretTrack's own domain so testers are not dependent on GitHub Wiki or GitHub asset access when browser, workplace, school, or device policies block GitHub.
