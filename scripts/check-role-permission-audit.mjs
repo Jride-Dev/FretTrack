@@ -37,6 +37,7 @@ for (const helperName of [
   'canEditPhotos',
   'canOverwritePhotos',
   'canDeletePhotos',
+  'canUploadPhotos',
   'canEditScheduling',
   'canEditCustomers',
   'canEditJobs',
@@ -50,6 +51,8 @@ assertIncludes(helpers, "const SHOP_WRITE_ROLES = new Set(['owner', 'admin', 'te
 assertIncludes(helpers, "const SHOP_MANAGE_ROLES = new Set(['owner', 'admin']);", 'Only owner/admin may manage shop settings or view billing.');
 assertIncludes(helpers, "const SHOP_OWNER_ROLES = new Set(['owner']);", 'Owner-only billing management must stay explicit.');
 assertMatches(helpers, /export function canEditJobs[\s\S]*?return canWriteShop/, 'Job writes must use the centralized lifecycle-aware write check.');
+assertMatches(helpers, /export function canUploadPhotos[\s\S]*?return canWriteShop/, 'Basic job photo uploads must use lifecycle-aware shop write access.');
+assert.ok(!helpers.includes('entitlementSnapshot?.access?.canUploadPhotos !== false'), 'Basic job photo uploads must not be hidden by a stale snapshot-level upload flag.');
 assertMatches(helpers, /export function canEditCustomers[\s\S]*?return canWriteShop/, 'Customer writes must use the centralized lifecycle-aware write check.');
 assertMatches(helpers, /export function canEditScheduling[\s\S]*?return canWriteShop/, 'Schedule writes must use the centralized lifecycle-aware write check.');
 assertMatches(helpers, /export function canManageInventory[\s\S]*?return canWriteShop/, 'Inventory writes must use the centralized lifecycle-aware write check.');
