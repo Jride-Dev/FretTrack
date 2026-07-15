@@ -34,7 +34,7 @@ import {
   stringCountForInstrument
 } from '../instruments/instrumentService';
 import { generateJobNumber } from './jobNumber';
-import { getJobEvents } from './jobEventsService';
+import { getJobEvents, logJobEventSafe } from './jobEventsService';
 import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
 import { buildDocumentEmailHtml, buildInvoiceEmailDraft, buildSelectedDocumentEmailContent, buildWorkOrderEmailDraft } from './emailDocuments';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
