@@ -5,6 +5,7 @@ import { join } from 'node:path';
 const root = process.cwd();
 const dialog = readFileSync(join(root, 'src/modules/jobs/JobDocumentEmailDialog.jsx'), 'utf8');
 const jobDetail = readFileSync(join(root, 'src/modules/jobs/JobDetail.jsx'), 'utf8');
+const styles = readFileSync(join(root, 'src/styles.css'), 'utf8');
 
 function assertIncludes(source, expected, message) {
   assert.ok(source.includes(expected), message || `Expected source to include: ${expected}`);
@@ -28,8 +29,12 @@ assertIncludes(dialog, '<button type="button" className="button-tertiary" onClic
 assert.ok(!dialog.includes('onClick={onClose} disabled={sendState.sending}'), 'Cancel must not stay disabled after a send settles.');
 assertIncludes(dialog, 'disabled={!canSend}', 'Send control must still prevent duplicate sends while busy.');
 assertIncludes(jobDetail, "message: type === 'invoice' ? 'Invoice email sent.' : 'Work order email sent.'", 'Successful sends must leave a visible app-level confirmation after modal close.');
+assertIncludes(jobDetail, "import { getJobEvents, logJobEventSafe } from './jobEventsService';", 'Document email audit logging must import the safe job-event helper.');
+assertIncludes(jobDetail, 'logJobEventSafe({', 'Successful document sends must retain non-blocking job-event logging.');
 assertIncludes(jobDetail, 'buildSelectedDocumentEmailContent', 'Document email send path must build selected document content.');
 assertIncludes(jobDetail, 'buildDocumentEmailHtml', 'Document email send path must use formatted HTML when documents are selected.');
+assertIncludes(styles, '.document-email-option input[type="checkbox"]', 'Document email checkbox sizing must stay scoped to the dialog.');
+assertIncludes(styles, 'width: auto;', 'Document email checkboxes must override full-width text input styling.');
 
 const emailDocuments = readFileSync(join(root, 'src/modules/jobs/emailDocuments.js'), 'utf8');
 assertIncludes(emailDocuments, 'buildJobSheetEmailSection', 'Document email helper must build the Job Sheet content.');

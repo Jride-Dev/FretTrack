@@ -14,6 +14,8 @@ After an invoice or work-order email succeeds, the document dialog now closes au
 
 The document email dialog can now include a Job Sheet and/or Customer Report. Shops select the documents deliberately before sending; FretTrack adds readable customer-facing sections to the email while leaving the message body editable. This does not create a PDF attachment or expose temporary photo URLs.
 
+The document choices use compact, aligned checkbox rows and successful sends continue to record a non-blocking job timeline event. Audit-log trouble cannot interrupt a customer email that has already been sent.
+
 ## Public Docs Hub
 
 The landing site now includes `https://frettrack-app.com/docs` as a public hub for customer-facing and tester-facing resources. It links beta testing downloads, support / FAQ, app login, privacy, and terms from FretTrack's own domain so testers are not dependent on GitHub Wiki or GitHub asset access when browser, workplace, school, or device policies block GitHub.

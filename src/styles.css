@@ -1865,10 +1865,21 @@ form.panel button {
   display: flex;
   font-weight: 700;
   gap: 8px;
+  justify-content: flex-start;
+  min-width: 0;
 }
 
-.document-email-option input {
+.document-email-option input[type="checkbox"] {
   flex: 0 0 auto;
+  margin: 0;
+  max-width: none;
+  min-height: 18px;
+  padding: 0;
+  width: auto;
+}
+
+.document-email-option span {
+  min-width: 0;
 }
 
 .document-email-options p {
