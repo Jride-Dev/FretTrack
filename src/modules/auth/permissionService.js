@@ -103,7 +103,7 @@ export function canVoidShipments({ role, entitlementSnapshot } = {}) {
 }
 
 export function canUploadPhotos({ role, entitlementSnapshot } = {}) {
-  return canWriteShop({ role, entitlementSnapshot }) && entitlementSnapshot?.access?.canUploadPhotos !== false;
+  return canWriteShop({ role, entitlementSnapshot });
 }
 
 export function canUsePhotoEditor({ role, entitlementSnapshot } = {}) {

@@ -30,6 +30,8 @@ Landing Worker docs routing now forces docs paths through the Worker before stat
 
 Saved job photos, edited-photo copies, overwritten photos, and damage-map photo references now treat Supabase Storage paths as the source of truth. FretTrack regenerates fresh signed URLs when jobs load instead of preserving old signed URLs, blob URLs, or temporary preview URLs as durable photo state. Older records that still have a recoverable storage path inside a signed/public URL are normalized defensively; records with no storage path are logged clearly instead of disappearing silently.
 
+Normal job photo capture and device import remain part of the core writable job workflow for owners, admins, and techs. The Photos tab is not hidden by a stale upload entitlement snapshot; Photo Editor controls remain separately limited to the appropriate Pro access.
+
 ## Shipping / Receiving / Chain of Custody Foundation
 
 FretTrack now has a manual Shipping dashboard for vendor inbound receiving records, customer inbound check-ins, customer outbound returns, vendor returns, inventory outbound shipments, and internal transfer tracking. The dashboard groups records by Pending Arrival, Arrived / Needs Check-In, At Bench, Ready to Ship, In Transit, and Exceptions so the shop can see where instruments, parts, packages, and problem shipments are sitting.

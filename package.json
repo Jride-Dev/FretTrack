@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "check:job-photo-persistence": "node scripts/check-job-photo-persistence.mjs",
+    "check:job-photo-upload-controls": "node scripts/check-job-photo-upload-controls.mjs",
     "check:customer-import": "node scripts/check-customer-import.mjs",
     "check:shop-bootstrap": "node scripts/check-shop-bootstrap.mjs",
     "check:inventory-shipping-polish": "node scripts/check-inventory-shipping-polish.mjs",
