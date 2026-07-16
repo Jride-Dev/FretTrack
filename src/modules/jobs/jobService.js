@@ -824,6 +824,46 @@ function firstPresentValue(source = {}, keys = []) {
   return matchingKey === undefined ? undefined : source[matchingKey];
 }
 
+const damageMapStoragePathKeys = [
+  'storagePath',
+  'storage_path',
+  'imagePath',
+  'image_path',
+  'photoPath',
+  'photo_path'
+];
+const damageMapViewUrlKeys = ['imageUrl', 'image_url', 'url', 'public_url', 'publicUrl', 'photoUrl', 'photo_url'];
+const damageMapMarkUrlKeys = ['photoUrl', 'photo_url', 'url', 'public_url', 'publicUrl', 'imageUrl', 'image_url'];
+
+function getFirstDamageMapString(source = {}, keys = []) {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'string' && value.trim()) {
+      return value;
+    }
+  }
+
+  return '';
+}
+
+function getDamageMapPhotoSource(source = {}, urlKeys = []) {
+  const url = getFirstDamageMapString(source, urlKeys);
+  const explicitStoragePath = getFirstDamageMapString(source, damageMapStoragePathKeys);
+
+  return {
+    url,
+    storagePath: getJobImageStoragePath({ storagePath: explicitStoragePath, url })
+  };
+}
+
+function getDamageMapViewPhotoSource(view = {}) {
+  return getDamageMapPhotoSource(view, damageMapViewUrlKeys);
+}
+
+function getDamageMapMarkPhotoSource(mark = {}) {
+  return getDamageMapPhotoSource(mark, damageMapMarkUrlKeys);
+}
+
 function normalizeDamageMap(damageMap = {}) {
   const oldMarks = Array.isArray(damageMap.marks) ? damageMap.marks : [];
   const frontView = damageMap.views?.front || {};
@@ -854,25 +894,19 @@ function normalizeDamageMap(damageMap = {}) {
 }
 
 function normalizeDamageView(view = {}, marks = []) {
-  const storagePath = getJobImageStoragePath({
-    storagePath: view.storagePath,
-    url: view.imageUrl
-  });
+  const { storagePath, url } = getDamageMapViewPhotoSource(view);
 
   return {
-    imageUrl: view.imageUrl || '',
-    imageName: view.imageName || '',
-    imageId: view.imageId || '',
+    imageUrl: url,
+    imageName: view.imageName || view.image_name || view.photoName || view.photo_name || '',
+    imageId: view.imageId || view.image_id || view.photoId || view.photo_id || '',
     storagePath,
     marks: marks.map(normalizeDamageMark)
   };
 }
 
 function normalizeDamageMark(mark) {
-  const storagePath = getJobImageStoragePath({
-    storagePath: mark.storagePath,
-    url: mark.photoUrl
-  });
+  const { storagePath, url } = getDamageMapMarkPhotoSource(mark);
 
   return {
     id: mark.id || crypto.randomUUID(),
@@ -880,9 +914,9 @@ function normalizeDamageMark(mark) {
     severity: normalizeSeverity(mark.severity),
     note: mark.note || '',
     recommendedRepair: mark.recommendedRepair || '',
-    photoUrl: mark.photoUrl || '',
-    photoName: mark.photoName || '',
-    photoId: mark.photoId || '',
+    photoUrl: url,
+    photoName: mark.photoName || mark.photo_name || mark.imageName || mark.image_name || '',
+    photoId: mark.photoId || mark.photo_id || mark.imageId || mark.image_id || '',
     storagePath,
     x: Number(mark.x) || 0,
     y: Number(mark.y) || 0
@@ -1027,28 +1061,22 @@ function sanitizeDamageMapForPersistence(damageMap) {
 }
 
 function sanitizeDamageViewForPersistence(view = {}) {
-  const storagePath = getJobImageStoragePath({
-    storagePath: view.storagePath,
-    url: view.imageUrl
-  });
+  const { storagePath, url } = getDamageMapViewPhotoSource(view);
 
   return {
     ...view,
-    imageUrl: getPersistableJobImageUrl({ url: view.imageUrl, storagePath }),
+    imageUrl: getPersistableJobImageUrl({ url, storagePath }),
     storagePath,
     marks: (view.marks || []).map(sanitizeDamageMarkForPersistence)
   };
 }
 
 function sanitizeDamageMarkForPersistence(mark = {}) {
-  const storagePath = getJobImageStoragePath({
-    storagePath: mark.storagePath,
-    url: mark.photoUrl
-  });
+  const { storagePath, url } = getDamageMapMarkPhotoSource(mark);
 
   return {
     ...mark,
-    photoUrl: getPersistableJobImageUrl({ url: mark.photoUrl, storagePath }),
+    photoUrl: getPersistableJobImageUrl({ url, storagePath }),
     storagePath
   };
 }
@@ -1254,27 +1282,23 @@ async function hydrateDamageMapImageUrls(damageMap) {
 
   const hydratedViews = {};
   for (const [viewName, view] of Object.entries(damageMap.views)) {
-    const viewStoragePath = getJobImageStoragePath({
-      storagePath: view.storagePath,
-      url: view.imageUrl
-    });
+    const { storagePath: viewStoragePath, url: viewUrl } = getDamageMapViewPhotoSource(view);
     const viewImageUrl = await resolveJobImageUrl({
       storagePath: viewStoragePath,
-      url: view.imageUrl
+      url: viewUrl,
+      imageId: view.imageId
     });
 
     const marks = await Promise.all((view.marks || []).map(async (mark) => {
-      const markStoragePath = getJobImageStoragePath({
-        storagePath: mark.storagePath,
-        url: mark.photoUrl
-      });
+      const { storagePath: markStoragePath, url: markUrl } = getDamageMapMarkPhotoSource(mark);
 
       return {
         ...mark,
         storagePath: markStoragePath,
         photoUrl: await resolveJobImageUrl({
           storagePath: markStoragePath,
-          url: mark.photoUrl
+          url: markUrl,
+          imageId: mark.photoId
         })
       };
     }));
