@@ -4403,11 +4403,18 @@ th.internal-only {
     display: none !important;
   }
 
+  html,
   body {
-    background: var(--print-bg);
+    background: #fff !important;
+    border: 0 !important;
     color: var(--print-text);
+    margin: 0 !important;
+    outline: 0 !important;
+    padding: 0 !important;
+  }
+
+  body {
     font-size: 12px;
-    margin: 0;
   }
 
   body,
@@ -4427,12 +4434,18 @@ th.internal-only {
     display: block !important;
   }
 
+  .app-shell,
   .app-layout,
+  .layout,
+  main,
+  .detail,
   .job-detail,
   .card,
   section {
+    background: #fff !important;
     box-shadow: none !important;
     border: none !important;
+    outline: 0 !important;
   }
 
   main {
@@ -4552,6 +4565,17 @@ th.internal-only {
     margin: 0 auto;
     max-width: 7.45in;
     padding: 0.22in 0.24in 0.2in;
+    width: 100%;
+  }
+
+  .job-sheet-print {
+    background: #fff !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    max-width: none;
+    outline: 0 !important;
+    padding: 0 !important;
     width: 100%;
   }
 

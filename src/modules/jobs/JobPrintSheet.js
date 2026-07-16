@@ -37,7 +37,7 @@ export default function JobPrintSheet({
   ].filter(Boolean);
 
   return (
-    <section className="print-sheet">
+    <section className="print-sheet job-sheet-print">
       <div className="print-invoice-header print-section">
         <img src={shopSettings.logoUrl || '/frettrack-wordmark.jpg'} alt={shopSettings.shopName || 'FretTrack Systems'} />
         <div>
