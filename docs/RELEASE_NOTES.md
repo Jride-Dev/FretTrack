@@ -30,6 +30,8 @@ Landing Worker docs routing now forces docs paths through the Worker before stat
 
 Saved job photos, edited-photo copies, overwritten photos, and damage-map photo references now treat Supabase Storage paths as the source of truth. FretTrack regenerates fresh signed URLs when jobs load instead of preserving old signed URLs, blob URLs, or temporary preview URLs as durable photo state. Older records that still have a recoverable storage path inside a signed/public URL are normalized defensively; records with no storage path are logged clearly instead of disappearing silently.
 
+Older Damage Map records are also normalized before image hydration. View and damage-area photos can recover their stable object path from legacy `storage_path`, image/photo path, and URL field names, then receive a fresh signed URL when a job opens. A record that has only an expired temporary URL and no recoverable storage path cannot be restored by the frontend; it is logged for follow-up without changing or deleting the record.
+
 Normal job photo capture and device import remain part of the core writable job workflow for owners, admins, and techs. The Photos tab is not hidden by a stale upload entitlement snapshot; Photo Editor controls remain separately limited to the appropriate Pro access.
 
 ## Shipping / Receiving / Chain of Custody Foundation
