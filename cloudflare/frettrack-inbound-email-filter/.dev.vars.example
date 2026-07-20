@@ -1,0 +1,4 @@
+# Use verified Cloudflare Email Routing destination addresses only.
+SUPPORT_FORWARD_TO=your-verified-support-destination@example.com
+NOREPLY_FORWARD_TO=your-verified-noreply-destination@example.com
+JEFF_FORWARD_TO=your-verified-jeff-destination@example.com

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "frettrack-inbound-email-filter",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-20",
+  "observability": {
+    "enabled": true
+  }
+}

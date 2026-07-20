@@ -43,6 +43,51 @@ Domain: `frettrack-app.com`
 - Inbound email routing:
   - `support@frettrack-app.com` forwards to the verified Cloudflare destination `jaycurtis@techie.com`
   - `noreply@frettrack-app.com` forwards to the verified Cloudflare destination `jaycurtis@techie.com`
+  - `jeff@frettrack-app.com` forwards to the verified Cloudflare destination `jaycurtis@techie.com`
+
+## Inbound Sender Denylist
+
+The dedicated Cloudflare Email Worker in `cloudflare/frettrack-inbound-email-filter` rejects known unwanted senders before forwarding mail to a verified Cloudflare destination. It currently rejects:
+
+- `k.lerner@fisher-estates.com`
+- Any sender at `fisher-estates.com`
+
+The Worker checks both the SMTP envelope sender (`message.from`) and the visible `From` header, case-insensitively. Rejections are logged through Cloudflare Worker observability with the envelope sender, visible `From` value, recipient, reason, and UTC timestamp. The SMTP rejection text remains generic so it does not disclose policy details to the sender.
+
+This is an email-routing control, not a website WAF rule. Do not block Titan Email, Flockmail, Amazon AWS, or a broad provider IP range. The reported `44.199.128.152` address is shared Titan outbound infrastructure and is intentionally not blocked here. No email-source-IP policy exists in the current Cloudflare configuration.
+
+### Deploy And Attach The Email Worker
+
+Do this only after the Worker code has been reviewed and deployed. Do not remove the existing direct-forward rules until the corresponding Worker secrets have been configured.
+
+```powershell
+npx wrangler deploy --config cloudflare/frettrack-inbound-email-filter/wrangler.jsonc
+npx wrangler secret put SUPPORT_FORWARD_TO --config cloudflare/frettrack-inbound-email-filter/wrangler.jsonc
+npx wrangler secret put NOREPLY_FORWARD_TO --config cloudflare/frettrack-inbound-email-filter/wrangler.jsonc
+npx wrangler secret put JEFF_FORWARD_TO --config cloudflare/frettrack-inbound-email-filter/wrangler.jsonc
+```
+
+Set each secret to the verified destination or comma-separated verified destinations that should receive that mailbox. At the time this was documented, the only registered verified destination for these routes was `jaycurtis@techie.com`; verify any mail.com alias in Cloudflare Email Routing before using it.
+
+Then replace only these three Email Routing rule actions with the Worker action `frettrack-inbound-email-filter` while leaving all other routing rules and the disabled catch-all untouched:
+
+- `support@frettrack-app.com`
+- `noreply@frettrack-app.com`
+- `jeff@frettrack-app.com`
+
+Verify the rule configuration without changing it:
+
+```powershell
+npx wrangler email routing rules list frettrack-app.com
+npx wrangler email routing addresses list
+npx wrangler tail frettrack-inbound-email-filter --format pretty
+```
+
+Run the repository check before deploy:
+
+```powershell
+npm run check:inbound-email-denylist
+```
 
 ## What Cloudflare Does Not Provide
 
