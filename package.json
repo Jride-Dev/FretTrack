@@ -36,17 +36,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.0",
+    "@supabase/supabase-js": "^2.110.8",
     "heic2any": "^0.0.4",
     "jsbarcode": "^3.12.3",
     "papaparse": "^5.5.4",
     "postgres": "^3.4.9",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@vitejs/plugin-legacy": "^8.1.0",
+    "@vitejs/plugin-legacy": "^8.2.1",
     "@vitejs/plugin-react": "^6.0.3",
-    "vite": "^8.1.2"
+    "vite": "^8.1.5"
   }
 }
