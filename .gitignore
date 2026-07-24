@@ -33,4 +33,7 @@ Thumbs.db
 supabase/.temp
 supabase/.branches
 
+# Cloudflare local runtime state
+.wrangler/
+
 backups/

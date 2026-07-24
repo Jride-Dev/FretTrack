@@ -76,6 +76,7 @@ try {
   testDocsRunWorkerFirstConfig();
   await testLandingPageIncludesLaunchAssets();
   await testBundledFaviconAssetRoute();
+  await testCommunityAssetRoutes();
   await testBetaTesterChecklistRoutes();
   await testSuccessfulApplication();
   await testSupabaseFailureBlocksSuccess();
@@ -143,6 +144,19 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /https:\/\/devglobe\.app\/projects\/frettrack\?utm_source=badge&utm_medium=embed/);
   assert.match(html, /Launched on DevGlobe/);
   assert.match(html, /href="\/docs"/);
+  assert.match(html, /href="https:\/\/discord\.gg\/PaEhWTfz9e" target="_blank" rel="noopener">Discord<\/a>/);
+  assert.match(html, /href="https:\/\/github\.com\/Jride-Dev\/FretTrack" target="_blank" rel="noopener">GitHub<\/a>/);
+  assert.match(html, /href="https:\/\/www\.reddit\.com\/r\/FretTrack\/" target="_blank" rel="noopener">Reddit<\/a>/);
+  assert.match(html, /href="https:\/\/torranceguitarrepair\.com\/" target="_blank" rel="noopener">Torrance Guitar Repair<\/a>/);
+  assert.match(html, /id="community"/);
+  assert.match(html, /Join our Discord for news and updates!/);
+  assert.match(html, /Join the FretTrack Discord/);
+  assert.match(html, /\/community\/frettrack-discord\.jpg/);
+  assert.match(html, /\/community\/discord-frettrack\.png/);
+  assert.match(html, /\/community\/reddit-frettrack\.png/);
+  assert.match(html, /\/community\/github-frettrack\.png/);
+  assert.match(html, /View FretTrack on GitHub/);
+  assert.match(html, /Visit Torrance Guitar Repair/);
   assert.match(html, /href="\/beta-tester"/);
   assert.match(html, /href="\/support"/);
   assert.match(html, /href="\/privacy"/);
@@ -171,6 +185,36 @@ async function testBundledFaviconAssetRoute() {
   assert.equal(assetCalls.length, 1);
   assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable');
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+}
+
+async function testCommunityAssetRoutes() {
+  const paths = [
+    '/community/frettrack-discord.jpg',
+    '/community/discord-frettrack.png',
+    '/community/reddit-frettrack.png',
+    '/community/github-frettrack.png'
+  ];
+
+  for (const pathname of paths) {
+    const response = await worker.fetch(new Request(`https://frettrack-app.com${pathname}`), {
+      ...baseEnv(),
+      LANDING_ASSETS: {
+        async fetch(request) {
+          assert.equal(new URL(request.url).pathname, pathname);
+          return new Response('community-image-bytes', {
+            headers: {
+              'content-type': pathname.endsWith('.jpg') ? 'image/jpeg' : 'image/png'
+            }
+          });
+        }
+      }
+    });
+
+    assert.equal(response.status, 200, pathname);
+    assert.match(response.headers.get('content-type') || '', /image\/(jpeg|png)/, pathname);
+    assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable', pathname);
+    assert.equal(await response.text(), 'community-image-bytes', pathname);
+  }
 }
 
 async function testBetaTesterChecklistRoutes() {

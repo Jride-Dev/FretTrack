@@ -9,7 +9,7 @@ const CONTENT_SECURITY_POLICY = [
   "form-action 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.supabase.co",
+  "img-src 'self' data: blob: https://*.supabase.co https://devglobe.app",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
   "worker-src 'self' blob:",
@@ -587,6 +587,223 @@ function landingPage() {
         color: #12151c;
       }
 
+      .community-band {
+        background:
+          radial-gradient(circle at 88% 16%, rgba(88, 101, 242, 0.32), transparent 34%),
+          radial-gradient(circle at 12% 92%, rgba(255, 69, 0, 0.16), transparent 30%),
+          #0b1118;
+        color: #ffffff;
+        overflow: hidden;
+      }
+
+      .community-band .section-lede {
+        color: #bac5d3;
+      }
+
+      .community-kicker {
+        color: #8ea1ff;
+        display: block;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        margin-bottom: 14px;
+        text-transform: uppercase;
+      }
+
+      .discord-spotlight {
+        background:
+          linear-gradient(125deg, rgba(88, 101, 242, 0.98), rgba(50, 63, 181, 0.96));
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 22px;
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.34);
+        color: #ffffff;
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+        margin-top: 34px;
+        min-height: 420px;
+        overflow: hidden;
+        text-decoration: none;
+        transition: box-shadow 180ms ease, transform 180ms ease;
+      }
+
+      .discord-spotlight:hover,
+      .discord-spotlight:focus-visible {
+        box-shadow: 0 34px 90px rgba(88, 101, 242, 0.38);
+        outline: 3px solid #ffffff;
+        outline-offset: 4px;
+        transform: translateY(-3px);
+      }
+
+      .discord-copy {
+        align-self: center;
+        padding: clamp(30px, 5vw, 58px);
+        position: relative;
+        z-index: 2;
+      }
+
+      .discord-label {
+        align-items: center;
+        display: inline-flex;
+        font-size: 13px;
+        font-weight: 900;
+        gap: 8px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .discord-label::before {
+        background: #77f0d2;
+        border-radius: 999px;
+        box-shadow: 0 0 0 5px rgba(119, 240, 210, 0.14);
+        content: "";
+        height: 9px;
+        width: 9px;
+      }
+
+      .discord-copy h3 {
+        font-size: clamp(36px, 5.4vw, 68px);
+        letter-spacing: -0.045em;
+        line-height: 0.94;
+        margin: 22px 0 18px;
+        max-width: 700px;
+        text-wrap: balance;
+      }
+
+      .discord-copy p {
+        color: #eef0ff;
+        font-size: clamp(16px, 1.8vw, 20px);
+        margin: 0;
+        max-width: 650px;
+      }
+
+      .discord-cta {
+        align-items: center;
+        background: #ffffff;
+        border-radius: 999px;
+        color: #303a9f;
+        display: inline-flex;
+        font-size: 16px;
+        font-weight: 900;
+        gap: 10px;
+        margin-top: 28px;
+        min-height: 52px;
+        padding: 13px 22px;
+      }
+
+      .discord-visual {
+        min-height: 420px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .discord-server-shot {
+        height: 100%;
+        inset: 0;
+        object-fit: cover;
+        object-position: 36% center;
+        opacity: 0.46;
+        position: absolute;
+        width: 100%;
+      }
+
+      .discord-visual::after {
+        background: linear-gradient(90deg, #4653cf 0%, transparent 56%);
+        content: "";
+        inset: 0;
+        position: absolute;
+      }
+
+      .discord-emblem {
+        border: 2px solid rgba(255, 255, 255, 0.76);
+        border-radius: 28px;
+        bottom: 34px;
+        box-shadow: 0 22px 50px rgba(0, 0, 0, 0.48);
+        height: clamp(150px, 19vw, 225px);
+        object-fit: cover;
+        position: absolute;
+        right: clamp(26px, 5vw, 58px);
+        transform: rotate(3deg);
+        width: clamp(150px, 19vw, 225px);
+        z-index: 1;
+      }
+
+      .community-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 18px;
+      }
+
+      .community-card {
+        background: rgba(20, 29, 41, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 14px;
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        min-height: 275px;
+        overflow: hidden;
+        padding: 26px;
+        text-decoration: none;
+        transition: border-color 160ms ease, transform 160ms ease;
+      }
+
+      .community-card:hover,
+      .community-card:focus-visible {
+        border-color: rgba(255, 255, 255, 0.55);
+        outline: 2px solid transparent;
+        transform: translateY(-3px);
+      }
+
+      .community-card.reddit-card {
+        background:
+          linear-gradient(135deg, rgba(255, 69, 0, 0.13), transparent 60%),
+          rgba(20, 29, 41, 0.96);
+      }
+
+      .community-card-art {
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 18px;
+        height: 92px;
+        margin-bottom: 24px;
+        object-fit: cover;
+        width: 92px;
+      }
+
+      .community-card-mark {
+        align-items: center;
+        background: #202b3b;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 18px;
+        color: var(--amber);
+        display: flex;
+        font-size: 24px;
+        font-weight: 900;
+        height: 64px;
+        justify-content: center;
+        margin-bottom: 24px;
+        width: 64px;
+      }
+
+      .community-card h3 {
+        font-size: 24px;
+        line-height: 1.06;
+        margin: 0 0 10px;
+      }
+
+      .community-card p {
+        color: #b9c5d3;
+        margin: 0;
+      }
+
+      .community-card-action {
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 900;
+        margin-top: auto;
+        padding-top: 24px;
+      }
+
       footer {
         background: var(--night);
         border-top: 1px solid rgba(255, 255, 255, 0.12);
@@ -756,7 +973,8 @@ function landingPage() {
       @media (max-width: 980px) {
         .hero,
         .feature-layout,
-        .launch-panel {
+        .launch-panel,
+        .discord-spotlight {
           grid-template-columns: 1fr;
         }
 
@@ -771,12 +989,17 @@ function landingPage() {
 
         .trust-grid,
         .plan-grid,
-        .workflow {
+        .workflow,
+        .community-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .launch-panel {
           align-items: start;
+        }
+
+        .discord-visual {
+          min-height: 330px;
         }
       }
 
@@ -814,8 +1037,26 @@ function landingPage() {
         .hero-proof,
         .trust-grid,
         .plan-grid,
-        .workflow {
+        .workflow,
+        .community-grid {
           grid-template-columns: 1fr;
+        }
+
+        .discord-spotlight {
+          border-radius: 14px;
+        }
+
+        .discord-copy h3 {
+          font-size: clamp(34px, 12vw, 52px);
+        }
+
+        .discord-visual {
+          min-height: 270px;
+        }
+
+        .discord-emblem {
+          bottom: 22px;
+          right: 22px;
         }
 
         .proof-item {
@@ -862,6 +1103,7 @@ function landingPage() {
           <a href="#security">Security</a>
           <a href="#pricing">Pricing</a>
           <a href="#beta">Beta</a>
+          <a href="#community">Community</a>
           <a href="/docs">Docs</a>
           <a href="/support">Support</a>
           <a href="/terms">Terms</a>
@@ -1037,6 +1279,48 @@ function landingPage() {
           </div>
         </div>
       </section>
+
+      <section class="community-band" id="community">
+        <div class="section">
+          <span class="community-kicker">Follow the build</span>
+          <h2>News, shop talk, and the work behind FretTrack.</h2>
+          <p class="section-lede">Get release news, help shape the beta, follow development, and connect with the repair-shop community.</p>
+
+          <a class="discord-spotlight" href="https://discord.gg/PaEhWTfz9e" target="_blank" rel="noopener">
+            <div class="discord-copy">
+              <span class="discord-label">FretTrack community</span>
+              <h3>Join our Discord for news and updates!</h3>
+              <p>Get beta announcements, release notes, feature previews, support, and honest shop-floor conversation directly from the people building and testing FretTrack.</p>
+              <span class="discord-cta">Join the FretTrack Discord <span aria-hidden="true">→</span></span>
+            </div>
+            <div class="discord-visual" aria-hidden="true">
+              <img class="discord-server-shot" src="/community/frettrack-discord.jpg" alt="" loading="lazy">
+              <img class="discord-emblem" src="/community/discord-frettrack.png" alt="" loading="lazy">
+            </div>
+          </a>
+
+          <div class="community-grid">
+            <a class="community-card reddit-card" href="https://www.reddit.com/r/FretTrack/" target="_blank" rel="noopener">
+              <img class="community-card-art" src="/community/reddit-frettrack.png" alt="" loading="lazy">
+              <h3>Join r/FretTrack</h3>
+              <p>Share workflow ideas, feature requests, repair-shop lessons, and feedback with the growing FretTrack community.</p>
+              <span class="community-card-action">Visit the subreddit <span aria-hidden="true">→</span></span>
+            </a>
+            <a class="community-card" href="https://github.com/Jride-Dev/FretTrack" target="_blank" rel="noopener">
+              <img class="community-card-art" src="/community/github-frettrack.png" alt="" loading="lazy">
+              <h3>Follow development</h3>
+              <p>Explore the public repository, track releases, review the roadmap, and see how FretTrack is built.</p>
+              <span class="community-card-action">View FretTrack on GitHub <span aria-hidden="true">→</span></span>
+            </a>
+            <a class="community-card" href="https://torranceguitarrepair.com/" target="_blank" rel="noopener">
+              <span class="community-card-mark" aria-hidden="true">TGR</span>
+              <h3>Built in a real repair shop</h3>
+              <p>Meet Torrance Guitar Repair, the working shop where FretTrack’s tools and workflows are put to the test.</p>
+              <span class="community-card-action">Visit Torrance Guitar Repair <span aria-hidden="true">→</span></span>
+            </a>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer>
@@ -1048,6 +1332,10 @@ function landingPage() {
         <div class="footer-links">
           <a href="${APP_URL}">App Login</a>
           <a href="/docs">Docs</a>
+          <a href="https://discord.gg/PaEhWTfz9e" target="_blank" rel="noopener">Discord</a>
+          <a href="https://github.com/Jride-Dev/FretTrack" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://www.reddit.com/r/FretTrack/" target="_blank" rel="noopener">Reddit</a>
+          <a href="https://torranceguitarrepair.com/" target="_blank" rel="noopener">Torrance Guitar Repair</a>
           <a href="/terms">Terms</a>
           <a href="/support">Support</a>
           <a href="/privacy">Privacy</a>
@@ -1605,6 +1893,7 @@ async function serveAsset(pathname, env) {
 function isBundledAssetPath(pathname) {
   return BUNDLED_ASSET_PATHS.has(pathname)
     || pathname.startsWith('/landing/')
+    || pathname.startsWith('/community/')
     || (pathname.startsWith('/docs/') && /\.[a-z0-9]+$/i.test(pathname));
 }
 
