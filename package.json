@@ -13,6 +13,7 @@
     "check:job-photo-upload-controls": "node scripts/check-job-photo-upload-controls.mjs",
     "check:legacy-damage-map-photos": "node scripts/check-legacy-damage-map-photo-hydration.mjs",
     "check:job-sheet-print-layout": "node scripts/check-job-sheet-print-layout.mjs",
+    "check:global-print-canvas": "node scripts/check-global-print-canvas.mjs",
     "check:customer-import": "node scripts/check-customer-import.mjs",
     "check:shop-bootstrap": "node scripts/check-shop-bootstrap.mjs",
     "check:inventory-shipping-polish": "node scripts/check-inventory-shipping-polish.mjs",

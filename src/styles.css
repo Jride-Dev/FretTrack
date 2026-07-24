@@ -4368,6 +4368,7 @@ th.internal-only {
 
 @media print {
   @page {
+    background: #fff;
     size: letter portrait;
     margin: 0.5in;
   }
@@ -4440,12 +4441,16 @@ th.internal-only {
   main,
   .detail,
   .job-detail,
-  .card,
-  section {
+  .card {
     background: #fff !important;
     box-shadow: none !important;
     border: none !important;
     outline: 0 !important;
+  }
+
+  section {
+    box-shadow: none !important;
+    border: none !important;
   }
 
   main {
@@ -4767,5 +4772,39 @@ th.internal-only {
   body.barcode-label-printing .barcode-label-preset-letter .barcode-label-grid {
     gap: 0.125in;
     grid-template-columns: repeat(3, 2.45in);
+  }
+
+  /* Keep the selected app theme from leaking into any browser print canvas. */
+  html,
+  body,
+  #root,
+  .app-shell,
+  .app-layout,
+  .layout,
+  main,
+  .detail,
+  .job-detail,
+  .job-workspace,
+  .print-only,
+  .print-sheet,
+  .customer-report {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  #root,
+  .app-shell,
+  .app-layout,
+  .layout,
+  main,
+  .detail,
+  .job-detail,
+  .job-workspace,
+  .print-only,
+  .print-sheet,
+  .customer-report {
+    border: 0 !important;
+    box-shadow: none !important;
+    outline: 0 !important;
   }
 }
