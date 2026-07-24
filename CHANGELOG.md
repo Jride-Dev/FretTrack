@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.0 - Current Beta Candidate
 
+- Added Discord, GitHub, Reddit, and Torrance Guitar Repair links to the public FretTrack landing-page footer.
 - Bumped package metadata and the in-app version display to `0.2.9-beta.0`.
 - Finalized the 0.2.9 beta release marker for Pro Reports Dashboard Phase 2, Pro branding/status UI hardening, Pro emblem support, beta tester workbook/checklist delivery, public Terms/Privacy/Support readiness, and paid beta preparation before Stripe Billing Foundation begins.
 - Fixed a Reports runtime crash caused by a missing `formatDateTime` helper in the Advanced Reports table renderers, and added `npm run check:reports` coverage so missing report formatter references are caught before release.
@@ -21,6 +22,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Fixed job photo persistence so saved gallery, edited-photo, and damage-map images prefer stable Supabase Storage paths and regenerate fresh signed URLs on job load instead of reusing expired temporary URLs.
 - Restored legacy Damage Map photo hydration for older jobs. Legacy storage-path and URL field names are normalized before display, so recoverable map and damage-area photos receive fresh signed URLs when the job reopens.
 - Fixed Job Sheet printing so the customer-facing page canvas and Job Sheet wrapper are explicitly white and borderless, with one Letter-page margin instead of an added sheet frame and second margin layer.
+- Fixed the global print canvas so Job Sheets, Customer Reports, and Damage Acknowledgments cannot inherit a dark/system app theme around the document. Outer print roots and shared document wrappers now print white and borderless while internal document structure remains intact.
 - Restored normal job photo upload controls for writable owner/admin/tech users. Basic photo capture and device import now follow lifecycle-aware job write access, while Pro-only photo editing remains separately gated.
 - Completed a role and permission audit pass: Job Detail controls now remain read-only for viewers and expired shops across intake, inspection, damage maps, work logs, parts, services, payments, status changes, schedules, photo selection, and messaging preferences; owner/admin/tech operational access stays intact, operator tools remain verified-operator-only, and `npm run check:role-permissions` covers the role matrix.
 - Fixed the invoice/work-order email dialog so a successful send closes it cleanly, failures release the sending state for retry, and Cancel, Escape, or backdrop dismissal always remain available without resending the document.

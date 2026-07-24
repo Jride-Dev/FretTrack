@@ -20,6 +20,8 @@ The document choices use compact, aligned checkbox rows and successful sends con
 
 Job Sheets now print on a clean white Letter-page canvas without a page-wide black frame. The print stylesheet explicitly clears browser/theme borders and outlines from the document root and Job Sheet wrapper, and relies on the page margin rather than adding a second sheet margin. Intended section dividers and table structure remain available in the printed document.
 
+The same print-canvas reset now covers every customer-facing document. Job Sheets, Customer Reports, and Customer Damage Acknowledgments force the application root, layout, and shared document wrappers to a white background with black text during printing, regardless of the selected app theme. Internal tables, headings, signature lines, and report structure retain their intentional borders and dividers.
+
 ## Public Docs Hub
 
 The landing site now includes `https://frettrack-app.com/docs` as a public hub for customer-facing and tester-facing resources. It links beta testing downloads, support / FAQ, app login, privacy, and terms from FretTrack's own domain so testers are not dependent on GitHub Wiki or GitHub asset access when browser, workplace, school, or device policies block GitHub.
