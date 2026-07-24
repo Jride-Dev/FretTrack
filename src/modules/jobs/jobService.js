@@ -805,6 +805,7 @@ function normalizeContactDetails(contact = {}, source = {}) {
   const sourceCity = firstPresentValue(source, ['city']);
   const sourceRegion = firstPresentValue(source, ['region', 'state']);
   const sourcePostalCode = firstPresentValue(source, ['postalCode', 'postal_code', 'zipCode', 'zip_code']);
+  const postalCode = sourcePostalCode ?? contact.postalCode ?? contact.postal_code ?? contact.zipCode ?? contact.zip_code ?? '';
 
   return {
     phone: sourcePhone ?? contact.phone ?? '',
@@ -815,7 +816,7 @@ function normalizeContactDetails(contact = {}, source = {}) {
     addressLine1: sourceAddressLine1 ?? contact.addressLine1 ?? contact.address_line1 ?? contact.address ?? '',
     city: sourceCity ?? contact.city ?? '',
     region: sourceRegion ?? contact.region ?? contact.state ?? '',
-    postalCode: sourcePostalCode ?? contact.postalCode ?? contact.postal_code ?? contact.zipCode ?? contact.zip_code ?? ''
+    postalCode: String(postalCode || '').trim()
   };
 }
 

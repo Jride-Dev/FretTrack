@@ -4,6 +4,12 @@
 
 FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
+## Beta UK/privacy Polish
+
+This pass responds to first real-job beta feedback from a UK shop. Customer, job intake, and job detail address fields now use `Postal Code / ZIP`, accept alphanumeric postal codes with spaces, and trim stored values without adding a database migration. Neck inspection now includes `Hump / rise at body joint` while preserving the existing `Twist` option and old stored values.
+
+A new [Customer Data & Privacy Note for Beta Shops](CUSTOMER_DATA_PRIVACY_NOTE_BETA_SHOPS.md) gives beta shops practical customer-facing wording about FretTrack's repair-shop workflow purpose, shop-scoped role-based access, avoiding unnecessary sensitive personal information, shop responsibility, and the existing Privacy Policy and Terms.
+
 ## Role And Permission Audit
 
 The application now applies the same role intent consistently across its high-risk operational screens. Owners, admins, and techs retain their intended shop workflows; viewers see read-only job, customer, inventory, shipping, scheduling, and photo views. Job Detail no longer leaves editable intake, inspection, damage-map, work-log, payment, job-status, or schedule controls exposed to a read-only user. Expired/read-only lifecycle states also block those changes at the client while existing Supabase RLS remains the backend authority. Billing remains viewable to owners/admins, while owner-only billing-management authority and verified platform-operator tools stay distinct from ordinary shop roles.

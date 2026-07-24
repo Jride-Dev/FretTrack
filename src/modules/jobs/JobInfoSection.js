@@ -74,8 +74,8 @@ export default function JobInfoSection({
           </select>
         </label>
         <label>
-          Zip Code
-          <input name="postalCode" value={draftJob.postalCode || ''} onChange={updateField} inputMode="numeric" disabled={!canWrite} />
+          Postal Code / ZIP
+          <input name="postalCode" value={draftJob.postalCode || ''} onChange={updateField} inputMode="text" autoCapitalize="characters" disabled={!canWrite} />
         </label>
         <label>
           Phone

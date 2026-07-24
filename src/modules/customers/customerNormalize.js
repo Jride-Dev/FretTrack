@@ -67,6 +67,7 @@ export function normalizeCustomer(customer = {}) {
   const lastName = customer.lastName || customer.last_name || customer.customerLastName || customer.customer_last_name || splitName.lastName;
   const email = String(customer.email || '').trim();
   const phone = String(customer.phone || '').trim();
+  const postalCode = String(customer.postalCode || customer.postal_code || '').trim();
   const displayName = getCustomerDisplayName({
     ...customer,
     firstName,
@@ -97,7 +98,7 @@ export function normalizeCustomer(customer = {}) {
     addressLine2: customer.addressLine2 || customer.address_line2 || '',
     city: customer.city || '',
     region: customer.region || '',
-    postalCode: customer.postalCode || customer.postal_code || '',
+    postalCode,
     country: customer.country || '',
     notes: customer.notes || '',
     source: customer.source || '',

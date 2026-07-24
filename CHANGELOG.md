@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.0 - Current Beta Candidate
 
+- Added beta UK/privacy polish with international `Postal Code / ZIP` labels, alphanumeric postal-code entry, trimmed postal-code storage, a `Hump / rise at body joint` neck condition option, a beta-shop customer data/privacy note, and `npm run check:beta-uk-privacy-polish` coverage.
 - Added Discord, GitHub, Reddit, and Torrance Guitar Repair links to the public FretTrack landing-page footer.
 - Bumped package metadata and the in-app version display to `0.2.9-beta.0`.
 - Finalized the 0.2.9 beta release marker for Pro Reports Dashboard Phase 2, Pro branding/status UI hardening, Pro emblem support, beta tester workbook/checklist delivery, public Terms/Privacy/Support readiness, and paid beta preparation before Stripe Billing Foundation begins.

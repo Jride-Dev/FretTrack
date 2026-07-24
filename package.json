@@ -15,6 +15,7 @@
     "check:job-sheet-print-layout": "node scripts/check-job-sheet-print-layout.mjs",
     "check:global-print-canvas": "node scripts/check-global-print-canvas.mjs",
     "check:customer-import": "node scripts/check-customer-import.mjs",
+    "check:beta-uk-privacy-polish": "node scripts/check-beta-uk-privacy-polish.mjs",
     "check:shop-bootstrap": "node scripts/check-shop-bootstrap.mjs",
     "check:inventory-shipping-polish": "node scripts/check-inventory-shipping-polish.mjs",
     "check:invoice-email-modal": "node scripts/check-invoice-email-modal.mjs",

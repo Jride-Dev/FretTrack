@@ -6,6 +6,10 @@ Public tester page:
 
 - `https://frettrack-app.com/beta-tester`
 
+Customer privacy note for beta shops:
+
+- [Customer Data & Privacy Note for Beta Shops](CUSTOMER_DATA_PRIVACY_NOTE_BETA_SHOPS.md)
+
 Recommended workbook download:
 
 - `/downloads/frettrack-beta-tester-workbook.xlsx`

@@ -1,4 +1,5 @@
 import { getLengthUnitLabel, normalizeLengthUnit, parseLengthInput } from '../../shared/utils/measurements';
+import { NECK_CONDITION_OPTIONS } from './neckInspectionOptions';
 
 export default function NeckInspectionSection({
   canWrite = true,
@@ -127,10 +128,9 @@ export default function NeckInspectionSection({
         <label>
           Neck Condition
           <select value={stage.neckCondition || 'Straight'} onChange={(event) => updateNeckInspection(stageKey, 'neckCondition', event.target.value)} disabled={!canWrite}>
-            <option value="Straight">Straight</option>
-            <option value="Backbow">Backbow</option>
-            <option value="Upbow">Upbow</option>
-            <option value="Twist">Twist</option>
+            {NECK_CONDITION_OPTIONS.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
           </select>
         </label>
         <label>
