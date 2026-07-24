@@ -221,8 +221,8 @@ export default function CustomerForm({
           <input name="region" value={form.region} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
-          Postal Code
-          <input name="postalCode" value={form.postalCode} onChange={handleChange} disabled={!canWrite} />
+          Postal Code / ZIP
+          <input name="postalCode" value={form.postalCode} onChange={handleChange} disabled={!canWrite} inputMode="text" autoCapitalize="characters" />
         </label>
         <label>
           Country

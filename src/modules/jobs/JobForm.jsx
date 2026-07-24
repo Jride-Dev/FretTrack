@@ -27,6 +27,10 @@ function todayValue() {
   return toIsoDateInputValue();
 }
 
+function cleanPostalCode(value) {
+  return String(value || '').trim();
+}
+
 function getInitialFormState(jobs = []) {
   const dateReceived = todayValue();
   return {
@@ -190,7 +194,7 @@ export default function JobForm({
         addressLine1: customer.addressLine1 || '',
         city: customer.city || '',
         region: customer.region || '',
-        postalCode: customer.postalCode || ''
+        postalCode: cleanPostalCode(customer.postalCode)
       };
 
       if (customer.customerType === 'subcontractor') {
@@ -218,7 +222,7 @@ export default function JobForm({
       addressLine1: customer.addressLine1 || '',
       city: customer.city || '',
       region: customer.region || '',
-      postalCode: customer.postalCode || ''
+      postalCode: cleanPostalCode(customer.postalCode)
     };
 
     if (customer.customerType === 'subcontractor') {
@@ -452,8 +456,8 @@ export default function JobForm({
           </select>
         </label>
         <label>
-          Zip Code
-          <input name="postalCode" value={form.postalCode} onChange={handleChange} disabled={!canWrite} inputMode="numeric" />
+          Postal Code / ZIP
+          <input name="postalCode" value={form.postalCode} onChange={handleChange} disabled={!canWrite} inputMode="text" autoCapitalize="characters" />
         </label>
         <label>
           Phone
