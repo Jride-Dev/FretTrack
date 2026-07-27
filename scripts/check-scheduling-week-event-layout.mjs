@@ -64,12 +64,13 @@ assertIncludes(packageJson, '"check:scheduling-week-event-layout": "node scripts
 
 const changed = changedFiles();
 for (const forbiddenPath of [
-  'supabase/migrations/',
   'supabase/functions/',
   'cloudflare/frettrack-coming-soon/',
   'src/modules/billing/'
 ]) {
   assert.ok(!changed.some((file) => file.startsWith(forbiddenPath)), `${forbiddenPath} must not change for Scheduling layout polish.`);
 }
+const unrelatedMigrations = changed.filter((file) => file.startsWith('supabase/migrations/') && !file.endsWith('_add_shop_country_localization.sql'));
+assert.equal(unrelatedMigrations.length, 0, 'Scheduling layout changes must not add unrelated Supabase migrations.');
 
 console.log('Scheduling week-view event layout checks passed.');

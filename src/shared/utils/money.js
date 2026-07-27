@@ -4,7 +4,8 @@ const DEFAULT_LOCALE = ENV.VITE_DEFAULT_LOCALE || undefined;
 
 export const SUPPORTED_CURRENCIES = [
   { code: 'USD', label: 'USD - US Dollar', symbol: '$', locale: 'en-US', taxLabel: 'Sales Tax' },
-  { code: 'GBP', label: 'GBP - British Pound', symbol: '\u00a3', locale: 'en-GB', taxLabel: 'VAT' }
+  { code: 'GBP', label: 'GBP - British Pound', symbol: '\u00a3', locale: 'en-GB', taxLabel: 'VAT' },
+  { code: 'CAD', label: 'CAD - Canadian Dollar', symbol: 'CA$', locale: 'en-CA', taxLabel: 'GST' }
 ];
 
 export function getDefaultCurrency() {

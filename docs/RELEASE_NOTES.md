@@ -1,8 +1,16 @@
 # Release Notes
 
-## GitHub Release Summary: v0.2.9-beta.0
+## GitHub Release Summary: v0.2.9-beta.1
 
-FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
+FretTrack `0.2.9-beta.1` adds persistent international shop localization and a full Current Jobs workspace while retaining the existing paid-release preparation, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundation.
+
+## International Shop Localization and Current Jobs
+
+UK beta shops can now explicitly save United Kingdom, metric/mm action measurements, GBP, VAT wording, and their own default percentage in Shop Settings. US shops retain imperial/in, USD, and Sales Tax defaults. Canada/CAD/GST is also available through the same centralized shop profile path. Country suggestions never invent a tax rate, and shops can preserve manual localization overrides.
+
+New jobs inherit a snapshot of the active shop defaults. Existing job measurements and monetary values are not converted or rewritten, and changing a shop default does not silently recalculate historical totals. Currency display is localization context only—no foreign-exchange conversion is performed—and FretTrack makes no VAT, tax, accounting, or legal compliance claim.
+
+The compact Current Jobs sidebar now shows a contained active-job summary with a **View all current jobs** action. The full-width page adds search, priority, status, overdue/due-soon and active/all filters, plus priority/date/due/job-number/status sorting. Selecting a row or responsive mobile card opens the existing Job Detail workflow.
 
 ## Scheduling Week-view Event Layout
 

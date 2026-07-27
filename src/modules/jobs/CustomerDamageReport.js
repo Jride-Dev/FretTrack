@@ -1,5 +1,5 @@
 import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat';
-import { getPrintFooterText, getShopDateOptions, getShopSettings } from '../shops/shopConfig';
+import { getPrintFooterText, getShopDateOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
 import { retailTotal } from '../billing/accounting';
 import { money } from '../../shared/utils/money';
 
@@ -21,6 +21,7 @@ export default function CustomerDamageReport({
     dateFormat: draftJob.techDetails?.tax?.dateFormat || shopSettings.dateFormat,
     locale: draftJob.techDetails?.tax?.locale || shopSettings.locale
   });
+  const moneyOptions = getShopMoneyOptions(draftJob.techDetails?.tax || shopSettings);
   const printableWorkOrderImages = workOrderImages.filter((image) => image.url);
 
   return (
@@ -51,23 +52,23 @@ export default function CustomerDamageReport({
       <table>
         <tbody>
           <tr>
-            <td>Relief</td>
+            <td>Relief ({lengthUnit})</td>
             <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.relief, draftJob.techDetails.neckInspection?.final?.relief, lengthUnit)}</td>
           </tr>
           <tr>
-            <td>Action {outerStringLabels.treble} @ 3rd</td>
+            <td>Action {outerStringLabels.treble} @ 3rd ({lengthUnit})</td>
             <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutHighE, draftJob.techDetails.neckInspection?.final?.nutHighE, lengthUnit)}</td>
           </tr>
           <tr>
-            <td>Action {outerStringLabels.bass} @ 3rd</td>
+            <td>Action {outerStringLabels.bass} @ 3rd ({lengthUnit})</td>
             <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.nutLowE, draftJob.techDetails.neckInspection?.final?.nutLowE, lengthUnit)}</td>
           </tr>
           <tr>
-            <td>Action {outerStringLabels.treble} @ 12th</td>
+            <td>Action {outerStringLabels.treble} @ 12th ({lengthUnit})</td>
             <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionHighE12th, draftJob.techDetails.neckInspection?.final?.actionHighE12th, lengthUnit)}</td>
           </tr>
           <tr>
-            <td>Action {outerStringLabels.bass} @ 12th</td>
+            <td>Action {outerStringLabels.bass} @ 12th ({lengthUnit})</td>
             <td>{formatMeasurementDelta(draftJob.techDetails.neckInspection?.initial?.actionLowE12th, draftJob.techDetails.neckInspection?.final?.actionLowE12th, lengthUnit)}</td>
           </tr>
           <tr>
@@ -121,8 +122,8 @@ export default function CustomerDamageReport({
                 <tr key={row.id}>
                   <td>{row.sku ? `${row.sku} - ${row.name}` : row.name}</td>
                   <td>{row.quantity || 1}</td>
-                  <td>{money(Number(row.retail) || 0, { currency: shopSettings.currencyCode, locale: shopSettings.locale })}</td>
-                  <td>{row.includedInService ? 'Included' : money(retailTotal(row), { currency: shopSettings.currencyCode, locale: shopSettings.locale })}</td>
+                  <td>{money(Number(row.retail) || 0, moneyOptions)}</td>
+                  <td>{row.includedInService ? 'Included' : money(retailTotal(row), moneyOptions)}</td>
                 </tr>
               ))}
             </tbody>

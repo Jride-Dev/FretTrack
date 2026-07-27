@@ -234,7 +234,8 @@ assertIncludes(edgeFunction, ".eq('shop_id', job.shop_id)", 'Email Edge Function
 assertIncludes(edgeFunction, "['owner', 'admin', 'tech']", 'Email Edge Function must require a send-capable role.');
 
 const changed = changedFiles();
-assert.ok(!changed.some((file) => file.startsWith('supabase/migrations/')), 'No Supabase migration should be added for email shop isolation.');
+const unrelatedMigrations = changed.filter((file) => file.startsWith('supabase/migrations/') && !file.endsWith('_add_shop_country_localization.sql'));
+assert.equal(unrelatedMigrations.length, 0, 'Email isolation changes must not add unrelated Supabase migrations.');
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Landing Worker files must not change.');
 assert.ok(!changed.some((file) => /(^|\/)(billing|stripe)(\/|\.|$)/i.test(file)), 'Billing/Stripe files must not change.');
 

@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import UserSettings from '../auth/UserSettings.jsx';
 import { SUPPORTED_DATE_FORMATS, getDefaultDateFormatForLocale } from '../../shared/utils/dateFormat';
-import { getDefaultMeasurementPreferences } from '../../shared/utils/measurements';
 import { SUPPORTED_CURRENCIES, getDefaultLocaleForCurrency, getSupportedCurrency } from '../../shared/utils/money';
 import { getShopSettings, normalizePresetArray, normalizeShippingLabelSettings, saveShopSettings } from './shopConfig';
 import { saveShopProfile, uploadShopLogo } from './shopProfileService';
+import {
+  SHOP_COUNTRIES,
+  applyCountryLocalizationDefaults
+} from './shopLocalization.js';
 import ShopMembersPanel from './ShopMembersPanel.jsx';
 import SubscriptionSettingsSection from './SubscriptionSettingsSection.jsx';
 
@@ -54,14 +57,19 @@ export default function ShopSettings({
         return {
           ...current,
           currencyCode: currency.code,
-          locale: getDefaultLocaleForCurrency(currency.code),
-          taxLabel: currency.taxLabel,
-          dateFormat: getDefaultDateFormatForLocale(getDefaultLocaleForCurrency(currency.code)),
-          ...getDefaultMeasurementPreferences({
-            currencyCode: currency.code,
-            locale: getDefaultLocaleForCurrency(currency.code)
-          })
+          locale: getDefaultLocaleForCurrency(currency.code)
         };
+      }
+
+      if (name === 'countryCode') {
+        const country = SHOP_COUNTRIES.find((option) => option.code === value);
+        const applyDefaults = window.confirm(
+          `Use the suggested currency, measurement, locale, and tax label for ${country?.label || value}? `
+          + 'Choose Cancel to change only the country and preserve your current localization choices.'
+        );
+        return applyDefaults
+          ? applyCountryLocalizationDefaults(current, value)
+          : { ...current, countryCode: value };
       }
 
       if (name === 'measurementSystem') {
@@ -70,6 +78,10 @@ export default function ShopSettings({
           measurementSystem: value,
           lengthUnit: value === 'metric' ? 'mm' : 'in'
         };
+      }
+
+      if (name === 'defaultTaxRate') {
+        return { ...current, defaultTaxRate: value, salesTaxRate: value };
       }
 
       return { ...current, [name]: type === 'checkbox' ? checked : value };
@@ -99,7 +111,7 @@ export default function ShopSettings({
     }
 
     if (requireCompletion && !settings.taxState.trim()) {
-      onNotice?.({ type: 'error', message: 'State is required before beta use.' });
+      onNotice?.({ type: 'error', message: 'Tax jurisdiction is required before beta use.' });
       return;
     }
 
@@ -185,6 +197,14 @@ export default function ShopSettings({
             </div>
           )}
           <label>
+            Country / Region
+            <select name="countryCode" value={settings.countryCode || 'US'} onChange={updateField} disabled={!canManageShop || isSaving}>
+              {SHOP_COUNTRIES.map((country) => (
+                <option key={country.code} value={country.code}>{country.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
             Currency
             <select name="currencyCode" value={settings.currencyCode || 'USD'} onChange={updateField} disabled={!canManageShop || isSaving}>
               {SUPPORTED_CURRENCIES.map((currency) => (
@@ -220,7 +240,12 @@ export default function ShopSettings({
           </label>
           <label>
             Tax/VAT Label
-            <input name="taxLabel" value={settings.taxLabel || ''} onChange={updateField} disabled={!canManageShop || isSaving} placeholder="Sales Tax" />
+            <input name="taxLabel" list="shop-tax-label-options" value={settings.taxLabel || ''} onChange={updateField} disabled={!canManageShop || isSaving} placeholder="Sales Tax, VAT, GST, or custom" />
+            <datalist id="shop-tax-label-options">
+              <option value="Sales Tax" />
+              <option value="VAT" />
+              <option value="GST" />
+            </datalist>
           </label>
           <label>
             Tax/VAT Registration #
@@ -232,7 +257,8 @@ export default function ShopSettings({
           </label>
           <label>
             Default {settings.taxLabel || 'Tax'} %
-            <input type="number" min="0" step="0.001" name="salesTaxRate" value={settings.salesTaxRate || ''} onChange={updateField} disabled={!canManageShop || isSaving} />
+            <input type="number" min="0" max="100" step="0.001" name="defaultTaxRate" value={settings.defaultTaxRate ?? settings.salesTaxRate ?? ''} onChange={updateField} disabled={!canManageShop || isSaving} />
+            <small>This is a shop default for new jobs, not tax or legal advice. Existing job tax snapshots are unchanged.</small>
           </label>
           <label className="checkline">
             <input type="checkbox" name="taxablePartsDefault" checked={settings.taxablePartsDefault !== false} onChange={updateField} disabled={!canManageShop || isSaving} />

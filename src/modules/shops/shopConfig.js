@@ -1,6 +1,7 @@
 import { getDefaultDateFormatForLocale, normalizeDateFormat } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences, normalizeLengthUnit, normalizeMeasurementSystem } from '../../shared/utils/measurements';
 
+const ENV = import.meta.env || {};
 const DEFAULT_SHOP_ID = 'default-shop';
 const DEFAULT_SHOP_NAME = 'FretTrack Trial Shop';
 const SHOP_SETTINGS_STORAGE_KEY = 'frettrack_shop_settings';
@@ -8,6 +9,7 @@ const SHOP_SELECTION_STORAGE_KEY = 'frettrack_selected_shop';
 const DEFAULT_CURRENCY_CODE = 'USD';
 const DEFAULT_LOCALE = 'en-US';
 const DEFAULT_TAX_LABEL = 'Sales Tax';
+const DEFAULT_COUNTRY_CODE = 'US';
 const DEFAULT_MEASUREMENT_SYSTEM = 'imperial';
 const DEFAULT_LENGTH_UNIT = 'in';
 const DEFAULT_SHIPPING_LABEL_SETTINGS = {
@@ -23,6 +25,7 @@ export const defaultShopSettings = {
   logoUrl: '',
   logoStoragePath: '',
   printFooterText: '',
+  countryCode: DEFAULT_COUNTRY_CODE,
   currencyCode: DEFAULT_CURRENCY_CODE,
   locale: DEFAULT_LOCALE,
   taxLabel: DEFAULT_TAX_LABEL,
@@ -32,6 +35,7 @@ export const defaultShopSettings = {
   lengthUnit: DEFAULT_LENGTH_UNIT,
   taxState: '',
   salesTaxRate: '',
+  defaultTaxRate: '',
   taxablePartsDefault: true,
   taxableServicesDefault: false,
   subscriptionTier: 'free',
@@ -52,7 +56,7 @@ export function getShopSettings() {
   }
 
   const selectedShop = getSelectedShop();
-  const shopId = selectedShop.shopId || import.meta.env.VITE_FRETTRACK_SHOP_ID || savedSettings.shopId || DEFAULT_SHOP_ID;
+  const shopId = selectedShop.shopId || ENV.VITE_FRETTRACK_SHOP_ID || savedSettings.shopId || DEFAULT_SHOP_ID;
   const savedSettingsMatchShop = savedSettings.shopId === shopId;
 
   return {
@@ -60,13 +64,14 @@ export function getShopSettings() {
     shopId,
     shopName: savedSettingsMatchShop && savedSettings.shopName
       ? savedSettings.shopName
-      : selectedShop.shopName || import.meta.env.VITE_FRETTRACK_SHOP_NAME || DEFAULT_SHOP_NAME,
+      : selectedShop.shopName || ENV.VITE_FRETTRACK_SHOP_NAME || DEFAULT_SHOP_NAME,
     phone: savedSettingsMatchShop ? savedSettings.phone || '' : '',
     email: savedSettingsMatchShop ? savedSettings.email || '' : '',
     address: savedSettingsMatchShop ? savedSettings.address || '' : '',
     logoUrl: savedSettingsMatchShop ? savedSettings.logoUrl || '' : '',
     logoStoragePath: savedSettingsMatchShop ? savedSettings.logoStoragePath || '' : '',
     printFooterText: savedSettingsMatchShop ? savedSettings.printFooterText || '' : '',
+    countryCode: savedSettingsMatchShop ? normalizeCountryCode(savedSettings.countryCode, savedSettings) : DEFAULT_COUNTRY_CODE,
     currencyCode: savedSettingsMatchShop ? normalizeCurrencyCode(savedSettings.currencyCode) : DEFAULT_CURRENCY_CODE,
     locale: savedSettingsMatchShop ? savedSettings.locale || DEFAULT_LOCALE : DEFAULT_LOCALE,
     taxLabel: savedSettingsMatchShop ? savedSettings.taxLabel || DEFAULT_TAX_LABEL : DEFAULT_TAX_LABEL,
@@ -82,6 +87,7 @@ export function getShopSettings() {
       : DEFAULT_LENGTH_UNIT,
     taxState: savedSettingsMatchShop ? savedSettings.taxState || '' : '',
     salesTaxRate: savedSettingsMatchShop ? savedSettings.salesTaxRate || '' : '',
+    defaultTaxRate: savedSettingsMatchShop ? savedSettings.defaultTaxRate ?? savedSettings.salesTaxRate ?? '' : '',
     taxablePartsDefault: savedSettingsMatchShop ? savedSettings.taxablePartsDefault !== false : true,
     taxableServicesDefault: savedSettingsMatchShop ? Boolean(savedSettings.taxableServicesDefault) : false,
     subscriptionTier: savedSettingsMatchShop ? savedSettings.subscriptionTier || 'free' : 'free',
@@ -124,37 +130,28 @@ export function getPrintFooterText() {
   return getShopSettings().printFooterText;
 }
 
-export function getShopMoneyOptions(settings = getShopSettings()) {
-  const mergedSettings = {
-    ...getShopSettings(),
-    ...(settings || {})
-  };
+export function getShopMoneyOptions(settings = null) {
+  const mergedSettings = settings ? { ...defaultShopSettings, ...settings } : getShopSettings();
   return {
     currency: normalizeCurrencyCode(mergedSettings.currencyCode),
     locale: mergedSettings.locale || DEFAULT_LOCALE
   };
 }
 
-export function getShopTaxLabel(settings = getShopSettings()) {
-  return settings.taxLabel || getShopSettings().taxLabel || DEFAULT_TAX_LABEL;
+export function getShopTaxLabel(settings = null) {
+  return settings ? settings.taxLabel || DEFAULT_TAX_LABEL : getShopSettings().taxLabel || DEFAULT_TAX_LABEL;
 }
 
-export function getShopDateOptions(settings = getShopSettings()) {
-  const mergedSettings = {
-    ...getShopSettings(),
-    ...(settings || {})
-  };
+export function getShopDateOptions(settings = null) {
+  const mergedSettings = settings ? { ...defaultShopSettings, ...settings } : getShopSettings();
   return {
     dateFormat: normalizeDateFormat(mergedSettings.dateFormat, mergedSettings.locale || DEFAULT_LOCALE),
     locale: mergedSettings.locale || DEFAULT_LOCALE
   };
 }
 
-export function getShopMeasurementOptions(settings = getShopSettings()) {
-  const mergedSettings = {
-    ...getShopSettings(),
-    ...(settings || {})
-  };
+export function getShopMeasurementOptions(settings = null) {
+  const mergedSettings = settings ? { ...defaultShopSettings, ...settings } : getShopSettings();
   const defaults = getDefaultMeasurementPreferences(mergedSettings);
   return {
     measurementSystem: normalizeMeasurementSystem(mergedSettings.measurementSystem, defaults.measurementSystem),
@@ -191,7 +188,21 @@ export function clearSelectedShop() {
 
 function normalizeCurrencyCode(currencyCode) {
   const code = String(currencyCode || DEFAULT_CURRENCY_CODE).toUpperCase();
-  return code === 'GBP' ? 'GBP' : 'USD';
+  return ['USD', 'GBP', 'CAD'].includes(code) ? code : DEFAULT_CURRENCY_CODE;
+}
+
+function normalizeCountryCode(countryCode, settings = {}) {
+  const code = String(countryCode || '').toUpperCase();
+  if (['US', 'GB', 'CA'].includes(code)) {
+    return code;
+  }
+  if (String(settings.currencyCode || '').toUpperCase() === 'GBP' || String(settings.locale || '').toLowerCase().startsWith('en-gb')) {
+    return 'GB';
+  }
+  if (String(settings.currencyCode || '').toUpperCase() === 'CAD' || String(settings.locale || '').toLowerCase().startsWith('en-ca')) {
+    return 'CA';
+  }
+  return DEFAULT_COUNTRY_CODE;
 }
 
 export function normalizePresetArray(value) {

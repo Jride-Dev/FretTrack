@@ -1,11 +1,12 @@
 # Changelog
 
-Current version: `0.2.9-beta.0`
+Current version: `0.2.9-beta.1`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.9-beta.0 - Current Beta Candidate
+## v0.2.9-beta.1 - Current Beta Candidate
 
+- Bumped FretTrack to `0.2.9-beta.1` with persistent country/region, metric/imperial action units, USD/GBP/CAD currency context, shop-defined Sales Tax/VAT/GST wording and default rate, plus a full Current Jobs page with active scope, search, priority/status/due filters, sorting, and responsive cards.
 - Corrected the responsive Scheduling event-details dialog action layout so small-screen buttons stack at full available width without horizontal clipping, and made the regression check verify the actual mobile media rule across platform line endings.
 - Fixed Scheduling week-view event overflow with contained, clamped compact cards and a responsive keyboard-accessible event details dialog that preserves role-gated edit, complete, reopen, cancel, and delete actions, backed by `npm run check:scheduling-week-event-layout`.
 - Fixed generated customer email shop isolation so invoice/work-order/document emails and job message templates resolve identity from the active job shop profile, block missing or mismatched shop context, reset drafts across job/shop changes, and avoid stale JR/Torrance/default shop signatures with `npm run check:email-shop-isolation` coverage.
@@ -13,7 +14,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added beta UK/privacy polish with international `Postal Code / ZIP` labels, alphanumeric postal-code entry, trimmed postal-code storage, a `Hump / rise at body joint` neck condition option, a beta-shop customer data/privacy note, and `npm run check:beta-uk-privacy-polish` coverage.
 - Added Discord, GitHub, Reddit, and Torrance Guitar Repair links to the public FretTrack landing-page footer.
 - Added a full landing-page community section with a prominent Discord news-and-updates call to action, custom Discord, Reddit, and GitHub-themed FretTrack artwork, and dedicated GitHub, Reddit, and Torrance Guitar Repair destination cards.
-- Bumped package metadata and the in-app version display to `0.2.9-beta.0`.
+- Bumped package metadata and the in-app version display to `0.2.9-beta.1`.
 - Finalized the 0.2.9 beta release marker for Pro Reports Dashboard Phase 2, Pro branding/status UI hardening, Pro emblem support, beta tester workbook/checklist delivery, public Terms/Privacy/Support readiness, and paid beta preparation before Stripe Billing Foundation begins.
 - Fixed a Reports runtime crash caused by a missing `formatDateTime` helper in the Advanced Reports table renderers, and added `npm run check:reports` coverage so missing report formatter references are caught before release.
 - Added 0.2.9-D Reports hardening with browser print support, per-section CSV exports, 25-row table previews, 250-row show-all safety, 1,000-row export caps, simple report date/status filters, section-level error containment, and larger mock dataset checks without adding PDF generation dependencies.

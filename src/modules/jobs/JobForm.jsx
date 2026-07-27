@@ -665,7 +665,7 @@ function getStringCountSelectValue(form) {
 function getDefaultTaxSettings(shopProfile = {}) {
   return {
     state: shopProfile?.taxState || '',
-    salesTaxRate: shopProfile?.salesTaxRate || '',
+    salesTaxRate: shopProfile?.defaultTaxRate ?? shopProfile?.salesTaxRate ?? '',
     taxLabel: shopProfile?.taxLabel || 'Sales Tax',
     taxRegistrationNumber: shopProfile?.taxRegistrationNumber || '',
     currencyCode: shopProfile?.currencyCode || 'USD',

@@ -157,3 +157,6 @@ npm run migration:check:strict
 `check:migrations` and `migration:check` both fail when the remote database has migration versions that are missing locally. This catches the dangerous drift state before future pushes.
 
 `migration:check:strict` also fails when local migrations are pending remotely, useful before release or deploy steps.
+# Localization migration
+
+`20260727103658_add_shop_country_localization.sql` adds the shop-scoped `country_code` field, permits CAD in the existing currency constraint/catalog, and bounds the existing default tax-rate column to 0–100. It reuses existing `shop_profiles` RLS and is intentionally pending until reviewed and approved for deployment.
