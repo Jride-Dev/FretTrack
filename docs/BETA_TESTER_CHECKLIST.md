@@ -92,6 +92,11 @@ For useful bug reports, include:
 | Shop Localization | LOCAL-003 | Compare two shop memberships. | Switching between a UK and US shop refreshes units, currency, and tax wording without cross-shop leakage. | Owner/Admin |
 | Current Jobs | JOBS-001 | Open View all current jobs. | A full-width active-jobs page opens with readable job details and no clipped sidebar columns. | Owner/Admin/Tech/Viewer |
 | Current Jobs | JOBS-002 | Filter and sort Current Jobs. | Search, priority, status, due state, scope, and sorting update the visible jobs; selecting a result opens Job Detail. | Owner/Admin/Tech/Viewer |
+| Team Assignment | TEAM-001 | Assign and reassign a job. | Owner/Admin can choose any active member from the same shop and clear the assignment; another shop's member never appears or saves. | Owner/Admin |
+| Team Assignment | TEAM-002 | Claim an unassigned job. | Tech can assign only themselves to an unassigned job and remove themselves, but cannot take another member's job. | Tech |
+| Team Assignment | TEAM-003 | Review assignment as Viewer. | Viewer sees the assigned technician but receives no assignment control. | Viewer |
+| Team Assignment | TEAM-004 | Filter Current Jobs and review Team Workload. | Pro/beta access filters by active technician or Unassigned and shows active/unassigned/overdue counts without employee scores. | Owner/Admin/Tech/Viewer |
+| Team Assignment | TEAM-005 | Simulate two users changing assignment. | A stale second change is rejected with refresh-and-retry guidance and unrelated job fields remain intact. | Owner/Admin/Tech |
 | Job Detail and Workflow | JOBDETAIL-001 | Open an existing job. | Job Detail loads customer, instrument, status, photos, parts, services, and work sections. | Owner/Admin/Tech/Viewer |
 | Job Detail and Workflow | JOBDETAIL-002 | Change job status. | Status saves and reflects in lists/reports. | Owner/Admin/Tech |
 | Job Detail and Workflow | JOBDETAIL-003 | Save job edits. | Save succeeds, dirty state clears, and updated values remain after refresh. | Owner/Admin/Tech |

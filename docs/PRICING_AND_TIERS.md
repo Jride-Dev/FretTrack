@@ -87,10 +87,13 @@ Pro is the advanced reporting and automation tier. Phase 1 currently unlocks:
 - Photo Editor
 - Team Members
 - Advanced Reporting
+- Team Assignment and workload visibility
 
 Pro subscriptions and Pro trials use the FretTrack Pro emblem and labels such as `Trial: Pro`, `Pro Monthly`, `Pro Yearly`, or `Pro, canceling`. Trial Pro access keeps Advanced Reporting unlocked through the existing entitlement snapshot; non-Pro shops continue to see the Pro locked state.
 
 Team Members is backend-enforced. Existing staff memberships are preserved when trial access expires, but non-owner staff access and member changes are inactive until Pro access is restored.
+
+The `0.2.9-beta.2` Team Assignment Foundation adds an independent `team_assignment` entitlement for advanced multi-user workflow. It does not change existing `team_members` rows or membership access rules. Pro and active beta/trial paths can assign active same-shop members, filter Current Jobs by assignee, and view active/unassigned/overdue workload counts. Shop/non-Pro states keep historical assignments readable but do not expose assignment writes or workload controls. These counts are workload coordination only, not employee performance scoring.
 
 The current Pro reporting dashboard includes operational tables for shop overview counts, jobs by status, priority, overdue promise dates, ready-for-pickup work, waiting-on-parts work, job aging, recent work-log activity, low-stock inventory by desired stock level, open purchase orders, landed-cost purchase history, and upcoming schedule workload. These reports use existing shop data and do not add Stripe, billing automation, charts, PDF generation, or export workflows yet.
 

@@ -15,6 +15,7 @@ Start here for the current product path:
 
 - [Release notes](RELEASE_NOTES.md)
 - [Shop localization and Current Jobs](SHOP_LOCALIZATION_AND_CURRENT_JOBS.md)
+- [Pro Team Assignment Foundation](PRO_TEAM_ASSIGNMENT_FOUNDATION.md)
 - [Roadmap](../ROADMAP.md)
 - [Deployment notes](DEPLOYMENT_NOTES.md)
 - [Reports](REPORTS.md)
@@ -48,6 +49,7 @@ Core shipped beta areas now include:
 - shipping / receiving / chain-of-custody foundation with `job_shipments`, `shipping_items`, custody events, manual carrier/tracking and label-reference fields, a grouped Shipping dashboard, and reuse of inventory Location/Category presets; carrier APIs, label/rate purchasing, and automatic shipment notifications are still future work
 - Scheduling / Calendar Phase 1
 - persistent per-shop country, measurement, currency, and tax terminology defaults plus a full Current Jobs workspace
+- Pro primary-technician assignment, Current Jobs assignee filtering, role-safe self-assignment, assignment audit history, and non-scoring workload visibility
 - unsaved-changes protection foundation
 - premium entitlement foundation
 - permission hardening with centralized role checks

@@ -30,6 +30,7 @@ for (const helperName of [
   'canManageBilling',
   'canManageShopSettings',
   'canManageTeamMembers',
+  'canUseTeamAssignment',
   'canManageInventory',
   'canManageVendors',
   'canManagePurchaseOrders',

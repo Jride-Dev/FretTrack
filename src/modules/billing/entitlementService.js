@@ -28,6 +28,7 @@ export const PREMIUM_FEATURES = {
   PHOTO_EDITOR: 'photo_editor',
   ADVANCED_REPORTING: 'advanced_reporting',
   TEAM_MEMBERS: 'team_members',
+  TEAM_ASSIGNMENT: 'team_assignment',
   BUSINESS_ANALYTICS: 'business_analytics',
   INVENTORY_ANALYTICS: 'inventory_analytics',
   REVENUE_DASHBOARDS: 'revenue_dashboards',
@@ -65,6 +66,7 @@ const defaultEntitlements = {
   photo_editor: false,
   advanced_reporting: false,
   team_members: false,
+  team_assignment: false,
   business_analytics: false,
   inventory_analytics: false,
   revenue_dashboards: false,
@@ -100,6 +102,7 @@ const tierEntitlements = {
     photo_editor: true,
     advanced_reporting: true,
     team_members: true,
+    team_assignment: true,
     max_users: 10,
     max_storage_bytes: 100 * 1024 * 1024 * 1024
   },
@@ -107,6 +110,7 @@ const tierEntitlements = {
     photo_editor: true,
     advanced_reporting: true,
     team_members: true,
+    team_assignment: true,
     business_analytics: true,
     inventory_analytics: true,
     revenue_dashboards: true,
@@ -137,6 +141,7 @@ export const premiumFeatureGroups = [
     features: [
       [PREMIUM_FEATURES.PHOTO_EDITOR, 'Photo Editor'],
       [PREMIUM_FEATURES.TEAM_MEMBERS, 'Team Members'],
+      [PREMIUM_FEATURES.TEAM_ASSIGNMENT, 'Team Assignment'],
       [PREMIUM_FEATURES.ADVANCED_REPORTING, 'Advanced Reporting']
     ]
   }
@@ -247,6 +252,7 @@ export function normalizeEntitlementSnapshot(snapshot = {}, shopId = '') {
       canUsePhotoEditor: Boolean(entitlements.photo_editor),
       canUseAdvancedReporting: Boolean(entitlements.advanced_reporting),
       canManageTeamMembers: Boolean(entitlements.team_members),
+      canUseTeamAssignment: Boolean(entitlements.team_assignment),
       canUseCustomerPortal: Boolean(entitlements.customer_portal),
       canUseApi: Boolean(entitlements.api_access),
       canUseCustomBranding: Boolean(entitlements.custom_branding || entitlements.advanced_branding),
@@ -320,6 +326,12 @@ export function canManageTeamMembers(snapshot) {
   return getShopFeatureValue(snapshot, PREMIUM_FEATURES.TEAM_MEMBERS);
 }
 
+export function canUseTeamAssignment(snapshot, { betaApproved = false } = {}) {
+  return getShopFeatureValue(snapshot, PREMIUM_FEATURES.TEAM_ASSIGNMENT)
+    || (betaApproved && !isReadOnlyStatus(snapshot))
+    || getEffectiveStatus(snapshot) === BILLING_STATUSES.BETA_BYPASS;
+}
+
 export function canUseCustomerPortal(snapshot) {
   return getShopFeatureValue(snapshot, PREMIUM_FEATURES.CUSTOMER_PORTAL);
 }
@@ -367,6 +379,7 @@ export function getEnabledFeatureLabels(snapshot) {
     ['photo_editor', 'Photo editor'],
     ['advanced_reporting', 'Advanced reporting'],
     ['team_members', 'Team members'],
+    ['team_assignment', 'Team assignment'],
     ['business_analytics', 'Business analytics'],
     ['inventory_analytics', 'Inventory analytics'],
     ['customer_portal', 'Customer portal'],

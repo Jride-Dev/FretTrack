@@ -22,6 +22,8 @@ import { smsEnabled } from '../../data/messagesRepository';
 import { stateOptionsWithCurrent } from '../../data/usStates';
 import { JOB_PRIORITY_OPTIONS, normalizeJobPriority } from './jobPriority';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
+import { canUseTeamAssignment } from '../billing/entitlementService.js';
+import { getAvailableAssignmentChoices } from './teamAssignment.js';
 
 function todayValue() {
   return toIsoDateInputValue();
@@ -64,6 +66,7 @@ function getInitialFormState(jobs = []) {
     dateReceived,
     promiseDate: '',
     priority: 'regular',
+    assignedMemberId: '',
     jobNumber: generateJobNumber(dateReceived, jobs)
   };
 }
@@ -73,6 +76,10 @@ export default function JobForm({
   customers = [],
   canWrite = true,
   shopProfile = null,
+  assignableMembers = [],
+  membership = null,
+  entitlementSnapshot = null,
+  betaApproved = false,
   initialCustomer = null,
   onCreate,
   onJobSaved,
@@ -86,6 +93,15 @@ export default function JobForm({
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const dateOptions = getShopDateOptions(shopProfile || undefined);
   const initialCustomerId = initialCustomer?.id || '';
+  const teamAssignmentEnabled = canUseTeamAssignment(entitlementSnapshot, { betaApproved });
+  const assignmentChoices = teamAssignmentEnabled
+    ? getAvailableAssignmentChoices({
+        members: assignableMembers,
+        role: membership?.role,
+        currentMemberId: membership?.id || '',
+        shopId: membership?.shopId || shopProfile?.shopId || ''
+      })
+    : [];
 
   useEffect(() => {
     setForm((current) => ({
@@ -254,6 +270,7 @@ export default function JobForm({
     const now = new Date().toISOString();
     const dateReceived = form.dateReceived || todayValue();
     const measurementPreferences = getDefaultMeasurementPreferences(shopProfile || {});
+    const selectedAssignee = assignmentChoices.find((member) => member.id === form.assignedMemberId);
 
     const newJob = {
       id: crypto.randomUUID(),
@@ -263,6 +280,8 @@ export default function JobForm({
       dateReceived,
       promiseDate: form.promiseDate || '',
       priority: normalizeJobPriority(form.priority),
+      assignedMemberId: form.assignedMemberId || '',
+      assignedMemberDisplayName: selectedAssignee?.displayName || '',
       jobNumber: generateJobNumber(dateReceived, jobs),
       status: 'Checked In',
       discountType: 'none',
@@ -643,6 +662,22 @@ export default function JobForm({
             ))}
           </select>
         </label>
+        {teamAssignmentEnabled && (
+          <label>
+            Assigned Technician
+            <select
+              name="assignedMemberId"
+              value={form.assignedMemberId || ''}
+              onChange={handleChange}
+              disabled={!canWrite}
+            >
+              <option value="">Unassigned</option>
+              {assignmentChoices.map((member) => (
+                <option key={member.id} value={member.id}>{member.displayName || 'Team member'}</option>
+              ))}
+            </select>
+          </label>
+        )}
         <label>
           Job Number
           <input name="jobNumber" value={form.jobNumber} readOnly />

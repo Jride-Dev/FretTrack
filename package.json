@@ -1,6 +1,6 @@
 {
   "name": "frettrack",
-  "version": "0.2.9-beta.1",
+  "version": "0.2.9-beta.2",
   "private": true,
   "type": "module",
   "engines": {
@@ -15,6 +15,7 @@
     "check:damage-map-image-required": "node scripts/check-damage-map-image-required.mjs",
     "check:shop-localization": "node scripts/check-shop-localization.mjs",
     "check:current-jobs-page": "node scripts/check-current-jobs-page.mjs",
+    "check:pro-team-assignment": "node scripts/check-pro-team-assignment.mjs",
     "check:version-consistency": "node scripts/check-version-consistency.mjs",
     "check:scheduling-week-event-layout": "node scripts/check-scheduling-week-event-layout.mjs",
     "check:job-sheet-print-layout": "node scripts/check-job-sheet-print-layout.mjs",

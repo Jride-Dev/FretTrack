@@ -281,7 +281,7 @@ export async function addJob(job) {
   }
 
   const { data, error } = await supabase.rpc('create_job_with_number', {
-    job_payload: toDbJob(newJob)
+    job_payload: toDbJob(newJob, { includeAssignment: true })
   });
 
   if (error) {
@@ -479,7 +479,7 @@ export async function ensureRemoteJob(job) {
   }
 
   const { data, error } = await supabase.rpc('create_job_with_number', {
-    job_payload: toDbJob(normalizedJob)
+    job_payload: toDbJob(normalizedJob, { includeAssignment: true })
   });
 
   if (error) {
@@ -729,6 +729,9 @@ function normalizeJob(job, jobs = []) {
     jobDayCode,
     dailySequence,
     shopId,
+    assignedMemberId: job.assignedMemberId || job.assigned_member_id || '',
+    assignedMemberDisplayName: job.assignedMemberDisplayName || job.assigned_member_display_name || '',
+    assignmentUpdatedAt: job.assignmentUpdatedAt || job.assignment_updated_at || null,
     jobNumber: job.jobNumber || job.job_number || (dailySequence ? formatJobNumber(jobDayCode, dailySequence) : generateJobNumber(jobDate, jobs, job.id, shopId)),
     status: job.status || 'Checked In',
     discountType: job.discountType || techDetails.discountType || 'none',
@@ -1092,9 +1095,9 @@ function parseDailySequence(sequenceValue, jobNumber = '') {
   return match ? Number(match[1]) : null;
 }
 
-function toDbJob(job) {
+function toDbJob(job, { includeAssignment = false } = {}) {
   const shopId = getActiveShopId(job.shopId);
-  return {
+  const payload = {
     ...toLegacyDbJob(job),
     customer_id: job.customerId || null,
     job_date: job.jobDate || job.dateReceived || null,
@@ -1105,6 +1108,10 @@ function toDbJob(job) {
     shop_id: shopId,
     status: job.status || 'Checked In'
   };
+  if (includeAssignment) {
+    payload.assigned_member_id = job.assignedMemberId || null;
+  }
+  return payload;
 }
 
 function toLegacyDbJob(job) {
@@ -1184,6 +1191,9 @@ function fromDbJob(job) {
     jobDayCode: job.job_day_code || '',
     dailySequence: job.daily_sequence || null,
     shopId: getActiveShopId(job.shop_id),
+    assignedMemberId: job.assigned_member_id || '',
+    assignedMemberDisplayName: job.assigned_member_display_name || '',
+    assignmentUpdatedAt: job.assignment_updated_at || null,
     jobNumber: job.job_number || '',
     status: job.status || 'Checked In',
     discountType: job.tech_details?.discountType || 'none',

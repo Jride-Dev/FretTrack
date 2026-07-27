@@ -42,6 +42,7 @@ import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoServic
 import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
+import JobAssignmentControl from './JobAssignmentControl.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 
 const intakeTypes = JOB_SOURCE_OPTIONS;
@@ -111,6 +112,13 @@ export default function JobDetail({
   canSendSms = true,
   entitlementMessage = '',
   shopProfile = null,
+  membership = null,
+  entitlementSnapshot = null,
+  betaApproved = false,
+  assignableMembers = [],
+  assignableMembersLoading = false,
+  assignableMembersError = '',
+  onAssignmentChanged,
   onDirtyChange
 }) {
   const [draftJob, setDraftJob] = useState(job);
@@ -1306,6 +1314,19 @@ export default function JobDetail({
     setTimelineEvents(events);
   }
 
+  function handleAssignmentChanged(assignment) {
+    setDraftJob((current) => ({
+      ...current,
+      assignedMemberId: assignment.assignedMemberId || '',
+      assignedMemberDisplayName: assignment.assignedMemberDisplayName || '',
+      assignmentUpdatedAt: assignment.assignmentUpdatedAt || null
+    }));
+    onAssignmentChanged?.(draftJob.id, assignment);
+    refreshTimelineEvents().catch((error) => {
+      console.warn('Assignment timeline refresh failed.', error);
+    });
+  }
+
   const printActions = (
     <PrintActions
       canSendEmail={canSendEmail}
@@ -1510,6 +1531,17 @@ export default function JobDetail({
         </div>
         <JobStatusSelect canWrite={canWrite} value={draftJob.status} onChange={updateField} />
       </div>
+      <JobAssignmentControl
+        job={draftJob}
+        members={assignableMembers}
+        membersError={assignableMembersError}
+        membersLoading={assignableMembersLoading}
+        membership={membership}
+        entitlementSnapshot={entitlementSnapshot}
+        betaApproved={betaApproved}
+        onAssignmentChanged={handleAssignmentChanged}
+        onNotice={onNotice}
+      />
 
       {(isDirty || saveStatus === 'saving' || saveStatus === 'error') && (
         <UnsavedChangesBadge
