@@ -4506,11 +4506,18 @@ th.internal-only {
   }
 
   .schedule-event-modal-actions {
+    align-items: stretch;
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
   }
 
   .schedule-event-modal-actions button {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
     width: 100%;
   }
 }

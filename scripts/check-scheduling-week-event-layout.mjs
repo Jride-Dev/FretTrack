@@ -46,7 +46,20 @@ assertIncludes(detailsDialog, 'canWrite && <button type="button" onClick={onEdit
 assertIncludes(detailsDialog, 'canComplete && <button type="button" className="primary-action" onClick={onComplete}', 'Complete must remain permission gated.');
 assertIncludes(detailsDialog, 'canReopen && <button type="button" onClick={onReopen}', 'Reopen must remain permission gated.');
 assertIncludes(styles, 'max-height: min(90vh, 760px)', 'The details dialog must fit within the viewport.');
-assertIncludes(styles, '.schedule-event-modal-actions {\n    display: grid;', 'Small-screen dialog actions must stack cleanly.');
+const smallScreenBreakpointStart = styles.indexOf('@media (max-width: 560px)');
+const smallScreenBreakpointEnd = styles.indexOf('@media print', smallScreenBreakpointStart);
+assert.ok(smallScreenBreakpointStart >= 0 && smallScreenBreakpointEnd > smallScreenBreakpointStart, 'Scheduling styles must keep the existing small-screen breakpoint.');
+const smallScreenStyles = styles.slice(smallScreenBreakpointStart, smallScreenBreakpointEnd);
+assertMatches(
+  smallScreenStyles,
+  /\.schedule-event-modal-actions\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);[^}]*max-width:\s*100%;[^}]*min-width:\s*0;[^}]*width:\s*100%;[^}]*\}/,
+  'Small-screen dialog actions must stack in one contained column.'
+);
+assertMatches(
+  smallScreenStyles,
+  /\.schedule-event-modal-actions button\s*\{[^}]*box-sizing:\s*border-box;[^}]*max-width:\s*100%;[^}]*min-width:\s*0;[^}]*width:\s*100%;[^}]*\}/,
+  'Small-screen dialog action buttons must stretch without horizontal overflow.'
+);
 assertIncludes(packageJson, '"check:scheduling-week-event-layout": "node scripts/check-scheduling-week-event-layout.mjs"', 'Package script must expose the Scheduling layout check.');
 
 const changed = changedFiles();
