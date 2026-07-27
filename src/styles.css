@@ -891,6 +891,10 @@ label {
   width: 100%;
 }
 
+.damage-canvas[aria-disabled="true"] {
+  cursor: default;
+}
+
 .empty-damage-canvas {
   align-items: center;
   display: flex;
@@ -915,9 +919,16 @@ label {
 
 .damage-canvas-empty {
   color: var(--muted);
+  display: grid;
   font-size: 14px;
+  gap: 8px;
   padding: 32px;
   text-align: center;
+}
+
+.damage-canvas-empty strong {
+  color: var(--text);
+  font-size: 16px;
 }
 
 .damage-canvas img {

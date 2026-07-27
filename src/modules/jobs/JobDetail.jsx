@@ -1095,17 +1095,18 @@ export default function JobDetail({
     const damageMap = draftJob.techDetails.damageMap || {};
     const view = damageMap.views?.[viewName] || { marks: [] };
     const imageUrl = view.imageUrl || '';
+    const hasBaseImage = Boolean(imageUrl || view.storagePath || view.imageId);
     const marks = view.marks || [];
     const title = `${damageViewLabels[viewName] || 'Damage'} Damage Map`;
 
-    if (!imageUrl && marks.length === 0) {
+    if (!hasBaseImage && marks.length === 0) {
       return null;
     }
 
     return (
       <div className="report-damage-view">
         <h3>{title}</h3>
-        {imageUrl ? (
+        {hasBaseImage && imageUrl ? (
           <div className="report-damage-canvas">
             <img src={imageUrl} alt={`${viewName} damage map`} />
             {marks.map((mark, index) => (
@@ -1119,9 +1120,9 @@ export default function JobDetail({
             ))}
           </div>
         ) : (
-          <p className="report-damage-missing">No {title.toLowerCase()} image was available for this report.</p>
+          <p className="report-damage-missing">No damage map image was attached.</p>
         )}
-        {marks.length > 0 && (
+        {hasBaseImage && imageUrl && marks.length > 0 && (
           <table>
             <thead>
               <tr>

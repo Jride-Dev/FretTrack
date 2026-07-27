@@ -29,6 +29,11 @@ const viewOptions = [
 
 const DAMAGE_IMAGE_MAX_EDGE = 1400;
 const DAMAGE_IMAGE_QUALITY = 0.85;
+const DAMAGE_MAP_IMAGE_REQUIRED_MESSAGE = 'Choose a damage map image before adding damage markers.';
+
+function hasDamageMapBaseImage(view = {}) {
+  return Boolean(view.imageUrl || view.storagePath || view.imageId);
+}
 
 function markerColor(severity) {
   if (severity === 'Critical') return '#b3261e';
@@ -123,7 +128,8 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
   const currentView = views[selectedView] || { marks: [] };
   const marks = currentView.marks || [];
   const imageUrl = currentView.imageUrl || '';
-  const canvasClassName = `damage-canvas ${instrumentType.toLowerCase()}-${selectedView}-damage-canvas ${imageUrl ? 'has-damage-image' : 'empty-damage-canvas'}`;
+  const hasBaseImage = hasDamageMapBaseImage(currentView);
+  const canvasClassName = `damage-canvas ${instrumentType.toLowerCase()}-${selectedView}-damage-canvas ${hasBaseImage ? 'has-damage-image' : 'empty-damage-canvas'}`;
 
   function updateMap(patch) {
     if (!canWrite) {
@@ -145,6 +151,10 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
   }
 
   function updateCurrentView(patch) {
+    if (!hasBaseImage && Array.isArray(patch.marks) && patch.marks.length > marks.length) {
+      setImportError(DAMAGE_MAP_IMAGE_REQUIRED_MESSAGE);
+      return;
+    }
     updateMap({
       views: {
         front: { marks: [], ...(views.front || {}) },
@@ -162,6 +172,10 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
 
   function addMark(event) {
     if (!canWrite) {
+      return;
+    }
+    if (!hasBaseImage) {
+      setImportError(DAMAGE_MAP_IMAGE_REQUIRED_MESSAGE);
       return;
     }
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -344,34 +358,38 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
         className={canvasClassName}
         onClick={addMark}
         aria-label={`Mark damage on ${instrumentType} ${selectedView} diagram`}
+        aria-disabled={!hasBaseImage}
         disabled={!canWrite}
       >
         {imageUrl ? (
           <img src={imageUrl} alt={`${instrumentType} ${selectedView} inspection diagram`} draggable="false" />
         ) : (
-          <span className="damage-canvas-empty">
-            Import an instrument photo or diagram to mark damage.
+          <span className="damage-canvas-empty" role="status">
+            <strong>Add or select a damage map image before marking damage.</strong>
+            <span>Damage markers need a reference image so their position can be documented accurately.</span>
           </span>
         )}
-        <span className="damage-mark-layer" aria-hidden="true">
-          {marks.map((mark, index) => (
-            <span
-              key={mark.id}
-              className="damage-marker"
-              style={{
-                left: `${mark.x}%`,
-                top: `${mark.y}%`,
-                backgroundColor: markerColor(mark.severity)
-              }}
-              title={`${mark.area} - ${mark.severity}`}
-            >
-              {index + 1}
-            </span>
-          ))}
-        </span>
+        {hasBaseImage && (
+          <span className="damage-mark-layer" aria-hidden="true">
+            {marks.map((mark, index) => (
+              <span
+                key={mark.id}
+                className="damage-marker"
+                style={{
+                  left: `${mark.x}%`,
+                  top: `${mark.y}%`,
+                  backgroundColor: markerColor(mark.severity)
+                }}
+                title={`${mark.area} - ${mark.severity}`}
+              >
+                {index + 1}
+              </span>
+            ))}
+          </span>
+        )}
       </button>
 
-      {marks.length > 0 && (
+      {hasBaseImage && marks.length > 0 && (
         <div className="damage-list">
           {marks.map((mark, index) => (
             <div key={mark.id} className="damage-row damage-row-expanded">

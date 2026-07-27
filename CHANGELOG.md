@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.0 - Current Beta Candidate
 
+- Fixed Damage Map marker intake so users must add or select a damage map image before markers can be placed, with guarded marker creation, clearer empty-state copy, safer customer-facing no-image output, and `npm run check:damage-map-image-required` coverage.
 - Added beta UK/privacy polish with international `Postal Code / ZIP` labels, alphanumeric postal-code entry, trimmed postal-code storage, a `Hump / rise at body joint` neck condition option, a beta-shop customer data/privacy note, and `npm run check:beta-uk-privacy-polish` coverage.
 - Added Discord, GitHub, Reddit, and Torrance Guitar Repair links to the public FretTrack landing-page footer.
 - Added a full landing-page community section with a prominent Discord news-and-updates call to action, custom Discord, Reddit, and GitHub-themed FretTrack artwork, and dedicated GitHub, Reddit, and Torrance Guitar Repair destination cards.

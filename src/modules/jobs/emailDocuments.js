@@ -235,15 +235,20 @@ function buildCustomerReportEmailSection(job = {}, context = {}) {
     ['Serial Number', cleanText(job.serial) || '-'],
     ['Date Received', base.dateReceived]
   ];
-  const damageRows = Object.entries(damageMap.views || {}).flatMap(([viewName, view]) => (
-    (view?.marks || []).map((mark, index) => [
+  const hasAnyDamageMapImage = Object.values(damageMap.views || {}).some((view) => Boolean(view?.imageUrl || view?.storagePath || view?.imageId));
+  const damageRows = Object.entries(damageMap.views || {}).flatMap(([viewName, view]) => {
+    const hasBaseImage = Boolean(view?.imageUrl || view?.storagePath || view?.imageId);
+    if (!hasBaseImage) {
+      return [];
+    }
+    return (view?.marks || []).map((mark, index) => [
       `${formatDamageViewLabel(viewName)} #${index + 1}`,
       cleanText(mark.area) || '-',
       cleanText(mark.severity) || '-',
       cleanText(mark.note) || '-',
       cleanText(mark.recommendedRepair) || '-'
-    ])
-  ));
+    ]);
+  });
   const workRows = [
     ...services.map((row) => [cleanText(row.description) || 'Service', String(row.quantity || 1)]),
     ...(job.workLog || []).map((entry) => [
@@ -269,7 +274,7 @@ function buildCustomerReportEmailSection(job = {}, context = {}) {
     title: 'Customer Report',
     fields,
     tables: [
-      { title: 'Documented Condition', headers: ['View', 'Area', 'Severity', 'Note', 'Recommended Repair'], rows: damageRows, emptyText: 'No damage markers were recorded.' },
+      { title: 'Documented Condition', headers: ['View', 'Area', 'Severity', 'Note', 'Recommended Repair'], rows: damageRows, emptyText: hasAnyDamageMapImage ? 'No damage markers were recorded.' : 'No damage map image was attached.' },
       { title: 'Neck Measurements', headers: ['Measurement', 'Recorded Change'], rows: neckRows },
       { title: 'Work Performed', headers: ['Entry', 'Details'], rows: workRows, emptyText: 'No work entries were recorded.' },
       { title: 'Parts', headers: ['Part', 'Qty', 'Unit Price', 'Line Total'], rows: partRows, emptyText: 'No parts were recorded.' }
