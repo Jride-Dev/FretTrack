@@ -9,6 +9,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Added the Pro Team Assignment Foundation: persisted same-shop primary technician assignments, owner/admin management, technician self-claim/removal, viewer read-only display, active-member validation, safe historical assignee names, targeted stale-aware updates, assignment audit events, Current Jobs filtering, and a non-scoring workload summary.
 - Added `team_assignment` as an advanced Pro workflow entitlement without changing existing Team Members membership behavior, billing, or Stripe. Active trials and approved writable beta shops can exercise the feature; expired/read-only shops retain readable historical data.
 - Added migration `20260727151302_pro_team_assignment_foundation.sql` and `npm run check:pro-team-assignment`; the migration is not applied by this branch.
+- Fixed the Pro Team Assignment validation check so it verifies the exact authoritative migration from repository contents after merge, including clean working trees, instead of relying on feature-branch diffs.
 
 ## v0.2.9-beta.1
 

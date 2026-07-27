@@ -1,12 +1,35 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
 const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
+const findAuthoritativeMigration = (repositoryMigrationPaths, authoritativePath) =>
+  repositoryMigrationPaths.filter((repositoryPath) => repositoryPath === authoritativePath);
 
 const migrationPath = 'supabase/migrations/20260727151302_pro_team_assignment_foundation.sql';
+const repositoryMigrationPaths = readdirSync(join(root, 'supabase/migrations'), { withFileTypes: true })
+  .filter((entry) => entry.isFile())
+  .map((entry) => `supabase/migrations/${entry.name}`);
+const authoritativeMigrationMatches = findAuthoritativeMigration(repositoryMigrationPaths, migrationPath);
+assert.deepEqual(
+  authoritativeMigrationMatches,
+  [migrationPath],
+  'Exactly one authoritative Pro Team Assignment migration must exist at the expected repository path.'
+);
+
+const mergedMainNoDiffFixture = {
+  workingTreeDiff: [],
+  repositoryMigrationPaths
+};
+assert.equal(mergedMainNoDiffFixture.workingTreeDiff.length, 0, 'Merged-main regression fixture must have no working-tree diff.');
+assert.deepEqual(
+  findAuthoritativeMigration(mergedMainNoDiffFixture.repositoryMigrationPaths, migrationPath),
+  [migrationPath],
+  'Authoritative migration discovery must work on merged main without a working-tree diff.'
+);
+
 const migration = read(migrationPath);
 const assignmentHelpers = read('src/modules/jobs/teamAssignment.js');
 const assignmentService = read('src/modules/jobs/teamAssignmentService.js');
@@ -24,6 +47,7 @@ const docs = read('docs/PRO_TEAM_ASSIGNMENT_FOUNDATION.md');
 
 assert.match(migration, /add column if not exists assigned_member_id uuid[\s\S]*references public\.shop_members\(id\) on delete set null/i, 'Jobs must persist an optional membership relationship.');
 assert.match(migration, /assigned_member_display_name text not null default ''/, 'Historical assignee display snapshot must exist.');
+assert.match(migration, /assignment_updated_at timestamptz/, 'Assignment concurrency timestamp must exist.');
 assert.match(migration, /private\.is_active_shop_member\([\s\S]*shop_members\.shop_id = target_shop_id[\s\S]*email_confirmed_at is not null[\s\S]*banned_until/i, 'Assignable members must be active and same-shop.');
 assert.match(migration, /The assigned technician must be an active member of this shop/, 'Cross-shop or inactive assignment must be rejected.');
 assert.match(migration, /actor_member\.role in \('owner', 'admin'\)/, 'Owner/admin assignment policy must be enforced.');
@@ -34,6 +58,16 @@ assert.match(migration, /assignment_updated_at is distinct from expected_assignm
 assert.match(migration, /update public\.jobs[\s\S]*assigned_member_id = target_assigned_member_id/, 'Assignment persistence must use a targeted update.');
 assert.match(migration, /job_assigned[\s\S]*job_unassigned[\s\S]*job_reassigned/, 'Assignment audit event types must exist.');
 assert.match(migration, /exception when others then[\s\S]*raise warning 'Job assignment audit event failed/, 'Audit failure must not corrupt the job update.');
+assert.match(migration, /create or replace function public\.get_assignable_shop_members\(target_shop_id text\)/, 'Shop-scoped assignable-member RPC must exist.');
+assert.match(migration, /create or replace function public\.update_job_assignment\([\s\S]*expected_assignment_updated_at timestamptz default null/, 'Targeted assignment RPC must accept the expected assignment timestamp.');
+assert.match(migration, /create or replace function public\.create_job_with_number\(job_payload jsonb\)[\s\S]*assigned_member_id/, 'Job creation RPC must persist the optional assignment.');
+for (const signature of [
+  'public.get_assignable_shop_members\\(text\\)',
+  'public.update_job_assignment\\(uuid, uuid, timestamptz\\)',
+  'public.create_job_with_number\\(jsonb\\)'
+]) {
+  assert.match(migration, new RegExp(`grant execute on function ${signature} to authenticated`, 'i'), `${signature} must be granted to authenticated users.`);
+}
 
 for (const helper of [
   'canManageJobAssignment',
@@ -88,8 +122,6 @@ const changed = [
   .split(/\r?\n/)
   .filter(Boolean)
   .map((file) => file.replaceAll('\\', '/'));
-assert.equal(changed.filter((file) => file.startsWith('supabase/migrations/')).length, 1, 'Exactly one focused migration is expected.');
-assert.ok(changed.includes(migrationPath), 'The focused assignment migration must be present.');
 assert.ok(!changed.some((file) => file.startsWith('supabase/functions/')), 'Edge Functions must not change.');
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Landing Worker files must not change.');
 assert.ok(!changed.some((file) => /stripe/i.test(file)), 'Stripe code must not change.');
