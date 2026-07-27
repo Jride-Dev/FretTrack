@@ -160,3 +160,7 @@ npm run migration:check:strict
 # Localization migration
 
 `20260727103658_add_shop_country_localization.sql` adds the shop-scoped `country_code` field, permits CAD in the existing currency constraint/catalog, and bounds the existing default tax-rate column to 0–100. It reuses existing `shop_profiles` RLS and is intentionally pending until reviewed and approved for deployment.
+
+# Pro Team Assignment migration
+
+`20260727151302_pro_team_assignment_foundation.sql` adds nullable job-to-membership assignment fields, a partial shop/assignee index, same-shop active-member and role validation, targeted stale-aware assignment and safe member-list RPCs, assignment audit events, Pro/beta entitlement handling, and assignment-aware job creation. It preserves existing jobs as unassigned and does not rewrite job rows. It is intentionally pending and must not be pushed without review and approval.

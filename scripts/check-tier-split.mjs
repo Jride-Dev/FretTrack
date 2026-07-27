@@ -30,7 +30,8 @@ const bootstrapMigration = read('supabase/migrations/20260612043000_verified_sho
 const shopTierMigration = read('supabase/migrations/20260612233321_shop_tier_foundation_phase_1.sql');
 const paidLifecycleMigration = read('supabase/migrations/20260616034902_paid_access_lifecycle_phase_1.sql');
 const liveDemoPolishMigration = read('supabase/migrations/20260629155417_live_demo_bug_polish_phase_1.sql');
-const tierMigrations = `${migration}\n${shopTierMigration}\n${paidLifecycleMigration}\n${liveDemoPolishMigration}`;
+const teamAssignmentMigration = read('supabase/migrations/20260727151302_pro_team_assignment_foundation.sql');
+const tierMigrations = `${migration}\n${shopTierMigration}\n${paidLifecycleMigration}\n${liveDemoPolishMigration}\n${teamAssignmentMigration}`;
 
 assertIncludes(entitlementService, "SHOP: 'shop'", 'Shop tier key must be centralized.');
 assertIncludes(
@@ -82,8 +83,14 @@ for (const key of ['customer_portal', 'sms_messages', 'api_access', 'custom_bran
 
 assertIncludes(entitlementService, "PHOTO_EDITOR: 'photo_editor'", 'Photo editor entitlement key must be centralized.');
 assertIncludes(entitlementService, "TEAM_MEMBERS: 'team_members'", 'Team members entitlement key must be centralized.');
+assertIncludes(entitlementService, "TEAM_ASSIGNMENT: 'team_assignment'", 'Team assignment entitlement key must be centralized.');
 assertIncludes(entitlementService, 'canUsePhotoEditor(snapshot)', 'Photo editor helper must exist.');
 assertIncludes(entitlementService, 'canManageTeamMembers(snapshot)', 'Team member helper must exist.');
+assertIncludes(entitlementService, 'canUseTeamAssignment(snapshot', 'Team assignment helper must exist.');
+assertMatches(teamAssignmentMigration, /\('shop', 'team_assignment', 'false'::jsonb\)/i, 'Shop must not unlock advanced assignment workflow.');
+assertMatches(teamAssignmentMigration, /\('pro', 'team_assignment', 'true'::jsonb\)/i, 'Pro must unlock advanced assignment workflow.');
+assertMatches(teamAssignmentMigration, /\('trial', 'team_assignment', 'true'::jsonb\)/i, 'Beta/trial access must exercise assignment workflow.');
+assert.ok(!teamAssignmentMigration.includes("('shop', 'team_members'"), 'Assignment foundation must preserve existing Shop Team Members behavior.');
 
 assertIncludes(permissionService, 'canAccessShopAsMember', 'Effective membership helper must exist.');
 assertIncludes(permissionService, 'canUsePhotoEditor({ role, entitlementSnapshot }', 'Photo editor permission helper must exist.');

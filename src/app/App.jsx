@@ -9,6 +9,7 @@ import JobDetail from '../modules/jobs/JobDetail.jsx';
 import JobForm from '../modules/jobs/JobForm.jsx';
 import JobList from '../modules/jobs/JobList.jsx';
 import CurrentJobsPage from '../modules/jobs/CurrentJobsPage.jsx';
+import { getAssignableShopMembers } from '../modules/jobs/teamAssignmentService.js';
 import OfflineDraftQueue from '../modules/jobs/OfflineDraftQueue.jsx';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
 import AdvancedReportsPage from '../modules/reports/AdvancedReportsPage.jsx';
@@ -55,6 +56,7 @@ import {
   getEffectiveStatus,
   getPremiumFeatureAvailability,
   getShopEntitlementSnapshot,
+  canUseTeamAssignment as hasTeamAssignmentEntitlement,
   isGraceStatus,
   isReadOnlyStatus
 } from '../modules/billing/entitlementService';
@@ -63,7 +65,7 @@ import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService'
 import { isCurrentOperator } from '../modules/operator/operatorService';
 import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
 
-const APP_VERSION = '0.2.9-beta.1';
+const APP_VERSION = '0.2.9-beta.2';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';
@@ -74,6 +76,10 @@ const UNSAVED_CHANGES_MESSAGE = 'You have unsaved changes. Leave without saving?
 export default function App() {
   const [jobs, setJobs] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [assignableMembers, setAssignableMembers] = useState([]);
+  const [assignableMembersError, setAssignableMembersError] = useState('');
+  const [assignableMembersLoading, setAssignableMembersLoading] = useState(false);
+  const [currentJobsAssigneeFilter, setCurrentJobsAssigneeFilter] = useState('');
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [mode, setMode] = useState('new');
   const [supabaseStatus, setSupabaseStatus] = useState(hasSupabaseConfig ? 'checking' : 'not-configured');
@@ -112,11 +118,13 @@ export default function App() {
   const manualSignOutRef = useRef(false);
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
   const billingAccess = entitlementSnapshot || getDefaultEntitlementSnapshot(membership?.shopId);
+  const betaApproved = betaAccess?.status === 'approved';
   const planStatus = getPlanStatus(billingAccess);
   const appVersionText = getPlanVersionText(APP_VERSION, planStatus);
   const permissionContext = {
     role: membership?.role,
-    entitlementSnapshot: billingAccess
+    entitlementSnapshot: billingAccess,
+    betaApproved
   };
   const canEditJobs = !hasSupabaseConfig || canEditJobsForRole(permissionContext);
   const canWrite = hasSupabaseConfig
@@ -137,6 +145,7 @@ export default function App() {
   const canViewBilling = !hasSupabaseConfig || canViewBillingForRole(permissionContext);
   const canSendEmail = canWrite && billingAccess.access?.canSendEmail !== false;
   const canSendSms = canWrite && billingAccess.access?.canSendSms === true;
+  const teamAssignmentEnabled = hasTeamAssignmentEntitlement(billingAccess, { betaApproved });
   const entitlementMessage = getEntitlementMessage(billingAccess);
   const tillSummary = calculateTillSummary(jobs);
   const moneyOptions = getShopMoneyOptions(shopProfile || undefined);
@@ -155,6 +164,28 @@ export default function App() {
     const loadedCustomers = await getCustomers(sourceJobs);
     setCustomers(loadedCustomers);
     return loadedCustomers;
+  }
+
+  async function refreshAssignableMembers(shopId = membership?.shopId) {
+    if (!shopId) {
+      setAssignableMembers([]);
+      setAssignableMembersError('');
+      return [];
+    }
+    setAssignableMembersLoading(true);
+    setAssignableMembersError('');
+    try {
+      const members = await getAssignableShopMembers(shopId);
+      setAssignableMembers(members);
+      return members;
+    } catch (error) {
+      console.error('Assignable shop members failed to load.', error);
+      setAssignableMembers([]);
+      setAssignableMembersError(getErrorMessage(error, 'Unable to load active shop members.'));
+      return [];
+    } finally {
+      setAssignableMembersLoading(false);
+    }
   }
 
   async function refreshOfflineDraftQueue(shopId = membership?.shopId || getSelectedShop().shopId) {
@@ -322,6 +353,15 @@ export default function App() {
       setMode(workspaceState.mode);
     }
   }, [canManageShop, canViewBilling, canWrite, isOperator, membership?.shopId, jobs, selectedJobId]);
+
+  useEffect(() => {
+    if (!membership?.shopId) {
+      setAssignableMembers([]);
+      setAssignableMembersError('');
+      return;
+    }
+    refreshAssignableMembers(membership.shopId);
+  }, [membership?.shopId]);
 
   useEffect(() => {
     if (!membership?.shopId) {
@@ -615,6 +655,24 @@ export default function App() {
     setHasUnsavedPageChanges(false);
     setSelectedJobId(jobId);
     setMode('detail');
+  }
+
+  function handleAssignmentChanged(jobId, assignment) {
+    setJobs((current) => current.map((item) => (
+      item.id === jobId
+        ? {
+            ...item,
+            assignedMemberId: assignment.assignedMemberId || '',
+            assignedMemberDisplayName: assignment.assignedMemberDisplayName || '',
+            assignmentUpdatedAt: assignment.assignmentUpdatedAt || null
+          }
+        : item
+    )));
+  }
+
+  function openCurrentJobsForAssignee(assignedMemberId) {
+    setCurrentJobsAssigneeFilter(assignedMemberId || '');
+    navigateTo('list');
   }
 
   async function handleUpdate(job) {
@@ -1250,6 +1308,10 @@ export default function App() {
               customers={customers}
               canWrite={canEditJobs}
               shopProfile={shopProfile}
+              assignableMembers={assignableMembers}
+              membership={membership}
+              entitlementSnapshot={billingAccess}
+              betaApproved={betaApproved}
               initialCustomer={pendingNewJobCustomer}
               onJobSaved={handleJobSaved}
               onOfflineDraftSaved={handleOfflineDraftSaved}
@@ -1289,7 +1351,14 @@ export default function App() {
           )}
 
           {mode === 'list' && (
-            <CurrentJobsPage jobs={jobs} onSelectJob={handleSelectJob} shopProfile={shopProfile} />
+            <CurrentJobsPage
+              jobs={jobs}
+              onSelectJob={handleSelectJob}
+              shopProfile={shopProfile}
+              assignableMembers={assignableMembers}
+              teamAssignmentEnabled={teamAssignmentEnabled}
+              initialAssigneeFilter={currentJobsAssigneeFilter}
+            />
           )}
 
           {mode === 'settings' && (
@@ -1299,6 +1368,12 @@ export default function App() {
               currentUserId={session?.user?.id || ''}
               initialSettings={shopProfile}
               entitlementSnapshot={billingAccess}
+              jobs={jobs}
+              assignableMembers={assignableMembers}
+              assignableMembersLoading={assignableMembersLoading}
+              assignableMembersError={assignableMembersError}
+              teamAssignmentEnabled={teamAssignmentEnabled}
+              onOpenCurrentJobsForAssignee={openCurrentJobsForAssignee}
               onSave={(settings) => {
                 setShopProfile(settings);
                 setShopName(settings.shopName);
@@ -1422,6 +1497,13 @@ export default function App() {
               canSendSms={canSendSms}
               entitlementMessage={entitlementMessage}
               shopProfile={shopProfile}
+              membership={membership}
+              entitlementSnapshot={billingAccess}
+              betaApproved={betaApproved}
+              assignableMembers={assignableMembers}
+              assignableMembersLoading={assignableMembersLoading}
+              assignableMembersError={assignableMembersError}
+              onAssignmentChanged={handleAssignmentChanged}
               onDirtyChange={setHasUnsavedPageChanges}
             />
           )}

@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { formatShopDate } from '../../shared/utils/dateFormat.js';
 import { getShopDateOptions } from '../shops/shopConfig.js';
 import { formatInstrumentLabel } from '../instruments/instrumentService.js';
 import { JOB_PRIORITY_OPTIONS, getJobPriorityOption, getJobPriorityShortLabel, normalizeJobPriority } from './jobPriority.js';
 import { JOB_STATUSES } from './JobStatusSelect.jsx';
+import { listAssignableShopMembers, resolveJobAssignee } from './teamAssignment.js';
 
 export const CLOSED_JOB_STATUSES = new Set(['completed', 'picked up', 'cancelled', 'archived']);
 
@@ -56,6 +57,16 @@ export function filterAndSortCurrentJobs(jobs = [], filters = {}, now = new Date
     if (filters.due && getJobDueState(job, now) !== filters.due) {
       return false;
     }
+    if (filters.assignedMemberId === 'unassigned' && job.assignedMemberId) {
+      return false;
+    }
+    if (
+      filters.assignedMemberId
+      && filters.assignedMemberId !== 'unassigned'
+      && job.assignedMemberId !== filters.assignedMemberId
+    ) {
+      return false;
+    }
     if (!search) {
       return true;
     }
@@ -65,7 +76,8 @@ export function filterAndSortCurrentJobs(jobs = [], filters = {}, now = new Date
       job.instrumentType,
       job.guitarBrand,
       job.model,
-      job.serial
+      job.serial,
+      job.assignedMemberDisplayName
     ].some((value) => cleanText(value).includes(search));
   });
 
@@ -79,6 +91,8 @@ export function filterAndSortCurrentJobs(jobs = [], filters = {}, now = new Date
         return String(left.jobNumber || '').localeCompare(String(right.jobNumber || ''), undefined, { numeric: true });
       case 'status':
         return String(left.status || '').localeCompare(String(right.status || ''));
+      case 'assignedTechnician':
+        return String(left.assignedMemberDisplayName || '').localeCompare(String(right.assignedMemberDisplayName || ''));
       case 'dateReceived':
       default:
         return new Date(right.dateReceived || 0).getTime() - new Date(left.dateReceived || 0).getTime();
@@ -93,17 +107,34 @@ function compareDueDates(left, right) {
   return new Date(left).getTime() - new Date(right).getTime();
 }
 
-export default function CurrentJobsPage({ jobs = [], onSelectJob, shopProfile = null }) {
+export default function CurrentJobsPage({
+  jobs = [],
+  onSelectJob,
+  shopProfile = null,
+  assignableMembers = [],
+  teamAssignmentEnabled = false,
+  initialAssigneeFilter = ''
+}) {
   const [filters, setFilters] = useState({
     search: '',
     priority: '',
     status: '',
     due: '',
+    assignedMemberId: initialAssigneeFilter,
     scope: 'active',
     sortBy: 'priority'
   });
   const dateOptions = getShopDateOptions(shopProfile || undefined);
   const visibleJobs = useMemo(() => filterAndSortCurrentJobs(jobs, filters), [jobs, filters]);
+  const shopId = jobs.find((job) => job.shopId)?.shopId || shopProfile?.shopId || '';
+  const assignmentChoices = useMemo(
+    () => listAssignableShopMembers(assignableMembers, shopId),
+    [assignableMembers, shopId]
+  );
+
+  useEffect(() => {
+    setFilters((current) => ({ ...current, assignedMemberId: initialAssigneeFilter || '' }));
+  }, [initialAssigneeFilter]);
 
   function updateFilter(name, value) {
     setFilters((current) => ({ ...current, [name]: value }));
@@ -151,6 +182,21 @@ export default function CurrentJobsPage({ jobs = [], onSelectJob, shopProfile = 
             <option value="due-soon">Due within 7 days</option>
           </select>
         </label>
+        {teamAssignmentEnabled && (
+          <label>
+            Assigned Technician
+            <select
+              value={filters.assignedMemberId}
+              onChange={(event) => updateFilter('assignedMemberId', event.target.value)}
+            >
+              <option value="">All technicians</option>
+              <option value="unassigned">Unassigned</option>
+              {assignmentChoices.map((member) => (
+                <option key={member.id} value={member.id}>{member.displayName || 'Team member'}</option>
+              ))}
+            </select>
+          </label>
+        )}
         <label>
           Scope
           <select value={filters.scope} onChange={(event) => updateFilter('scope', event.target.value)}>
@@ -166,17 +212,19 @@ export default function CurrentJobsPage({ jobs = [], onSelectJob, shopProfile = 
             <option value="dueDate">Due date</option>
             <option value="jobNumber">Job number</option>
             <option value="status">Status</option>
+            <option value="assignedTechnician">Assigned technician</option>
           </select>
         </label>
       </div>
 
       <div className="current-jobs-table" role="table" aria-label="Current jobs">
         <div className="current-jobs-heading" role="row">
-          <span>Priority</span><span>Status</span><span>Job</span><span>Customer</span><span>Instrument</span><span>Received</span><span>Due</span>
+          <span>Priority</span><span>Status</span><span>Job</span><span>Customer</span><span>Instrument</span><span>Assigned Technician</span><span>Received</span><span>Due</span>
         </div>
         {visibleJobs.map((job) => {
           const priority = getJobPriorityOption(job.priority || job.techDetails?.priority);
           const dueState = getJobDueState(job);
+          const assignee = resolveJobAssignee(job, assignableMembers, job.shopId);
           return (
             <button
               key={job.id}
@@ -191,6 +239,10 @@ export default function CurrentJobsPage({ jobs = [], onSelectJob, shopProfile = 
               <strong role="cell" data-label="Job">#{job.jobNumber || '-'}</strong>
               <span role="cell" data-label="Customer">{job.customerName || '-'}</span>
               <span role="cell" data-label="Instrument">{[formatInstrumentLabel(job), job.guitarBrand, job.model].filter(Boolean).join(' ') || '-'}</span>
+              <span role="cell" data-label="Assigned Technician">
+                {assignee.name}
+                {assignee.historical && <small>Inactive or removed</small>}
+              </span>
               <span role="cell" data-label="Received">{formatShopDate(job.dateReceived, dateOptions) || '-'}</span>
               <span role="cell" data-label="Due" className={dueState || undefined}>
                 {formatShopDate(getJobDueDate(job), dateOptions) || '-'}

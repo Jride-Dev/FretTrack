@@ -10,6 +10,7 @@ import {
 } from './shopLocalization.js';
 import ShopMembersPanel from './ShopMembersPanel.jsx';
 import SubscriptionSettingsSection from './SubscriptionSettingsSection.jsx';
+import TeamWorkloadSummary from './TeamWorkloadSummary.jsx';
 
 const SHIPPING_LABEL_PRESETS = [
   { value: 'parts_bin_2_25x1_25', label: '2.25 x 1.25 parts/bin label' },
@@ -31,6 +32,12 @@ export default function ShopSettings({
   currentUserId = '',
   initialSettings = null,
   entitlementSnapshot = null,
+  jobs = [],
+  assignableMembers = [],
+  assignableMembersLoading = false,
+  assignableMembersError = '',
+  teamAssignmentEnabled = false,
+  onOpenCurrentJobsForAssignee,
   requireCompletion = false,
   onSave,
   onNotice
@@ -320,6 +327,17 @@ export default function ShopSettings({
         <SubscriptionSettingsSection
           entitlementSnapshot={entitlementSnapshot}
           shopProfile={settings}
+        />
+      )}
+      {!requireCompletion && (
+        <TeamWorkloadSummary
+          jobs={jobs}
+          members={assignableMembers}
+          shopId={settings.shopId}
+          enabled={teamAssignmentEnabled}
+          isLoading={assignableMembersLoading}
+          error={assignableMembersError}
+          onOpenCurrentJobs={onOpenCurrentJobsForAssignee}
         />
       )}
       {!requireCompletion && (

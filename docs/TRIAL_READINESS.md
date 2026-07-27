@@ -1,4 +1,4 @@
-# FretTrack v0.2.9-beta.1 Trial Readiness Checklist
+# FretTrack v0.2.9-beta.2 Trial Readiness Checklist
 
 Use this checklist before handing a build to a real trial shop.
 
@@ -48,6 +48,7 @@ Apply all current schema changes, including:
 - `supabase/migrations/20260514220946_drop_legacy_public_job_image_storage_policies.sql`
 - `supabase/migrations/20260606093000_inventory_parts_phase_1.sql`
 - `supabase/migrations/20260617220231_inventory_purchasing_foundation_phase_1.sql`
+- `supabase/migrations/20260727151302_pro_team_assignment_foundation.sql`
 - `supabase/migrations/20260618072854_inventory_receiving_rpc_polish.sql`
 - `supabase/migrations/20260619092622_po_items_create_inventory_parts.sql`
 - `supabase/migrations/20260620015312_inventory_vendor_shipping_landed_cost.sql`
@@ -71,7 +72,7 @@ Beta access approval is separate from paid access trial state. A user may be app
 2. Open the internal Operator Dashboard.
 3. Confirm normal shop owners/admins/techs/viewers do not see the Operator Dashboard unless they are also listed in `public.operator_users`.
 4. Start a 7-day Shop trial for a test shop and confirm paid core workflow stays writable while Photo Editor, Team Members, and Advanced Reporting stay locked behind Pro.
-5. Start a 7-day Pro trial for a test shop and confirm Photo Editor, Team Members, and Advanced Reporting become available.
+5. Start a 7-day Pro trial for a test shop and confirm Photo Editor, Team Members, Advanced Reporting, Team Assignment, assignee filtering, and Team Workload become available.
 6. Start 14-day and 30-day trials on the same test shop and confirm the trial end date is reset from now, not extended from the old date.
 7. Extend the trial by 7, 14, and 30 days and confirm each extension starts from the greater of the existing trial end or now.
 8. End the trial and confirm the lifecycle becomes expired, stored tier is preserved, and writes are blocked without deleting data:
@@ -109,6 +110,9 @@ Beta access approval is separate from paid access trial state. A user may be app
 19. Confirm the Pro emblem appears only for Pro subscriptions or Pro trials.
 20. Open Shop Settings and confirm the Plan / Subscription panel shows current plan, billing interval, subscription status, trial end, current period end, countdown, Advanced Reporting availability, and locked premium feature count.
 21. Confirm Manage billing and Upgrade plan controls are disabled/placeholders until Stripe Checkout, Customer Portal, and webhooks are implemented.
+22. Confirm approved beta users in a writable beta shop can exercise Team Assignment under the current beta lifecycle without Stripe.
+23. Confirm an expired/read-only shop can still read historical assignees but cannot assign, reassign, clear, or self-claim jobs.
+24. Confirm Shop/non-Pro behavior leaves existing Team Members behavior unchanged and hides only the advanced assignment/workload controls.
 
 ## Test Job Creation Flow
 

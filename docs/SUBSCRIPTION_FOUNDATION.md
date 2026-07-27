@@ -180,9 +180,12 @@ Pro feature gates:
 
 - Photo Editor
 - Team Members
+- Team Assignment and workload visibility
 - Advanced Reporting
 
 Advanced Reporting now includes the Pro Reports Dashboard Phase 2 operational view: shop overview cards, jobs by status, priority report, overdue/promise-date list, ready-for-pickup list, waiting-on-parts list, job aging, recent work-log activity, low-stock inventory by desired stock level, purchase-order status, landed-cost purchase history, and upcoming schedule workload. This remains a read/reporting surface only and does not add Stripe, billing automation, charts, exports, PDFs, SMS, public document links, or supplier integrations.
+
+The `0.2.9-beta.2` Team Assignment Foundation adds `team_assignment` separately from `team_members`. It preserves current membership/account access behavior while Pro and approved active beta/trial shops gain same-shop job assignment, assignee filtering, and non-scoring workload visibility. Historical assignment data remains readable when the entitlement or writable lifecycle is unavailable.
 
 The following remain available:
 

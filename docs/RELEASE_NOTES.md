@@ -1,8 +1,18 @@
 # Release Notes
 
-## GitHub Release Summary: v0.2.9-beta.1
+## GitHub Release Summary: v0.2.9-beta.2
 
-FretTrack `0.2.9-beta.1` adds persistent international shop localization and a full Current Jobs workspace while retaining the existing paid-release preparation, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundation.
+FretTrack `0.2.9-beta.2` adds the Pro Team Assignment Foundation while retaining beta.1 localization, Current Jobs, scheduling, paid-release preparation, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundations.
+
+## Pro Team Assignment Foundation
+
+Jobs may now have one optional primary technician linked to an active membership in the same shop. Owners/admins can assign, reassign, or clear any active member; technicians may claim an unassigned job or remove themselves; viewers remain read-only. Removed members do not break historical display, and changing assignment does not change job status.
+
+Job Detail contains the assignment workflow, New Job defaults to Unassigned, the full Current Jobs page adds assignment display/filtering/sorting, and Shop Settings adds a modest active/unassigned/overdue workload summary. The compact Current Jobs sidebar remains isolated and restrained. Workload visibility does not create employee scores or rankings.
+
+Assignment writes use a targeted stale-aware RPC so ordinary full job saves cannot overwrite a coworker's newer assignment. Assignment, reassignment, and unassignment events are added to job history with authoritative IDs and safe presentation names.
+
+The new `team_assignment` entitlement gates advanced Pro controls without changing existing `team_members` behavior. Existing assignment data remains readable when Pro access is unavailable, and active beta/trial paths can exercise the feature. Migration `20260727151302_pro_team_assignment_foundation.sql` is included but not applied. No Stripe, billing automation, Edge Function, or landing Worker change is included. See [Pro Team Assignment Foundation](PRO_TEAM_ASSIGNMENT_FOUNDATION.md).
 
 ## International Shop Localization and Current Jobs
 

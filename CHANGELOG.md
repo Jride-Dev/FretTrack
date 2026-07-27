@@ -1,10 +1,16 @@
 # Changelog
 
-Current version: `0.2.9-beta.1`
+Current version: `0.2.9-beta.2`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.9-beta.1 - Current Beta Candidate
+## v0.2.9-beta.2 - Current Beta Candidate
+
+- Added the Pro Team Assignment Foundation: persisted same-shop primary technician assignments, owner/admin management, technician self-claim/removal, viewer read-only display, active-member validation, safe historical assignee names, targeted stale-aware updates, assignment audit events, Current Jobs filtering, and a non-scoring workload summary.
+- Added `team_assignment` as an advanced Pro workflow entitlement without changing existing Team Members membership behavior, billing, or Stripe. Active trials and approved writable beta shops can exercise the feature; expired/read-only shops retain readable historical data.
+- Added migration `20260727151302_pro_team_assignment_foundation.sql` and `npm run check:pro-team-assignment`; the migration is not applied by this branch.
+
+## v0.2.9-beta.1
 
 - Hotfixed the compact Current Jobs sidebar after the full-page release: restored restrained rectangular summary rows, contained job/date text, removed oversized pill/tab styling and horizontal clipping, and preserved the separate full-width Current Jobs filters and sorting page.
 - Bumped FretTrack to `0.2.9-beta.1` with persistent country/region, metric/imperial action units, USD/GBP/CAD currency context, shop-defined Sales Tax/VAT/GST wording and default rate, plus a full Current Jobs page with active scope, search, priority/status/due filters, sorting, and responsive cards.

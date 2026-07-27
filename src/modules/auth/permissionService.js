@@ -1,5 +1,6 @@
 import {
   canManageTeamMembers as hasTeamMembersEntitlement,
+  canUseTeamAssignment as hasTeamAssignmentEntitlement,
   canUseAdvancedReporting,
   canUsePhotoEditor as hasPhotoEditorEntitlement,
   isReadOnlyStatus
@@ -132,6 +133,12 @@ export function canManageTeamMembers({ role, entitlementSnapshot } = {}) {
     && hasTeamMembersEntitlement(entitlementSnapshot);
 }
 
+export function canUseTeamAssignment({ role, entitlementSnapshot, betaApproved = false } = {}) {
+  return hasShopWriteRole(role)
+    && !isReadOnlyStatus(entitlementSnapshot)
+    && hasTeamAssignmentEntitlement(entitlementSnapshot, { betaApproved });
+}
+
 export function getShopWriteAccess({ role, entitlementSnapshot, hasSupabaseConfig = true } = {}) {
   if (!hasSupabaseConfig) {
     return true;
@@ -150,6 +157,7 @@ export function getCurrentAccessPermissions({ isOperator, role, entitlementSnaps
     canManagePurchaseOrders: canManagePurchaseOrders(context),
     canManageShopSettings: canManageShopSettings(context),
     canManageTeamMembers: canManageTeamMembers(context),
+    canUseTeamAssignment: canUseTeamAssignment(context),
     canManageVendors: canManageVendors(context),
     canViewAdvancedReports: canViewAdvancedReporting(context),
     canViewBilling: canViewBilling(context),

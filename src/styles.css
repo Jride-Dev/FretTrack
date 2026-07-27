@@ -1474,7 +1474,7 @@ form.panel button {
   align-items: end;
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(240px, 2fr) repeat(5, minmax(130px, 1fr));
+  grid-template-columns: minmax(240px, 2fr) repeat(6, minmax(130px, 1fr));
   min-width: 0;
 }
 
@@ -1501,8 +1501,8 @@ form.panel button {
   box-sizing: border-box;
   display: grid;
   gap: 10px;
-  grid-template-columns: 90px 110px 110px minmax(140px, 1fr) minmax(180px, 1.3fr) 100px 100px;
-  min-width: 920px;
+  grid-template-columns: 90px 110px 110px minmax(140px, 1fr) minmax(180px, 1.3fr) minmax(140px, 1fr) 100px 100px;
+  min-width: 1080px;
   padding: 10px 12px;
   text-align: left;
 }
@@ -1532,6 +1532,11 @@ form.panel button {
 .current-job-row > * {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.current-job-row [data-label="Assigned Technician"] small {
+  color: var(--text-muted);
+  display: block;
 }
 
 .current-job-row .overdue,
@@ -1597,10 +1602,37 @@ form.panel button {
     font-size: 11px;
     font-weight: 700;
   }
+
+  .job-assignment-control {
+    grid-template-columns: 1fr;
+  }
 }
 
 .detail {
   min-height: 760px;
+}
+
+.job-assignment-control {
+  align-items: end;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1fr);
+  margin-bottom: 14px;
+  padding: 12px;
+}
+
+.job-assignment-control h3,
+.job-assignment-control p {
+  margin: 0;
+}
+
+.job-assignment-control button,
+.job-assignment-control select {
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .detail-header {
@@ -1809,6 +1841,45 @@ form.panel button {
   gap: 12px;
   margin-top: 18px;
   padding-top: 16px;
+}
+
+.team-workload-summary {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+}
+
+.team-workload-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.team-workload-card {
+  align-items: flex-start;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: none;
+  color: var(--text);
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+  text-align: left;
+}
+
+.team-workload-card:not(:disabled):hover,
+.team-workload-card:not(:disabled):focus-visible {
+  background: var(--surface-muted);
+  border-color: var(--accent);
+}
+
+.team-workload-card span {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .member-add-form {

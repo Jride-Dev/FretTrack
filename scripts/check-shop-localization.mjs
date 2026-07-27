@@ -121,6 +121,9 @@ assert.ok(emailSource.includes('taxLabel: cleanText(shopSettings.taxLabel'), 'Ge
 const changed = changedFiles();
 assert.ok(!changed.some((file) => file.startsWith('supabase/functions/')), 'Localization must not modify Edge Functions.');
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Localization must not modify landing Worker files.');
-assert.ok(!changed.some((file) => /(^|\/)(billing|stripe)(\/|\.|$)/i.test(file)), 'Localization must not modify billing or Stripe files.');
+assert.ok(
+  !changed.some((file) => /stripe/i.test(file) || (/\/billing\//i.test(file) && !file.endsWith('entitlementService.js'))),
+  'Localization must not modify Stripe or unrelated billing files.'
+);
 
 console.log('Shop localization checks passed.');
