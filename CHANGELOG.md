@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.0 - Current Beta Candidate
 
+- Corrected the responsive Scheduling event-details dialog action layout so small-screen buttons stack at full available width without horizontal clipping, and made the regression check verify the actual mobile media rule across platform line endings.
 - Fixed Scheduling week-view event overflow with contained, clamped compact cards and a responsive keyboard-accessible event details dialog that preserves role-gated edit, complete, reopen, cancel, and delete actions, backed by `npm run check:scheduling-week-event-layout`.
 - Fixed generated customer email shop isolation so invoice/work-order/document emails and job message templates resolve identity from the active job shop profile, block missing or mismatched shop context, reset drafts across job/shop changes, and avoid stale JR/Torrance/default shop signatures with `npm run check:email-shop-isolation` coverage.
 - Fixed Damage Map marker intake so users must add or select a damage map image before markers can be placed, with guarded marker creation, clearer empty-state copy, safer customer-facing no-image output, and `npm run check:damage-map-image-required` coverage.

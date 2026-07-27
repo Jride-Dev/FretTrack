@@ -10,6 +10,8 @@ Scheduling week-view events now stay inside their assigned day columns. Compact 
 
 Clicking, tapping, or keyboard-activating a card opens a responsive details dialog with the available event, timing, status, job, customer, instrument, location, and notes fields. Shop blocks use the same dialog without misleading job fields. View-only roles can read and close the dialog, while existing scheduling write access continues to control edit, complete, reopen, cancel, and delete actions.
 
+The event-dialog action area now explicitly uses one contained, full-width column on small screens. Buttons stretch to the available dialog width without clipping, and the regression check reads the real responsive media rule reliably on Windows and Unix-style checkouts.
+
 ## Generated Email Shop Isolation
 
 Generated customer emails now use the active job's shop profile instead of global/default shop settings. Invoice, work-order, selected Job Sheet / Customer Report document sections, and job message templates include only the matching shop identity, reset defaults when the job or shop changes, and block sending generated document content when the job shop and loaded shop profile do not match.
