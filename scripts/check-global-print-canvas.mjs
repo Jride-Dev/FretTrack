@@ -7,7 +7,10 @@ const root = process.cwd();
 const styles = readFileSync(resolve(root, 'src/styles.css'), 'utf8');
 const printStart = styles.lastIndexOf('@media print');
 const printStyles = styles.slice(printStart);
-const changedFiles = execFileSync('git', ['diff', '--name-only'], { cwd: root, encoding: 'utf8' });
+const changedFiles = execFileSync('git', ['diff', '--name-only'], { cwd: root, encoding: 'utf8' })
+  .split(/\r?\n/)
+  .filter(Boolean)
+  .map((file) => file.replaceAll('\\', '/'));
 
 assert.ok(printStart >= 0, 'A print stylesheet must exist.');
 assert.ok(printStyles.includes('/* Keep the selected app theme from leaking into any browser print canvas. */'), 'Global print canvas reset must be at the end of the print stylesheet.');
@@ -17,6 +20,9 @@ assert.match(printStyles, /@page\s*{[\s\S]*background:\s*#fff;[\s\S]*size:\s*let
 assert.doesNotMatch(printStyles, /\*,\s*\*::before,\s*\*::after\s*{[^}]*border:\s*(?:0|none)/, 'Print CSS must not remove borders from every element.');
 assert.match(printStyles, /\.report-table th,[\s\S]*\.report-table td\s*{[\s\S]*border:\s*1px solid #000;/, 'Internal report table borders must remain available.');
 assert.match(printStyles, /\.print-sheet h3\s*{[\s\S]*border-bottom:\s*1px solid #9a9a9a;/, 'Job Sheet section dividers must remain available.');
-assert.ok(!changedFiles.includes('src/modules/photos/'), 'Global print canvas work must not change photo logic.');
+assert.ok(
+  !changedFiles.some((file) => file.startsWith('src/modules/photos/') && file !== 'src/modules/photos/photoService.js'),
+  'Only the later usage-cap photo service integration may change photo logic.'
+);
 
 console.log('Global print canvas checks passed.');

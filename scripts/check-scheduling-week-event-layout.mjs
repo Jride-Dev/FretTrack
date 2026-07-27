@@ -63,20 +63,25 @@ assertMatches(
 assertIncludes(packageJson, '"check:scheduling-week-event-layout": "node scripts/check-scheduling-week-event-layout.mjs"', 'Package script must expose the Scheduling layout check.');
 
 const changed = changedFiles();
-for (const forbiddenPath of [
-  'supabase/functions/',
-  'cloudflare/frettrack-coming-soon/'
-]) {
-  assert.ok(!changed.some((file) => file.startsWith(forbiddenPath)), `${forbiddenPath} must not change for Scheduling layout polish.`);
-}
 assert.ok(
-  !changed.some((file) => file.startsWith('src/modules/billing/') && !file.endsWith('entitlementService.js')),
+  !changed.some((file) => file.startsWith('supabase/functions/') && file !== 'supabase/functions/send-email/index.ts'),
+  'Only the later usage-cap send-email integration may change an Edge Function.'
+);
+assert.ok(
+  !changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')),
+  'Landing Worker files must not change for Scheduling layout polish.'
+);
+assert.ok(
+  !changed.some((file) => file.startsWith('src/modules/billing/')
+    && !file.endsWith('entitlementService.js')
+    && !file.endsWith('usageCaps.js')),
   'Unrelated billing files must not change for Scheduling layout polish.'
 );
 const unrelatedMigrations = changed.filter((file) => (
   file.startsWith('supabase/migrations/')
   && !file.endsWith('_add_shop_country_localization.sql')
   && !file.endsWith('_pro_team_assignment_foundation.sql')
+  && !file.endsWith('_email_photo_usage_caps_foundation.sql')
 ));
 assert.equal(unrelatedMigrations.length, 0, 'Scheduling layout changes must not add unrelated Supabase migrations.');
 

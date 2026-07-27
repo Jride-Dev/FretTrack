@@ -22,7 +22,11 @@ Deno.serve(async (request) => {
   const payload = await request.json().catch(() => ({}));
   const jobId = payload.job_id || payload.jobId || payload.job?.id || '';
   const customerId = payload.customer_id || payload.customerId || null;
-  const to = payload.to || payload.message?.recipient || payload.job?.email || '';
+  const toRecipients = normalizeRecipients(payload.to || payload.message?.recipient || payload.job?.email || '');
+  const ccRecipients = normalizeRecipients(payload.cc || payload.message?.cc || []);
+  const bccRecipients = normalizeRecipients(payload.bcc || payload.message?.bcc || []);
+  const recipientCount = toRecipients.length + ccRecipients.length + bccRecipients.length;
+  const to = toRecipients.join(', ');
   const subject = payload.subject || payload.message?.subject || '';
   const body = payload.body || payload.message?.body || '';
   const html = typeof payload.html === 'string' ? payload.html : '';
@@ -32,9 +36,9 @@ Deno.serve(async (request) => {
     return json({ success: false, error: `Missing required field(s): ${missing.join(', ')}` });
   }
 
-  const accessError = await validateJobWriteAccess(request, jobId);
-  if (accessError) {
-    return accessError;
+  const access = await resolveJobWriteAccess(request, jobId);
+  if (access.error) {
+    return access.error;
   }
 
   const resendApiKey = Deno.env.get('RESEND_API_KEY');
@@ -55,6 +59,10 @@ Deno.serve(async (request) => {
     return json({ success: false, error: 'Resend is not configured.', message });
   }
 
+  const quotaRequestId = normalizeRequestId(payload.request_id || payload.requestId);
+  let quotaReserved = false;
+  let providerAccepted = false;
+
   try {
     const rateLimit = await checkRateLimit('email', EMAIL_RATE_LIMIT_PER_HOUR);
     if (!rateLimit.allowed) {
@@ -73,6 +81,20 @@ Deno.serve(async (request) => {
       return json({ success: false, error: errorMessage, message });
     }
 
+    const quota = await reserveEmailRecipientQuota(access.shopId, quotaRequestId, recipientCount);
+    if (!quota.allowed) {
+      return json({
+        success: false,
+        code: quota.code || 'EMAIL_MONTHLY_LIMIT_REACHED',
+        error: 'Monthly email limit reached. Existing records and generated documents remain available, but new emails cannot be sent until the quota resets or the plan changes.',
+        limit: quota.limit,
+        used: quota.used,
+        remaining: quota.remaining,
+        resetDate: quota.resetDate
+      }, 429);
+    }
+    quotaReserved = true;
+
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -81,7 +103,9 @@ Deno.serve(async (request) => {
       },
       body: JSON.stringify({
         from: fromEmail,
-        to,
+        to: toRecipients,
+        ...(ccRecipients.length ? { cc: ccRecipients } : {}),
+        ...(bccRecipients.length ? { bcc: bccRecipients } : {}),
         subject,
         text: body,
         ...(html ? { html } : {})
@@ -91,6 +115,8 @@ Deno.serve(async (request) => {
     const providerResponse = await response.json().catch(() => ({}));
 
     if (!response.ok) {
+      await releaseEmailRecipientQuota(access.shopId, quotaRequestId);
+      quotaReserved = false;
       const errorMessage = providerResponse.message || providerResponse.error || 'Resend send failed.';
       const message = await logMessage({
         jobId,
@@ -106,6 +132,8 @@ Deno.serve(async (request) => {
       return json({ success: false, error: errorMessage, providerResponse, message });
     }
 
+    providerAccepted = true;
+    const quotaSettlement = await settleEmailRecipientQuota(access.shopId, quotaRequestId);
     const message = await logMessage({
       jobId,
       customerId,
@@ -119,8 +147,20 @@ Deno.serve(async (request) => {
       sentAt: new Date().toISOString()
     });
 
-    return json({ success: true, id: providerResponse.id || '', provider: 'resend', message });
+    return json({
+      success: true,
+      id: providerResponse.id || '',
+      provider: 'resend',
+      message,
+      usage: {
+        recipientCount,
+        settled: quotaSettlement.settled === true
+      }
+    });
   } catch (error) {
+    if (quotaReserved && !providerAccepted) {
+      await releaseEmailRecipientQuota(access.shopId, quotaRequestId);
+    }
     const errorMessage = error instanceof Error ? error.message : 'Unknown email send error.';
     const message = await logMessage({
       jobId,
@@ -152,6 +192,18 @@ function requiredFields(fields: Record<string, string>) {
   return Object.entries(fields)
     .filter(([, value]) => !String(value || '').trim())
     .map(([key]) => key);
+}
+
+function normalizeRecipients(value: unknown) {
+  const values = Array.isArray(value) ? value : String(value || '').split(/[;,]/);
+  return values.map((recipient) => String(recipient || '').trim()).filter(Boolean);
+}
+
+function normalizeRequestId(value: unknown) {
+  const candidate = String(value || '').trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(candidate)
+    ? candidate
+    : crypto.randomUUID();
 }
 
 async function logMessage(message: {
@@ -203,21 +255,21 @@ async function logMessage(message: {
   return data;
 }
 
-async function validateJobWriteAccess(request: Request, jobId: string) {
+async function resolveJobWriteAccess(request: Request, jobId: string) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const authorization = request.headers.get('Authorization') || '';
   const token = authorization.replace(/^Bearer\s+/i, '').trim();
 
   if (!supabaseUrl || !serviceRoleKey || !token) {
-    return json({ success: false, error: 'Authenticated shop access is required.' }, 401);
+    return { error: json({ success: false, error: 'Authenticated shop access is required.' }, 401), shopId: '' };
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   const { data: userData, error: userError } = await supabase.auth.getUser(token);
   const user = userData?.user;
   if (userError || !user) {
-    return json({ success: false, error: 'Authenticated shop access is required.' }, 401);
+    return { error: json({ success: false, error: 'Authenticated shop access is required.' }, 401), shopId: '' };
   }
 
   const { data: job, error: jobError } = await supabase
@@ -227,7 +279,7 @@ async function validateJobWriteAccess(request: Request, jobId: string) {
     .single();
 
   if (jobError || !job) {
-    return json({ success: false, error: 'Work order was not found.' }, 404);
+    return { error: json({ success: false, error: 'Work order was not found.' }, 404), shopId: '' };
   }
 
   const { data: membership, error: membershipError } = await supabase
@@ -238,15 +290,67 @@ async function validateJobWriteAccess(request: Request, jobId: string) {
     .maybeSingle();
 
   if (membershipError || !['owner', 'admin', 'tech'].includes(membership?.role || '')) {
-    return json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403);
+    return { error: json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403), shopId: '' };
   }
 
   const hasEffectiveAccess = await canUseShopWriteRole(supabase, job.shop_id, membership.role);
   if (!hasEffectiveAccess) {
-    return json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403);
+    return { error: json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403), shopId: '' };
   }
 
-  return null;
+  return { error: null, shopId: job.shop_id };
+}
+
+async function reserveEmailRecipientQuota(shopId: string, requestId: string, recipientCount: number) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase.rpc('reserve_shop_usage', {
+    target_shop_id: shopId,
+    target_request_id: requestId,
+    target_usage_kind: 'email_recipients',
+    requested_units: recipientCount,
+    expected_storage_bytes: 0,
+    target_bucket: null,
+    target_path: null
+  });
+  if (error) {
+    throw new Error(`Email quota reservation failed: ${error.message}`);
+  }
+  return data || { allowed: false, code: 'EMAIL_MONTHLY_LIMIT_REACHED' };
+}
+
+async function settleEmailRecipientQuota(shopId: string, requestId: string) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase.rpc('settle_shop_usage_reservation', {
+    target_shop_id: shopId,
+    target_request_id: requestId
+  });
+  if (error) {
+    console.error('email quota settlement failed', error);
+    return { settled: false };
+  }
+  return data || { settled: false };
+}
+
+async function releaseEmailRecipientQuota(shopId: string, requestId: string) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase.rpc('release_shop_usage_reservation', {
+    target_shop_id: shopId,
+    target_request_id: requestId
+  });
+  if (error) {
+    console.error('email quota release failed', error);
+    return { released: false };
+  }
+  return data || { released: false };
+}
+
+function createServiceClient() {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Supabase service configuration is unavailable.');
+  }
+  return createClient(supabaseUrl, serviceRoleKey);
 }
 
 async function canUseShopWriteRole(supabase: ReturnType<typeof createClient>, shopId: string, role: string) {

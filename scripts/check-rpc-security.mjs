@@ -31,6 +31,7 @@ const membershipService = read('src/modules/shops/shopMembershipService.js');
 const landingWorker = read('cloudflare/frettrack-coming-soon/src/index.js');
 const sendEmailFunction = read('supabase/functions/send-email/index.ts');
 const sendSmsFunction = read('supabase/functions/send-sms/index.ts');
+const usageCapsMigration = read('supabase/migrations/20260727231401_email_photo_usage_caps_foundation.sql');
 
 const flaggedFunctions = [
   ['submit_beta_access_request', 'text, text, text, text', ['anon', 'authenticated']],
@@ -56,6 +57,18 @@ for (const [name, signature, grants] of flaggedFunctions) {
   assertIncludes(securityMigration, `revoke all on function ${fn} from authenticated;`, `${name} must revoke authenticated before final grants.`);
   assertIncludes(securityMigration, `grant execute on function ${fn} to ${grants.join(', ')};`, `${name} must grant only approved caller roles.`);
 }
+
+for (const [signature, grants] of [
+  ['reserve_shop_usage(text, uuid, text, bigint, bigint, text, text)', 'authenticated, service_role'],
+  ['settle_shop_usage_reservation(text, uuid)', 'authenticated, service_role'],
+  ['release_shop_usage_reservation(text, uuid)', 'authenticated, service_role'],
+  ['release_photo_storage_object(text, text, text)', 'authenticated'],
+  ['get_shop_usage_snapshot(text)', 'authenticated']
+]) {
+  assertIncludes(usageCapsMigration, `revoke all on function public.${signature} from public, anon, authenticated, service_role;`, `${signature} must revoke default execution.`);
+  assertIncludes(usageCapsMigration, `grant execute on function public.${signature} to ${grants};`, `${signature} must grant only intended roles.`);
+}
+assertMatches(usageCapsMigration, /security definer[\s\S]*set search_path = ''/, 'Usage SECURITY DEFINER functions must lock search_path.');
 
 for (const name of [
   'get_beta_access_requests',

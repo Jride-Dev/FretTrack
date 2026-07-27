@@ -1,4 +1,4 @@
-# FretTrack v0.2.9-beta.2 Trial Readiness Checklist
+# FretTrack v0.2.9-beta.3 Trial Readiness Checklist
 
 Use this checklist before handing a build to a real trial shop.
 
@@ -34,6 +34,9 @@ SHOP_EMAIL_FROM=
 7. Set Edge Function secrets.
 8. Sign in through FretTrack and create the first shop owner if the shop has no members yet.
 9. Send a test email through the app.
+10. Confirm Shop Settings shows email, source-photo upload, and photo-storage usage with the UTC reset date.
+11. Verify the Shop/Pro trial selection supplies the matching caps documented in [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md).
+12. Test a rejected email and failed photo upload without consuming settled quota; confirm existing photos remain readable at a hard limit.
 
 ## Migrations Required
 

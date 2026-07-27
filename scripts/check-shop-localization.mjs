@@ -119,10 +119,16 @@ assert.ok(emailSource.includes('currencyCode: cleanText(shopSettings.currencyCod
 assert.ok(emailSource.includes('taxLabel: cleanText(shopSettings.taxLabel'), 'Generated documents must carry the scoped shop tax label.');
 
 const changed = changedFiles();
-assert.ok(!changed.some((file) => file.startsWith('supabase/functions/')), 'Localization must not modify Edge Functions.');
+assert.ok(
+  !changed.some((file) => file.startsWith('supabase/functions/') && file !== 'supabase/functions/send-email/index.ts'),
+  'Localization validation permits only the later usage-cap send-email integration.'
+);
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Localization must not modify landing Worker files.');
 assert.ok(
-  !changed.some((file) => /stripe/i.test(file) || (/\/billing\//i.test(file) && !file.endsWith('entitlementService.js'))),
+  !changed.some((file) => /stripe/i.test(file)
+    || (/\/billing\//i.test(file)
+      && !file.endsWith('entitlementService.js')
+      && !file.endsWith('usageCaps.js'))),
   'Localization must not modify Stripe or unrelated billing files.'
 );
 

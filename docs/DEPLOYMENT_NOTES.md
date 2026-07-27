@@ -14,6 +14,8 @@ Review this file before every production deploy and after every manual database/
 
 ## Current Migration Note
 
+`20260727231401_email_photo_usage_caps_foundation.sql` is intentionally pending. It must be reviewed and applied before deploying the matching `send-email` Edge Function or app build because new Storage upload policies require quota reservation RPCs. After the migration, deploy `send-email`, then App Pages. Do not deploy the Edge Function first, do not use a blanket migration push, and do not deploy the landing Worker. No Stripe secret or provider billing configuration is added.
+
 `npm run check:migrations` currently reports no remote-only drift and these pending local migrations:
 
 - `20260606093000`

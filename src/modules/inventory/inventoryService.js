@@ -1,6 +1,12 @@
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { getCurrentShopId } from '../shops/shopConfig';
 import { logJobEventSafe } from '../jobs/jobEventsService';
+import {
+  releaseDeletedPhotoStorage,
+  releasePhotoUsageReservation,
+  reservePhotoUsage,
+  settlePhotoUsage
+} from '../billing/usageCaps';
 
 const PART_IMAGES_BUCKET = 'part-images';
 const MAX_PART_IMAGE_DIMENSION = 300;
@@ -345,16 +351,35 @@ export async function uploadPartImage(part, file) {
   }
 
   const filePath = `${part.shopId}/parts/${part.id}/${Date.now()}-${safeStorageFileName(file.name || 'part-image')}`;
-  const { error: uploadError } = await supabase.storage
-    .from(PART_IMAGES_BUCKET)
-    .upload(filePath, file, {
-      contentType: file.type || 'application/octet-stream',
-      cacheControl: '31536000',
-      upsert: true
-    });
+  const requestId = crypto.randomUUID();
+  await reservePhotoUsage({
+    shopId: part.shopId,
+    requestId,
+    usageKind: 'source_photo',
+    expectedStorageBytes: file.size,
+    bucket: PART_IMAGES_BUCKET,
+    path: filePath
+  });
 
-  if (uploadError) {
-    throw uploadError;
+  let uploaded = false;
+  try {
+    const { error: uploadError } = await supabase.storage
+      .from(PART_IMAGES_BUCKET)
+      .upload(filePath, file, {
+        contentType: file.type || 'application/octet-stream',
+        cacheControl: '31536000'
+      });
+    if (uploadError) {
+      throw uploadError;
+    }
+    uploaded = true;
+    await settlePhotoUsage({ shopId: part.shopId, requestId });
+  } catch (error) {
+    if (uploaded) {
+      await supabase.storage.from(PART_IMAGES_BUCKET).remove([filePath]);
+    }
+    await releasePhotoUsageReservation({ shopId: part.shopId, requestId }).catch(() => null);
+    throw error;
   }
 
   const { data, error } = await supabase
@@ -370,13 +395,35 @@ export async function uploadPartImage(part, file) {
     .single();
 
   if (error) {
+    await removePartImageAndReleaseUsage(part.shopId, filePath);
     throw error;
+  }
+
+  if (part.imagePath && part.imagePath !== filePath) {
+    await removePartImageAndReleaseUsage(part.shopId, part.imagePath);
   }
 
   return {
     ...fromDbPart(data),
     imageUrl: await createPartImageObjectUrl(filePath)
   };
+}
+
+async function removePartImageAndReleaseUsage(shopId, storagePath) {
+  const { error } = await supabase.storage.from(PART_IMAGES_BUCKET).remove([storagePath]);
+  if (error) {
+    console.error('Part image cleanup failed.', error);
+    return;
+  }
+  try {
+    await releaseDeletedPhotoStorage({
+      shopId,
+      bucket: PART_IMAGES_BUCKET,
+      path: storagePath
+    });
+  } catch (releaseError) {
+    console.error('Part image storage usage release failed.', releaseError);
+  }
 }
 
 export async function createPartImageObjectUrl(storagePath) {

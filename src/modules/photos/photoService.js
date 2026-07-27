@@ -3,7 +3,15 @@ import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import { ensureRemoteJob, getLocalJobs, saveLocalJobs, updateJob } from '../jobs/jobService';
 import { logJobEventSafe } from '../jobs/jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
+import {
+  releaseDeletedPhotoStorage,
+  releasePhotoUsageReservation,
+  reservePhotoUsage,
+  settlePhotoUsage
+} from '../billing/usageCaps';
 import { createJobImageSignedUrl, getJobImageStoragePath } from './photoUrls';
+
+const JOB_IMAGES_BUCKET = 'job-images';
 
 export async function uploadJobImages(job, files, options = {}) {
   const fileList = Array.from(files || []);
@@ -32,6 +40,7 @@ export async function uploadJobImages(job, files, options = {}) {
       console.error('Image import failed.', error);
       errors.push({
         fileName: fileList[index]?.name || `Image ${index + 1}`,
+        code: error?.code || '',
         message: error instanceof Error ? error.message : 'Image import failed.'
       });
     }
@@ -86,18 +95,18 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
 
   const storedFileName = makeJobImageFileName(normalizedJob, options.index || 1);
   const filePath = `${jobId}/${storedFileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('job-images')
-    .upload(filePath, uploadFile, {
+  const shopId = requirePhotoShopId(normalizedJob?.shopId);
+  await uploadPhotoObjectWithQuota({
+    shopId,
+    bucket: JOB_IMAGES_BUCKET,
+    path: filePath,
+    file: uploadFile,
+    usageKind: 'source_photo',
+    uploadOptions: {
       contentType: uploadFile.type,
       cacheControl: '31536000'
-    });
-
-  if (uploadError) {
-    console.error('Image upload failed.', uploadError);
-    return null;
-  }
+    }
+  });
 
   const imageUrl = await createJobImageSignedUrl(filePath);
 
@@ -140,6 +149,7 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
 
   if (dbError) {
     console.error('Image database insert failed.', dbError);
+    await removeSettledPhotoObjectSafe({ shopId, bucket: JOB_IMAGES_BUCKET, path: filePath });
     throw new Error(`Image uploaded, but database photo record failed: ${dbError.message}`);
   }
 
@@ -176,12 +186,23 @@ export async function deleteJobImage(job, image) {
   const storagePath = getJobImageStoragePath(image);
   if (storagePath) {
     const { error: storageError } = await supabase.storage
-      .from('job-images')
+      .from(JOB_IMAGES_BUCKET)
       .remove([storagePath]);
 
     if (storageError) {
       console.error('Image storage delete failed.', storageError);
       return null;
+    }
+    try {
+      await releaseDeletedPhotoStorage({
+        shopId: requirePhotoShopId(nextJob.shopId),
+        bucket: JOB_IMAGES_BUCKET,
+        path: storagePath
+      });
+    } catch (releaseError) {
+      // The object is already gone, so preserve the user's delete and leave a
+      // conservative over-count for an operator reconciliation pass.
+      console.error('Photo storage usage release failed.', releaseError);
     }
   }
 
@@ -265,17 +286,18 @@ export async function saveEditedJobImageCopy(job, sourceImage, editedFile, editM
   const jobId = normalizedJob.id;
   const fileName = makeEditedImageFileName(sourceImage, 'edited');
   const filePath = `${jobId}/edited/${fileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('job-images')
-    .upload(filePath, editedFile, {
+  const shopId = requirePhotoShopId(normalizedJob.shopId);
+  await uploadPhotoObjectWithQuota({
+    shopId,
+    bucket: JOB_IMAGES_BUCKET,
+    path: filePath,
+    file: editedFile,
+    usageKind: 'photo_derivative',
+    uploadOptions: {
       contentType: editedFile.type || 'image/png',
       cacheControl: '31536000'
-    });
-
-  if (uploadError) {
-    throw new Error(`Edited image upload failed: ${uploadError.message}`);
-  }
+    }
+  });
 
   const imageUrl = await createJobImageSignedUrl(filePath);
   const image = {
@@ -319,11 +341,12 @@ export async function saveEditedJobImageCopy(job, sourceImage, editedFile, editM
   });
 
   if (dbError) {
+    await removeSettledPhotoObjectSafe({ shopId, bucket: JOB_IMAGES_BUCKET, path: filePath });
     throw new Error(`Edited image record failed: ${dbError.message}`);
   }
 
   await insertPhotoDerivativeSafe({
-    shopId: normalizedJob.shopId || getCurrentShopId(),
+    shopId,
     jobId,
     sourcePhotoId: sourceImage.id,
     derivativeType: derivePhotoDerivativeType(editMetadata),
@@ -371,17 +394,18 @@ export async function overwriteJobImage(job, sourceImage, editedFile, editMetada
   const backupStoragePath = getJobImageStoragePath(sourceImage);
   const fileName = makeEditedImageFileName(sourceImage, 'overwrite');
   const filePath = `${jobId}/edited/${fileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('job-images')
-    .upload(filePath, editedFile, {
+  const shopId = requirePhotoShopId(normalizedJob.shopId);
+  await uploadPhotoObjectWithQuota({
+    shopId,
+    bucket: JOB_IMAGES_BUCKET,
+    path: filePath,
+    file: editedFile,
+    usageKind: 'source_photo',
+    uploadOptions: {
       contentType: editedFile.type || 'image/png',
       cacheControl: '31536000'
-    });
-
-  if (uploadError) {
-    throw new Error(`Edited image upload failed: ${uploadError.message}`);
-  }
+    }
+  });
 
   const imageUrl = await createJobImageSignedUrl(filePath);
   const updatedImage = {
@@ -418,11 +442,12 @@ export async function overwriteJobImage(job, sourceImage, editedFile, editMetada
     .eq('job_id', jobId);
 
   if (dbError) {
+    await removeSettledPhotoObjectSafe({ shopId, bucket: JOB_IMAGES_BUCKET, path: filePath });
     throw new Error(`Edited image record failed: ${dbError.message}`);
   }
 
   await insertPhotoDerivativeSafe({
-    shopId: normalizedJob.shopId || getCurrentShopId(),
+    shopId,
     jobId,
     sourcePhotoId: sourceImage.id,
     derivativeType: 'edited',
@@ -438,7 +463,77 @@ export async function overwriteJobImage(job, sourceImage, editedFile, editMetada
     ...normalizedJob,
     images: (normalizedJob.images || []).map((image) => (image.id === sourceImage.id ? updatedImage : image))
   });
+  if (backupStoragePath && backupStoragePath !== filePath) {
+    await removeSettledPhotoObjectSafe({
+      shopId,
+      bucket: JOB_IMAGES_BUCKET,
+      path: backupStoragePath
+    });
+  }
   return { job: savedJob, image: updatedImage };
+}
+
+async function uploadPhotoObjectWithQuota({
+  shopId,
+  bucket,
+  path,
+  file,
+  usageKind,
+  uploadOptions
+}) {
+  const requestId = crypto.randomUUID();
+  await reservePhotoUsage({
+    shopId,
+    requestId,
+    usageKind,
+    expectedStorageBytes: file.size,
+    bucket,
+    path
+  });
+
+  let uploaded = false;
+  try {
+    const { error } = await supabase.storage
+      .from(bucket)
+      .upload(path, file, uploadOptions);
+    if (error) {
+      throw error;
+    }
+    uploaded = true;
+    await settlePhotoUsage({ shopId, requestId });
+  } catch (error) {
+    if (uploaded) {
+      await supabase.storage.from(bucket).remove([path]);
+    }
+    await releasePhotoUsageReservation({ shopId, requestId }).catch((releaseError) => {
+      console.error('Photo quota reservation release failed.', releaseError);
+    });
+    throw error;
+  }
+}
+
+async function removeSettledPhotoObjectSafe({ shopId, bucket, path }) {
+  if (!path) {
+    return;
+  }
+  const { error } = await supabase.storage.from(bucket).remove([path]);
+  if (error) {
+    console.error('Photo storage cleanup failed.', error);
+    return;
+  }
+  try {
+    await releaseDeletedPhotoStorage({ shopId, bucket, path });
+  } catch (releaseError) {
+    console.error('Photo storage usage release failed.', releaseError);
+  }
+}
+
+function requirePhotoShopId(shopId) {
+  const value = String(shopId || '').trim();
+  if (!value) {
+    throw new Error('An explicit shop is required for photo storage.');
+  }
+  return value;
 }
 
 function imageMetadataToObject(metadata = {}) {

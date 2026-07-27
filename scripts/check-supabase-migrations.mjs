@@ -1,6 +1,12 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 const strict = process.argv.includes('--strict');
+const usageCapsMigration = join(process.cwd(), 'supabase/migrations/20260727231401_email_photo_usage_caps_foundation.sql');
+if (!existsSync(usageCapsMigration)) {
+  throw new Error('Authoritative Email and Photo Usage Caps migration is missing.');
+}
 
 function runSupabaseMigrationList() {
   try {

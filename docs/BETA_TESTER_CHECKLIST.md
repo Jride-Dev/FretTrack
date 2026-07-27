@@ -10,6 +10,12 @@ Customer privacy note for beta shops:
 
 - [Customer Data & Privacy Note for Beta Shops](CUSTOMER_DATA_PRIVACY_NOTE_BETA_SHOPS.md)
 
+Usage-cap behavior:
+
+- [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md)
+- Owner/admin: review the Usage section in Shop Settings and confirm used, limit, remaining, UTC reset, and warning text.
+- Confirm a reached cap blocks only a new send/upload; existing records, photos, reports, downloads, and deletion remain available.
+
 Recommended workbook download:
 
 - `/downloads/frettrack-beta-tester-workbook.xlsx`

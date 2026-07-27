@@ -122,7 +122,10 @@ const changed = [
   .split(/\r?\n/)
   .filter(Boolean)
   .map((file) => file.replaceAll('\\', '/'));
-assert.ok(!changed.some((file) => file.startsWith('supabase/functions/')), 'Edge Functions must not change.');
+assert.ok(
+  !changed.some((file) => file.startsWith('supabase/functions/') && file !== 'supabase/functions/send-email/index.ts'),
+  'Only the usage-cap send-email integration may change an Edge Function.'
+);
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Landing Worker files must not change.');
 assert.ok(!changed.some((file) => /stripe/i.test(file)), 'Stripe code must not change.');
 assert.ok(!trackedChangedOutput.replaceAll('\\', '/').includes('Screenshots/current_jobs_update7.jpg'), 'The protected screenshot must not change.');

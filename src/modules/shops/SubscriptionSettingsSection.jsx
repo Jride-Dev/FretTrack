@@ -5,6 +5,12 @@ import {
   normalizeEntitlementSnapshot
 } from '../billing/entitlementService';
 import { getPlanStatus } from '../billing/planStatus';
+import {
+  formatStorageBytes,
+  getUsagePercentage,
+  getUsageWarningLevel,
+  resolveUsageResetDate
+} from '../billing/usageCaps';
 
 export default function SubscriptionSettingsSection({ entitlementSnapshot = null, shopProfile = null }) {
   const snapshot = normalizeEntitlementSnapshot(entitlementSnapshot || {
@@ -57,6 +63,8 @@ export default function SubscriptionSettingsSection({ entitlementSnapshot = null
         </div>
       </div>
 
+      <UsageSection usage={snapshot.usage || {}} />
+
       <div className="subscription-feature-groups">
         {premiumTierLabels.map((tierLabel) => (
           <div className="subscription-feature-group" key={tierLabel}>
@@ -78,6 +86,79 @@ export default function SubscriptionSettingsSection({ entitlementSnapshot = null
       </div>
     </section>
   );
+}
+
+function UsageSection({ usage }) {
+  const resetDate = resolveUsageResetDate(usage);
+  const items = [
+    {
+      label: 'Emails this month',
+      used: Number(usage.emailRecipientsUsed || 0),
+      limit: Number(usage.monthlyEmailLimit || 0),
+      format: (value) => String(value),
+      detail: resetDate ? `Resets ${formatDate(resetDate)} (UTC)` : 'Resets monthly (UTC)'
+    },
+    {
+      label: 'Photo uploads this month',
+      used: Number(usage.sourcePhotosUploaded || 0),
+      limit: Number(usage.monthlyPhotoUploadLimit || 0),
+      format: (value) => String(value),
+      detail: resetDate ? `Resets ${formatDate(resetDate)} (UTC)` : 'Resets monthly (UTC)'
+    },
+    {
+      label: 'Photo storage',
+      used: Number(usage.photoStorageBytes || 0),
+      limit: Number(usage.maxPhotoStorageBytes || 0),
+      format: formatStorageBytes,
+      detail: 'Current stored originals and generated derivatives'
+    }
+  ];
+
+  return (
+    <section className="usage-settings" aria-labelledby="shop-usage-heading">
+      <div>
+        <h4 id="shop-usage-heading">Usage</h4>
+        <p className="muted-text">Limits block only new email or photo activity; existing records and photos remain available.</p>
+      </div>
+      <div className="usage-meter-grid">
+        {items.map((item) => {
+          const remaining = Math.max(0, item.limit - item.used);
+          const percentage = getUsagePercentage(item.used, item.limit);
+          const warningLevel = getUsageWarningLevel(item.used, item.limit);
+          return (
+            <article className={`usage-meter usage-meter-${warningLevel}`} key={item.label}>
+              <div className="usage-meter-heading">
+                <strong>{item.label}</strong>
+                <span>{warningLevelLabel(warningLevel)}</span>
+              </div>
+              <p>{item.format(item.used)} used of {item.format(item.limit)} · {item.format(remaining)} remaining</p>
+              <div
+                className="usage-progress"
+                role="progressbar"
+                aria-label={`${item.label}: ${Math.round(percentage)} percent used`}
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow={Math.round(percentage)}
+              >
+                <span style={{ width: `${percentage}%` }} />
+              </div>
+              <small>{item.detail}</small>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function warningLevelLabel(level) {
+  const labels = {
+    normal: 'Available',
+    warning: '80% warning',
+    critical: '95% critical warning',
+    'limit-reached': 'Limit reached'
+  };
+  return labels[level] || 'Available';
 }
 
 function SubscriptionCard({ detail = '', label, value }) {

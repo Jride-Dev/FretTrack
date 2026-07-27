@@ -18,6 +18,9 @@ Beta access approval and premium trial entitlement are separate systems.
 - Current product behavior keeps Shop on the paid core workflow. Pro unlocks Photo Editor, Team Members, and Advanced Reporting.
 - Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration. Existing `free + active` beta shops are preserved for now.
 - Stripe, billing webhooks, and payment collection are still not connected.
+- `0.2.9-beta.3` adds server-enforced email-recipient, source-photo upload, and current repair-photo storage limits. Shop/Shop trial uses 1,000 recipients, 2,000 uploads, and 5 GiB; Pro/Pro trial uses 5,000, 10,000, and 25 GiB. No paid overages are available.
+
+See [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md) for UTC reset, reservation, deletion, downgrade, and operator-override semantics.
 
 ## Implemented
 
