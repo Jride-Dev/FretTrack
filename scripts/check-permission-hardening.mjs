@@ -31,11 +31,14 @@ const photoGallery = read('src/modules/photos/PhotoGallery.jsx');
 const operatorDashboard = read('src/modules/operator/BetaOperatorDashboard.jsx');
 const migration = read('supabase/migrations/20260611120000_premium_trial_management_phase_1.sql');
 const paidLifecycleMigration = read('supabase/migrations/20260616034902_paid_access_lifecycle_phase_1.sql');
+const usageCapsMigration = read('supabase/migrations/20260727231401_email_photo_usage_caps_foundation.sql');
 
 assertIncludes(permissionService, "const SHOP_WRITE_ROLES = new Set(['owner', 'admin', 'tech']);", 'Write roles must stay owner/admin/tech.');
 assertIncludes(permissionService, "const SHOP_MANAGE_ROLES = new Set(['owner', 'admin']);", 'Shop settings roles must stay owner/admin.');
 assertIncludes(permissionService, 'return Boolean(isOperator);', 'Operator helpers must use verified operator state only.');
 assertIncludes(permissionService, 'canUseAdvancedReporting(entitlementSnapshot)', 'Advanced reporting must use entitlement checks.');
+assertMatches(usageCapsMigration, /private\.can_write_shop\(target_shop_id\)[\s\S]*private\.shop_lifecycle_allows_write\(target_shop_id\)/, 'Photo quota must preserve role and lifecycle write restrictions.');
+assertMatches(usageCapsMigration, /not private\.is_shop_member\(target_shop_id\) and not private\.is_operator\(\)/, 'Usage reads must stay shop-scoped.');
 
 assertIncludes(app, "return canAccessOperatorDashboard({ isOperator });", 'Workspace restore must use operator helper.');
 assertIncludes(app, "mode === 'operator' && canAccessOperatorDashboard({ isOperator })", 'Operator route render must use operator helper.');

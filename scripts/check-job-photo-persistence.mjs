@@ -50,6 +50,9 @@ assertIncludes(photoService, 'storage_path: image.storagePath', 'photoService.js
 assertIncludes(photoService, 'storage_path: updatedImage.storagePath', 'photoService.js');
 assertIncludes(photoService, 'getJobImageStoragePath(image)', 'photoService.js');
 assertIncludes(photoService, 'getJobImageStoragePath(sourceImage)', 'photoService.js');
+assertIncludes(photoService, 'await reservePhotoUsage({', 'photoService.js');
+assertIncludes(photoService, 'await settlePhotoUsage({ shopId, requestId });', 'photoService.js');
+assertIncludes(photoService, 'releaseDeletedPhotoStorage({', 'photoService.js');
 assertNotMatches(
   photoService,
   /public_url:\s*(image|updatedImage|sourceImage)\.url/,

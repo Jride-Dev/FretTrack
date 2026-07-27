@@ -16,6 +16,7 @@ Start here for the current product path:
 - [Release notes](RELEASE_NOTES.md)
 - [Shop localization and Current Jobs](SHOP_LOCALIZATION_AND_CURRENT_JOBS.md)
 - [Pro Team Assignment Foundation](PRO_TEAM_ASSIGNMENT_FOUNDATION.md)
+- [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md)
 - [Roadmap](../ROADMAP.md)
 - [Deployment notes](DEPLOYMENT_NOTES.md)
 - [Reports](REPORTS.md)

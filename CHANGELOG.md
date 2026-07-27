@@ -1,10 +1,16 @@
 # Changelog
 
-Current version: `0.2.9-beta.2`
+Current version: `0.2.9-beta.3`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.9-beta.2 - Current Beta Candidate
+## v0.2.9-beta.3 - Current Beta Candidate
+
+- Added server-authoritative Shop and Pro usage caps for monthly transactional email recipients, monthly source-photo uploads, and current repair-photo storage, including atomic idempotent reservations, failure release, exact-path Storage enforcement, deletion reconciliation, operator overrides, and owner/admin usage meters.
+- Shop includes 1,000 email recipients/month, 2,000 source-photo uploads/month, and 5 GiB photo storage. Pro includes 5,000 recipients/month, 10,000 source uploads/month, and 25 GiB photo storage. Shop and Pro trials inherit their selected tier.
+- Added migration `20260727231401_email_photo_usage_caps_foundation.sql`, `docs/EMAIL_AND_PHOTO_USAGE_CAPS.md`, and `npm run check:usage-caps`. No migration or Edge Function is applied or deployed by this branch, and no Stripe or paid-overage behavior was added.
+
+## v0.2.9-beta.2
 
 - Added the Pro Team Assignment Foundation: persisted same-shop primary technician assignments, owner/admin management, technician self-claim/removal, viewer read-only display, active-member validation, safe historical assignee names, targeted stale-aware updates, assignment audit events, Current Jobs filtering, and a non-scoring workload summary.
 - Added `team_assignment` as an advanced Pro workflow entitlement without changing existing Team Members membership behavior, billing, or Stripe. Active trials and approved writable beta shops can exercise the feature; expired/read-only shops retain readable historical data.

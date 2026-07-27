@@ -244,6 +244,9 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
             return;
           }
         } catch (error) {
+          if (String(error?.code || '').startsWith('PHOTO_')) {
+            throw error;
+          }
           console.error('Damage marker photo upload failed. Using local preview.', error);
         }
       }
@@ -280,6 +283,9 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
             return;
           }
         } catch (error) {
+          if (String(error?.code || '').startsWith('PHOTO_')) {
+            throw error;
+          }
           console.error('Damage view image upload failed. Using local preview.', error);
         }
       }

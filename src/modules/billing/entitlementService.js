@@ -1,4 +1,9 @@
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
+import {
+  getShopUsageSnapshot,
+  SHOP_USAGE_LIMITS,
+  PRO_USAGE_LIMITS
+} from './usageCaps';
 
 export const BILLING_STATUSES = {
   TRIALING: 'trialing',
@@ -84,7 +89,9 @@ const defaultEntitlements = {
   enterprise_administration: false,
   max_users: 1,
   max_storage_bytes: 5 * 1024 * 1024 * 1024,
-  monthly_email_limit: 1000,
+  monthly_email_limit: SHOP_USAGE_LIMITS.monthlyEmailLimit,
+  monthly_photo_upload_limit: SHOP_USAGE_LIMITS.monthlyPhotoUploadLimit,
+  max_photo_storage_bytes: SHOP_USAGE_LIMITS.maxPhotoStorageBytes,
   monthly_sms_limit: 0
 };
 
@@ -104,7 +111,10 @@ const tierEntitlements = {
     team_members: true,
     team_assignment: true,
     max_users: 10,
-    max_storage_bytes: 100 * 1024 * 1024 * 1024
+    max_storage_bytes: PRO_USAGE_LIMITS.maxPhotoStorageBytes,
+    monthly_email_limit: PRO_USAGE_LIMITS.monthlyEmailLimit,
+    monthly_photo_upload_limit: PRO_USAGE_LIMITS.monthlyPhotoUploadLimit,
+    max_photo_storage_bytes: PRO_USAGE_LIMITS.maxPhotoStorageBytes
   },
   [SUBSCRIPTION_TIERS.ENTERPRISE]: {
     photo_editor: true,
@@ -130,6 +140,9 @@ const tierEntitlements = {
     enterprise_administration: true,
     max_users: 100,
     max_storage_bytes: 1024 * 1024 * 1024 * 1024,
+    monthly_email_limit: 25000,
+    monthly_photo_upload_limit: 50000,
+    max_photo_storage_bytes: 100 * 1024 * 1024 * 1024,
     monthly_sms_limit: 5000
   }
 };
@@ -170,7 +183,14 @@ export function getDefaultEntitlementSnapshot(shopId = '') {
       storageBytes: 0,
       jobCount: 0,
       emailCountMonth: 0,
-      smsCountMonth: 0
+      smsCountMonth: 0,
+      emailRecipientsUsed: 0,
+      monthlyEmailLimit: SHOP_USAGE_LIMITS.monthlyEmailLimit,
+      sourcePhotosUploaded: 0,
+      monthlyPhotoUploadLimit: SHOP_USAGE_LIMITS.monthlyPhotoUploadLimit,
+      photoStorageBytes: 0,
+      maxPhotoStorageBytes: SHOP_USAGE_LIMITS.maxPhotoStorageBytes,
+      resetDate: ''
     },
     access: {
       canWrite: true,
@@ -189,16 +209,25 @@ export async function getShopEntitlementSnapshot(shopId) {
     return getDefaultEntitlementSnapshot(shopId);
   }
 
-  const { data, error } = await supabase.rpc('get_shop_entitlement_snapshot', {
-    target_shop_id: shopId
-  });
+  const [{ data, error }, usage] = await Promise.all([
+    supabase.rpc('get_shop_entitlement_snapshot', {
+      target_shop_id: shopId
+    }),
+    getShopUsageSnapshot(shopId)
+  ]);
 
   if (error) {
     console.error('Entitlement snapshot load failed.', error);
     throw error;
   }
 
-  return normalizeEntitlementSnapshot(data, shopId);
+  return normalizeEntitlementSnapshot({
+    ...data,
+    usage: {
+      ...(data?.usage || {}),
+      ...(usage || {})
+    }
+  }, shopId);
 }
 
 export function normalizeEntitlementSnapshot(snapshot = {}, shopId = '') {

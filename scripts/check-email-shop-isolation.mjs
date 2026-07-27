@@ -40,6 +40,14 @@ function assertThrowsShopContext(fn, message) {
   assert.throws(fn, (error) => error?.message === SHOP_EMAIL_CONTEXT_ERROR, message);
 }
 
+const sendEmailFunction = read('supabase/functions/send-email/index.ts');
+assert.ok(
+  sendEmailFunction.indexOf('reserveEmailRecipientQuota(') < sendEmailFunction.indexOf("fetch('https://api.resend.com/emails'"),
+  'Email recipient quota must be reserved after shop resolution and before provider send.'
+);
+assertIncludes(sendEmailFunction, 'releaseEmailRecipientQuota(access.shopId, quotaRequestId)', 'Failed sends must release the same shop reservation.');
+assertIncludes(sendEmailFunction, 'recipientCount = toRecipients.length + ccRecipients.length + bccRecipients.length', 'Recipient count must include To, CC, and BCC.');
+
 const northShop = {
   shopId: 'north-shop',
   shopName: 'North Bench Guitars',

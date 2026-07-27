@@ -870,6 +870,11 @@ export default function JobDetail({
     const category = uploadOptions.category || `damage-map-${viewName}`;
     const existingImageIds = new Set((draftJob.images || []).map((image) => image.id));
     const result = await onImageUpload(draftJob, [file], { category, skipRefresh: true });
+    if (result?.errors?.length) {
+      const uploadError = new Error(result.errors[0].message || 'Damage photo upload failed.');
+      uploadError.code = result.errors[0].code || '';
+      throw uploadError;
+    }
     if (result?.job) {
       setDraftJob(result.job);
       setIsDirty(false);

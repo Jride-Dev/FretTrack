@@ -31,7 +31,8 @@ const shopTierMigration = read('supabase/migrations/20260612233321_shop_tier_fou
 const paidLifecycleMigration = read('supabase/migrations/20260616034902_paid_access_lifecycle_phase_1.sql');
 const liveDemoPolishMigration = read('supabase/migrations/20260629155417_live_demo_bug_polish_phase_1.sql');
 const teamAssignmentMigration = read('supabase/migrations/20260727151302_pro_team_assignment_foundation.sql');
-const tierMigrations = `${migration}\n${shopTierMigration}\n${paidLifecycleMigration}\n${liveDemoPolishMigration}\n${teamAssignmentMigration}`;
+const usageCapsMigration = read('supabase/migrations/20260727231401_email_photo_usage_caps_foundation.sql');
+const tierMigrations = `${migration}\n${shopTierMigration}\n${paidLifecycleMigration}\n${liveDemoPolishMigration}\n${teamAssignmentMigration}\n${usageCapsMigration}`;
 
 assertIncludes(entitlementService, "SHOP: 'shop'", 'Shop tier key must be centralized.');
 assertIncludes(
@@ -88,6 +89,10 @@ assertIncludes(entitlementService, 'canUsePhotoEditor(snapshot)', 'Photo editor 
 assertIncludes(entitlementService, 'canManageTeamMembers(snapshot)', 'Team member helper must exist.');
 assertIncludes(entitlementService, 'canUseTeamAssignment(snapshot', 'Team assignment helper must exist.');
 assertMatches(teamAssignmentMigration, /\('shop', 'team_assignment', 'false'::jsonb\)/i, 'Shop must not unlock advanced assignment workflow.');
+assertMatches(usageCapsMigration, /\('shop', 'monthly_email_limit', '1000'::jsonb\)/i, 'Shop email allowance must remain 1,000 recipients.');
+assertMatches(usageCapsMigration, /\('pro', 'monthly_email_limit', '5000'::jsonb\)/i, 'Pro email allowance must remain 5,000 recipients.');
+assertMatches(usageCapsMigration, /\('shop', 'max_photo_storage_bytes', '5368709120'::jsonb\)/i, 'Shop photo storage must remain 5 GiB.');
+assertMatches(usageCapsMigration, /\('pro', 'max_photo_storage_bytes', '26843545600'::jsonb\)/i, 'Pro photo storage must remain 25 GiB.');
 assertMatches(teamAssignmentMigration, /\('pro', 'team_assignment', 'true'::jsonb\)/i, 'Pro must unlock advanced assignment workflow.');
 assertMatches(teamAssignmentMigration, /\('trial', 'team_assignment', 'true'::jsonb\)/i, 'Beta/trial access must exercise assignment workflow.');
 assert.ok(!teamAssignmentMigration.includes("('shop', 'team_members'"), 'Assignment foundation must preserve existing Shop Team Members behavior.');

@@ -356,9 +356,12 @@ export async function sendCustomerMessage(job, message) {
   const { data, error } = await supabase.functions.invoke(functionName, {
     headers: functionHeaders(),
     body: {
+      request_id: crypto.randomUUID(),
       job_id: normalizedJob.id,
       customer_id: message.customerId || null,
       to: recipient,
+      cc: message.cc || [],
+      bcc: message.bcc || [],
       subject: message.subject || '',
       body: message.body || '',
       html: message.html || '',
@@ -373,6 +376,13 @@ export async function sendCustomerMessage(job, message) {
       ok: false,
       message: data?.message ? normalizeCustomerMessage(fromDbCustomerMessage(data.message)) : null,
       mode: data?.mode || '',
+      code: data?.code || '',
+      usage: data?.limit ? {
+        limit: data.limit,
+        used: data.used,
+        remaining: data.remaining,
+        resetDate: data.resetDate
+      } : null,
       error: errorMessage
     };
   }

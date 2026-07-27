@@ -4487,6 +4487,87 @@ th.internal-only {
   align-items: center;
 }
 
+.usage-settings {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.usage-settings h4,
+.usage-settings p {
+  margin: 0;
+}
+
+.usage-meter-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.usage-meter {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.usage-meter-heading {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: space-between;
+}
+
+.usage-meter-heading span {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.usage-progress {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.usage-progress span {
+  background: var(--accent);
+  display: block;
+  height: 100%;
+}
+
+.usage-meter-warning {
+  border-color: #b7791f;
+}
+
+.usage-meter-warning .usage-progress span {
+  background: #d69e2e;
+}
+
+.usage-meter-critical {
+  border-color: #c05621;
+}
+
+.usage-meter-critical .usage-progress span {
+  background: #dd6b20;
+}
+
+.usage-meter-limit-reached {
+  border-color: #c53030;
+}
+
+.usage-meter-limit-reached .usage-progress span {
+  background: #e53e3e;
+}
+
 .schedule-toolbar {
   align-items: end;
   display: flex;

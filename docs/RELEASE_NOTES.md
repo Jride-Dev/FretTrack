@@ -1,8 +1,16 @@
 # Release Notes
 
-## GitHub Release Summary: v0.2.9-beta.2
+## GitHub Release Summary: v0.2.9-beta.3
 
-FretTrack `0.2.9-beta.2` adds the Pro Team Assignment Foundation while retaining beta.1 localization, Current Jobs, scheduling, paid-release preparation, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundations.
+FretTrack `0.2.9-beta.3` adds server-enforced email and photo usage caps while retaining the Pro Team Assignment Foundation, localization, Current Jobs, scheduling, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundations.
+
+## Email and Photo Usage Caps
+
+Shop now includes 1,000 successful transactional email recipients per UTC month, 2,000 successful source-photo uploads per UTC month, and 5 GiB of current repair-photo storage. Pro includes 5,000 recipients, 10,000 source uploads, and 25 GiB. A Shop trial inherits Shop limits and a Pro trial inherits Pro limits.
+
+The database reserves quota atomically before Resend or Storage is called. Failed sends and uploads release their reservations; successful sends consume recipient count; successful photo uploads reconcile the actual `storage.objects` byte size; generated derivatives consume storage but not an additional source-upload count. Successful deletion releases storage bytes without restoring the monthly upload count. Job photos, damage-map images, edited derivatives, and inventory part images are included; shop logos are excluded.
+
+Owner/admin Shop Settings shows used, limit, remaining, UTC reset date, and accessible 80%, 95%, and reached states. Reaching a cap blocks only the limited send/upload action. Existing photos, records, downloads, reports, deletions, and unrelated job work remain available. Downgrades never delete data, paid overages are not available, and Stripe was not changed. See [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md).
 
 ## Pro Team Assignment Foundation
 

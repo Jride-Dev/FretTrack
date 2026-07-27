@@ -29,6 +29,7 @@ Shipped or current-branch foundations:
 - Photo Editor Phase 1 with freehand markup, shapes, arrows, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup
 - Shop Tier Foundation Phase 1 with Trial, Shop, and Pro entitlement boundaries: Shop covers the paid core workflow, Pro unlocks Photo Editor, Team Members, and Advanced Reporting, and internal unpaid compatibility rows remain preserved for migration safety
 - Pro Team Assignment Foundation with primary technician assignment, Current Jobs assignee filtering, role-safe self-assignment, audit history, stale-update protection, and non-scoring workload visibility
+- Email and Photo Usage Caps Foundation with atomic recipient/upload reservations, repair-photo byte accounting, failure release, and owner/admin usage visibility
 
 Known weak spots:
 
@@ -40,7 +41,7 @@ Known weak spots:
 - deeper inventory operations such as vendor import/export, supplier integrations, vendor returns, forecasting, outbound/customer shipping, carrier labels, and tracking numbers are still future work
 - commerce, licensing, billing automation, production backups, and monitoring are later release tracks
 - Photo Editor Phase 1 is practical canvas editing, not a full Photoshop-style editor or AI cutout tool
-- Free/Shop/Pro pricing, plan caps, storage enforcement, Stripe, and self-service billing are still not implemented
+- Final pricing, Stripe, paid overages, and self-service billing are still not implemented; Shop/Pro email and repair-photo caps are now enforced as infrastructure safeguards
 
 ## Milestone Version Ladder
 

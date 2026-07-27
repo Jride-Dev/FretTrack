@@ -45,14 +45,22 @@ const changed = [
   execFileSync('git', ['diff', '--name-only', 'HEAD'], { cwd: root, encoding: 'utf8' }),
   execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' })
 ].join('\n').split(/\r?\n/).filter(Boolean).map((file) => file.replaceAll('\\', '/'));
-assert.ok(!changed.some((file) => file.startsWith('supabase/functions/')), 'Current Jobs must not modify Edge Functions.');
 assert.ok(
-  !changed.some((file) => file.startsWith('supabase/migrations/') && !file.endsWith('pro_team_assignment_foundation.sql')),
+  !changed.some((file) => file.startsWith('supabase/functions/') && file !== 'supabase/functions/send-email/index.ts'),
+  'Current Jobs validation permits only the later usage-cap send-email integration.'
+);
+assert.ok(
+  !changed.some((file) => file.startsWith('supabase/migrations/')
+    && !file.endsWith('pro_team_assignment_foundation.sql')
+    && !file.endsWith('email_photo_usage_caps_foundation.sql')),
   'Current Jobs must not add unrelated migrations.'
 );
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Current Jobs must not modify landing Worker files.');
 assert.ok(
-  !changed.some((file) => /stripe/i.test(file) || (/\/billing\//i.test(file) && !file.endsWith('entitlementService.js'))),
+  !changed.some((file) => /stripe/i.test(file)
+    || (/\/billing\//i.test(file)
+      && !file.endsWith('entitlementService.js')
+      && !file.endsWith('usageCaps.js'))),
   'Current Jobs must not modify Stripe or unrelated billing files.'
 );
 

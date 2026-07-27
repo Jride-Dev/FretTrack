@@ -164,3 +164,7 @@ npm run migration:check:strict
 # Pro Team Assignment migration
 
 `20260727151302_pro_team_assignment_foundation.sql` adds nullable job-to-membership assignment fields, a partial shop/assignee index, same-shop active-member and role validation, targeted stale-aware assignment and safe member-list RPCs, assignment audit events, Pro/beta entitlement handling, and assignment-aware job creation. It preserves existing jobs as unassigned and does not rewrite job rows. It is intentionally pending and must not be pushed without review and approval.
+
+# Email and Photo Usage Caps migration
+
+`20260727231401_email_photo_usage_caps_foundation.sql` seeds the official Shop/Pro email, source-photo upload, and repair-photo storage limits; adds monthly usage, reservation, current-storage, and per-object ledger tables; adds atomic idempotent reserve/settle/release RPCs and a shop-scoped usage snapshot; backfills known `job-images` and `part-images` objects; and requires exact-path reservations in Storage upload/update policies. It is intentionally pending and must be applied before the matching `send-email` Edge Function or app build is deployed. It does not add Stripe or paid-overage behavior.

@@ -30,13 +30,15 @@ Stripe and automated subscription management are planned later. The current goal
 
 Beta tester feedback should directly shape pricing, included features, limits, and the order of future modules.
 
-The 0.2.9-B0 plan-status UI foundation adds plan-aware branding and display only. FretTrack can now show Trial / Shop / Pro / Expired labels, Pro emblem branding for Pro-enabled shops, trial and renewal countdowns, and a Shop Settings Plan / Subscription panel. Pro and Trial Pro accounts must use the Pro emblem and Pro labels as their primary identity; they must not display the regular Shop identity except in comparison copy. Stripe Checkout, Customer Portal, webhooks, automated renewals, payment collection, and customer self-service billing remain future work.
+The 0.2.9-B0 plan-status UI foundation adds plan-aware branding and display. FretTrack can show Trial / Shop / Pro / Expired labels, Pro emblem branding for Pro-enabled shops, trial and renewal countdowns, and a Shop Settings Plan / Subscription panel. Pro and Trial Pro accounts must use the Pro emblem and Pro labels as their primary identity; they must not display the regular Shop identity except in comparison copy. Stripe Checkout, Customer Portal, webhooks, automated renewals, payment collection, and customer self-service billing remain future work.
+
+The `0.2.9-beta.3` usage-cap foundation now server-enforces 1,000 email recipients, 2,000 source-photo uploads, and 5 GiB repair-photo storage for Shop; Pro receives 5,000 recipients, 10,000 uploads, and 25 GiB. Shop and Pro trials inherit the selected tier. See [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md). These are included infrastructure allowances, not finalized prices: no paid overages, Stripe products, or automatic billing exist.
 
 The 0.2.9-F customer import work is parser/template foundation only. It prepares CSV mapping, preview validation, duplicate warnings, and skipped/error CSV output, but does not expose an import UI or write customer records yet. Owner/Admin import UI, write-enabled import, XLSX support, vendor import, and inventory import remain later work.
 
 ## Current Trial / Shop / Pro Split
 
-Phase 1 defines the product boundary without adding pricing, plan caps, Stripe, billing webhooks, payment forms, SMS limits, storage enforcement, or multi-shop restrictions.
+The product boundary does not add finalized pricing, Stripe, billing webhooks, payment forms, SMS limits, or multi-shop restrictions. Email-recipient and repair-photo caps are now the limited server-enforced exceptions documented above.
 
 ### Trial
 
