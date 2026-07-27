@@ -4,6 +4,12 @@
 
 FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
+## Scheduling Week-view Event Layout
+
+Scheduling week-view events now stay inside their assigned day columns. Compact cards show the event type, all-day/time label, clamped title, one concise job/customer or shop-block line, and status; full notes and job details no longer stretch the week grid.
+
+Clicking, tapping, or keyboard-activating a card opens a responsive details dialog with the available event, timing, status, job, customer, instrument, location, and notes fields. Shop blocks use the same dialog without misleading job fields. View-only roles can read and close the dialog, while existing scheduling write access continues to control edit, complete, reopen, cancel, and delete actions.
+
 ## Generated Email Shop Isolation
 
 Generated customer emails now use the active job's shop profile instead of global/default shop settings. Invoice, work-order, selected Job Sheet / Customer Report document sections, and job message templates include only the matching shop identity, reset defaults when the job or shop changes, and block sending generated document content when the job shop and loaded shop profile do not match.

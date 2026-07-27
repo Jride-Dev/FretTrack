@@ -3,6 +3,7 @@ import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateForma
 import { getCurrentShopId, getShopDateOptions } from '../shops/shopConfig';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
+import ScheduleEventDetailsDialog from './ScheduleEventDetailsDialog.jsx';
 import {
   cancelScheduleEvent,
   completeScheduleEvent,
@@ -81,6 +82,7 @@ export default function SchedulingPage({
   const [filters, setFilters] = useState({ eventType: '', status: '' });
   const [eventForm, setEventForm] = useState(() => ({ ...emptyEventForm, startsAt: defaultStartDateTime() }));
   const [editingEventId, setEditingEventId] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { isDirty, markDirty, markClean, confirmIfDirty } = useUnsavedChanges();
@@ -131,7 +133,7 @@ export default function SchedulingPage({
 
   function editEvent(scheduleEvent, options = {}) {
     if (!options.skipDirtyGuard && !confirmIfDirty()) {
-      return;
+      return false;
     }
 
     setEditingEventId(scheduleEvent.id);
@@ -149,6 +151,7 @@ export default function SchedulingPage({
     });
     markClean();
     setSaveStatus('saved');
+    return true;
   }
 
   async function saveEvent(event) {
@@ -189,11 +192,15 @@ export default function SchedulingPage({
       if (action === 'complete') {
         await completeScheduleEvent(scheduleEvent.id);
         onNotice?.({ type: 'success', message: 'Schedule event completed.' });
+      } else if (action === 'reopen') {
+        await updateScheduleEvent(scheduleEvent.id, { status: 'scheduled' });
+        onNotice?.({ type: 'success', message: 'Schedule event reopened.' });
       } else {
         await cancelScheduleEvent(scheduleEvent.id);
         onNotice?.({ type: 'success', message: 'Schedule event cancelled.' });
       }
       await loadEvents();
+      setSelectedEvent(null);
     } catch (error) {
       console.error('Schedule status update failed.', error);
       onNotice?.({ type: 'error', message: error.message || 'Unable to update schedule event.' });
@@ -215,6 +222,7 @@ export default function SchedulingPage({
       await deleteScheduleEvent(scheduleEvent.id);
       onNotice?.({ type: 'success', message: 'Schedule event deleted.' });
       await loadEvents();
+      setSelectedEvent(null);
     } catch (error) {
       console.error('Schedule delete failed.', error);
       onNotice?.({ type: 'error', message: error.message || 'Unable to delete schedule event.' });
@@ -234,6 +242,51 @@ export default function SchedulingPage({
   function linkedCustomerLabel(customerId) {
     const customer = customers.find((item) => item.id === customerId);
     return customer?.displayName || customer?.customerName || '';
+  }
+
+  function linkedJob(scheduleEvent) {
+    return jobs.find((item) => item.id === scheduleEvent?.jobId) || null;
+  }
+
+  function eventCustomerName(scheduleEvent, job = linkedJob(scheduleEvent)) {
+    return linkedCustomerLabel(scheduleEvent?.customerId)
+      || job?.customerName
+      || linkedCustomerLabel(job?.customerId)
+      || '';
+  }
+
+  function eventInstrumentLabel(scheduleEvent, job = linkedJob(scheduleEvent)) {
+    if (scheduleEvent?.eventType === 'shop_block' || !job) {
+      return '';
+    }
+    return [job.guitarBrand, job.model].filter(Boolean).join(' ') || job.instrumentType || '';
+  }
+
+  function compactEventSecondaryLabel(scheduleEvent) {
+    if (scheduleEvent.eventType === 'shop_block') {
+      return scheduleEvent.location || 'Shop block';
+    }
+    const job = linkedJob(scheduleEvent);
+    const jobNumber = job?.jobNumber ? `#${job.jobNumber}` : '';
+    return [jobNumber, eventCustomerName(scheduleEvent, job)].filter(Boolean).join(' | ')
+      || eventInstrumentLabel(scheduleEvent, job)
+      || scheduleEvent.location
+      || 'No linked job or customer';
+  }
+
+  function eventTimeLabel(scheduleEvent) {
+    if (scheduleEvent.allDay) {
+      return 'All day';
+    }
+    const start = formatShopDateTime(scheduleEvent.startsAt, dateOptions).split(' ').at(-1);
+    const end = formatShopDateTime(scheduleEvent.endsAt, dateOptions).split(' ').at(-1);
+    return end ? `${start} - ${end}` : start;
+  }
+
+  function handleModalEdit(scheduleEvent) {
+    if (editEvent(scheduleEvent)) {
+      setSelectedEvent(null);
+    }
   }
 
   function eventsForDay(day) {
@@ -287,25 +340,21 @@ export default function SchedulingPage({
               </button>
               <div className="schedule-event-list">
                 {eventsForDay(day).map((scheduleEvent) => (
-                  <article key={scheduleEvent.id} className={`schedule-card ${scheduleEvent.status}`}>
-                    <div>
+                  <button
+                    key={scheduleEvent.id}
+                    type="button"
+                    className={`schedule-card ${scheduleEvent.status}`}
+                    onClick={() => setSelectedEvent(scheduleEvent)}
+                    aria-label={`Open ${scheduleEvent.title || eventTypeLabel(scheduleEvent.eventType)} details`}
+                  >
+                    <span className="schedule-card-meta">
                       <span className="status-pill">{eventTypeLabel(scheduleEvent.eventType)}</span>
-                      <span className="muted-text">{scheduleEvent.allDay ? 'All day' : formatShopDateTime(scheduleEvent.startsAt, dateOptions)}</span>
-                    </div>
-                    <h3>{scheduleEvent.title}</h3>
-                    <p>{linkedJobLabel(scheduleEvent.jobId) || linkedCustomerLabel(scheduleEvent.customerId) || scheduleEvent.location || 'No linked job/customer'}</p>
-                    <p className="muted-text">{statusLabel(scheduleEvent.status)}</p>
-                    <div className="mode-actions no-print">
-                      {canWrite && <button type="button" onClick={() => editEvent(scheduleEvent)}>Edit</button>}
-                      {canWrite && scheduleEvent.status === 'scheduled' && (
-                        <>
-                          <button type="button" onClick={() => updateEventStatus(scheduleEvent, 'complete')} disabled={isSaving}>Complete</button>
-                          <button type="button" onClick={() => updateEventStatus(scheduleEvent, 'cancel')} disabled={isSaving}>Cancel</button>
-                        </>
-                      )}
-                      {canWrite && <button type="button" className="row-remove" onClick={() => removeEvent(scheduleEvent)} disabled={isSaving}>Delete</button>}
-                    </div>
-                  </article>
+                      <span className="muted-text schedule-card-time">{scheduleEvent.allDay ? 'All day' : formatShopDateTime(scheduleEvent.startsAt, dateOptions)}</span>
+                    </span>
+                    <span className="schedule-card-title">{scheduleEvent.title}</span>
+                    <span className="schedule-card-secondary">{compactEventSecondaryLabel(scheduleEvent)}</span>
+                    <span className="muted-text schedule-card-status">{statusLabel(scheduleEvent.status)}</span>
+                  </button>
                 ))}
                 {!eventsForDay(day).length && <p className="muted-text">No events</p>}
               </div>
@@ -347,6 +396,25 @@ export default function SchedulingPage({
           )}
         </form>
       </div>
+
+      <ScheduleEventDetailsDialog
+        canWrite={canWrite}
+        customerName={eventCustomerName(selectedEvent)}
+        dateLabel={selectedEvent ? formatShopDate(selectedEvent.startsAt, dateOptions) : ''}
+        event={selectedEvent}
+        eventTypeLabel={selectedEvent ? eventTypeLabel(selectedEvent.eventType) : ''}
+        instrumentLabel={eventInstrumentLabel(selectedEvent)}
+        isSaving={isSaving}
+        jobNumber={linkedJob(selectedEvent)?.jobNumber || ''}
+        onCancel={() => updateEventStatus(selectedEvent, 'cancel')}
+        onClose={() => setSelectedEvent(null)}
+        onComplete={() => updateEventStatus(selectedEvent, 'complete')}
+        onDelete={() => removeEvent(selectedEvent)}
+        onEdit={() => handleModalEdit(selectedEvent)}
+        onReopen={() => updateEventStatus(selectedEvent, 'reopen')}
+        statusLabel={selectedEvent ? statusLabel(selectedEvent.status) : ''}
+        timeLabel={selectedEvent ? eventTimeLabel(selectedEvent) : ''}
+      />
     </section>
   );
 }
