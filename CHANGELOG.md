@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.1 - Current Beta Candidate
 
+- Hotfixed the compact Current Jobs sidebar after the full-page release: restored restrained rectangular summary rows, contained job/date text, removed oversized pill/tab styling and horizontal clipping, and preserved the separate full-width Current Jobs filters and sorting page.
 - Bumped FretTrack to `0.2.9-beta.1` with persistent country/region, metric/imperial action units, USD/GBP/CAD currency context, shop-defined Sales Tax/VAT/GST wording and default rate, plus a full Current Jobs page with active scope, search, priority/status/due filters, sorting, and responsive cards.
 - Corrected the responsive Scheduling event-details dialog action layout so small-screen buttons stack at full available width without horizontal clipping, and made the regression check verify the actual mobile media rule across platform line endings.
 - Fixed Scheduling week-view event overflow with contained, clamped compact cards and a responsive keyboard-accessible event details dialog that preserves role-gated edit, complete, reopen, cancel, and delete actions, backed by `npm run check:scheduling-week-event-layout`.

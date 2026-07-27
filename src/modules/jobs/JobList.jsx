@@ -35,12 +35,12 @@ export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob, on
   }, [jobs, search, showClosed]);
 
   return (
-    <section className="panel job-list">
-      <div className="job-list-heading">
+    <section className="panel current-jobs-summary">
+      <div className="current-jobs-summary-heading">
         <h2>Current Jobs</h2>
         {onViewAll && <button type="button" onClick={onViewAll}>View all current jobs</button>}
       </div>
-      <label className="job-search">
+      <label className="current-jobs-summary-search">
         Search
         <input
           type="search"
@@ -49,7 +49,7 @@ export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob, on
           onChange={(event) => setSearch(event.target.value)}
         />
       </label>
-      <label className="table-checkbox job-filter-toggle">
+      <label className="table-checkbox current-jobs-summary-filter">
         <input
           type="checkbox"
           checked={showClosed}
@@ -60,26 +60,25 @@ export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob, on
       {filteredJobs.length === 0 ? (
         <p className="empty">{jobs.length === 0 ? 'No jobs yet.' : 'No matching current jobs.'}</p>
       ) : (
-        <div className="list">
+        <div className="current-jobs-summary-list">
           {filteredJobs.map((job) => (
             <button
               key={job.id}
               type="button"
               onClick={() => handleSelect(job.id)}
-              className={job.id === selectedJobId ? 'job-row selected' : 'job-row'}
+              className={job.id === selectedJobId ? 'current-jobs-summary-item selected' : 'current-jobs-summary-item'}
             >
-              <span className="job-number-priority">
+              <span className="current-jobs-summary-primary">
                 <strong>#{job.jobNumber}</strong>
                 <span className={`priority-badge ${getJobPriorityOption(job.priority).className}`}>
                   {getJobPriorityShortLabel(job.priority)}
                 </span>
               </span>
-              <span className="job-row-customer">{job.customerName}</span>
-              <span className="job-row-instrument">
-                {job.guitarBrand} {job.model}
+              <span className="current-jobs-summary-status">{job.status}</span>
+              <span className="current-jobs-summary-description">
+                {[job.customerName, [job.guitarBrand, job.model].filter(Boolean).join(' ')].filter(Boolean).join(' | ')}
               </span>
-              <span className="job-row-status">{job.status}</span>
-              <span className="job-row-date">{formatShopDate(job.dateReceived, dateOptions)}</span>
+              <span className="current-jobs-summary-date">{formatShopDate(job.dateReceived, dateOptions)}</span>
             </button>
           ))}
         </div>

@@ -12,6 +12,10 @@ const app = source('src/app/App.jsx');
 const styles = source('src/styles.css');
 
 assert.ok(page.includes('<h2>Current Jobs</h2>'), 'Full Current Jobs page must exist.');
+assert.ok(compactList.includes('className="panel current-jobs-summary"'), 'Compact Current Jobs must use a summary-specific container.');
+assert.ok(compactList.includes('className="current-jobs-summary-list"'), 'Compact Current Jobs must use a summary-specific list.');
+assert.ok(compactList.includes("'current-jobs-summary-item selected' : 'current-jobs-summary-item'"), 'Compact Current Jobs rows must use summary-specific item classes.');
+assert.ok(!compactList.includes("className={job.id === selectedJobId ? 'job-row"), 'Compact Current Jobs must not use the legacy shared job-row class.');
 assert.ok(app.includes("mode === 'list'"), 'Current Jobs application mode must exist.');
 assert.ok(app.includes('<CurrentJobsPage jobs={jobs} onSelectJob={handleSelectJob} shopProfile={shopProfile} />'), 'Current Jobs mode must render the full page.');
 assert.ok(compactList.includes('View all current jobs'), 'Dashboard summary must link to the full Current Jobs page.');
@@ -29,14 +33,20 @@ assert.ok(page.includes('onClick={() => onSelectJob(job.id)}'), 'Clicking a curr
 assert.ok(page.includes('type="button"'), 'Current Jobs rows must remain keyboard-accessible buttons.');
 assert.ok(page.includes("new Set(['completed', 'picked up', 'cancelled', 'archived'])"), 'Default current scope must exclude closed job statuses.');
 assert.match(styles, /\.app-layout\.full-content\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/, 'Current Jobs must use the full content width.');
+assert.match(styles, /\.current-jobs-summary-item\s*\{[^}]*border-radius:\s*6px;[^}]*box-sizing:\s*border-box;[^}]*max-width:\s*100%;[^}]*min-width:\s*0;[^}]*overflow:\s*hidden;[^}]*width:\s*100%;/, 'Compact Current Jobs rows must be restrained and contained.');
+const compactItemRule = styles.match(/\.current-jobs-summary-item\s*\{([^}]*)\}/)?.[1] || '';
+assert.doesNotMatch(compactItemRule, /border-radius:\s*999px/, 'Compact Current Jobs rows must not use pill geometry.');
+assert.match(styles, /\.current-jobs-summary\s*\{[^}]*overflow-x:\s*hidden;[^}]*overflow-y:\s*auto;/, 'Compact Current Jobs must not scroll horizontally.');
 assert.match(styles, /\.current-jobs-page\s*\{[^}]*max-width:\s*100%[^}]*min-width:\s*0[^}]*overflow:\s*hidden/, 'Current Jobs page must be contained.');
 assert.match(styles, /@media \(max-width:\s*760px\)[\s\S]*?\.current-job-row\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)[^}]*min-width:\s*0/, 'Current Jobs must use contained cards on narrow screens.');
+assert.ok(!styles.includes('.current-jobs-page .current-jobs-summary-item'), 'Full-page Current Jobs styles must not target compact summary items.');
 
 const changed = [
   execFileSync('git', ['diff', '--name-only', 'HEAD'], { cwd: root, encoding: 'utf8' }),
   execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' })
 ].join('\n').split(/\r?\n/).filter(Boolean).map((file) => file.replaceAll('\\', '/'));
 assert.ok(!changed.some((file) => file.startsWith('supabase/functions/')), 'Current Jobs must not modify Edge Functions.');
+assert.ok(!changed.some((file) => file.startsWith('supabase/migrations/')), 'Current Jobs sidebar hotfix must not add a migration.');
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Current Jobs must not modify landing Worker files.');
 assert.ok(!changed.some((file) => /(^|\/)(billing|stripe)(\/|\.|$)/i.test(file)), 'Current Jobs must not modify billing or Stripe files.');
 
