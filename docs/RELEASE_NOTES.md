@@ -4,6 +4,12 @@
 
 FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
+## Damage Map Image-required Marker Polish
+
+Damage Map marker placement now requires a base image/template/photo for the selected view. Empty views show a clear prompt to add or select a damage map image before marking damage, and both click/tap placement and the internal marker update path block new orphan coordinates until a reference image exists. Existing image-backed maps and markers continue to render normally.
+
+Customer-facing print and email document output now avoids misleading marker documentation when no damage map image is attached. No database migration, Edge Function change, billing change, or landing Worker change is part of this polish.
+
 ## Beta UK/privacy Polish
 
 This pass responds to first real-job beta feedback from a UK shop. Customer, job intake, and job detail address fields now use `Postal Code / ZIP`, accept alphanumeric postal codes with spaces, and trim stored values without adding a database migration. Neck inspection now includes `Hump / rise at body joint` while preserving the existing `Twist` option and old stored values.
