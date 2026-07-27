@@ -14,6 +14,8 @@ Assignment writes use a targeted stale-aware RPC so ordinary full job saves cann
 
 The new `team_assignment` entitlement gates advanced Pro controls without changing existing `team_members` behavior. Existing assignment data remains readable when Pro access is unavailable, and active beta/trial paths can exercise the feature. Migration `20260727151302_pro_team_assignment_foundation.sql` is included but not applied. No Stripe, billing automation, Edge Function, or landing Worker change is included. See [Pro Team Assignment Foundation](PRO_TEAM_ASSIGNMENT_FOUNDATION.md).
 
+Validation hotfix: `npm run check:pro-team-assignment` now locates the exact authoritative migration from repository contents, so the same substantive SQL checks run before commit, after commit, and on merged main even when the working-tree diff is empty.
+
 ## International Shop Localization and Current Jobs
 
 UK beta shops can now explicitly save United Kingdom, metric/mm action measurements, GBP, VAT wording, and their own default percentage in Shop Settings. US shops retain imperial/in, USD, and Sales Tax defaults. Canada/CAD/GST is also available through the same centralized shop profile path. Country suggestions never invent a tax rate, and shops can preserve manual localization overrides.
