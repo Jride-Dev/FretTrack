@@ -36,7 +36,7 @@ import {
 import { generateJobNumber } from './jobNumber';
 import { getJobEvents, logJobEventSafe } from './jobEventsService';
 import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
-import { buildDocumentEmailHtml, buildInvoiceEmailDraft, buildSelectedDocumentEmailContent, buildWorkOrderEmailDraft } from './emailDocuments';
+import { SHOP_EMAIL_CONTEXT_ERROR, buildDocumentEmailHtml, buildInvoiceEmailDraft, buildSelectedDocumentEmailContent, buildWorkOrderEmailDraft, resolveScopedShopEmailSettings } from './emailDocuments';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
 import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
@@ -110,6 +110,7 @@ export default function JobDetail({
   canSendEmail = true,
   canSendSms = true,
   entitlementMessage = '',
+  shopProfile = null,
   onDirtyChange
 }) {
   const [draftJob, setDraftJob] = useState(job);
@@ -142,8 +143,13 @@ export default function JobDetail({
   useEffect(() => {
     setDraftJob(job);
     setTimelineEvents(job.events || []);
+    setDocumentEmailDraft(null);
     setIsDirty(false);
   }, [job, setIsDirty]);
+
+  useEffect(() => {
+    setDocumentEmailDraft(null);
+  }, [draftJob.id, draftJob.shopId, shopProfile?.shopId, shopProfile?.updatedAt]);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -186,7 +192,7 @@ export default function JobDetail({
   });
 
   const totals = useMemo(() => calculateJobTotals(draftJob), [draftJob]);
-  const shopSettings = getShopSettings();
+  const shopSettings = shopProfile || getShopSettings();
   const dateOptions = getShopDateOptions({
     dateFormat: taxSettings.dateFormat || shopSettings.dateFormat,
     locale: taxSettings.locale || shopSettings.locale
@@ -986,33 +992,47 @@ export default function JobDetail({
     if (!canWrite || !canSendEmail) {
       return;
     }
-    setDocumentEmailDraft({
-      kind: 'work_order',
-      ...buildWorkOrderEmailDraft(draftJob, {
-        shopSettings,
-        dateOptions,
-        moneyOptions,
-        totals,
-        instrumentLabel: formatInstrumentLabel(draftJob)
-      })
-    });
+    try {
+      const scopedShopSettings = resolveScopedShopEmailSettings(draftJob, shopProfile);
+      setDocumentEmailDraft({
+        kind: 'work_order',
+        jobId: draftJob.id,
+        shopId: draftJob.shopId,
+        ...buildWorkOrderEmailDraft(draftJob, {
+          shopSettings: scopedShopSettings,
+          dateOptions,
+          moneyOptions,
+          totals,
+          instrumentLabel: formatInstrumentLabel(draftJob)
+        })
+      });
+    } catch (error) {
+      onNotice?.({ type: 'error', message: error?.message || SHOP_EMAIL_CONTEXT_ERROR });
+    }
   }
 
   function openInvoiceEmail() {
     if (!canWrite || !canSendEmail) {
       return;
     }
-    setDocumentEmailDraft({
-      kind: 'invoice',
-      ...buildInvoiceEmailDraft(draftJob, {
-        shopSettings,
-        dateOptions,
-        moneyOptions,
-        totals,
-        taxLabel: taxSettings.taxLabel || shopSettings.taxLabel || 'Sales Tax',
-        instrumentLabel: formatInstrumentLabel(draftJob)
-      })
-    });
+    try {
+      const scopedShopSettings = resolveScopedShopEmailSettings(draftJob, shopProfile);
+      setDocumentEmailDraft({
+        kind: 'invoice',
+        jobId: draftJob.id,
+        shopId: draftJob.shopId,
+        ...buildInvoiceEmailDraft(draftJob, {
+          shopSettings: scopedShopSettings,
+          dateOptions,
+          moneyOptions,
+          totals,
+          taxLabel: taxSettings.taxLabel || scopedShopSettings.taxLabel || 'Sales Tax',
+          instrumentLabel: formatInstrumentLabel(draftJob)
+        })
+      });
+    } catch (error) {
+      onNotice?.({ type: 'error', message: error?.message || SHOP_EMAIL_CONTEXT_ERROR });
+    }
   }
 
   function formatMeasurementDelta(initialValue, finalValue, unit = measurementOptions.lengthUnit) {
@@ -1207,17 +1227,24 @@ export default function JobDetail({
       }
     }
 
-    const documentContent = buildSelectedDocumentEmailContent(jobToSend, {
-      shopSettings,
-      dateOptions,
-      moneyOptions,
-      totals: calculateJobTotals(jobToSend),
-      taxLabel: jobToSend.techDetails?.tax?.taxLabel || shopSettings.taxLabel || 'Sales Tax',
-      instrumentLabel: formatInstrumentLabel(jobToSend)
-    }, {
-      includeJobSheet,
-      includeCustomerReport
-    });
+    let documentContent;
+    let scopedShopSettings;
+    try {
+      scopedShopSettings = resolveScopedShopEmailSettings(jobToSend, shopProfile);
+      documentContent = buildSelectedDocumentEmailContent(jobToSend, {
+        shopSettings: scopedShopSettings,
+        dateOptions,
+        moneyOptions,
+        totals: calculateJobTotals(jobToSend),
+        taxLabel: jobToSend.techDetails?.tax?.taxLabel || scopedShopSettings.taxLabel || 'Sales Tax',
+        instrumentLabel: formatInstrumentLabel(jobToSend)
+      }, {
+        includeJobSheet,
+        includeCustomerReport
+      });
+    } catch (error) {
+      return { ok: false, error: error?.message || SHOP_EMAIL_CONTEXT_ERROR };
+    }
     const emailBody = [body.trim(), documentContent.text].filter(Boolean).join('\n\n');
 
     const result = await sendCustomerMessage(jobToSend, {
@@ -1434,6 +1461,7 @@ export default function JobDetail({
       canSendSmsByPlan={canSendSms}
       entitlementMessage={entitlementMessage}
       job={draftJob}
+      shopProfile={shopProfile}
       onPreferenceChange={updateContactPreference}
       onTemplateChange={updateMessageTemplate}
       onSendMessage={handleSendCustomerMessage}

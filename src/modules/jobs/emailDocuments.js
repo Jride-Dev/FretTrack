@@ -1,7 +1,9 @@
-import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat';
-import { money } from '../../shared/utils/money';
-import { getJobSourceLabel } from './jobSources';
-import { retailTotal, rowQuantity } from '../billing/accounting';
+import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat.js';
+import { money } from '../../shared/utils/money.js';
+import { getJobSourceLabel } from './jobSources.js';
+import { retailTotal, rowQuantity } from '../billing/accounting.js';
+
+export const SHOP_EMAIL_CONTEXT_ERROR = 'Unable to load the shop details for this email. Please review Shop Settings and try again.';
 
 export function getDefaultDocumentRecipient(job = {}) {
   return String(job.email || '').trim();
@@ -380,7 +382,7 @@ function escapeHtml(value) {
 }
 
 function buildBaseContext(job = {}, context = {}) {
-  const shopSettings = context.shopSettings || {};
+  const shopSettings = resolveScopedShopEmailSettings(job, context.shopSettings);
   const dateOptions = context.dateOptions || {};
   const moneyOptions = context.moneyOptions || {};
   const recipient = getDefaultDocumentRecipient(job);
@@ -389,11 +391,13 @@ function buildBaseContext(job = {}, context = {}) {
     || cleanText([job.guitarBrand, job.model].filter(Boolean).join(' '))
     || cleanText(job.instrumentType)
     || 'Instrument';
-  const shopName = cleanText(shopSettings.shopName) || 'FretTrack';
+  const shopName = cleanText(shopSettings.shopName);
   const shopContactLine = [
     shopName,
+    cleanText(shopSettings.address),
     cleanText(shopSettings.phone),
-    cleanText(shopSettings.email)
+    cleanText(shopSettings.email),
+    cleanText(shopSettings.website)
   ].filter(Boolean).join(' | ');
 
   return {
@@ -403,12 +407,42 @@ function buildBaseContext(job = {}, context = {}) {
     instrumentLabel,
     shopName,
     shopContactLine,
-    shopSignature: ['Thanks,', shopName, cleanText(shopSettings.phone), cleanText(shopSettings.email)].filter(Boolean).join('\n'),
+    shopSignature: [
+      'Thanks,',
+      shopName,
+      cleanText(shopSettings.address),
+      cleanText(shopSettings.phone),
+      cleanText(shopSettings.email),
+      cleanText(shopSettings.website)
+    ].filter(Boolean).join('\n'),
     jobNumberLabel: cleanText(job.jobNumber) || 'Unnumbered job',
     status: cleanText(job.status) || 'Checked In',
     dateReceived: formatShopDate(job.dateReceived, dateOptions) || '-',
     moneyOptions,
     dateOptions
+  };
+}
+
+export function resolveScopedShopEmailSettings(job = {}, shopSettings = {}) {
+  const jobShopId = cleanText(job.shopId || job.shop_id);
+  const settingsShopId = cleanText(shopSettings.shopId || shopSettings.shop_id);
+
+  if (!jobShopId || !settingsShopId || jobShopId !== settingsShopId) {
+    throw new Error(SHOP_EMAIL_CONTEXT_ERROR);
+  }
+
+  return {
+    shopId: settingsShopId,
+    shopName: cleanText(shopSettings.shopName || shopSettings.shop_name),
+    address: cleanText(shopSettings.address),
+    phone: cleanText(shopSettings.phone),
+    email: cleanText(shopSettings.email),
+    website: cleanText(shopSettings.website),
+    logoUrl: cleanText(shopSettings.logoUrl || shopSettings.logo_url),
+    taxLabel: cleanText(shopSettings.taxLabel || shopSettings.tax_label),
+    currencyCode: cleanText(shopSettings.currencyCode || shopSettings.currency_code),
+    locale: cleanText(shopSettings.locale),
+    dateFormat: cleanText(shopSettings.dateFormat || shopSettings.date_format)
   };
 }
 

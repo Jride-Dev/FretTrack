@@ -24,7 +24,7 @@ export default function JobDocumentEmailDialog({
     setBody(draft?.body || '');
     setIncludedDocuments({ jobSheet: false, customerReport: false });
     setSendState({ sending: false, error: '', success: '' });
-  }, [isOpen, draft?.recipient, draft?.subject, draft?.body, draft?.type]);
+  }, [isOpen, draft?.recipient, draft?.subject, draft?.body, draft?.type, draft?.jobId, draft?.shopId]);
 
   useEffect(() => {
     if (!isOpen) {
