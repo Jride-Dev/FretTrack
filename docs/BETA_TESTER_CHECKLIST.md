@@ -87,6 +87,11 @@ For useful bug reports, include:
 | New Job Intake | JOB-005 | Enter Year, Finish, and Orientation. | Optional values save and display correctly on the job. | Owner/Admin/Tech |
 | New Job Intake | JOB-006 | Set job Priority. | HIGH, Medium, and Regular / Low values save and display with readable labels. | Owner/Admin/Tech |
 | New Job Intake | JOB-007 | Set a Promise Date. | Promise Date saves, displays on the job, and supports overdue reporting. | Owner/Admin/Tech |
+| Shop Localization | LOCAL-001 | Configure a UK shop. | Country GB suggests metric/mm, GBP, and VAT without inventing a tax percentage; saved settings remain after refresh and on another signed-in device. | Owner/Admin |
+| Shop Localization | LOCAL-002 | Preserve manual localization overrides. | Declining country suggestions keeps explicitly selected currency, measurement, and tax-label choices. | Owner/Admin |
+| Shop Localization | LOCAL-003 | Compare two shop memberships. | Switching between a UK and US shop refreshes units, currency, and tax wording without cross-shop leakage. | Owner/Admin |
+| Current Jobs | JOBS-001 | Open View all current jobs. | A full-width active-jobs page opens with readable job details and no clipped sidebar columns. | Owner/Admin/Tech/Viewer |
+| Current Jobs | JOBS-002 | Filter and sort Current Jobs. | Search, priority, status, due state, scope, and sorting update the visible jobs; selecting a result opens Job Detail. | Owner/Admin/Tech/Viewer |
 | Job Detail and Workflow | JOBDETAIL-001 | Open an existing job. | Job Detail loads customer, instrument, status, photos, parts, services, and work sections. | Owner/Admin/Tech/Viewer |
 | Job Detail and Workflow | JOBDETAIL-002 | Change job status. | Status saves and reflects in lists/reports. | Owner/Admin/Tech |
 | Job Detail and Workflow | JOBDETAIL-003 | Save job edits. | Save succeeds, dirty state clears, and updated values remain after refresh. | Owner/Admin/Tech |

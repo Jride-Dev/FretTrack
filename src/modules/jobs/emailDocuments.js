@@ -265,8 +265,11 @@ function buildCustomerReportEmailSection(job = {}, context = {}) {
     row.includedInService ? 'Included' : money(retailTotal(row), base.moneyOptions)
   ]);
   const neckInspection = techDetails.neckInspection || {};
+  const measurementUnit = cleanText(techDetails.lengthUnit) || 'in';
   const neckRows = [
-    ['Relief', formatInspectionChange(neckInspection.initial?.relief, neckInspection.final?.relief, techDetails.lengthUnit)],
+    [`Relief (${measurementUnit})`, formatInspectionChange(neckInspection.initial?.relief, neckInspection.final?.relief, measurementUnit)],
+    [`Action, High E at 12th fret (${measurementUnit})`, formatInspectionChange(neckInspection.initial?.actionHighE12th, neckInspection.final?.actionHighE12th, measurementUnit)],
+    [`Action, Low E at 12th fret (${measurementUnit})`, formatInspectionChange(neckInspection.initial?.actionLowE12th, neckInspection.final?.actionLowE12th, measurementUnit)],
     ['Fret Condition', formatInspectionChange(neckInspection.initial?.fretCondition, neckInspection.final?.fretCondition)],
     ['Neck Condition', formatInspectionChange(neckInspection.initial?.neckCondition, neckInspection.final?.neckCondition)],
     ['Truss Rod', formatInspectionChange(neckInspection.initial?.trussRodStatus, neckInspection.final?.trussRodStatus)]

@@ -133,15 +133,15 @@ export default function JobPrintSheet({
           <table>
             <tbody>
               <tr>
-                <td>Relief</td>
+                <td>Relief ({finalLengthUnit})</td>
                 <td>{formatLength(finalNeckInspection.relief, finalNeckInspection.reliefUnit || finalLengthUnit) || '-'}</td>
               </tr>
               <tr>
-                <td>Action {outerStringLabels.treble} / {outerStringLabels.bass} @ 3rd</td>
+                <td>Action {outerStringLabels.treble} / {outerStringLabels.bass} @ 3rd ({finalLengthUnit})</td>
                 <td>{formatLength(finalNeckInspection.nutHighE, finalNeckInspection.nutHighEUnit || finalLengthUnit) || '-'} / {formatLength(finalNeckInspection.nutLowE, finalNeckInspection.nutLowEUnit || finalLengthUnit) || '-'}</td>
               </tr>
               <tr>
-                <td>Action {outerStringLabels.treble} / {outerStringLabels.bass} @ 12th</td>
+                <td>Action {outerStringLabels.treble} / {outerStringLabels.bass} @ 12th ({finalLengthUnit})</td>
                 <td>{formatLength(finalNeckInspection.actionHighE12th, finalNeckInspection.actionHighE12thUnit || finalLengthUnit) || '-'} / {formatLength(finalNeckInspection.actionLowE12th, finalNeckInspection.actionLowE12thUnit || finalLengthUnit) || '-'}</td>
               </tr>
               <tr>

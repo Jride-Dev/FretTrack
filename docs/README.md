@@ -14,6 +14,7 @@ FretTrack's old live baseline is `v0.2.6-beta.14`. Current branch planning uses 
 Start here for the current product path:
 
 - [Release notes](RELEASE_NOTES.md)
+- [Shop localization and Current Jobs](SHOP_LOCALIZATION_AND_CURRENT_JOBS.md)
 - [Roadmap](../ROADMAP.md)
 - [Deployment notes](DEPLOYMENT_NOTES.md)
 - [Reports](REPORTS.md)
@@ -46,6 +47,7 @@ Core shipped beta areas now include:
 - inventory purchasing foundation with parts, vendors, purchase orders, receiving, purchase history, barcode labels, inventory Location/Category presets, UPC-facing labels, Special Order Part behavior, small part images, inbound PO shipping, landed-cost allocation, and transactional receiving RPCs
 - shipping / receiving / chain-of-custody foundation with `job_shipments`, `shipping_items`, custody events, manual carrier/tracking and label-reference fields, a grouped Shipping dashboard, and reuse of inventory Location/Category presets; carrier APIs, label/rate purchasing, and automatic shipment notifications are still future work
 - Scheduling / Calendar Phase 1
+- persistent per-shop country, measurement, currency, and tax terminology defaults plus a full Current Jobs workspace
 - unsaved-changes protection foundation
 - premium entitlement foundation
 - permission hardening with centralized role checks

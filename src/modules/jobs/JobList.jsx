@@ -3,6 +3,7 @@ import { formatShopDate } from '../../shared/utils/dateFormat';
 import { getShopDateOptions } from '../shops/shopConfig';
 import { sortNewestFirst } from './jobSelectors';
 import { getJobPriorityOption, getJobPriorityShortLabel } from './jobPriority';
+import { isCurrentJob } from './CurrentJobsPage.jsx';
 
 function searchableText(job) {
   return [
@@ -22,20 +23,23 @@ function searchableText(job) {
     .toLowerCase();
 }
 
-export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob }) {
+export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob, onViewAll }) {
   const [search, setSearch] = useState('');
-  const [showPickedUp, setShowPickedUp] = useState(false);
+  const [showClosed, setShowClosed] = useState(false);
   const handleSelect = onSelectJob || onSelect;
   const dateOptions = getShopDateOptions();
 
   const filteredJobs = useMemo(() => {
-    const sortedJobs = sortNewestFirst(jobs).filter((job) => showPickedUp || !['Picked Up', 'Picked up'].includes(job.status));
+    const sortedJobs = sortNewestFirst(jobs).filter((job) => showClosed || isCurrentJob(job));
     return sortedJobs.filter((job) => searchableText(job).includes(search.toLowerCase()));
-  }, [jobs, search, showPickedUp]);
+  }, [jobs, search, showClosed]);
 
   return (
     <section className="panel job-list">
-      <h2>Current Jobs</h2>
+      <div className="job-list-heading">
+        <h2>Current Jobs</h2>
+        {onViewAll && <button type="button" onClick={onViewAll}>View all current jobs</button>}
+      </div>
       <label className="job-search">
         Search
         <input
@@ -48,10 +52,10 @@ export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob }) 
       <label className="table-checkbox job-filter-toggle">
         <input
           type="checkbox"
-          checked={showPickedUp}
-          onChange={(event) => setShowPickedUp(event.target.checked)}
+          checked={showClosed}
+          onChange={(event) => setShowClosed(event.target.checked)}
         />
-        Show picked up jobs
+        Show closed jobs
       </label>
       {filteredJobs.length === 0 ? (
         <p className="empty">{jobs.length === 0 ? 'No jobs yet.' : 'No matching current jobs.'}</p>
@@ -70,12 +74,12 @@ export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob }) 
                   {getJobPriorityShortLabel(job.priority)}
                 </span>
               </span>
-              <span>{job.customerName}</span>
-              <span>
+              <span className="job-row-customer">{job.customerName}</span>
+              <span className="job-row-instrument">
                 {job.guitarBrand} {job.model}
               </span>
-              <span>{job.status}</span>
-              <span>{formatShopDate(job.dateReceived, dateOptions)}</span>
+              <span className="job-row-status">{job.status}</span>
+              <span className="job-row-date">{formatShopDate(job.dateReceived, dateOptions)}</span>
             </button>
           ))}
         </div>

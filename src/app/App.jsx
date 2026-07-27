@@ -8,6 +8,7 @@ import InventoryPage from '../modules/inventory/InventoryPage.jsx';
 import JobDetail from '../modules/jobs/JobDetail.jsx';
 import JobForm from '../modules/jobs/JobForm.jsx';
 import JobList from '../modules/jobs/JobList.jsx';
+import CurrentJobsPage from '../modules/jobs/CurrentJobsPage.jsx';
 import OfflineDraftQueue from '../modules/jobs/OfflineDraftQueue.jsx';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
 import AdvancedReportsPage from '../modules/reports/AdvancedReportsPage.jsx';
@@ -45,6 +46,7 @@ import { deleteOfflineDraft, getOfflineDrafts, saveOfflineDraft, updateOfflineDr
 import { clearSelectedShop, getCurrentShopName, getSelectedShop, getShopDateOptions, getShopMoneyOptions, setSelectedShop } from '../modules/shops/shopConfig';
 import { bootstrapCurrentUserAsOwner, getCurrentUserShopMemberships } from '../modules/shops/shopMembershipService';
 import { getCurrentShopProfile } from '../modules/shops/shopProfileService';
+import { getCountryLocalizationDefaults } from '../modules/shops/shopLocalization.js';
 import { money } from '../shared/utils/money';
 import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes';
 import {
@@ -61,7 +63,7 @@ import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService'
 import { isCurrentOperator } from '../modules/operator/operatorService';
 import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
 
-const APP_VERSION = '0.2.9-beta.0';
+const APP_VERSION = '0.2.9-beta.1';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';
@@ -1229,8 +1231,8 @@ export default function App() {
         />
       )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
-      <div className={`layout app-layout${mode === 'detail' && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
-        <aside className="new-job-sidebar no-print" aria-label="New job sections">
+      <div className={`layout app-layout${mode === 'detail' && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${mode === 'list' ? ' full-content' : ''}`}>
+        {mode !== 'list' && <aside className="new-job-sidebar no-print" aria-label="New job sections">
           <div className="new-job-sidebar-controls">
             <button
               type="button"
@@ -1253,7 +1255,7 @@ export default function App() {
               onOfflineDraftSaved={handleOfflineDraftSaved}
               onNotice={setNotice}
             />
-            <JobList jobs={jobs} selectedJobId={selectedJobId} onSelectJob={handleSelectJob} />
+            <JobList jobs={jobs} selectedJobId={selectedJobId} onSelectJob={handleSelectJob} onViewAll={() => navigateTo('list')} />
             <section className="panel till-summary">
               <h2>Till Summary</h2>
               <div className="totals">
@@ -1278,7 +1280,7 @@ export default function App() {
               />
             )}
           </div>
-        </aside>
+        </aside>}
         <div className="content">
           {mode === 'new' && (
             <section className="panel empty-state">
@@ -1287,10 +1289,7 @@ export default function App() {
           )}
 
           {mode === 'list' && (
-            <section className="panel empty-state">
-              <h2>Current Jobs</h2>
-              <p>Select an open job from the list to open it.</p>
-            </section>
+            <CurrentJobsPage jobs={jobs} onSelectJob={handleSelectJob} shopProfile={shopProfile} />
           )}
 
           {mode === 'settings' && (
@@ -1485,8 +1484,8 @@ function isAllowedWorkspaceMode(mode, { isOperator = false, canManageShop = fals
 
 function getCurrentShopProfileFallback() {
   const shopName = getCurrentShopName();
-  const looksUnitedKingdom = /\b(norwich|united kingdom|uk|england|gb|great britain)\b/i.test(shopName);
   return {
+    ...getCountryLocalizationDefaults('US'),
     shopId: '',
     shopName,
     phone: '',
@@ -1495,15 +1494,11 @@ function getCurrentShopProfileFallback() {
     logoUrl: '',
     logoStoragePath: '',
     printFooterText: '',
-    currencyCode: looksUnitedKingdom ? 'GBP' : 'USD',
-    locale: looksUnitedKingdom ? 'en-GB' : 'en-US',
-    taxLabel: looksUnitedKingdom ? 'VAT' : 'Sales Tax',
     taxRegistrationNumber: '',
-    dateFormat: looksUnitedKingdom ? 'DD/MM/YYYY' : 'MM/DD/YYYY',
-    measurementSystem: looksUnitedKingdom ? 'metric' : 'imperial',
-    lengthUnit: looksUnitedKingdom ? 'mm' : 'in',
+    dateFormat: 'MM/DD/YYYY',
     taxState: '',
     salesTaxRate: '',
+    defaultTaxRate: '',
     taxablePartsDefault: true,
     taxableServicesDefault: false
   };
