@@ -12,6 +12,8 @@ New jobs inherit a snapshot of the active shop defaults. Existing job measuremen
 
 The compact Current Jobs sidebar now shows a contained active-job summary with a **View all current jobs** action. The full-width page adds search, priority, status, overdue/due-soon and active/all filters, plus priority/date/due/job-number/status sorting. Selecting a row or responsive mobile card opens the existing Job Detail workflow.
 
+Hotfix: the sidebar summary now uses its own restrained rectangular row styles instead of inheriting the application’s pill-button geometry. Job number, priority, customer/instrument, status, and date remain contained and readable without horizontal clipping. The separate full-page Current Jobs workspace and all of its filters and sorting remain unchanged.
+
 ## Scheduling Week-view Event Layout
 
 Scheduling week-view events now stay inside their assigned day columns. Compact cards show the event type, all-day/time label, clamped title, one concise job/customer or shop-block line, and status; full notes and job details no longer stretch the week grid.

@@ -1359,13 +1359,15 @@ form.panel button {
   width: 100%;
 }
 
-.job-list {
+.current-jobs-summary {
   max-height: 420px;
   min-width: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
-.job-list-heading {
+.current-jobs-summary-heading {
   align-items: flex-start;
   display: flex;
   flex-wrap: wrap;
@@ -1373,66 +1375,91 @@ form.panel button {
   justify-content: space-between;
 }
 
-.job-list-heading h2 {
+.current-jobs-summary-heading h2 {
   margin-bottom: 0;
 }
 
-.job-list-heading button {
+.current-jobs-summary-heading button {
   font-size: 12px;
   white-space: normal;
 }
 
-.job-search {
+.current-jobs-summary-search {
   margin-bottom: 10px;
 }
 
-.job-filter-toggle {
+.current-jobs-summary-filter {
   margin-bottom: 10px;
 }
 
-.list {
+.current-jobs-summary-list {
   display: grid;
   gap: 6px;
-}
-
-.job-row {
-  background: var(--surface-soft);
-  border: 1px solid var(--border);
-  color: var(--text);
-  display: grid;
-  gap: 6px;
-  grid-template-columns: 76px 1.1fr 1.35fr 108px 94px;
-  padding: 10px;
-  text-align: left;
-}
-
-.job-list .job-row {
-  box-sizing: border-box;
-  grid-template-columns: minmax(0, 1fr) auto;
   max-width: 100%;
   min-width: 0;
+}
+
+.current-jobs-summary-item {
+  align-items: center;
+  appearance: none;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: none;
+  box-sizing: border-box;
+  color: var(--text);
+  display: grid;
+  gap: 4px 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  max-width: 100%;
+  min-height: 0;
+  min-width: 0;
   overflow: hidden;
+  padding: 8px;
+  text-align: left;
   width: 100%;
 }
 
-.job-list .job-row-customer,
-.job-list .job-row-instrument {
+.current-jobs-summary-primary {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.current-jobs-summary-primary strong,
+.current-jobs-summary-description,
+.current-jobs-summary-status,
+.current-jobs-summary-date {
+  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.job-list .job-row-customer,
-.job-list .job-row-instrument {
-  grid-column: 1 / -1;
+.current-jobs-summary-description {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
-.job-list .job-row-status {
-  min-width: 0;
+.current-jobs-summary-status,
+.current-jobs-summary-date {
+  font-size: 12px;
 }
 
-.job-list .job-row-date {
+.current-jobs-summary-status,
+.current-jobs-summary-date {
   text-align: right;
+}
+
+.current-jobs-summary-item:hover,
+.current-jobs-summary-item:focus-visible,
+.current-jobs-summary-item.selected {
+  background: var(--surface-muted);
+  border-color: var(--accent);
 }
 
 .current-jobs-page {
@@ -1570,19 +1597,6 @@ form.panel button {
     font-size: 11px;
     font-weight: 700;
   }
-}
-
-.job-number-priority {
-  align-items: flex-start;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.job-row:hover,
-.job-row.selected {
-  background: var(--surface-muted);
-  border-color: var(--accent);
 }
 
 .detail {
@@ -3778,10 +3792,6 @@ th.internal-only {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .job-row {
-    grid-template-columns: 70px minmax(0, 1fr) minmax(0, 1fr) 96px 90px;
-  }
-
   .damage-toolbar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3957,19 +3967,16 @@ th.internal-only {
   }
 
   .damage-row,
-  .damage-row-expanded,
-  .job-row {
+  .damage-row-expanded {
     grid-template-columns: 1fr;
   }
 
-  .job-row {
-    gap: 4px;
-  }
-
-  .job-row strong,
-  .job-row span,
   .operator-table td small {
     overflow-wrap: anywhere;
+  }
+
+  .current-jobs-summary-item {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .operator-table {
