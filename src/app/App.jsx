@@ -1422,6 +1422,7 @@ export default function App() {
               canSendEmail={canSendEmail}
               canSendSms={canSendSms}
               entitlementMessage={entitlementMessage}
+              shopProfile={shopProfile}
               onDirtyChange={setHasUnsavedPageChanges}
             />
           )}

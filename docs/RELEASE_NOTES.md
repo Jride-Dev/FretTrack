@@ -4,6 +4,12 @@
 
 FretTrack `0.2.9-beta.0` moves the beta into paid-release preparation: Pro Reports Dashboard Phase 2, Pro plan branding/status UI hardening, FretTrack Pro emblem support, Trial Pro / Pro identity display, plan countdown/status handling, beta tester workbook/checklist delivery, public Terms / Privacy / Support readiness, Customer Import preview safety, outbound Shipping Foundation, and the existing Trial/Shop/Pro entitlement foundation. Stripe Checkout, Customer Portal, billing webhooks, subscription sync, and live payment collection are next, not live in this release.
 
+## Generated Email Shop Isolation
+
+Generated customer emails now use the active job's shop profile instead of global/default shop settings. Invoice, work-order, selected Job Sheet / Customer Report document sections, and job message templates include only the matching shop identity, reset defaults when the job or shop changes, and block sending generated document content when the job shop and loaded shop profile do not match.
+
+The send-email Edge Function was audited and left unchanged: it already authorizes sends against the submitted job's `shop_id` and the authenticated user's shop role, while the client generates the editable customer-facing email body.
+
 ## Damage Map Image-required Marker Polish
 
 Damage Map marker placement now requires a base image/template/photo for the selected view. Empty views show a clear prompt to add or select a damage map image before marking damage, and both click/tap placement and the internal marker update path block new orphan coordinates until a reference image exists. Existing image-backed maps and markers continue to render normally.

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { formatShopDateTime } from '../../shared/utils/dateFormat';
 import { getShopDateOptions } from '../shops/shopConfig';
-import { defaultTemplateKey, instrumentName, messageTemplates, renderTemplate } from './messageTemplates';
+import { buildShopSignature, defaultTemplateKey, instrumentName, messageTemplates, renderTemplate } from './messageTemplates';
 import { sendCustomerChannelMessage, smsDisabledMessage, smsEnabled } from './messageService';
 
 export default function MessagesPanel({
@@ -13,7 +13,8 @@ export default function MessagesPanel({
   onPreferenceChange,
   onSendMessage,
   onGetSmsMode,
-  onTemplateChange
+  onTemplateChange,
+  shopProfile = null
 }) {
   const [templateKey, setTemplateKey] = useState(job.techDetails?.lastMessageTemplate || defaultTemplateKey);
   const [subject, setSubject] = useState('');
@@ -25,16 +26,18 @@ export default function MessagesPanel({
   const variables = useMemo(() => ({
     customer_name: job.customerName || '',
     job_number: job.jobNumber || '',
-    instrument: instrumentName(job)
-  }), [job]);
+    instrument: instrumentName(job),
+    shop_name: shopProfile?.shopName || '',
+    shop_signature: buildShopSignature(shopProfile || {})
+  }), [job, shopProfile]);
 
   useEffect(() => {
     applyTemplate(job.techDetails?.lastMessageTemplate || defaultTemplateKey, { saveSelection: false });
-  }, [job.id]);
+  }, [job.id, job.shopId, shopProfile?.shopId, shopProfile?.updatedAt]);
 
   useEffect(() => {
     applyTemplate(templateKey, { saveSelection: false });
-  }, [variables.customer_name, variables.job_number, variables.instrument]);
+  }, [variables.customer_name, variables.job_number, variables.instrument, variables.shop_name, variables.shop_signature]);
 
   useEffect(() => {
     let active = true;
