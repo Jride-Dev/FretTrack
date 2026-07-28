@@ -18,14 +18,14 @@ export default function JobPrintSheet({
   const printFooterText = getPrintFooterText();
   const taxSettings = draftJob.techDetails?.tax || {};
   const moneyOptions = getShopMoneyOptions({
-    currencyCode: taxSettings.currencyCode || shopSettings.currencyCode,
-    locale: taxSettings.locale || shopSettings.locale
+    currencyCode: shopSettings.currencyCode || taxSettings.currencyCode,
+    locale: shopSettings.locale || taxSettings.locale
   });
   const dateOptions = getShopDateOptions({
-    dateFormat: taxSettings.dateFormat || shopSettings.dateFormat,
-    locale: taxSettings.locale || shopSettings.locale
+    dateFormat: shopSettings.dateFormat || taxSettings.dateFormat,
+    locale: shopSettings.locale || taxSettings.locale
   });
-  const taxLabel = taxSettings.taxLabel || shopSettings.taxLabel || 'Sales Tax';
+  const taxLabel = shopSettings.taxLabel || taxSettings.taxLabel || 'Sales Tax';
   const techDetails = draftJob.techDetails || {};
   const finalNeckInspection = techDetails.neckInspection?.final || {};
   const finalLengthUnit = finalNeckInspection.lengthUnit || finalNeckInspection.reliefUnit || techDetails.lengthUnit || 'in';

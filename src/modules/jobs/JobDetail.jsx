@@ -188,7 +188,15 @@ export default function JobDetail({
   const images = draftJob.images || [];
   const workOrderImageIds = draftJob.techDetails.workOrderImageIds || [];
   const workOrderImages = images.filter((image) => workOrderImageIds.includes(image.id));
-  const taxSettings = draftJob.techDetails.tax || {};
+  const storedTaxSettings = draftJob.techDetails.tax || {};
+  const shopSettings = shopProfile || getShopSettings();
+  const taxSettings = {
+    ...storedTaxSettings,
+    currencyCode: shopSettings.currencyCode || storedTaxSettings.currencyCode,
+    locale: shopSettings.locale || storedTaxSettings.locale,
+    dateFormat: shopSettings.dateFormat || storedTaxSettings.dateFormat,
+    taxLabel: shopSettings.taxLabel || storedTaxSettings.taxLabel
+  };
   const payments = draftJob.techDetails.payments || [];
   const instrumentStringCount = getInstrumentStringCount(draftJob);
   const outerStringLabels = getOuterStringLabels(draftJob.instrumentType, instrumentStringCount);
@@ -200,7 +208,6 @@ export default function JobDetail({
   });
 
   const totals = useMemo(() => calculateJobTotals(draftJob), [draftJob]);
-  const shopSettings = shopProfile || getShopSettings();
   const dateOptions = getShopDateOptions({
     dateFormat: taxSettings.dateFormat || shopSettings.dateFormat,
     locale: taxSettings.locale || shopSettings.locale
