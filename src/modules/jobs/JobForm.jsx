@@ -64,6 +64,7 @@ function getInitialFormState(jobs = []) {
     orientation: 'Unknown',
     reasonForVisit: '',
     dateReceived,
+    dropOffAt: '',
     promiseDate: '',
     priority: 'regular',
     assignedMemberId: '',
@@ -278,6 +279,7 @@ export default function JobForm({
       customerId: form.customerId || selectedCustomer?.id || '',
       customerName,
       dateReceived,
+      dropOffAt: form.dropOffAt || '',
       promiseDate: form.promiseDate || '',
       priority: normalizeJobPriority(form.priority),
       assignedMemberId: form.assignedMemberId || '',
@@ -649,6 +651,10 @@ export default function JobForm({
         <label>
           Date Received
           <input type="date" name="dateReceived" value={form.dateReceived} onChange={handleChange} disabled={!canWrite} />
+        </label>
+        <label>
+          Drop-off date and time
+          <input type="datetime-local" name="dropOffAt" value={form.dropOffAt} onChange={handleChange} disabled={!canWrite} />
         </label>
         <label>
           Promise Date

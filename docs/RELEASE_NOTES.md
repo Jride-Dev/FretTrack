@@ -4,6 +4,14 @@
 
 FretTrack `0.2.9-beta.3` adds server-enforced email and photo usage caps while retaining the Pro Team Assignment Foundation, localization, Current Jobs, scheduling, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundations.
 
+## Job Dates and Scheduling Sync
+
+Jobs now support an optional **Drop-off date and time** and the shared job status list includes **Drop Off**. Job writers can set or clear the timestamp in New Job and Job Detail, while read-only roles retain the existing view-only behavior. Job Detail formats the saved value with the shop's existing date and time preferences.
+
+Saving a job automatically creates or updates one generated Scheduling event for its drop-off timestamp and one all-day generated event for its existing Promise Date. These events use a shop/job/source uniqueness rule, so repeat saves cannot duplicate them. Changing a source date updates its event; clearing one date removes only that generated event; manual linked events remain untouched. Scheduling cards and details identify whether an event came from the job's drop-off or due date.
+
+Migration `20260728094434_job_dates_scheduling_sync.sql` is included but not applied. It adds the optional job timestamp, generated-event source metadata and uniqueness, status validation, and database triggers that preserve current shop isolation and write permissions. No Edge Function, Stripe, billing, or landing Worker change is included.
+
 ## Email and Photo Usage Caps
 
 Shop now includes 1,000 successful transactional email recipients per UTC month, 2,000 successful source-photo uploads per UTC month, and 5 GiB of current repair-photo storage. Pro includes 5,000 recipients, 10,000 source uploads, and 25 GiB. A Shop trial inherits Shop limits and a Pro trial inherits Pro limits.

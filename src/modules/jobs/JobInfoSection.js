@@ -10,6 +10,7 @@ import {
 import { smsEnabled } from '../../data/messagesRepository';
 import { stateOptionsWithCurrent } from '../../data/usStates';
 import { JOB_PRIORITY_OPTIONS } from './jobPriority';
+import { toLocalDateTimeInputValue } from '../../shared/utils/dateFormat';
 
 export default function JobInfoSection({
   canWrite = true,
@@ -250,6 +251,10 @@ export default function JobInfoSection({
         <label>
           Date Received
           <input type="date" name="dateReceived" value={draftJob.dateReceived} onChange={updateField} disabled={!canWrite} />
+        </label>
+        <label>
+          Drop-off date and time
+          <input type="datetime-local" name="dropOffAt" value={toLocalDateTimeInputValue(draftJob.dropOffAt)} onChange={updateField} disabled={!canWrite} />
         </label>
         <label>
           Promise Date

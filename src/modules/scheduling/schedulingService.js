@@ -18,6 +18,16 @@ export const scheduleStatuses = [
   { value: 'missed', label: 'Missed' }
 ];
 
+export function generatedScheduleEventSourceLabel(eventKind) {
+  if (eventKind === 'job_drop_off') {
+    return 'Job drop-off date';
+  }
+  if (eventKind === 'job_due') {
+    return 'Job due date';
+  }
+  return '';
+}
+
 function cleanText(value) {
   return String(value || '').trim();
 }
@@ -66,6 +76,7 @@ export function fromDbScheduleEvent(row = {}) {
     allDay: Boolean(row.all_day),
     status: row.status || 'scheduled',
     location: row.location || '',
+    generatedEventKind: row.generated_event_kind || '',
     createdBy: row.created_by || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at

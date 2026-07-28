@@ -52,7 +52,8 @@ assert.ok(
 assert.ok(
   !changed.some((file) => file.startsWith('supabase/migrations/')
     && !file.endsWith('pro_team_assignment_foundation.sql')
-    && !file.endsWith('email_photo_usage_caps_foundation.sql')),
+    && !file.endsWith('email_photo_usage_caps_foundation.sql')
+    && !file.endsWith('job_dates_scheduling_sync.sql')),
   'Current Jobs must not add unrelated migrations.'
 );
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Current Jobs must not modify landing Worker files.');

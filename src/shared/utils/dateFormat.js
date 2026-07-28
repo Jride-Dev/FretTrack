@@ -49,6 +49,18 @@ export function toIsoDateInputValue(value = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
+export function toLocalDateTimeInputValue(value) {
+  if (!value) {
+    return '';
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 16);
+}
+
 function parseDisplayDate(value) {
   if (!value) return null;
   if (value instanceof Date) {

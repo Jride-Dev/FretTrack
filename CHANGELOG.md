@@ -6,6 +6,8 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.3 - Current Beta Candidate
 
+- Added optional job drop-off date/time, the shared `Drop Off` job status, and server-authoritative generated Scheduling events for job drop-off and promise dates. Generated events are shop/job/kind unique, update without duplication, clear independently from manual events, and show their job-date source in Scheduling.
+- Added migration `20260728094434_job_dates_scheduling_sync.sql` and `npm run check:job-dates-scheduling-sync`; the migration is included for review and is not applied by this branch.
 - Added server-authoritative Shop and Pro usage caps for monthly transactional email recipients, monthly source-photo uploads, and current repair-photo storage, including atomic idempotent reservations, failure release, exact-path Storage enforcement, deletion reconciliation, operator overrides, and owner/admin usage meters.
 - Shop includes 1,000 email recipients/month, 2,000 source-photo uploads/month, and 5 GiB photo storage. Pro includes 5,000 recipients/month, 10,000 source uploads/month, and 25 GiB photo storage. Shop and Pro trials inherit their selected tier.
 - Added migration `20260727231401_email_photo_usage_caps_foundation.sql`, `docs/EMAIL_AND_PHOTO_USAGE_CAPS.md`, and `npm run check:usage-caps`. No migration or Edge Function is applied or deployed by this branch, and no Stripe or paid-overage behavior was added.
