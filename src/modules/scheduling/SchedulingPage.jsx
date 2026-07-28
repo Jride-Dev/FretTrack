@@ -10,6 +10,7 @@ import {
   createScheduleEvent,
   deleteScheduleEvent,
   listScheduleEvents,
+  generatedScheduleEventSourceLabel,
   scheduleEventTypes,
   scheduleStatuses,
   updateScheduleEvent
@@ -353,7 +354,9 @@ export default function SchedulingPage({
                     </span>
                     <span className="schedule-card-title">{scheduleEvent.title}</span>
                     <span className="schedule-card-secondary">{compactEventSecondaryLabel(scheduleEvent)}</span>
-                    <span className="muted-text schedule-card-status">{statusLabel(scheduleEvent.status)}</span>
+                    <span className="muted-text schedule-card-status">
+                      {statusLabel(scheduleEvent.status)}{scheduleEvent.generatedEventKind ? ' | From job dates' : ''}
+                    </span>
                   </button>
                 ))}
                 {!eventsForDay(day).length && <p className="muted-text">No events</p>}
@@ -403,6 +406,7 @@ export default function SchedulingPage({
         dateLabel={selectedEvent ? formatShopDate(selectedEvent.startsAt, dateOptions) : ''}
         event={selectedEvent}
         eventTypeLabel={selectedEvent ? eventTypeLabel(selectedEvent.eventType) : ''}
+        sourceLabel={selectedEvent ? generatedScheduleEventSourceLabel(selectedEvent.generatedEventKind) : ''}
         instrumentLabel={eventInstrumentLabel(selectedEvent)}
         isSaving={isSaving}
         jobNumber={linkedJob(selectedEvent)?.jobNumber || ''}

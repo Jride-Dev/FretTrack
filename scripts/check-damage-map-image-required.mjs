@@ -50,8 +50,9 @@ assertIncludes(packageJson, '"check:damage-map-image-required": "node scripts/ch
 const changed = changedFiles();
 assert.ok(
   !changed.some((file) => file.startsWith('supabase/migrations/')
-    && !file.endsWith('_email_photo_usage_caps_foundation.sql')),
-  'Only the later usage-cap migration may change Supabase schema after Damage Map gating.'
+    && !file.endsWith('_email_photo_usage_caps_foundation.sql')
+    && !file.endsWith('_job_dates_scheduling_sync.sql')),
+  'Only reviewed later feature migrations may change Supabase schema after Damage Map gating.'
 );
 assert.ok(
   !changed.some((file) => file.startsWith('supabase/functions/')

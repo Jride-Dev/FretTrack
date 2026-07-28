@@ -1,4 +1,5 @@
 export const JOB_STATUSES = [
+  "Drop Off",
   "Checked In",
   "On Bench",
   "Waiting Parts",

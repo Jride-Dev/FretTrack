@@ -28,6 +28,7 @@ export default function ScheduleEventDetailsDialog({
   onDelete,
   onEdit,
   onReopen,
+  sourceLabel,
   statusLabel,
   timeLabel
 }) {
@@ -84,6 +85,7 @@ export default function ScheduleEventDetailsDialog({
           <DetailRow label="Date" value={dateLabel} />
           <DetailRow label="Time" value={timeLabel} />
           <DetailRow label="Status" value={statusLabel} />
+          <DetailRow label="Source" value={sourceLabel} />
           <DetailRow label={isShopBlock ? 'Block title' : 'Title'} value={event.title} />
           {!isShopBlock && <DetailRow label="Linked job" value={jobNumber ? `#${jobNumber}` : ''} />}
           {!isShopBlock && <DetailRow label="Customer" value={customerName} />}

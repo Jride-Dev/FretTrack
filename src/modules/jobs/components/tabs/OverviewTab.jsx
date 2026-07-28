@@ -1,4 +1,4 @@
-import { formatShopDate } from '../../../../shared/utils/dateFormat.js';
+import { formatShopDate, formatShopDateTime } from '../../../../shared/utils/dateFormat.js';
 import { formatInstrumentLabel } from '../../../instruments/instrumentService.js';
 import { getShopDateOptions } from '../../../shops/shopConfig.js';
 import { getJobPriorityLabel, getJobPriorityOption } from '../../jobPriority.js';
@@ -22,6 +22,7 @@ export default function OverviewTab({ canWrite = true, draftJob, isDirty, update
         <span>Instrument</span><strong>{[formatInstrumentLabel(draftJob), draftJob.guitarBrand, draftJob.model].filter(Boolean).join(' ') || '-'}</strong>
         <span>Serial</span><strong>{draftJob.serial || '-'}</strong>
         <span>Intake Date</span><strong>{formatShopDate(draftJob.dateReceived, dateOptions) || '-'}</strong>
+        <span>Drop-off date and time</span><strong>{formatShopDateTime(draftJob.dropOffAt, dateOptions) || '-'}</strong>
         <span>Promise Date</span><strong>{formatShopDate(draftJob.promiseDate || draftJob.dueDate || draftJob.promisedDate || draftJob.techDetails?.dueDate, dateOptions) || '-'}</strong>
         <span>Priority</span>
         <strong>

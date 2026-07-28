@@ -5,6 +5,7 @@ import {
   cancelScheduleEvent,
   completeScheduleEvent,
   createScheduleEvent,
+  generatedScheduleEventSourceLabel,
   listJobScheduleEvents,
   scheduleEventTypes
 } from './schedulingService';
@@ -122,6 +123,7 @@ export default function JobScheduleSection({ canWrite = true, job, onNotice }) {
             <th>Title</th>
             <th>Type</th>
             <th>Status</th>
+            <th>Source</th>
             <th className="no-print">Actions</th>
           </tr>
         </thead>
@@ -132,6 +134,7 @@ export default function JobScheduleSection({ canWrite = true, job, onNotice }) {
               <td>{scheduleEvent.title}</td>
               <td>{scheduleEventTypes.find((type) => type.value === scheduleEvent.eventType)?.label || scheduleEvent.eventType}</td>
               <td>{scheduleEvent.status}</td>
+              <td>{generatedScheduleEventSourceLabel(scheduleEvent.generatedEventKind) || 'Manual event'}</td>
               <td className="no-print">
                 {canWrite && scheduleEvent.status === 'scheduled' ? (
                   <div className="mode-actions">
@@ -144,7 +147,7 @@ export default function JobScheduleSection({ canWrite = true, job, onNotice }) {
           ))}
           {!events.length && (
             <tr>
-              <td colSpan="5">{isLoading ? 'Loading schedule...' : 'No linked schedule events yet.'}</td>
+              <td colSpan="6">{isLoading ? 'Loading schedule...' : 'No linked schedule events yet.'}</td>
             </tr>
           )}
         </tbody>

@@ -733,6 +733,7 @@ function normalizeJob(job, jobs = []) {
     color: job.color || '',
     reasonForVisit: job.reasonForVisit || '',
     dateReceived,
+    dropOffAt: job.dropOffAt || job.drop_off_at || '',
     promiseDate: job.promiseDate || job.promise_date || job.promisedDate || '',
     priority: normalizeJobPriority(job.priority || techDetails.priority),
     jobDate,
@@ -1111,6 +1112,7 @@ function toDbJob(job, { includeAssignment = false } = {}) {
     ...toLegacyDbJob(job),
     customer_id: job.customerId || null,
     job_date: job.jobDate || job.dateReceived || null,
+    drop_off_at: job.dropOffAt ? new Date(job.dropOffAt).toISOString() : null,
     promise_date: job.promiseDate || null,
     priority: normalizeJobPriority(job.priority),
     job_day_code: job.jobDayCode || getJobDayCode(job.jobDate || job.dateReceived),
@@ -1149,12 +1151,14 @@ function toLegacyDbJob(job) {
     color: job.color || '',
     reason_for_visit: job.reasonForVisit || '',
     date_received: job.dateReceived || null,
+    drop_off_at: job.dropOffAt ? new Date(job.dropOffAt).toISOString() : null,
     job_number: job.jobNumber || '',
     status: toLegacyJobStatus(job.status),
     tech_details: {
       ...techDetails,
       contact,
       instrumentType,
+      dropOffAt: job.dropOffAt ? new Date(job.dropOffAt).toISOString() : '',
       includedPartIds: (job.parts || []).filter((part) => part.includedInService).map((part) => part.id),
       discountType: job.discountType || 'none',
       discountValue: job.discountValue ?? ''
@@ -1167,6 +1171,7 @@ function toLegacyDbJob(job) {
 function toLegacyJobStatus(status) {
   const legacyStatuses = {
     'Checked In': 'Intake',
+    'Drop Off': 'Intake',
     'On Bench': 'In Progress',
     'Waiting Parts': 'Waiting Parts',
     Completed: 'Completed',
@@ -1195,6 +1200,7 @@ function fromDbJob(job) {
     color: job.color || '',
     reasonForVisit: job.reason_for_visit || '',
     dateReceived: job.date_received || '',
+    dropOffAt: job.drop_off_at || '',
     promiseDate: job.promise_date || '',
     priority: normalizeJobPriority(job.priority || job.tech_details?.priority),
     jobDate: job.job_date || job.date_received || '',
