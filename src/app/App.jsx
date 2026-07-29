@@ -45,6 +45,7 @@ import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService'
 import { calculateTillSummary, sortNewestFirst } from '../modules/jobs/jobSelectors';
 import { deleteOfflineDraft, getOfflineDrafts, saveOfflineDraft, updateOfflineDraft } from '../modules/jobs/offlineDraftService.js';
 import { clearSelectedShop, getCurrentShopName, getSelectedShop, getShopDateOptions, getShopMoneyOptions, setSelectedShop } from '../modules/shops/shopConfig';
+import { clearVitePreloadReloadGuard } from '../shared/pwa/preloadRecovery';
 import { bootstrapCurrentUserAsOwner, getCurrentUserShopMemberships } from '../modules/shops/shopMembershipService';
 import { getCurrentShopProfile } from '../modules/shops/shopProfileService';
 import { getCountryLocalizationDefaults } from '../modules/shops/shopLocalization.js';
@@ -117,6 +118,10 @@ export default function App() {
   const [hasUnsavedPageChanges, setHasUnsavedPageChanges] = useState(false);
   const manualSignOutRef = useRef(false);
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
+
+  useEffect(() => {
+    clearVitePreloadReloadGuard();
+  }, []);
   const billingAccess = entitlementSnapshot || getDefaultEntitlementSnapshot(membership?.shopId);
   const betaApproved = betaAccess?.status === 'approved';
   const planStatus = getPlanStatus(billingAccess);
