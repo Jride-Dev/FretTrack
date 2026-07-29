@@ -1,4 +1,4 @@
-const SHELL_CACHE = 'frettrack-shell-v1';
+const SHELL_CACHE = 'frettrack-shell-v2';
 const CORE_ASSETS = [
   '/',
   '/manifest.webmanifest',
@@ -46,7 +46,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (['script', 'style', 'image', 'font'].includes(request.destination)) {
+  if (['script', 'style'].includes(request.destination)) {
+    event.respondWith(networkAsset(request));
+    return;
+  }
+
+  if (['image', 'font'].includes(request.destination)) {
     event.respondWith(cacheFirst(request));
   }
 });
@@ -65,11 +70,28 @@ async function networkFirst(request) {
 async function cacheFirst(request) {
   const cache = await caches.open(SHELL_CACHE);
   const cached = await cache.match(request);
-  if (cached) {
+  if (cached && !isHtmlResponse(cached)) {
     return cached;
+  }
+  if (cached) {
+    await cache.delete(request);
   }
 
   const response = await fetch(request);
-  cache.put(request, response.clone());
+  if (isHtmlResponse(response)) {
+    return Response.error();
+  }
+  if (response.ok) {
+    cache.put(request, response.clone());
+  }
   return response;
+}
+
+async function networkAsset(request) {
+  const response = await fetch(request);
+  return isHtmlResponse(response) ? Response.error() : response;
+}
+
+function isHtmlResponse(response) {
+  return String(response.headers.get('content-type') || '').toLowerCase().includes('text/html');
 }

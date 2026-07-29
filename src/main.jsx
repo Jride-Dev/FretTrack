@@ -5,7 +5,9 @@ import AppBootstrap from './app/AppBootstrap.jsx';
 import ErrorBoundary from './shared/components/ErrorBoundary.jsx';
 import './styles.css';
 import { registerPwaServiceWorker } from './shared/pwa/pwaSupport';
+import { installVitePreloadRecovery } from './shared/pwa/preloadRecovery';
 
+installVitePreloadRecovery();
 registerPwaServiceWorker();
 
 createRoot(document.getElementById('root')).render(
