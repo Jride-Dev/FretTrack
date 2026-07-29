@@ -21,6 +21,7 @@
     "check:scheduling-week-event-layout": "node scripts/check-scheduling-week-event-layout.mjs",
     "check:job-dates-scheduling-sync": "node scripts/check-job-dates-scheduling-sync.mjs",
     "check:job-sheet-print-layout": "node scripts/check-job-sheet-print-layout.mjs",
+    "check:navigation-clarity": "node scripts/check-navigation-clarity.mjs",
     "check:global-print-canvas": "node scripts/check-global-print-canvas.mjs",
     "check:customer-import": "node scripts/check-customer-import.mjs",
     "check:beta-uk-privacy-polish": "node scripts/check-beta-uk-privacy-polish.mjs",

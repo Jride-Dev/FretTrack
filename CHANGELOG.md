@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.3 - Current Beta Candidate
 
+- Improved detail and edit navigation clarity across Jobs, Customers, Inventory, Vendors, Purchase Orders, and Scheduling with explicit `Close Detail`, `Cancel`, `Close Preview`, and edit-aware `Save Changes` labels while preserving existing close and dirty-state handlers.
 - Renamed the job-detail-only `Close Job Detail` action to `Close Detail` so it no longer implies that it changes the job status; `Finish / Picked Up` remains the persisted job completion action.
 - Added optional job drop-off date/time, the shared `Drop Off` job status, and server-authoritative generated Scheduling events for job drop-off and promise dates. Generated events are shop/job/kind unique, update without duplication, clear independently from manual events, and show their job-date source in Scheduling.
 - Added migration `20260728094434_job_dates_scheduling_sync.sql` and `npm run check:job-dates-scheduling-sync`; the migration is included for review and is not applied by this branch.
