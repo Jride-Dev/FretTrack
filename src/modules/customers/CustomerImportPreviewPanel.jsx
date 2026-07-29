@@ -120,7 +120,7 @@ export default function CustomerImportPreviewPanel({
             <h2>Customer Import Preview</h2>
             <p className="muted-text">Only shop owners and admins can preview customer imports.</p>
           </div>
-          {onClose && <button type="button" className="button-tertiary" onClick={onClose}>Close</button>}
+          {onClose && <button type="button" className="button-tertiary" onClick={onClose}>Close Preview</button>}
         </div>
       </section>
     );
@@ -137,7 +137,7 @@ export default function CustomerImportPreviewPanel({
           <a className="button-tertiary" href={CUSTOMER_IMPORT_TEMPLATE_PATH} download>
             Download Template
           </a>
-          {onClose && <button type="button" className="button-tertiary" onClick={onClose}>Close</button>}
+          {onClose && <button type="button" className="button-tertiary" onClick={onClose}>Close Preview</button>}
         </div>
       </div>
 

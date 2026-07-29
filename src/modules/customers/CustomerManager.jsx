@@ -237,7 +237,7 @@ export default function CustomerManager({
                 <h2>{modalCustomer ? 'Edit Customer' : 'Add Customer'}</h2>
                 <p>{modalCustomer ? modalCustomer.displayName : 'Create a new customer, business, or subcontractor record.'}</p>
               </div>
-              <button type="button" className="modal-close" onClick={closeCustomerModal} aria-label="Close customer form">Close</button>
+              <button type="button" className="modal-close" onClick={closeCustomerModal} aria-label="Cancel customer form">Cancel</button>
             </div>
             <CustomerForm
               customer={modalCustomer}

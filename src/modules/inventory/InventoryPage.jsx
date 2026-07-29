@@ -758,6 +758,13 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     setPurchaseReceiveNote('');
   }
 
+  function closePurchaseOrderDetail() {
+    setSelectedPurchaseOrderId('');
+    setPurchaseReceiveQuantities({});
+    setPurchaseReceiveCosts({});
+    setPurchaseReceiveNote('');
+  }
+
   function selectPurchaseOrder(order) {
     setSelectedPurchaseOrderId(order.id);
     preparePurchaseReceiveForm(order);
@@ -1075,7 +1082,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               </label>
               {canWrite && (
                 <div className="mode-actions">
-                  <button type="submit" className="primary-action" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Part'}</button>
+                  <button type="submit" className="primary-action" disabled={isSaving}>{isSaving ? 'Saving...' : selectedPart ? 'Save Changes' : 'Save Part'}</button>
+                  {selectedPart && <button type="button" onClick={() => resetForm()} disabled={isSaving}>Cancel</button>}
                   {selectedPart && <button type="button" onClick={handleDeactivate} disabled={isSaving}>Deactivate</button>}
                 </div>
               )}
@@ -1155,7 +1163,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
           <form onSubmit={saveVendor}>
             <div className="editor-heading">
               <h3>{selectedVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
-              {canWrite && <button type="button" onClick={resetVendorForm}>New Vendor</button>}
+              {canWrite && selectedVendor && <button type="button" onClick={resetVendorForm}>Cancel</button>}
             </div>
             <div className="form-grid">
               <label>Company<input disabled={!canWrite} required value={vendorForm.name} onChange={(event) => setVendorForm((current) => ({ ...current, name: event.target.value }))} /></label>
@@ -1195,7 +1203,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
             </label>
             {canWrite && (
               <div className="mode-actions">
-                <button type="submit" className="primary-action" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Vendor'}</button>
+                <button type="submit" className="primary-action" disabled={isSaving}>{isSaving ? 'Saving...' : selectedVendor ? 'Save Changes' : 'Save Vendor'}</button>
               </div>
             )}
           </form>
@@ -1335,7 +1343,10 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
             <form className="inventory-stock-actions" onSubmit={handlePurchaseReceive}>
               <div className="editor-heading">
                 <h3>Receive {selectedPurchaseOrder.poNumber}</h3>
-                <span className={`status-pill ${selectedPurchaseOrder.status === 'received' ? 'success' : selectedPurchaseOrder.status === 'cancelled' ? 'muted' : 'warning'}`}>{formatStatusLabel(selectedPurchaseOrder.status)}</span>
+                <div className="mode-actions no-print">
+                  <span className={`status-pill ${selectedPurchaseOrder.status === 'received' ? 'success' : selectedPurchaseOrder.status === 'cancelled' ? 'muted' : 'warning'}`}>{formatStatusLabel(selectedPurchaseOrder.status)}</span>
+                  <button type="button" onClick={closePurchaseOrderDetail}>Close Detail</button>
+                </div>
               </div>
               <div className="inventory-meta-grid">
                 {(() => {

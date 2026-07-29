@@ -76,7 +76,7 @@ export default function ScheduleEventDetailsDialog({
             <h2 id="schedule-event-details-title">{event.title || 'Schedule Event Details'}</h2>
           </div>
           <button type="button" className="modal-close" onClick={onClose} autoFocus>
-            Close
+            Close Detail
           </button>
         </div>
 
@@ -100,7 +100,7 @@ export default function ScheduleEventDetailsDialog({
           {canReopen && <button type="button" onClick={onReopen} disabled={isSaving}>Reopen</button>}
           {canComplete && <button type="button" onClick={onCancel} disabled={isSaving}>Cancel Event</button>}
           {canWrite && <button type="button" className="row-remove" onClick={onDelete} disabled={isSaving}>Delete</button>}
-          <button type="button" onClick={onClose}>Close</button>
+          <button type="button" onClick={onClose}>Close Detail</button>
         </div>
       </section>
     </div>

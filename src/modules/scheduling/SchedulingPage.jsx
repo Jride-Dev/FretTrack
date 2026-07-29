@@ -393,8 +393,8 @@ export default function SchedulingPage({
           <label>Description<textarea value={eventForm.description} onChange={(event) => updateForm('description', event.target.value)} rows="4" disabled={!canWrite} /></label>
           {canWrite && (
             <div className="mode-actions">
-              <button type="submit" className="primary-action" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Event'}</button>
-              <button type="button" onClick={() => startNewEvent()}>Clear</button>
+              <button type="submit" className="primary-action" disabled={isSaving}>{isSaving ? 'Saving...' : editingEventId ? 'Save Changes' : 'Save Event'}</button>
+              <button type="button" onClick={() => startNewEvent()}>{editingEventId ? 'Cancel' : 'Clear Form'}</button>
             </div>
           )}
         </form>
