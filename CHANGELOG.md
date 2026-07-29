@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.3 - Current Beta Candidate
 
+- Renamed the job-detail-only `Close Job Detail` action to `Close Detail` so it no longer implies that it changes the job status; `Finish / Picked Up` remains the persisted job completion action.
 - Added optional job drop-off date/time, the shared `Drop Off` job status, and server-authoritative generated Scheduling events for job drop-off and promise dates. Generated events are shop/job/kind unique, update without duplication, clear independently from manual events, and show their job-date source in Scheduling.
 - Added migration `20260728094434_job_dates_scheduling_sync.sql` and `npm run check:job-dates-scheduling-sync`; the migration is included for review and is not applied by this branch.
 - Added server-authoritative Shop and Pro usage caps for monthly transactional email recipients, monthly source-photo uploads, and current repair-photo storage, including atomic idempotent reservations, failure release, exact-path Storage enforcement, deletion reconciliation, operator overrides, and owner/admin usage meters.
