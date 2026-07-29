@@ -10,7 +10,7 @@ export default function PrintActions({
 }) {
   return (
     <div className="actions no-print">
-      <button type="button" onClick={closeDetail}>Close Job Detail</button>
+      <button type="button" onClick={closeDetail}>Close Detail</button>
       <button type="button" onClick={finishJob} disabled={!canWrite}>Finish / Picked Up</button>
       <button type="button" onClick={exportJobJson}>Export Job JSON</button>
       <button type="button" onClick={emailWorkOrder} disabled={!canWrite || !canSendEmail}>Email Work Order</button>
