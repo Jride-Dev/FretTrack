@@ -20,6 +20,7 @@
     "check:version-consistency": "node scripts/check-version-consistency.mjs",
     "check:scheduling-week-event-layout": "node scripts/check-scheduling-week-event-layout.mjs",
     "check:job-dates-scheduling-sync": "node scripts/check-job-dates-scheduling-sync.mjs",
+    "check:job-status-default": "node scripts/check-job-status-default.mjs",
     "check:job-sheet-print-layout": "node scripts/check-job-sheet-print-layout.mjs",
     "check:navigation-clarity": "node scripts/check-navigation-clarity.mjs",
     "check:close-detail-behavior": "node scripts/check-close-detail-behavior.mjs",
