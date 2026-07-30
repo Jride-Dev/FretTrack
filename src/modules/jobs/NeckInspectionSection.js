@@ -11,8 +11,8 @@ export default function NeckInspectionSection({
 }) {
   const preferredUnit = normalizeLengthUnit(lengthUnit);
 
-  function getStageLengthUnit(stage) {
-    return normalizeLengthUnit(stage.lengthUnit || stage.reliefUnit, preferredUnit);
+  function getStageLengthUnit() {
+    return preferredUnit;
   }
 
   function updateLengthValue(stageKey, field, value) {
@@ -23,14 +23,14 @@ export default function NeckInspectionSection({
     const parsed = parseLengthInput(value, unit);
     updateNeckInspection(stageKey, {
       [field]: parsed.value,
-      [`${field}Unit`]: parsed.unit,
-      lengthUnit: parsed.unit
+      [`${field}Unit`]: preferredUnit,
+      lengthUnit: preferredUnit
     });
   }
 
   function renderNeckStage(stageKey, title) {
     const stage = techDetails.neckInspection?.[stageKey] || {};
-    const stageLengthUnit = getStageLengthUnit(stage);
+    const stageLengthUnit = getStageLengthUnit();
     const unitLabel = getLengthUnitLabel(stageLengthUnit);
     return (
       <fieldset className="neck-stage">
@@ -47,14 +47,11 @@ export default function NeckInspectionSection({
           />
         </label>
         <label>
-          Relief Unit
+          Measurement Unit (Shop Settings)
           <select
-            value={stage.reliefUnit || stageLengthUnit}
-            disabled={!canWrite}
-            onChange={(event) => {
-              updateNeckInspection(stageKey, 'reliefUnit', event.target.value);
-              updateNeckInspection(stageKey, 'lengthUnit', event.target.value);
-            }}
+            value={stageLengthUnit}
+            disabled
+            aria-label={`${title} measurement unit from Shop Settings`}
           >
             <option value="in">inches</option>
             <option value="mm">mm</option>
@@ -178,11 +175,11 @@ export default function NeckInspectionSection({
       </div>
       <div className="wide neck-deltas">
         <strong>Measured Changes</strong>
-        <span>Relief: {formatMeasurementDelta(techDetails.neckInspection?.initial?.relief, techDetails.neckInspection?.final?.relief, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
-        <span>Action {outerStringLabels.treble} @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutHighE, techDetails.neckInspection?.final?.nutHighE, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
-        <span>Action {outerStringLabels.bass} @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutLowE, techDetails.neckInspection?.final?.nutLowE, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
-        <span>Action {outerStringLabels.treble} @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionHighE12th, techDetails.neckInspection?.final?.actionHighE12th, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
-        <span>Action {outerStringLabels.bass} @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionLowE12th, techDetails.neckInspection?.final?.actionLowE12th, getStageLengthUnit(techDetails.neckInspection?.initial || {}))}</span>
+        <span>Relief: {formatMeasurementDelta(techDetails.neckInspection?.initial?.relief, techDetails.neckInspection?.final?.relief, preferredUnit)}</span>
+        <span>Action {outerStringLabels.treble} @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutHighE, techDetails.neckInspection?.final?.nutHighE, preferredUnit)}</span>
+        <span>Action {outerStringLabels.bass} @ 3rd: {formatMeasurementDelta(techDetails.neckInspection?.initial?.nutLowE, techDetails.neckInspection?.final?.nutLowE, preferredUnit)}</span>
+        <span>Action {outerStringLabels.treble} @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionHighE12th, techDetails.neckInspection?.final?.actionHighE12th, preferredUnit)}</span>
+        <span>Action {outerStringLabels.bass} @ 12th: {formatMeasurementDelta(techDetails.neckInspection?.initial?.actionLowE12th, techDetails.neckInspection?.final?.actionLowE12th, preferredUnit)}</span>
       </div>
     </>
   );

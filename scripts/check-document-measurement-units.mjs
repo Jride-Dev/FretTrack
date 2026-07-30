@@ -4,11 +4,17 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { buildSelectedDocumentEmailContent } from '../src/modules/jobs/emailDocuments.js';
 import { formatMeasurementChange } from '../src/shared/utils/measurements.js';
+import { buildJobAccountingSnapshot } from '../src/modules/accounting/accountingSelectors.js';
 
 const root = process.cwd();
 const read = (file) => readFileSync(resolve(root, file), 'utf8');
 const emailDocuments = read('src/modules/jobs/emailDocuments.js');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
+const jobForm = read('src/modules/jobs/JobForm.jsx');
+const jobPrintSheet = read('src/modules/jobs/JobPrintSheet.js');
+const neckInspectionSection = read('src/modules/jobs/NeckInspectionSection.js');
+const accountingSelectors = read('src/modules/accounting/accountingSelectors.js');
+const shopConfig = read('src/modules/shops/shopConfig.js');
 
 const job = {
   shopId: 'measurement-shop',
@@ -65,13 +71,30 @@ assert.match(
   'The scoped shop setting must remain authoritative when no explicit display-unit override is supplied.'
 );
 
+const metricAccountingSnapshot = buildJobAccountingSnapshot(job, { lengthUnit: 'mm' });
+assert.equal(metricAccountingSnapshot.measurementSummary.initial.unit, 'mm');
+assert.equal(metricAccountingSnapshot.measurementSummary.initial.relief, '0.2 mm');
+assert.equal(metricAccountingSnapshot.measurementSummary.final.actionHighE12th, '1.7 mm');
+
 assert.equal(
   formatMeasurementChange('0.2', '0.3', 'mm'),
   '0.2 mm -> 0.3 mm (+0.100 mm)',
   'The generated document must use the same shared formatter as Job Detail.'
 );
+assert.match(jobForm, /const measurementPreferences = getShopMeasurementOptions\(shopProfile \|\| undefined\);/, 'New jobs must copy the explicit Shop Settings measurement preference.');
+assert.doesNotMatch(jobForm, /const measurementPreferences = getDefaultMeasurementPreferences\(shopProfile \|\| \{\}\);/, 'New jobs must not infer units from currency or locale when Shop Settings has an explicit preference.');
+assert.match(shopConfig, /measurementSystem:\s*normalizeMeasurementSystem\(mergedSettings\.measurementSystem/, 'Measurement resolution must use the explicit Shop Settings system.');
+assert.match(shopConfig, /lengthUnit:\s*normalizeLengthUnit\(mergedSettings\.lengthUnit/, 'Measurement resolution must use the explicit Shop Settings unit.');
+assert.match(jobDetail, /const measurementOptions = getShopMeasurementOptions\(shopSettings\);/, 'Job Detail must resolve its display unit from current Shop Settings.');
+assert.doesNotMatch(jobDetail, /measurementSystem: draftJob\.techDetails\.measurementSystem|lengthUnit: draftJob\.techDetails\.lengthUnit/, 'Stale job metadata must not override current Shop Settings.');
 assert.match(jobDetail, /lengthUnit: measurementOptions\.lengthUnit/, 'Document generation must receive the same resolved unit displayed by Job Detail.');
 assert.match(jobDetail, /return formatMeasurementChange\(initialValue, finalValue, unit\);/, 'Job Detail must use the shared measurement-change formatter.');
+assert.match(neckInspectionSection, /Measurement Unit \(Shop Settings\)/, 'Neck measurement entry must identify Shop Settings as the unit source.');
+assert.match(neckInspectionSection, /value=\{stageLengthUnit\}[\s\S]*disabled/, 'Per-stage controls must display the shop unit without allowing a stale job override.');
+assert.doesNotMatch(neckInspectionSection, /stage\.lengthUnit \|\| stage\.reliefUnit/, 'Neck measurement display must not prefer stale per-stage unit metadata.');
+assert.match(jobPrintSheet, /const finalLengthUnit = lengthUnit;/, 'The printed Job Sheet must use the unit supplied from Shop Settings.');
+assert.doesNotMatch(jobPrintSheet, /finalNeckInspection\.lengthUnit \|\| finalNeckInspection\.reliefUnit/, 'The printed Job Sheet must not prefer stale per-stage unit metadata.');
+assert.match(accountingSelectors, /const unit = normalizeLengthUnit\(fallbackUnit\);/, 'Report exports must use their shop-provided unit.');
 assert.match(emailDocuments, /formatMeasurementChange\(neckInspection\.initial\?\.relief/, 'Generated neck measurements must use the shared formatter.');
 assert.doesNotMatch(emailDocuments, /cleanText\(techDetails\.lengthUnit\) \|\| 'in'/, 'Generated documents must not use the stale job-level inch fallback.');
 

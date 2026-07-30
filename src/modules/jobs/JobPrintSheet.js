@@ -8,6 +8,7 @@ import { getJobSourceLabel } from './jobSources';
 export default function JobPrintSheet({
   draftJob,
   formatInstrumentLabel,
+  lengthUnit = 'in',
   normalizeInstrumentType,
   outerStringLabels = { treble: 'High E', bass: 'Low E' },
   parts,
@@ -28,7 +29,7 @@ export default function JobPrintSheet({
   const taxLabel = shopSettings.taxLabel || taxSettings.taxLabel || 'Sales Tax';
   const techDetails = draftJob.techDetails || {};
   const finalNeckInspection = techDetails.neckInspection?.final || {};
-  const finalLengthUnit = finalNeckInspection.lengthUnit || finalNeckInspection.reliefUnit || techDetails.lengthUnit || 'in';
+  const finalLengthUnit = lengthUnit;
   const finalFlags = [
     finalNeckInspection.twist ? 'Twist' : '',
     finalNeckInspection.buzzPresent ? 'Buzz present' : '',
@@ -134,15 +135,15 @@ export default function JobPrintSheet({
             <tbody>
               <tr>
                 <td>Relief ({finalLengthUnit})</td>
-                <td>{formatLength(finalNeckInspection.relief, finalNeckInspection.reliefUnit || finalLengthUnit) || '-'}</td>
+                <td>{formatLength(finalNeckInspection.relief, finalLengthUnit) || '-'}</td>
               </tr>
               <tr>
                 <td>Action {outerStringLabels.treble} / {outerStringLabels.bass} @ 3rd ({finalLengthUnit})</td>
-                <td>{formatLength(finalNeckInspection.nutHighE, finalNeckInspection.nutHighEUnit || finalLengthUnit) || '-'} / {formatLength(finalNeckInspection.nutLowE, finalNeckInspection.nutLowEUnit || finalLengthUnit) || '-'}</td>
+                <td>{formatLength(finalNeckInspection.nutHighE, finalLengthUnit) || '-'} / {formatLength(finalNeckInspection.nutLowE, finalLengthUnit) || '-'}</td>
               </tr>
               <tr>
                 <td>Action {outerStringLabels.treble} / {outerStringLabels.bass} @ 12th ({finalLengthUnit})</td>
-                <td>{formatLength(finalNeckInspection.actionHighE12th, finalNeckInspection.actionHighE12thUnit || finalLengthUnit) || '-'} / {formatLength(finalNeckInspection.actionLowE12th, finalNeckInspection.actionLowE12thUnit || finalLengthUnit) || '-'}</td>
+                <td>{formatLength(finalNeckInspection.actionHighE12th, finalLengthUnit) || '-'} / {formatLength(finalNeckInspection.actionLowE12th, finalLengthUnit) || '-'}</td>
               </tr>
               <tr>
                 <td>Fret Condition</td>

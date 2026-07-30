@@ -17,7 +17,7 @@ import {
 } from '../instruments/instrumentService';
 import { formatShopDate, toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences } from '../../shared/utils/measurements';
-import { getShopDateOptions } from '../shops/shopConfig';
+import { getShopDateOptions, getShopMeasurementOptions } from '../shops/shopConfig';
 import { smsEnabled } from '../../data/messagesRepository';
 import { stateOptionsWithCurrent } from '../../data/usStates';
 import { JOB_PRIORITY_OPTIONS, normalizeJobPriority } from './jobPriority';
@@ -270,7 +270,7 @@ export default function JobForm({
 
     const now = new Date().toISOString();
     const dateReceived = form.dateReceived || todayValue();
-    const measurementPreferences = getDefaultMeasurementPreferences(shopProfile || {});
+    const measurementPreferences = getShopMeasurementOptions(shopProfile || undefined);
     const selectedAssignee = assignmentChoices.find((member) => member.id === form.assignedMemberId);
 
     const newJob = {
