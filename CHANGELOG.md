@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.3 - Current Beta Candidate
 
+- Added operator-published system notices and a persisted Operational/Maintenance/Degraded/Outage status shared by the authenticated app and public website, including server-timestamp-based uptime/incident duration, locally persisted notice-sound preferences, and a public-safe status endpoint. The additive migration is included for review and is not applied by this branch.
 - Fixed Job Detail’s `Close Detail` action so it returns to the page that opened the job, preserves the selected job context, and retains the existing unsaved-change confirmation without changing job status.
 - Hardened production deployment rollover recovery so stale Vite chunks cannot cache Cloudflare's HTML app-shell fallback as JavaScript or CSS, and a failed dynamic import receives one guarded automatic reload without entering a reload loop.
 - Improved detail and edit navigation clarity across Jobs, Customers, Inventory, Vendors, Purchase Orders, and Scheduling with explicit `Close Detail`, `Cancel`, `Close Preview`, and edit-aware `Save Changes` labels while preserving existing close and dirty-state handlers.

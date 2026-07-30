@@ -1031,6 +1031,7 @@ export default function App() {
             </div>
           </header>
           <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+          <SystemAnnouncements />
           <BetaOperatorDashboard onNotice={setNotice} />
         </main>
       );
@@ -1096,6 +1097,7 @@ export default function App() {
             </div>
           </header>
           <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
+          <SystemAnnouncements />
           <BetaOperatorDashboard onNotice={setNotice} />
         </main>
       );
