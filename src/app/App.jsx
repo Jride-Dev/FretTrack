@@ -117,6 +117,7 @@ export default function App() {
   const [syncingDraftId, setSyncingDraftId] = useState('');
   const [hasUnsavedPageChanges, setHasUnsavedPageChanges] = useState(false);
   const manualSignOutRef = useRef(false);
+  const jobDetailReturnModeRef = useRef('new');
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
 
   useEffect(() => {
@@ -657,9 +658,17 @@ export default function App() {
       return;
     }
 
+    if (mode !== 'detail') {
+      jobDetailReturnModeRef.current = mode;
+    }
     setHasUnsavedPageChanges(false);
     setSelectedJobId(jobId);
     setMode('detail');
+  }
+
+  function closeJobDetail() {
+    setHasUnsavedPageChanges(false);
+    setMode(jobDetailReturnModeRef.current || 'new');
   }
 
   function handleAssignmentChanged(jobId, assignment) {
@@ -1491,7 +1500,7 @@ export default function App() {
               onImageUpload={handleImageUpload}
               onImageDelete={handleImageDelete}
               onRefresh={refreshJobs}
-              onClose={() => showNewJob(null, { skipDirtyGuard: true })}
+              onClose={closeJobDetail}
               onNotice={setNotice}
               canWrite={canEditJobs}
               canUploadPhotos={canUploadPhotos}
