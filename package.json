@@ -23,6 +23,7 @@
     "check:job-sheet-print-layout": "node scripts/check-job-sheet-print-layout.mjs",
     "check:navigation-clarity": "node scripts/check-navigation-clarity.mjs",
     "check:close-detail-behavior": "node scripts/check-close-detail-behavior.mjs",
+    "check:document-measurement-units": "node scripts/check-document-measurement-units.mjs",
     "check:stale-chunk-recovery": "node scripts/check-stale-chunk-recovery.mjs",
     "check:system-notices-uptime": "node scripts/check-system-notices-uptime.mjs",
     "check:global-print-canvas": "node scripts/check-global-print-canvas.mjs",

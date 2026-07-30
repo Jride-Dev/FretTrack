@@ -1,4 +1,5 @@
 import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat.js';
+import { formatMeasurementChange, getLengthUnitLabel } from '../../shared/utils/measurements.js';
 import { money } from '../../shared/utils/money.js';
 import { getJobSourceLabel } from './jobSources.js';
 import { retailTotal, rowQuantity } from '../billing/accounting.js';
@@ -265,11 +266,11 @@ function buildCustomerReportEmailSection(job = {}, context = {}) {
     row.includedInService ? 'Included' : money(retailTotal(row), base.moneyOptions)
   ]);
   const neckInspection = techDetails.neckInspection || {};
-  const measurementUnit = cleanText(techDetails.lengthUnit) || 'in';
+  const measurementUnit = getLengthUnitLabel(context.lengthUnit || base.shopSettings.lengthUnit);
   const neckRows = [
-    [`Relief (${measurementUnit})`, formatInspectionChange(neckInspection.initial?.relief, neckInspection.final?.relief, measurementUnit)],
-    [`Action, High E at 12th fret (${measurementUnit})`, formatInspectionChange(neckInspection.initial?.actionHighE12th, neckInspection.final?.actionHighE12th, measurementUnit)],
-    [`Action, Low E at 12th fret (${measurementUnit})`, formatInspectionChange(neckInspection.initial?.actionLowE12th, neckInspection.final?.actionLowE12th, measurementUnit)],
+    [`Relief (${measurementUnit})`, formatMeasurementChange(neckInspection.initial?.relief, neckInspection.final?.relief, measurementUnit)],
+    [`Action, High E at 12th fret (${measurementUnit})`, formatMeasurementChange(neckInspection.initial?.actionHighE12th, neckInspection.final?.actionHighE12th, measurementUnit)],
+    [`Action, Low E at 12th fret (${measurementUnit})`, formatMeasurementChange(neckInspection.initial?.actionLowE12th, neckInspection.final?.actionLowE12th, measurementUnit)],
     ['Fret Condition', formatInspectionChange(neckInspection.initial?.fretCondition, neckInspection.final?.fretCondition)],
     ['Neck Condition', formatInspectionChange(neckInspection.initial?.neckCondition, neckInspection.final?.neckCondition)],
     ['Truss Rod', formatInspectionChange(neckInspection.initial?.trussRodStatus, neckInspection.final?.trussRodStatus)]
@@ -422,7 +423,8 @@ function buildBaseContext(job = {}, context = {}) {
     status: cleanText(job.status) || 'Checked In',
     dateReceived: formatShopDate(job.dateReceived, dateOptions) || '-',
     moneyOptions,
-    dateOptions
+    dateOptions,
+    shopSettings
   };
 }
 
@@ -445,7 +447,8 @@ export function resolveScopedShopEmailSettings(job = {}, shopSettings = {}) {
     taxLabel: cleanText(shopSettings.taxLabel || shopSettings.tax_label),
     currencyCode: cleanText(shopSettings.currencyCode || shopSettings.currency_code),
     locale: cleanText(shopSettings.locale),
-    dateFormat: cleanText(shopSettings.dateFormat || shopSettings.date_format)
+    dateFormat: cleanText(shopSettings.dateFormat || shopSettings.date_format),
+    lengthUnit: getLengthUnitLabel(shopSettings.lengthUnit || shopSettings.length_unit)
   };
 }
 
