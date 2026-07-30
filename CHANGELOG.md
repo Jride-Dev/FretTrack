@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.3 - Current Beta Candidate
 
+- Fixed legacy production schema drift where new jobs created without an explicit status defaulted to the disallowed value `Intake`; the database default now matches the app and status constraint at `Checked In`.
 - Added purchase-unit conversion for inventory parts, purchase orders, and partial receiving. PO lines and receipts snapshot their purchase unit and whole-number conversion, while stock, job usage, and normal adjustments remain in individual inventory units.
 - Compacted the authenticated operational-status banner and replaced its misleading “time since Operational was published” uptime display with live Supabase and Cloudflare Pages/Workers health sourced from the providers’ official status feeds; declared incidents retain an incident-duration indicator.
 - Fixed measurement-unit propagation so explicit Shop Settings (Imperial/inches or Metric/millimeters) now drive new jobs, Job Details, neck-measurement entry, print sheets, customer reports, generated document emails, exports, and advanced report measurement summaries instead of stale job-level unit defaults.
