@@ -66,6 +66,22 @@ export function formatLength(value, unit = 'in') {
   return `${text} ${cleanUnit}`;
 }
 
+export function formatMeasurementChange(initialValue, finalValue, unit = 'in') {
+  if (!initialValue && !finalValue) {
+    return '';
+  }
+
+  const initialNumber = Number(initialValue);
+  const finalNumber = Number(finalValue);
+  if (initialValue !== '' && finalValue !== '' && Number.isFinite(initialNumber) && Number.isFinite(finalNumber)) {
+    const delta = finalNumber - initialNumber;
+    const sign = delta > 0 ? '+' : '';
+    return `${formatLength(initialValue, unit)} -> ${formatLength(finalValue, unit)} (${sign}${formatLength(delta.toFixed(3), unit)})`;
+  }
+
+  return `${initialValue ? formatLength(initialValue, unit) : '-'} -> ${finalValue ? formatLength(finalValue, unit) : '-'}`;
+}
+
 export function getLengthUnitLabel(unit = 'in') {
   return normalizeLengthUnit(unit) === 'mm' ? 'mm' : 'in';
 }

@@ -19,7 +19,7 @@ import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
 import MessagesPanel from '../messaging/MessagesPanel';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
-import { formatLength } from '../../shared/utils/measurements';
+import { formatLength, formatMeasurementChange } from '../../shared/utils/measurements';
 import { getShopDateOptions, getShopMeasurementOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
 import { combineCustomerName } from '../customers';
 import {
@@ -1056,17 +1056,7 @@ export default function JobDetail({
   }
 
   function formatMeasurementDelta(initialValue, finalValue, unit = measurementOptions.lengthUnit) {
-    if (!initialValue && !finalValue) {
-      return '';
-    }
-    const initialNumber = Number(initialValue);
-    const finalNumber = Number(finalValue);
-    if (initialValue !== '' && finalValue !== '' && Number.isFinite(initialNumber) && Number.isFinite(finalNumber)) {
-      const delta = finalNumber - initialNumber;
-      const sign = delta > 0 ? '+' : '';
-      return `${formatLength(initialValue, unit)} -> ${formatLength(finalValue, unit)} (${sign}${formatLength(delta.toFixed(3), unit)})`;
-    }
-    return `${initialValue ? formatLength(initialValue, unit) : '-'} -> ${finalValue ? formatLength(finalValue, unit) : '-'}`;
+    return formatMeasurementChange(initialValue, finalValue, unit);
   }
 
   async function finishJob() {
@@ -1253,6 +1243,7 @@ export default function JobDetail({
       scopedShopSettings = resolveScopedShopEmailSettings(jobToSend, shopProfile);
       documentContent = buildSelectedDocumentEmailContent(jobToSend, {
         shopSettings: scopedShopSettings,
+        lengthUnit: measurementOptions.lengthUnit,
         dateOptions,
         moneyOptions,
         totals: calculateJobTotals(jobToSend),
