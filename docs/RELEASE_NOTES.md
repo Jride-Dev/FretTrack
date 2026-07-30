@@ -4,6 +4,8 @@
 
 FretTrack `0.2.9-beta.3` adds server-enforced email and photo usage caps while retaining the Pro Team Assignment Foundation, localization, Current Jobs, scheduling, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundations.
 
+The authenticated operational-status banner is now substantially smaller. Its former uptime value measured only time since an operator published the Operational state, so it has been removed from the app and replaced with live Supabase and Cloudflare Pages/Workers health from their official status feeds. FretTrack incident duration remains visible when an operator declares an active incident.
+
 Measurement-unit hotfix: the explicit Shop Settings choice is now authoritative across new-job defaults, Job Details, neck-measurement fields, Job Sheet printing, customer reports, generated document emails, exports, and advanced report summaries. Existing stale per-job inch metadata no longer overrides a shop configured for millimeters.
 
 ## Job Dates and Scheduling Sync

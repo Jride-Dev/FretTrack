@@ -9,28 +9,30 @@ import {
   getPublicSystemStatus,
   getVisibleAnnouncements
 } from './systemService';
-import { formatStatusTimestamp, getElapsedStatusText } from './systemStatus';
+import { getInfrastructureStatus } from './infrastructureStatus';
+import { getElapsedStatusText } from './systemStatus';
 
 const REFRESH_INTERVAL_MS = 60000;
 
 export default function SystemAnnouncements() {
   const [announcements, setAnnouncements] = useState([]);
   const [systemStatus, setSystemStatus] = useState(null);
+  const [infrastructureStatus, setInfrastructureStatus] = useState([]);
   const [noticeSoundsEnabled, setSoundsEnabled] = useState(() => getNoticeSoundsEnabled());
-  const [clock, setClock] = useState(() => Date.now());
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadAnnouncements() {
-      const [visibleAnnouncements, nextSystemStatus] = await Promise.all([
+      const [visibleAnnouncements, nextSystemStatus, nextInfrastructureStatus] = await Promise.all([
         getVisibleAnnouncements(),
-        getPublicSystemStatus()
+        getPublicSystemStatus(),
+        getInfrastructureStatus()
       ]);
       if (isMounted) {
         setAnnouncements(visibleAnnouncements);
         setSystemStatus(nextSystemStatus);
-        setClock(Date.now());
+        setInfrastructureStatus(nextInfrastructureStatus);
         if (nextSystemStatus) {
           void playImportantNoticeOnce(nextSystemStatus, { enabled: noticeSoundsEnabled });
         }
@@ -61,18 +63,34 @@ export default function SystemAnnouncements() {
     }
   }
 
-  if (!announcements.length && !systemStatus) {
+  if (!announcements.length && !systemStatus && !infrastructureStatus.length) {
     return null;
   }
 
   return (
     <section className="system-announcements no-print" aria-label="System announcements">
-      {systemStatus && (
-        <article className={`system-status-banner ${systemStatus.status}`} role="status" aria-live="polite">
+      {(systemStatus || infrastructureStatus.length > 0) && (
+        <article className={`system-status-banner ${systemStatus?.status || 'unknown'}`} role="status" aria-live="polite">
           <div className="system-status-heading">
-            <div>
-              <span className="system-status-label">{systemStatus.statusLabel}</span>
-              <strong>{systemStatus.publicNoticeTitle}</strong>
+            <span className="system-status-label">{systemStatus?.statusLabel || 'Status unavailable'}</span>
+            <strong>{systemStatus?.publicNoticeTitle || 'FretTrack status unavailable'}</strong>
+            {systemStatus?.publicNoticeMessage && (
+              <span className="system-status-message">{systemStatus.publicNoticeMessage}</span>
+            )}
+            <div className="infrastructure-status-list" aria-label="Infrastructure provider health">
+              {infrastructureStatus.map((provider) => (
+                <a
+                  key={provider.key}
+                  className={`infrastructure-status-chip ${provider.status}`}
+                  href={provider.statusUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={`Open ${provider.label} status page`}
+                >
+                  <span>{provider.label}</span>
+                  <strong>{provider.statusLabel}</strong>
+                </a>
+              ))}
             </div>
             <label className="system-notice-sound-toggle">
               <input
@@ -80,19 +98,15 @@ export default function SystemAnnouncements() {
                 checked={noticeSoundsEnabled}
                 onChange={handleSoundsChange}
               />
-              Notice sounds
+              Sound
             </label>
           </div>
-          <p>{systemStatus.publicNoticeMessage}</p>
-          {systemStatus.incidentState && (
-            <p className="system-incident-guidance">
-              Unexpected errors may be related to this active incident.
-            </p>
+          {systemStatus?.incidentState && (
+            <div className="system-incident-guidance">
+              <span>{getElapsedStatusText(systemStatus)}</span>
+              <span>Unexpected errors may be related to this incident.</span>
+            </div>
           )}
-          <div className="system-status-meta">
-            <span>{getElapsedStatusText(systemStatus, clock)}</span>
-            <span>Updated {formatStatusTimestamp(systemStatus.lastUpdatedAt)}</span>
-          </div>
         </article>
       )}
       {announcements.map((announcement) => (

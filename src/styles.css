@@ -2069,10 +2069,10 @@ form.panel button {
 
 .system-status-banner {
   background: var(--surface-2);
-  border: 2px solid var(--success-border);
+  border: 1px solid var(--success-border);
   display: grid;
-  gap: 8px;
-  padding: 14px;
+  gap: 6px;
+  padding: 7px 10px;
 }
 
 .system-status-banner.maintenance,
@@ -2086,8 +2086,13 @@ form.panel button {
   border-color: var(--danger);
 }
 
-.system-status-heading,
-.system-status-meta,
+.system-status-heading {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
 .operator-current-status {
   align-items: center;
   display: flex;
@@ -2097,25 +2102,84 @@ form.panel button {
 }
 
 .system-status-label {
-  display: block;
-  font-size: 12px;
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
-  margin-bottom: 3px;
+  padding: 2px 6px;
   text-transform: uppercase;
 }
 
-.system-status-banner p {
-  margin: 0;
+.system-status-banner.maintenance .system-status-label,
+.system-status-banner.degraded .system-status-label {
+  background: var(--warning-bg);
+  border-color: var(--warning);
+}
+
+.system-status-banner.outage .system-status-label {
+  background: var(--error-bg);
+  border-color: var(--danger);
+}
+
+.system-status-message {
+  color: var(--text-muted);
+  font-size: 12px;
+  min-width: 180px;
 }
 
 .system-incident-guidance {
+  color: var(--warning);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 11px;
   font-weight: 700;
+  gap: 4px 12px;
 }
 
-.system-status-meta {
+.infrastructure-status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.infrastructure-status-chip {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
   color: var(--text-muted);
-  font-size: 12px;
+  display: inline-flex;
+  font-size: 10px;
+  gap: 5px;
+  padding: 2px 7px;
+  text-decoration: none;
+}
+
+.infrastructure-status-chip strong {
+  color: var(--success-text);
+}
+
+.infrastructure-status-chip.maintenance,
+.infrastructure-status-chip.degraded {
+  border-color: var(--warning);
+}
+
+.infrastructure-status-chip.maintenance strong,
+.infrastructure-status-chip.degraded strong {
+  color: var(--warning);
+}
+
+.infrastructure-status-chip.outage {
+  border-color: var(--danger);
+}
+
+.infrastructure-status-chip.outage strong,
+.infrastructure-status-chip.unknown strong {
+  color: var(--error-text);
 }
 
 .system-notice-sound-toggle {
@@ -2175,6 +2239,21 @@ form.panel button {
 @media (max-width: 640px) {
   .system-status-heading {
     align-items: flex-start;
+  }
+
+  .system-status-message {
+    flex-basis: 100%;
+    order: 3;
+  }
+
+  .infrastructure-status-list {
+    margin-left: 0;
+    order: 4;
+  }
+
+  .system-notice-sound-toggle {
+    margin-left: auto;
+    order: 2;
   }
 
   .system-status-operator-form {
