@@ -4,6 +4,7 @@ import { money } from '../../shared/utils/money';
 import { canUseAdvancedReporting } from '../billing/entitlementService';
 import { getPlanStatus } from '../billing/planStatus';
 import { getCurrentShopId, getShopMoneyOptions } from '../shops/shopConfig';
+import { purchaseUnitLabel } from '../inventory/purchaseUnits';
 import {
   buildAdvancedOperationalReport,
   buildAdvancedReportMetrics,
@@ -359,7 +360,7 @@ export default function AdvancedReportsPage({
 
       <ReportDetails title="Purchase Order Status" description="Open purchase orders with ordered, received, and remaining quantities." exportConfig={exportMap.get('purchaseOrders')} onExport={handleExportCsv}>
         <ReportTable
-          headers={['PO #', 'Vendor', 'Status', 'Ordered', 'Received', 'Remaining', 'Est. Total', 'Shipping']}
+          headers={['PO #', 'Vendor', 'Status', 'Purchase Ordered', 'Purchase Received', 'Purchase Remaining', 'Inventory Ordered', 'Inventory Received', 'Inventory Remaining', 'Est. Total', 'Shipping']}
           rows={operationalReport.purchaseOrders}
           emptyText="No open purchase orders."
           renderRow={(row) => (
@@ -370,6 +371,9 @@ export default function AdvancedReportsPage({
               <td>{row.orderedQty}</td>
               <td>{row.receivedQty}</td>
               <td>{row.remainingQty}</td>
+              <td>{row.inventoryOrderedQty}</td>
+              <td>{row.inventoryReceivedQty}</td>
+              <td>{row.inventoryRemainingQty}</td>
               <td>{money(row.estimatedTotal, moneyOptions)}</td>
               <td>{money(row.shippingCost, moneyOptions)}</td>
             </tr>
@@ -379,7 +383,7 @@ export default function AdvancedReportsPage({
 
       <ReportDetails title="Purchase History / Landed Cost" description="Recent received inventory with shipping allocation and landed cost." exportConfig={exportMap.get('purchaseHistory')} onExport={handleExportCsv}>
         <ReportTable
-          headers={['Received', 'Part', 'Vendor', 'Qty', 'Unit Cost', 'Shipping Allocated', 'Landed Unit', 'Total Landed']}
+          headers={['Received', 'Part', 'Vendor', 'Purchase Qty', 'Inventory Qty', 'Purchase Unit Cost', 'Shipping Allocated', 'Landed Inventory Unit', 'Total Landed']}
           rows={operationalReport.purchaseHistory}
           emptyText="No purchase history yet."
           renderRow={(row) => (
@@ -387,7 +391,8 @@ export default function AdvancedReportsPage({
               <td>{formatDate(row.receivedAt, dateOptions)}</td>
               <td>{row.partName}</td>
               <td>{row.vendorName || '-'}</td>
-              <td>{row.quantity}</td>
+              <td>{row.quantity} {purchaseUnitLabel(row.purchaseUnit, row.quantity)}</td>
+              <td>{row.inventoryQuantity}</td>
               <td>{money(row.unitCost, moneyOptions)}</td>
               <td>{money(row.shippingAllocated, moneyOptions)}</td>
               <td>{money(row.landedUnitCost, moneyOptions)}</td>
@@ -529,9 +534,12 @@ function buildReportExportSections({ dateOptions, moneyOptions, metrics, operati
         { header: 'PO #', key: 'poNumber' },
         { header: 'Vendor', key: 'vendorName' },
         { header: 'Status', value: (row) => formatStatus(row.status) },
-        { header: 'Ordered', key: 'orderedQty' },
-        { header: 'Received', key: 'receivedQty' },
-        { header: 'Remaining', key: 'remainingQty' },
+        { header: 'Purchase Ordered', key: 'orderedQty' },
+        { header: 'Purchase Received', key: 'receivedQty' },
+        { header: 'Purchase Remaining', key: 'remainingQty' },
+        { header: 'Inventory Ordered', key: 'inventoryOrderedQty' },
+        { header: 'Inventory Received', key: 'inventoryReceivedQty' },
+        { header: 'Inventory Remaining', key: 'inventoryRemainingQty' },
         { header: 'Estimated Total', value: (row) => money(row.estimatedTotal, moneyOptions) },
         { header: 'Shipping', value: (row) => money(row.shippingCost, moneyOptions) }
       ]
@@ -544,10 +552,11 @@ function buildReportExportSections({ dateOptions, moneyOptions, metrics, operati
         { header: 'Received', value: (row) => formatDate(row.receivedAt, dateOptions) },
         { header: 'Part', key: 'partName' },
         { header: 'Vendor', key: 'vendorName' },
-        { header: 'Quantity', key: 'quantity' },
-        { header: 'Unit Cost', value: (row) => money(row.unitCost, moneyOptions) },
+        { header: 'Purchase Quantity', value: (row) => `${row.quantity} ${purchaseUnitLabel(row.purchaseUnit, row.quantity)}` },
+        { header: 'Inventory Quantity', key: 'inventoryQuantity' },
+        { header: 'Purchase Unit Cost', value: (row) => money(row.unitCost, moneyOptions) },
         { header: 'Shipping Allocated', value: (row) => money(row.shippingAllocated, moneyOptions) },
-        { header: 'Landed Unit', value: (row) => money(row.landedUnitCost, moneyOptions) },
+        { header: 'Landed Inventory Unit', value: (row) => money(row.landedUnitCost, moneyOptions) },
         { header: 'Total Landed', value: (row) => money(row.totalLandedCost, moneyOptions) },
         { header: 'PO #', key: 'poNumber' }
       ]
