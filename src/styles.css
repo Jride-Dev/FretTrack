@@ -2067,6 +2067,126 @@ form.panel button {
   line-height: 1.4;
 }
 
+.system-status-banner {
+  background: var(--surface-2);
+  border: 2px solid var(--success-border);
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.system-status-banner.maintenance,
+.system-status-banner.degraded {
+  background: var(--warning-bg);
+  border-color: var(--warning);
+}
+
+.system-status-banner.outage {
+  background: var(--error-bg);
+  border-color: var(--danger);
+}
+
+.system-status-heading,
+.system-status-meta,
+.operator-current-status {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: space-between;
+}
+
+.system-status-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+}
+
+.system-status-banner p {
+  margin: 0;
+}
+
+.system-incident-guidance {
+  font-weight: 700;
+}
+
+.system-status-meta {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.system-notice-sound-toggle {
+  align-items: center;
+  display: inline-flex;
+  font-size: 12px;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.system-notice-sound-toggle input {
+  margin: 0;
+}
+
+.system-status-operator {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.operator-current-status {
+  border: 1px solid var(--border);
+  padding: 10px;
+}
+
+.operator-current-status.maintenance,
+.operator-current-status.degraded {
+  border-color: var(--warning);
+}
+
+.operator-current-status.outage {
+  border-color: var(--danger);
+}
+
+.system-status-operator-form {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.system-status-operator-form label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.system-status-operator-form label:has(textarea),
+.system-status-operator-form button {
+  grid-column: 1 / -1;
+}
+
+.system-status-operator-form textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+@media (max-width: 640px) {
+  .system-status-heading {
+    align-items: flex-start;
+  }
+
+  .system-status-operator-form {
+    grid-template-columns: 1fr;
+  }
+
+  .system-status-operator-form label,
+  .system-status-operator-form button {
+    grid-column: 1;
+  }
+}
+
 .feedback-backdrop {
   align-items: center;
   background: rgba(0, 0, 0, 0.62);

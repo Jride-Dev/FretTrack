@@ -970,6 +970,55 @@ function landingPage() {
         color: #b42318;
       }
 
+      .public-system-status {
+        background: #101925;
+        border-block: 1px solid var(--line);
+        color: var(--ink);
+      }
+
+      .public-system-status-inner {
+        align-items: center;
+        display: grid;
+        gap: 12px 22px;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        margin: 0 auto;
+        padding: 14px 0;
+        width: min(1180px, calc(100% - 40px));
+      }
+
+      .public-system-status[data-status="maintenance"],
+      .public-system-status[data-status="degraded"] {
+        background: #352714;
+        border-color: var(--amber);
+      }
+
+      .public-system-status[data-status="outage"] {
+        background: #3b171b;
+        border-color: var(--danger);
+      }
+
+      .public-system-status-label {
+        font-size: 13px;
+        font-weight: 850;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .public-system-status-copy strong,
+      .public-system-status-copy span {
+        display: block;
+      }
+
+      .public-system-status-copy span,
+      .public-system-status-meta {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .public-system-status-meta {
+        text-align: right;
+      }
+
       @media (max-width: 980px) {
         .hero,
         .feature-layout,
@@ -1088,6 +1137,15 @@ function landingPage() {
           bottom: 0;
           z-index: 1;
         }
+
+        .public-system-status-inner {
+          grid-template-columns: 1fr;
+          width: min(100% - 28px, 1180px);
+        }
+
+        .public-system-status-meta {
+          text-align: left;
+        }
       }
     </style>
   </head>
@@ -1149,6 +1207,20 @@ function landingPage() {
         </div>
       </header>
     </div>
+
+    <aside class="public-system-status" id="public-system-status" data-status="unknown" aria-live="polite">
+      <div class="public-system-status-inner">
+        <span class="public-system-status-label" id="public-system-status-label">System status</span>
+        <div class="public-system-status-copy">
+          <strong id="public-system-status-title">Checking FretTrack service status...</strong>
+          <span id="public-system-status-message">Status details will appear here when available.</span>
+        </div>
+        <div class="public-system-status-meta">
+          <span id="public-system-status-duration">Status unavailable</span><br>
+          <span id="public-system-status-updated"></span>
+        </div>
+      </div>
+    </aside>
 
     <main>
       <section class="section" id="product">
@@ -1393,6 +1465,59 @@ function landingPage() {
       const modal = document.getElementById('application-modal');
       const form = document.getElementById('application-form');
       const status = document.getElementById('application-status');
+      const publicStatus = document.getElementById('public-system-status');
+      const publicStatusLabel = document.getElementById('public-system-status-label');
+      const publicStatusTitle = document.getElementById('public-system-status-title');
+      const publicStatusMessage = document.getElementById('public-system-status-message');
+      const publicStatusDuration = document.getElementById('public-system-status-duration');
+      const publicStatusUpdated = document.getElementById('public-system-status-updated');
+      let publicStatusSnapshot = null;
+
+      function formatStatusDuration(snapshot) {
+        const changedAt = Date.parse(snapshot.statusChangedAt || '');
+        if (!Number.isFinite(changedAt)) return snapshot.incidentState ? 'Incident duration unavailable' : 'Uptime unavailable';
+        const totalMinutes = Math.max(0, Math.floor((Date.now() - changedAt) / 60000));
+        const days = Math.floor(totalMinutes / 1440);
+        const hours = Math.floor((totalMinutes % 1440) / 60);
+        const minutes = totalMinutes % 60;
+        const parts = [];
+        if (days) parts.push(days + 'd');
+        if (hours || days) parts.push(hours + 'h');
+        parts.push(minutes + 'm');
+        return (snapshot.incidentState ? 'Incident duration ' : 'Uptime ') + parts.join(' ');
+      }
+
+      function renderPublicSystemStatus(snapshot) {
+        publicStatusSnapshot = snapshot;
+        publicStatus.dataset.status = snapshot.status;
+        publicStatusLabel.textContent = snapshot.statusLabel || snapshot.status;
+        publicStatusTitle.textContent = snapshot.publicNoticeTitle;
+        publicStatusMessage.textContent = snapshot.publicNoticeMessage;
+        publicStatusDuration.textContent = formatStatusDuration(snapshot);
+        publicStatusUpdated.textContent = snapshot.lastUpdatedAt
+          ? 'Updated ' + new Date(snapshot.lastUpdatedAt).toLocaleString()
+          : 'Update time unavailable';
+      }
+
+      async function loadPublicSystemStatus() {
+        try {
+          const response = await fetch('/api/system-status', { headers: { accept: 'application/json' } });
+          if (!response.ok) throw new Error('Status request unavailable.');
+          renderPublicSystemStatus(await response.json());
+        } catch {
+          publicStatus.dataset.status = 'unknown';
+          publicStatusLabel.textContent = 'Status unavailable';
+          publicStatusTitle.textContent = 'FretTrack status could not be loaded';
+          publicStatusMessage.textContent = 'Please try again shortly or contact support if you need help.';
+          publicStatusDuration.textContent = 'Status unavailable';
+          publicStatusUpdated.textContent = '';
+        }
+      }
+
+      loadPublicSystemStatus();
+      window.setInterval(function() {
+        if (publicStatusSnapshot) publicStatusDuration.textContent = formatStatusDuration(publicStatusSnapshot);
+      }, 60000);
 
       function openModal() {
         body.classList.add('modal-open');
@@ -1525,6 +1650,13 @@ export default {
       return saveBetaApplication(request, env);
     }
 
+    if (url.pathname === '/api/system-status') {
+      if (request.method !== 'GET') {
+        return jsonResponse({ error: 'Method not allowed.' }, 405);
+      }
+      return getPublicSystemStatus(env);
+    }
+
     if (url.pathname === '/app') {
       return Response.redirect(APP_URL, 302);
     }
@@ -1537,6 +1669,51 @@ export default {
     });
   }
 };
+
+async function getPublicSystemStatus(env) {
+  const supabaseUrl = cleanText(env.SUPABASE_URL || env.VITE_SUPABASE_URL || '', 300).replace(/\/+$/, '');
+  const supabaseAnonKey = cleanText(env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || '', 1000);
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return jsonResponse({ error: 'System status is unavailable.' }, 503);
+  }
+
+  try {
+    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/get_public_system_status`, {
+      method: 'POST',
+      headers: {
+        apikey: supabaseAnonKey,
+        authorization: `Bearer ${supabaseAnonKey}`,
+        'content-type': 'application/json'
+      },
+      body: '{}'
+    });
+    if (!response.ok) {
+      throw new Error(`Status provider returned ${response.status}.`);
+    }
+    const status = await response.json();
+    return jsonResponse({
+      status: cleanText(status.status, 20),
+      statusLabel: getPublicStatusLabel(status.status),
+      publicNoticeTitle: cleanText(status.publicNoticeTitle, 160),
+      publicNoticeMessage: cleanText(status.publicNoticeMessage, 1200),
+      statusChangedAt: cleanText(status.statusChangedAt, 80),
+      lastUpdatedAt: cleanText(status.lastUpdatedAt, 80),
+      incidentState: Boolean(status.incidentState)
+    });
+  } catch (error) {
+    console.error('public system status load failed', { error: error.message || 'Unknown error.' });
+    return jsonResponse({ error: 'System status is unavailable.' }, 503);
+  }
+}
+
+function getPublicStatusLabel(status) {
+  return {
+    operational: 'Operational',
+    maintenance: 'Maintenance',
+    degraded: 'Degraded',
+    outage: 'Outage'
+  }[status] || 'Status unavailable';
+}
 
 async function saveBetaApplication(request, env) {
   const contentType = request.headers.get('content-type') || '';

@@ -1,5 +1,6 @@
 import { supabase, hasSupabaseConfig } from '../../shared/lib/supabaseClient';
 import { getCurrentShopId } from '../shops/shopConfig';
+import { normalizeSystemStatus } from './systemStatus';
 
 export async function getVisibleAnnouncements() {
   if (!hasSupabaseConfig || !supabase) {
@@ -9,6 +10,7 @@ export async function getVisibleAnnouncements() {
   const { data: announcements, error } = await supabase
     .from('system_announcements')
     .select('id, title, message, severity, target_shop_id, starts_at, ends_at, created_at')
+    .eq('is_status_notice', false)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -35,6 +37,42 @@ export async function getVisibleAnnouncements() {
   return announcements
     .filter((announcement) => !dismissedIds.has(announcement.id))
     .map(fromAnnouncementRow);
+}
+
+export async function getPublicSystemStatus() {
+  if (!hasSupabaseConfig || !supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc('get_public_system_status');
+  if (error) {
+    console.error('System status load failed.', error);
+    return null;
+  }
+  return data ? normalizeSystemStatus(data) : null;
+}
+
+export async function updateSystemStatus({
+  status,
+  publicNoticeTitle,
+  publicNoticeMessage,
+  noticeType
+}) {
+  if (!hasSupabaseConfig || !supabase) {
+    throw new Error('Supabase is not configured.');
+  }
+
+  const { data, error } = await supabase.rpc('update_system_status', {
+    next_status: status,
+    next_notice_title: publicNoticeTitle,
+    next_notice_message: publicNoticeMessage,
+    next_notice_type: noticeType || null
+  });
+
+  if (error) {
+    throw error;
+  }
+  return normalizeSystemStatus(data);
 }
 
 export async function dismissAnnouncement(announcementId) {

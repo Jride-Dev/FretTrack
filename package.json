@@ -24,6 +24,7 @@
     "check:navigation-clarity": "node scripts/check-navigation-clarity.mjs",
     "check:close-detail-behavior": "node scripts/check-close-detail-behavior.mjs",
     "check:stale-chunk-recovery": "node scripts/check-stale-chunk-recovery.mjs",
+    "check:system-notices-uptime": "node scripts/check-system-notices-uptime.mjs",
     "check:global-print-canvas": "node scripts/check-global-print-canvas.mjs",
     "check:customer-import": "node scripts/check-customer-import.mjs",
     "check:beta-uk-privacy-polish": "node scripts/check-beta-uk-privacy-polish.mjs",

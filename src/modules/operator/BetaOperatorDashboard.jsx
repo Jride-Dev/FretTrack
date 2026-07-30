@@ -8,6 +8,7 @@ import {
   updateBetaAccessRequest,
   updateBetaShopSubscription
 } from './operatorService';
+import SystemStatusOperatorPanel from './SystemStatusOperatorPanel.jsx';
 
 const statusFilters = ['all', 'trialing', 'beta_bypass', 'active', 'grace', 'read_only', 'canceled'];
 const editableStatuses = ['trialing', 'active', 'grace', 'read_only', 'canceled', 'beta_bypass'];
@@ -198,6 +199,8 @@ export default function BetaOperatorDashboard({ onNotice }) {
       </div>
 
       <SummaryCards summary={dashboard.summary} />
+
+      <SystemStatusOperatorPanel onNotice={onNotice} />
 
       <div className="operator-controls no-print">
         <input
