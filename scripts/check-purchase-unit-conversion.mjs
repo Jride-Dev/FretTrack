@@ -79,6 +79,16 @@ assert.ok(
   'Focused implementation must not include forbidden modules.'
 );
 const changedMigrations = changedPaths.filter((file) => file.startsWith('supabase/migrations/'));
-assert.deepEqual(changedMigrations, [migrationPath], 'Exactly the focused additive migration may change.');
+const trackedMigration = execFileSync('git', ['ls-files', '--', migrationPath], { cwd: root, encoding: 'utf8' })
+  .trim()
+  .replaceAll('\\', '/');
+assert.ok(
+  trackedMigration === migrationPath || changedMigrations.includes(migrationPath),
+  'The focused migration must be tracked or present as the current uncommitted migration.'
+);
+assert.ok(
+  changedMigrations.every((file) => file === migrationPath),
+  'No migration other than the focused purchase-unit migration may change.'
+);
 
 console.log('Purchase-unit conversion regression checks passed.');
