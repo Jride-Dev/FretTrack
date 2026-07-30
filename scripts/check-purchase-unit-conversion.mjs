@@ -1,0 +1,84 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
+  inventoryUnitsForPurchaseQuantity,
+  purchaseConversionSummary,
+  validUnitsPerPurchaseUnit
+} from '../src/modules/inventory/purchaseUnits.js';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
+const migrationPath = 'supabase/migrations/20260730145549_purchase_unit_conversion.sql';
+const migration = read(migrationPath);
+const service = read('src/modules/inventory/inventoryService.js');
+const page = read('src/modules/inventory/InventoryPage.jsx');
+const reportsPage = read('src/modules/reports/AdvancedReportsPage.jsx');
+const packageJson = JSON.parse(read('package.json'));
+
+assert.equal(inventoryUnitsForPurchaseQuantity(2, 5), 10, 'Two five-packs must convert to ten inventory units.');
+assert.equal(
+  purchaseConversionSummary(2, 'pack', 5),
+  '2 Packs × 5 Each = 10 inventory units',
+  'The purchase-order conversion summary must be explicit.'
+);
+for (const invalid of [0, -1, 1.5, Number.NaN, 'not-a-number']) {
+  assert.equal(validUnitsPerPurchaseUnit(invalid), false, `Invalid conversion ${String(invalid)} must be rejected.`);
+}
+
+assert.ok(fs.existsSync(path.join(root, migrationPath)), 'The focused purchase-unit migration must exist.');
+for (const table of ['public.parts', 'public.purchase_order_items', 'public.inventory_receipt_items']) {
+  assert.match(migration, new RegExp(`alter table ${table.replace('.', '\\.')}[\\s\\S]*?purchase_unit`, 'i'), `${table} must store a purchase-unit snapshot.`);
+  assert.match(migration, new RegExp(`alter table ${table.replace('.', '\\.')}[\\s\\S]*?units_per_purchase_unit`, 'i'), `${table} must store a conversion snapshot.`);
+}
+assert.match(migration, /inventory_quantity_received integer/i, 'Receipts must snapshot converted inventory quantity.');
+assert.match(migration, /set inventory_quantity_received = quantity_received/i, 'Historical receipts must retain one-to-one behavior.');
+assert.match(migration, /default 'each'/i, 'Existing rows must default to Each.');
+assert.match(migration, /default 1/i, 'Existing rows must default to conversion 1.');
+assert.match(migration, /check \(units_per_purchase_unit between 1 and 999999\)/i, 'Database conversion factors must be positive whole integers.');
+
+assert.match(migration, /safe_inventory_quantity := \(safe_purchase_quantity::bigint \* target_item\.units_per_purchase_unit::bigint\)::integer/i, 'PO receiving must use the PO-line conversion snapshot.');
+assert.match(migration, /quantity_on_hand = coalesce\(quantity_on_hand, 0\) \+ safe_inventory_quantity/i, 'PO receiving must add converted inventory units to stock.');
+assert.match(migration, /'receive',\s*safe_inventory_quantity/i, 'Inventory movement audit rows must use inventory units.');
+assert.match(migration, /quantity_received = quantity_received \+ safe_purchase_quantity/i, 'PO progress must remain in purchase units.');
+assert.match(migration, /inventory_quantity_received,\s*unit_cost,\s*base_unit_cost/i, 'Receipt rows must persist the converted quantity and cost snapshots.');
+assert.match(migration, /not private\.can_write_shop\(target_order\.shop_id\)/i, 'Existing shop-scoped write permission enforcement must remain.');
+assert.match(migration, /grant execute on function public\.receive_purchase_order_items\(uuid, jsonb, text\) to authenticated/i, 'Authenticated receiving grant must remain explicit.');
+
+assert.match(service, /purchase_unit: normalizePurchaseUnit/i, 'Part and PO persistence must map purchase units.');
+assert.match(service, /units_per_purchase_unit:/i, 'Part and PO persistence must map conversion factors.');
+assert.match(page, /Purchase Unit/i, 'Inventory must expose purchase-unit configuration.');
+assert.match(page, /Units per Purchase Unit/i, 'Inventory must expose conversion configuration.');
+assert.match(page, /Purchase units ordered/i, 'PO details must distinguish purchase quantities.');
+assert.match(page, /Inventory units ordered/i, 'PO details must show converted inventory quantities.');
+assert.match(page, /Receive purchase quantity/i, 'Partial receiving must be entered in purchase units.');
+assert.match(reportsPage, /Purchase Qty/i, 'Reports must distinguish purchase quantities.');
+assert.match(reportsPage, /Inventory Qty/i, 'Reports must show converted inventory quantities.');
+
+assert.equal(
+  packageJson.scripts['check:purchase-unit-conversion'],
+  'node scripts/check-purchase-unit-conversion.mjs',
+  'The focused package validation command must be registered.'
+);
+
+const forbiddenRoots = [
+  'supabase/functions/',
+  'cloudflare/frettrack-coming-soon/',
+  'src/modules/billing/',
+  'src/modules/auth/',
+  'src/modules/scheduling/'
+];
+const statusLines = execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' })
+  .split(/\r?\n/)
+  .filter(Boolean);
+const changedPaths = statusLines.map((line) => line.slice(3).replaceAll('\\', '/'));
+assert.ok(
+  changedPaths.every((file) => !forbiddenRoots.some((rootPath) => file.startsWith(rootPath))),
+  'Focused implementation must not include forbidden modules.'
+);
+const changedMigrations = changedPaths.filter((file) => file.startsWith('supabase/migrations/'));
+assert.deepEqual(changedMigrations, [migrationPath], 'Exactly the focused additive migration may change.');
+
+console.log('Purchase-unit conversion regression checks passed.');

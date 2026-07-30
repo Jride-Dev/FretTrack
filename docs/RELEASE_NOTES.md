@@ -8,6 +8,12 @@ The authenticated operational-status banner is now substantially smaller. Its fo
 
 Measurement-unit hotfix: the explicit Shop Settings choice is now authoritative across new-job defaults, Job Details, neck-measurement fields, Job Sheet printing, customer reports, generated document emails, exports, and advanced report summaries. Existing stale per-job inch metadata no longer overrides a shop configured for millimeters.
 
+## Inventory Purchase Units
+
+Inventory parts may now define how a vendor sells them—Each, Pack, Box, Bag, Case, Set, Roll, or Bottle—and the positive whole number of individual inventory units inside that purchase unit. Purchase orders and partial receipts use purchase quantities while showing the calculated inventory quantity; receiving one five-pack therefore adds five individual units to stock.
+
+The conversion is snapshotted on each purchase-order line and receipt so later part-setting edits do not reinterpret historical purchasing. Existing parts, orders, and receipts retain one-to-one behavior. Job part usage and ordinary inventory adjustments continue to use individual inventory units.
+
 ## Job Dates and Scheduling Sync
 
 Jobs now support an optional **Drop-off date and time** and the shared job status list includes **Drop Off**. Job writers can set or clear the timestamp in New Job and Job Detail, while read-only roles retain the existing view-only behavior. Job Detail formats the saved value with the shop's existing date and time preferences.

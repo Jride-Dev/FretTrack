@@ -25,6 +25,12 @@ import {
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
 import BarcodeLabelSheet from './BarcodeLabelSheet.jsx';
+import {
+  PURCHASE_UNIT_OPTIONS,
+  inventoryUnitsForPurchaseQuantity,
+  purchaseConversionSummary,
+  purchaseUnitLabel
+} from './purchaseUnits';
 
 const emptyPartForm = {
   vendorId: '',
@@ -37,6 +43,8 @@ const emptyPartForm = {
   barcodeCode: '',
   manufacturer: '',
   partNumber: '',
+  purchaseUnit: 'each',
+  unitsPerPurchaseUnit: '1',
   unitCost: '',
   retailPrice: '',
   quantityOnHand: '0',
@@ -69,6 +77,8 @@ const emptyPurchaseOrderItem = {
   description: '',
   vendorSku: '',
   quantityOrdered: '1',
+  purchaseUnit: 'each',
+  unitsPerPurchaseUnit: '1',
   unitCost: ''
 };
 
@@ -142,6 +152,9 @@ function purchaseOrderTotals(order) {
     summary.ordered += ordered;
     summary.received += received;
     summary.remaining += Math.max(ordered - received, 0);
+    summary.inventoryOrdered += inventoryUnitsForPurchaseQuantity(ordered, item.unitsPerPurchaseUnit) || 0;
+    summary.inventoryReceived += inventoryUnitsForPurchaseQuantity(received, item.unitsPerPurchaseUnit) || 0;
+    summary.inventoryRemaining += inventoryUnitsForPurchaseQuantity(Math.max(ordered - received, 0), item.unitsPerPurchaseUnit) || 0;
     summary.itemSubtotal += ordered * cost;
     summary.receivedSubtotalFallback += received * cost;
     return summary;
@@ -150,6 +163,9 @@ function purchaseOrderTotals(order) {
     ordered: 0,
     received: 0,
     remaining: 0,
+    inventoryOrdered: 0,
+    inventoryReceived: 0,
+    inventoryRemaining: 0,
     itemSubtotal: 0,
     receivedSubtotalFallback: 0
   });
@@ -417,6 +433,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       barcodeCode: part.barcodeCode || '',
       manufacturer: part.manufacturer || '',
       partNumber: part.partNumber || '',
+      purchaseUnit: part.purchaseUnit || 'each',
+      unitsPerPurchaseUnit: String(part.unitsPerPurchaseUnit || 1),
       unitCost: String(part.unitCost ?? ''),
       retailPrice: String(part.retailPrice ?? ''),
       quantityOnHand: String(part.quantityOnHand ?? 0),
@@ -427,7 +445,11 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       isActive: part.isActive !== false
     });
     setPartImageFile(null);
-    setReceiveForm({ quantity: '1', cost: String(part.unitCost ?? ''), note: '' });
+    setReceiveForm({
+      quantity: '1',
+      cost: String(Number(part.unitCost || 0) * Number(part.unitsPerPurchaseUnit || 1)),
+      note: ''
+    });
     setAdjustForm({ quantityDelta: '0', note: '' });
     markClean();
     setSaveStatus('saved');
@@ -659,12 +681,18 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
         }
         if (field === 'partId') {
           const matchedPart = parts.find((part) => part.id === value);
+          const unitsPerPurchaseUnit = matchedPart?.unitsPerPurchaseUnit || 1;
+          const inventoryUnitCost = matchedPart?.lastCost ?? matchedPart?.unitCost;
           return {
             ...item,
             partId: value,
             description: matchedPart?.name || item.description,
             vendorSku: matchedPart?.vendorSku || item.vendorSku,
-            unitCost: matchedPart?.lastCost ?? matchedPart?.unitCost ?? item.unitCost
+            purchaseUnit: matchedPart?.purchaseUnit || 'each',
+            unitsPerPurchaseUnit: String(unitsPerPurchaseUnit),
+            unitCost: inventoryUnitCost === null || inventoryUnitCost === undefined
+              ? item.unitCost
+              : String(Number(inventoryUnitCost) * unitsPerPurchaseUnit)
           };
         }
         return { ...item, [field]: value };
@@ -824,7 +852,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     setIsSaving(true);
     try {
       const result = await receivePurchaseOrderItems(selectedPurchaseOrder.id, receiptItems, purchaseReceiveNote);
-      onNotice?.({ type: 'success', message: `Received ${result?.receivedUnits || 'stock'} unit(s).` });
+      onNotice?.({ type: 'success', message: `Received ${result?.receivedUnits || 'stock'} inventory unit(s).` });
       await Promise.all([
         loadPartsOnly({ search, activeOnly: !showInactive, lowStockOnly }),
         refreshPurchasingData()
@@ -1004,7 +1032,25 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                 <label>Barcode<input disabled={!canWrite} value={partForm.barcodeCode} onChange={(event) => updatePartForm('barcodeCode', event.target.value)} /></label>
                 <label>Manufacturer<input disabled={!canWrite} value={partForm.manufacturer} onChange={(event) => updatePartForm('manufacturer', event.target.value)} /></label>
                 <label>Manufacturer UPC<input disabled={!canWrite} value={partForm.sku} onChange={(event) => updatePartForm('sku', event.target.value)} /></label>
-                {canWrite && <label>Unit Cost<input type="number" min="0" step="0.01" value={partForm.unitCost} onChange={(event) => updatePartForm('unitCost', event.target.value)} /></label>}
+                {canWrite && <label>Unit Cost (Inventory Each)<input type="number" min="0" step="0.01" value={partForm.unitCost} onChange={(event) => updatePartForm('unitCost', event.target.value)} /></label>}
+                <label>Purchase Unit
+                  <select disabled={!canWrite} value={partForm.purchaseUnit} onChange={(event) => updatePartForm('purchaseUnit', event.target.value)}>
+                    {PURCHASE_UNIT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>Units per Purchase Unit
+                  <input
+                    disabled={!canWrite}
+                    type="number"
+                    min="1"
+                    max="999999"
+                    step="1"
+                    value={partForm.unitsPerPurchaseUnit}
+                    onChange={(event) => updatePartForm('unitsPerPurchaseUnit', event.target.value)}
+                  />
+                </label>
                 <label>Retail Price<input disabled={!canWrite} type="number" min="0" step="0.01" value={partForm.retailPrice} onChange={(event) => updatePartForm('retailPrice', event.target.value)} /></label>
                 <label>QTY On Hand<input disabled={!canWrite} type="number" step="1" value={partForm.quantityOnHand} onChange={(event) => updatePartForm('quantityOnHand', event.target.value)} /></label>
                 <label>Reorder Point<input disabled={!canWrite} type="number" min="0" step="1" value={partForm.reorderPoint} onChange={(event) => updatePartForm('reorderPoint', event.target.value)} /></label>
@@ -1060,6 +1106,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                   <span>Vendor UPC <strong>{selectedPart.vendorSku || '-'}</strong></span>
                   <span>Location <strong>{selectedPart.location || '-'}</strong></span>
                   <span>On hand <strong>{selectedPart.quantityOnHand}</strong></span>
+                  <span>Purchase conversion <strong>{purchaseUnitLabel(selectedPart.purchaseUnit)} × {selectedPart.unitsPerPurchaseUnit} Each</strong></span>
                   <span>Reorder point <strong>{selectedPart.reorderPoint}</strong></span>
                   <span>Desired stock <strong>{selectedPart.specialOrder ? 'Special order' : selectedPart.desiredStockLevel}</strong></span>
                   <span>Last cost <strong>{selectedPart.lastCost === null ? '-' : money(selectedPart.lastCost, moneyOptions)}</strong></span>
@@ -1093,9 +1140,12 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               <div className="inventory-stock-actions">
                 <form onSubmit={handleReceive}>
                   <h3>Receive Stock</h3>
+                  <p className="muted-text">
+                    Enter purchase units. {purchaseConversionSummary(receiveForm.quantity || 0, selectedPart.purchaseUnit, selectedPart.unitsPerPurchaseUnit)}
+                  </p>
                   <div className="row-form">
-                    <input type="number" min="1" step="1" placeholder="Qty" value={receiveForm.quantity} onChange={(event) => setReceiveForm((current) => ({ ...current, quantity: event.target.value }))} />
-                    <input type="number" min="0" step="0.01" placeholder="Unit cost" value={receiveForm.cost} onChange={(event) => setReceiveForm((current) => ({ ...current, cost: event.target.value }))} />
+                    <input aria-label="Purchase quantity" type="number" min="1" step="1" placeholder={`Qty (${purchaseUnitLabel(selectedPart.purchaseUnit, 2)})`} value={receiveForm.quantity} onChange={(event) => setReceiveForm((current) => ({ ...current, quantity: event.target.value }))} />
+                    <input aria-label="Cost per purchase unit" type="number" min="0" step="0.01" placeholder={`Cost per ${purchaseUnitLabel(selectedPart.purchaseUnit)}`} value={receiveForm.cost} onChange={(event) => setReceiveForm((current) => ({ ...current, cost: event.target.value }))} />
                     <input placeholder="Note" value={receiveForm.note} onChange={(event) => setReceiveForm((current) => ({ ...current, note: event.target.value }))} />
                     <button type="submit" disabled={isSaving}>Receive</button>
                   </div>
@@ -1235,8 +1285,9 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                 <th>Expected</th>
                 <th>Received</th>
                 <th>Lines</th>
-                <th>Qty</th>
-                <th>Remaining</th>
+                <th>Purchase Qty</th>
+                <th>Purchase Remaining</th>
+                <th>Inventory Qty</th>
                 <th>Item Subtotal</th>
                 <th>Shipping</th>
                 <th>Est. Total</th>
@@ -1261,6 +1312,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                     <td>{totals.lineCount}</td>
                     <td>{totals.received} / {totals.ordered}</td>
                     <td>{totals.remaining}</td>
+                    <td>{totals.inventoryReceived} / {totals.inventoryOrdered}</td>
                     <td>{money(totals.itemSubtotal, moneyOptions)}</td>
                     <td>{money(totals.shippingCost, moneyOptions)}</td>
                     <td>{money(totals.estimatedTotal, moneyOptions)}</td>
@@ -1317,18 +1369,27 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               </div>
               <p className="muted-text">Choose an existing part, or leave the selector on Create new inventory part. New PO items are added to inventory with quantity 0 until received.</p>
               {purchaseOrderForm.items.map((item, index) => (
-                <div className="purchase-order-item-row" key={`${index}-${item.partId || 'manual'}`}>
-                  <select disabled={!canWrite} value={item.partId} onChange={(event) => updatePurchaseOrderItem(index, 'partId', event.target.value)}>
-                    <option value="">Create new inventory part</option>
-                    {parts.filter((part) => part.isActive).map((part) => (
-                      <option key={part.id} value={part.id}>{part.name}</option>
-                    ))}
-                  </select>
-                  <input disabled={!canWrite} placeholder="Description" value={item.description} onChange={(event) => updatePurchaseOrderItem(index, 'description', event.target.value)} />
-                  <input disabled={!canWrite} placeholder="Vendor UPC" value={item.vendorSku} onChange={(event) => updatePurchaseOrderItem(index, 'vendorSku', event.target.value)} />
-                  <input disabled={!canWrite} type="number" min="1" step="1" placeholder="Qty" value={item.quantityOrdered} onChange={(event) => updatePurchaseOrderItem(index, 'quantityOrdered', event.target.value)} />
-                  <input disabled={!canWrite} type="number" min="0" step="0.01" placeholder="Unit cost" value={item.unitCost} onChange={(event) => updatePurchaseOrderItem(index, 'unitCost', event.target.value)} />
-                  {canWrite && <button type="button" onClick={() => removePurchaseOrderItem(index)}>Remove</button>}
+                <div className="purchase-order-item-block" key={`${index}-${item.partId || 'manual'}`}>
+                  <div className="purchase-order-item-row">
+                    <select disabled={!canWrite} value={item.partId} onChange={(event) => updatePurchaseOrderItem(index, 'partId', event.target.value)}>
+                      <option value="">Create new inventory part</option>
+                      {parts.filter((part) => part.isActive).map((part) => (
+                        <option key={part.id} value={part.id}>{part.name}</option>
+                      ))}
+                    </select>
+                    <input disabled={!canWrite} placeholder="Description" value={item.description} onChange={(event) => updatePurchaseOrderItem(index, 'description', event.target.value)} />
+                    <input disabled={!canWrite} placeholder="Vendor UPC" value={item.vendorSku} onChange={(event) => updatePurchaseOrderItem(index, 'vendorSku', event.target.value)} />
+                    <input aria-label="Purchase quantity" disabled={!canWrite} type="number" min="1" step="1" placeholder="Purchase qty" value={item.quantityOrdered} onChange={(event) => updatePurchaseOrderItem(index, 'quantityOrdered', event.target.value)} />
+                    <select aria-label="Purchase unit" disabled={!canWrite || Boolean(item.partId)} value={item.purchaseUnit} onChange={(event) => updatePurchaseOrderItem(index, 'purchaseUnit', event.target.value)}>
+                      {PURCHASE_UNIT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                    <input aria-label="Units per purchase unit" disabled={!canWrite || Boolean(item.partId)} type="number" min="1" max="999999" step="1" placeholder="Units each" value={item.unitsPerPurchaseUnit} onChange={(event) => updatePurchaseOrderItem(index, 'unitsPerPurchaseUnit', event.target.value)} />
+                    <input aria-label="Cost per purchase unit" disabled={!canWrite} type="number" min="0" step="0.01" placeholder={`Cost per ${purchaseUnitLabel(item.purchaseUnit)}`} value={item.unitCost} onChange={(event) => updatePurchaseOrderItem(index, 'unitCost', event.target.value)} />
+                    {canWrite && <button type="button" onClick={() => removePurchaseOrderItem(index)}>Remove</button>}
+                  </div>
+                  <small className="purchase-conversion-summary">{purchaseConversionSummary(item.quantityOrdered || 0, item.purchaseUnit, item.unitsPerPurchaseUnit)}</small>
                 </div>
               ))}
             </div>
@@ -1358,9 +1419,12 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                       <span>Expected <strong>{formatDate(selectedPurchaseOrder.expectedAt)}</strong></span>
                       <span>Received <strong>{formatDate(selectedPurchaseOrder.latestReceivedAt)}</strong></span>
                       <span>Line count <strong>{totals.lineCount}</strong></span>
-                      <span>Ordered qty <strong>{totals.ordered}</strong></span>
-                      <span>Received qty <strong>{totals.received}</strong></span>
-                      <span>Remaining qty <strong>{totals.remaining}</strong></span>
+                      <span>Purchase units ordered <strong>{totals.ordered}</strong></span>
+                      <span>Purchase units received <strong>{totals.received}</strong></span>
+                      <span>Purchase units remaining <strong>{totals.remaining}</strong></span>
+                      <span>Inventory units ordered <strong>{totals.inventoryOrdered}</strong></span>
+                      <span>Inventory units received <strong>{totals.inventoryReceived}</strong></span>
+                      <span>Inventory units remaining <strong>{totals.inventoryRemaining}</strong></span>
                       <span>Item subtotal <strong>{money(totals.itemSubtotal, moneyOptions)}</strong></span>
                       <span>Shipping cost <strong>{money(totals.shippingCost, moneyOptions)}</strong></span>
                       <span>Estimated total <strong>{money(totals.estimatedTotal, moneyOptions)}</strong></span>
@@ -1385,7 +1449,11 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                     <div className="receive-item-row" key={item.id}>
                       <span>
                         <strong>{item.description}</strong>
-                        <small>{item.vendorSku || 'No vendor UPC'} - ordered {item.quantityOrdered} - received {item.quantityReceived} - remaining {remaining}</small>
+                        <small>{item.vendorSku || 'No vendor UPC'} - ordered {item.quantityOrdered} - received {item.quantityReceived} - remaining {remaining} {purchaseUnitLabel(item.purchaseUnit, remaining)}</small>
+                        <small>{purchaseConversionSummary(item.quantityOrdered, item.purchaseUnit, item.unitsPerPurchaseUnit)}</small>
+                        {Number(purchaseReceiveQuantities[item.id] || 0) > 0 && (
+                          <small>Receiving: {purchaseConversionSummary(purchaseReceiveQuantities[item.id], item.purchaseUnit, item.unitsPerPurchaseUnit)}</small>
+                        )}
                       </span>
                       <input
                         disabled={!canWrite || remaining <= 0 || selectedPurchaseOrder.status === 'cancelled'}
@@ -1393,7 +1461,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                         min="0"
                         max={remaining}
                         step="1"
-                        placeholder="Receive"
+                        aria-label={`Receive purchase quantity in ${purchaseUnitLabel(item.purchaseUnit, 2)}`}
+                        placeholder={`Receive ${purchaseUnitLabel(item.purchaseUnit, 2)}`}
                         value={purchaseReceiveQuantities[item.id] ?? ''}
                         onChange={(event) => setPurchaseReceiveQuantities((current) => ({ ...current, [item.id]: event.target.value }))}
                       />
@@ -1402,7 +1471,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                         type="number"
                         min="0"
                         step="0.01"
-                        placeholder="Unit cost"
+                        aria-label={`Cost per ${purchaseUnitLabel(item.purchaseUnit)}`}
+                        placeholder={`Cost per ${purchaseUnitLabel(item.purchaseUnit)}`}
                         value={purchaseReceiveCosts[item.id] ?? ''}
                         onChange={(event) => setPurchaseReceiveCosts((current) => ({ ...current, [item.id]: event.target.value }))}
                       />
@@ -1436,10 +1506,11 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                 <th>Vendor</th>
                 <th>PO</th>
                 <th>Receipt</th>
-                <th>Qty</th>
-                <th>Unit Cost</th>
+                <th>Purchase Qty</th>
+                <th>Inventory Qty</th>
+                <th>Purchase Unit Cost</th>
                 <th>Shipping Allocated</th>
-                <th>Landed Unit Cost</th>
+                <th>Landed Inventory Unit Cost</th>
                 <th>Total Landed Cost</th>
                 <th>Received By</th>
                 <th>Notes</th>
@@ -1453,7 +1524,8 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
                   <td>{row.vendorName || '-'}</td>
                   <td>{row.poNumber || 'Manual'}</td>
                   <td>{row.receiptNumber || '-'}</td>
-                  <td>{row.quantityReceived}</td>
+                  <td>{row.quantityReceived} {purchaseUnitLabel(row.purchaseUnit, row.quantityReceived)}</td>
+                  <td>{row.inventoryQuantityReceived}</td>
                   <td>{money(row.baseUnitCost ?? row.unitCost, moneyOptions)}</td>
                   <td>{row.shippingAllocated ? money(row.shippingAllocated, moneyOptions) : '-'}</td>
                   <td>{money(row.landedUnitCost ?? row.unitCost, moneyOptions)}</td>

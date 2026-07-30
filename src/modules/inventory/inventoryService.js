@@ -7,6 +7,10 @@ import {
   reservePhotoUsage,
   settlePhotoUsage
 } from '../billing/usageCaps';
+import {
+  normalizePurchaseUnit,
+  validUnitsPerPurchaseUnit
+} from './purchaseUnits';
 
 const PART_IMAGES_BUCKET = 'part-images';
 const MAX_PART_IMAGE_DIMENSION = 300;
@@ -34,6 +38,10 @@ function normalizeBarcodeSearch(value) {
 
 function toDbPart(shopId, payload = {}) {
   const specialOrder = payload.specialOrder ?? payload.special_order ?? false;
+  const unitsPerPurchaseUnit = Number(payload.unitsPerPurchaseUnit ?? payload.units_per_purchase_unit ?? 1);
+  if (!validUnitsPerPurchaseUnit(unitsPerPurchaseUnit)) {
+    throw new Error('Units per purchase unit must be a whole number of at least 1.');
+  }
   return {
     shop_id: shopId,
     vendor_id: cleanText(payload.vendorId || payload.vendor_id) || null,
@@ -46,6 +54,8 @@ function toDbPart(shopId, payload = {}) {
     barcode_code: cleanText(payload.barcodeCode || payload.barcode_code) || null,
     manufacturer: cleanText(payload.manufacturer) || null,
     part_number: cleanText(payload.partNumber || payload.part_number) || null,
+    purchase_unit: normalizePurchaseUnit(payload.purchaseUnit || payload.purchase_unit),
+    units_per_purchase_unit: unitsPerPurchaseUnit,
     unit_cost: moneyNumber(payload.unitCost ?? payload.unit_cost),
     retail_price: moneyNumber(payload.retailPrice ?? payload.retail_price),
     quantity_on_hand: integerNumber(payload.quantityOnHand ?? payload.quantity_on_hand),
@@ -72,6 +82,8 @@ function fromDbPart(row = {}) {
     barcodeLabel: row.barcode_code ? `FT-PART-${row.barcode_code}` : '',
     manufacturer: row.manufacturer || '',
     partNumber: row.part_number || '',
+    purchaseUnit: normalizePurchaseUnit(row.purchase_unit),
+    unitsPerPurchaseUnit: integerNumber(row.units_per_purchase_unit, 1),
     unitCost: moneyNumber(row.unit_cost),
     retailPrice: moneyNumber(row.retail_price),
     quantityOnHand: integerNumber(row.quantity_on_hand),
@@ -168,6 +180,8 @@ function fromDbPurchaseOrderItem(row = {}) {
     vendorSku: row.vendor_sku || '',
     quantityOrdered: integerNumber(row.quantity_ordered),
     quantityReceived: integerNumber(row.quantity_received),
+    purchaseUnit: normalizePurchaseUnit(row.purchase_unit),
+    unitsPerPurchaseUnit: integerNumber(row.units_per_purchase_unit, 1),
     unitCost: moneyNumber(row.unit_cost),
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -204,6 +218,9 @@ function fromDbReceiptItem(row = {}) {
     description: row.description || '',
     vendorSku: row.vendor_sku || '',
     quantityReceived: integerNumber(row.quantity_received),
+    purchaseUnit: normalizePurchaseUnit(row.purchase_unit),
+    unitsPerPurchaseUnit: integerNumber(row.units_per_purchase_unit, 1),
+    inventoryQuantityReceived: integerNumber(row.inventory_quantity_received ?? row.quantity_received),
     unitCost: moneyNumber(row.unit_cost),
     baseUnitCost: row.base_unit_cost === null || row.base_unit_cost === undefined ? moneyNumber(row.unit_cost) : moneyNumber(row.base_unit_cost),
     shippingAllocated: moneyNumber(row.shipping_allocated),
@@ -646,9 +663,22 @@ export async function createPurchaseOrder(shopId = getCurrentShopId(), payload =
   const preparedItems = [];
 
   for (const item of items) {
+    const unitsPerPurchaseUnit = Number(item.unitsPerPurchaseUnit ?? item.units_per_purchase_unit ?? 1);
+    if (!validUnitsPerPurchaseUnit(unitsPerPurchaseUnit)) {
+      throw new Error('Units per purchase unit must be a whole number of at least 1.');
+    }
     const existingPartId = cleanText(item.partId || item.part_id);
     if (existingPartId) {
-      preparedItems.push(item);
+      const existingPart = await getPart(existingPartId);
+      if (!existingPart || existingPart.shopId !== shopId) {
+        throw new Error('The selected inventory part is not available for this shop.');
+      }
+      preparedItems.push({
+        ...item,
+        part: existingPart,
+        purchaseUnit: existingPart.purchaseUnit,
+        unitsPerPurchaseUnit: existingPart.unitsPerPurchaseUnit
+      });
       continue;
     }
 
@@ -661,7 +691,9 @@ export async function createPurchaseOrder(shopId = getCurrentShopId(), payload =
       vendorId,
       name: description,
       vendorSku: cleanText(item.vendorSku || item.vendor_sku),
-      unitCost: moneyNumber(item.unitCost ?? item.unit_cost),
+      purchaseUnit: normalizePurchaseUnit(item.purchaseUnit || item.purchase_unit),
+      unitsPerPurchaseUnit,
+      unitCost: moneyNumber(item.unitCost ?? item.unit_cost) / unitsPerPurchaseUnit,
       retailPrice: 0,
       quantityOnHand: 0,
       reorderPoint: 0,
@@ -709,6 +741,8 @@ export async function createPurchaseOrder(shopId = getCurrentShopId(), payload =
       vendor_sku: cleanText(item.vendorSku || item.vendor_sku) || matchedPart.vendorSku || null,
       quantity_ordered: Math.max(integerNumber(item.quantityOrdered ?? item.quantity_ordered, 1), 1),
       quantity_received: Math.max(integerNumber(item.quantityReceived ?? item.quantity_received, 0), 0),
+      purchase_unit: normalizePurchaseUnit(item.purchaseUnit || item.purchase_unit || matchedPart.purchaseUnit),
+      units_per_purchase_unit: Number(item.unitsPerPurchaseUnit ?? item.units_per_purchase_unit ?? matchedPart.unitsPerPurchaseUnit ?? 1),
       unit_cost: moneyNumber(item.unitCost ?? item.unit_cost)
     };
   });

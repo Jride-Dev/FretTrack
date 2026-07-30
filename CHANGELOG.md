@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.3 - Current Beta Candidate
 
+- Added purchase-unit conversion for inventory parts, purchase orders, and partial receiving. PO lines and receipts snapshot their purchase unit and whole-number conversion, while stock, job usage, and normal adjustments remain in individual inventory units.
 - Compacted the authenticated operational-status banner and replaced its misleading “time since Operational was published” uptime display with live Supabase and Cloudflare Pages/Workers health sourced from the providers’ official status feeds; declared incidents retain an incident-duration indicator.
 - Fixed measurement-unit propagation so explicit Shop Settings (Imperial/inches or Metric/millimeters) now drive new jobs, Job Details, neck-measurement entry, print sheets, customer reports, generated document emails, exports, and advanced report measurement summaries instead of stale job-level unit defaults.
 - Added operator-published system notices and a persisted Operational/Maintenance/Degraded/Outage status shared by the authenticated app and public website, including server-timestamp-based uptime/incident duration, locally persisted notice-sound preferences, and a public-safe status endpoint. The additive migration is included for review and is not applied by this branch.

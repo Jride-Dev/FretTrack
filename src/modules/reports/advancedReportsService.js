@@ -329,6 +329,9 @@ function buildPurchaseOrderRow(order, vendorsById) {
     orderedQty: totals.orderedQty,
     receivedQty: totals.receivedQty,
     remainingQty: totals.remainingQty,
+    inventoryOrderedQty: totals.inventoryOrderedQty,
+    inventoryReceivedQty: totals.inventoryReceivedQty,
+    inventoryRemainingQty: totals.inventoryRemainingQty,
     estimatedTotal: totals.estimatedTotal,
     shippingCost: Number(order.shippingCost ?? order.shipping_cost ?? 0) || 0
   };
@@ -340,15 +343,22 @@ function summarizePurchaseOrder(order = {}) {
     const ordered = Number(item.quantityOrdered ?? item.quantity_ordered ?? 0) || 0;
     const received = Number(item.quantityReceived ?? item.quantity_received ?? 0) || 0;
     const unitCost = Number(item.unitCost ?? item.unit_cost ?? 0) || 0;
+    const unitsPerPurchaseUnit = Number(item.unitsPerPurchaseUnit ?? item.units_per_purchase_unit ?? 1) || 1;
     summary.orderedQty += ordered;
     summary.receivedQty += received;
     summary.remainingQty += Math.max(ordered - received, 0);
+    summary.inventoryOrderedQty += ordered * unitsPerPurchaseUnit;
+    summary.inventoryReceivedQty += received * unitsPerPurchaseUnit;
+    summary.inventoryRemainingQty += Math.max(ordered - received, 0) * unitsPerPurchaseUnit;
     summary.estimatedTotal += ordered * unitCost;
     return summary;
   }, {
     orderedQty: 0,
     receivedQty: 0,
     remainingQty: 0,
+    inventoryOrderedQty: 0,
+    inventoryReceivedQty: 0,
+    inventoryRemainingQty: 0,
     estimatedTotal: Number(order.shippingCost ?? order.shipping_cost ?? 0) || 0
   });
 }
@@ -357,6 +367,7 @@ function buildPurchaseHistoryRow(row, partsById, vendorsById) {
   const part = partsById.get(row.partId || row.part_id || '') || {};
   const vendorId = row.vendorId || row.vendor_id || part.vendorId || '';
   const quantity = Number(row.quantityReceived ?? row.quantity_received ?? 0) || 0;
+  const inventoryQuantity = Number(row.inventoryQuantityReceived ?? row.inventory_quantity_received ?? quantity) || 0;
   const unitCost = Number(row.baseUnitCost ?? row.unitCost ?? row.unit_cost ?? 0) || 0;
   const shippingAllocated = Number(row.shippingAllocated ?? row.shipping_allocated ?? 0) || 0;
   const landedUnitCost = Number(row.landedUnitCost ?? row.landed_unit_cost ?? unitCost) || 0;
@@ -366,10 +377,13 @@ function buildPurchaseHistoryRow(row, partsById, vendorsById) {
     partName: row.partName || part.name || row.description || 'Inventory item',
     vendorName: row.vendorName || vendorsById.get(vendorId)?.name || '',
     quantity,
+    inventoryQuantity,
+    purchaseUnit: row.purchaseUnit || row.purchase_unit || 'each',
+    unitsPerPurchaseUnit: Number(row.unitsPerPurchaseUnit ?? row.units_per_purchase_unit ?? 1) || 1,
     unitCost,
     shippingAllocated,
     landedUnitCost,
-    totalLandedCost: Number(row.totalLandedCost ?? row.totalCost ?? quantity * landedUnitCost) || 0,
+    totalLandedCost: Number(row.totalLandedCost ?? row.totalCost ?? (quantity * unitCost) + shippingAllocated) || 0,
     poNumber: row.poNumber || row.po_number || ''
   };
 }
