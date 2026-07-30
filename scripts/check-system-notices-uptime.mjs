@@ -11,6 +11,11 @@ import {
   playImportantNoticeOnce,
   setNoticeSoundsEnabled
 } from '../src/modules/system/noticeSound.js';
+import {
+  getInfrastructureStatus,
+  INFRASTRUCTURE_PROVIDERS,
+  summarizeProviderStatus
+} from '../src/modules/system/infrastructureStatus.js';
 
 const root = process.cwd();
 const read = (file) => readFileSync(resolve(root, file), 'utf8');
@@ -23,17 +28,25 @@ const memoryStorage = () => {
 };
 
 const appNotice = read('src/modules/system/SystemAnnouncements.jsx');
+const infrastructureStatus = read('src/modules/system/infrastructureStatus.js');
 const service = read('src/modules/system/systemService.js');
 const operatorPanel = read('src/modules/operator/SystemStatusOperatorPanel.jsx');
+const styles = read('src/styles.css');
+const headers = read('public/_headers');
 const worker = read('cloudflare/frettrack-coming-soon/src/index.js');
 const migration = read('supabase/migrations/20260730080400_system_notices_and_uptime.sql');
 const packageJson = read('package.json');
 
-assert.match(appNotice, /system-status-banner/, 'The authenticated app must render a prominent system status banner.');
-assert.match(appNotice, /Unexpected errors may be related to this active incident\./, 'Active incidents must explain their possible relationship to unexpected errors.');
-assert.match(appNotice, /Notice sounds/, 'The app must expose an accessible notice sound preference.');
+assert.match(appNotice, /system-status-banner/, 'The authenticated app must render a compact system status banner.');
+assert.match(appNotice, /Unexpected errors may be related to this incident\./, 'Active incidents must explain their possible relationship to unexpected errors.');
+assert.match(appNotice, />\s*Sound\s*</, 'The app must expose a compact accessible notice sound preference.');
 assert.match(appNotice, /setInterval\(loadAnnouncements, REFRESH_INTERVAL_MS\)/, 'Status and notices must refresh without a page reload.');
 assert.doesNotMatch(appNotice, /updateSystemStatus|\.insert\(|\.update\(/, 'The app status timer must not write to the backend.');
+assert.match(appNotice, /getInfrastructureStatus\(\)/, 'The app must load infrastructure health independently of the manual FretTrack status.');
+assert.match(appNotice, /infrastructure-status-chip/, 'Supabase and Cloudflare health must render in the compact status UI.');
+assert.doesNotMatch(appNotice, /getElapsedStatusText\(systemStatus,\s*clock\)|Uptime/, 'The authenticated app must not present the manual status transition as infrastructure uptime.');
+assert.match(styles, /\.system-status-banner\s*{[\s\S]*border:\s*1px[\s\S]*gap:\s*6px;[\s\S]*padding:\s*7px 10px;/, 'The authenticated status banner must use the compact layout.');
+assert.match(headers, /connect-src[^;]*https:\/\/status\.supabase\.com[^;]*https:\/\/www\.cloudflarestatus\.com/, 'The production CSP must allow only the official provider status feeds used by the compact banner.');
 assert.match(service, /rpc\('get_public_system_status'\)/, 'The app must use the shared persisted public status source.');
 assert.match(operatorPanel, /updateSystemStatus/, 'Operators must have a status publishing control.');
 assert.match(operatorPanel, /Do not include private infrastructure or customer details/, 'Operator copy must reinforce public-safe notice content.');
@@ -79,6 +92,52 @@ assert.equal(
   getElapsedStatusText(notice, Date.parse('2026-07-30T08:05:00.000Z')),
   'Incident duration 1h 5m',
   'Non-operational state must show incident duration from the persisted transition.'
+);
+
+assert.deepEqual(
+  INFRASTRUCTURE_PROVIDERS.map((provider) => provider.label),
+  ['Supabase', 'Cloudflare'],
+  'Infrastructure status must report the two hosting dependencies.'
+);
+assert.match(infrastructureStatus, /https:\/\/status\.supabase\.com\/api\/v2\/summary\.json/, 'Supabase health must come from its official status feed.');
+assert.match(infrastructureStatus, /https:\/\/www\.cloudflarestatus\.com\/api\/v2\/summary\.json/, 'Cloudflare health must come from its official status feed.');
+assert.match(infrastructureStatus, /'API Gateway', 'Auth', 'Database', 'Realtime', 'Storage'/, 'Supabase health must cover the FretTrack backend services.');
+assert.match(infrastructureStatus, /'Pages', 'Workers', 'Workers Assets'/, 'Cloudflare health must cover FretTrack hosting and Worker services.');
+
+const cloudflareProvider = INFRASTRUCTURE_PROVIDERS.find((provider) => provider.key === 'cloudflare');
+assert.equal(
+  summarizeProviderStatus(cloudflareProvider, {
+    components: [
+      { name: 'Pages', status: 'operational' },
+      { name: 'Workers', status: 'degraded_performance' },
+      { name: 'Unrelated data center', status: 'major_outage' }
+    ]
+  }).status,
+  'degraded',
+  'Relevant Cloudflare component degradation must be shown without allowing unrelated components to mislabel FretTrack.'
+);
+
+const providerResponses = new Map([
+  ['https://status.supabase.com/api/v2/summary.json', {
+    components: INFRASTRUCTURE_PROVIDERS[0].componentNames.map((name) => ({ name, status: 'operational' }))
+  }],
+  ['https://www.cloudflarestatus.com/api/v2/summary.json', {
+    components: INFRASTRUCTURE_PROVIDERS[1].componentNames.map((name) => ({ name, status: 'operational' }))
+  }]
+]);
+const providerHealth = await getInfrastructureStatus(async (url) => (
+  new Response(JSON.stringify(providerResponses.get(url)), {
+    status: 200,
+    headers: { 'content-type': 'application/json' }
+  })
+));
+assert.deepEqual(
+  providerHealth.map(({ label, status }) => ({ label, status })),
+  [
+    { label: 'Supabase', status: 'operational' },
+    { label: 'Cloudflare', status: 'operational' }
+  ],
+  'Official provider summaries must resolve to the compact infrastructure health display.'
 );
 const recovered = normalizeSystemStatus({
   status: 'operational',
