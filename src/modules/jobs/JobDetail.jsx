@@ -84,13 +84,12 @@ function buildMeasurementDisplay(job, lengthUnit) {
 }
 
 function formatMeasurementStageForExport(stage = {}, fallbackUnit = 'in') {
-  const unit = stage.lengthUnit || stage.reliefUnit || fallbackUnit;
   return {
-    relief: formatLength(stage.relief, stage.reliefUnit || unit),
-    nutHighE: formatLength(stage.nutHighE, stage.nutHighEUnit || unit),
-    nutLowE: formatLength(stage.nutLowE, stage.nutLowEUnit || unit),
-    actionHighE12th: formatLength(stage.actionHighE12th, stage.actionHighE12thUnit || unit),
-    actionLowE12th: formatLength(stage.actionLowE12th, stage.actionLowE12thUnit || unit)
+    relief: formatLength(stage.relief, fallbackUnit),
+    nutHighE: formatLength(stage.nutHighE, fallbackUnit),
+    nutLowE: formatLength(stage.nutLowE, fallbackUnit),
+    actionHighE12th: formatLength(stage.actionHighE12th, fallbackUnit),
+    actionLowE12th: formatLength(stage.actionLowE12th, fallbackUnit)
   };
 }
 
@@ -200,12 +199,7 @@ export default function JobDetail({
   const payments = draftJob.techDetails.payments || [];
   const instrumentStringCount = getInstrumentStringCount(draftJob);
   const outerStringLabels = getOuterStringLabels(draftJob.instrumentType, instrumentStringCount);
-  const measurementOptions = getShopMeasurementOptions({
-    measurementSystem: draftJob.techDetails.measurementSystem,
-    lengthUnit: draftJob.techDetails.lengthUnit,
-    currencyCode: taxSettings.currencyCode,
-    locale: taxSettings.locale
-  });
+  const measurementOptions = getShopMeasurementOptions(shopSettings);
 
   const totals = useMemo(() => calculateJobTotals(draftJob), [draftJob]);
   const dateOptions = getShopDateOptions({
@@ -1020,6 +1014,7 @@ export default function JobDetail({
         shopId: draftJob.shopId,
         ...buildWorkOrderEmailDraft(draftJob, {
           shopSettings: scopedShopSettings,
+          lengthUnit: measurementOptions.lengthUnit,
           dateOptions,
           moneyOptions,
           totals,
@@ -1348,6 +1343,7 @@ export default function JobDetail({
       <JobPrintSheet
         draftJob={draftJob}
         formatInstrumentLabel={formatInstrumentLabel}
+        lengthUnit={measurementOptions.lengthUnit}
         normalizeInstrumentType={normalizeInstrumentType}
         outerStringLabels={outerStringLabels}
         parts={parts}

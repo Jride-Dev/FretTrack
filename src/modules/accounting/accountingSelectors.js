@@ -373,13 +373,13 @@ function buildMeasurementSummary(job, fallbackUnit = 'in') {
 }
 
 function buildMeasurementStageSummary(stage = {}, fallbackUnit = 'in') {
-  const unit = normalizeLengthUnit(stage.lengthUnit || stage.reliefUnit, fallbackUnit);
+  const unit = normalizeLengthUnit(fallbackUnit);
   return {
     unit,
-    relief: formatLength(stage.relief, stage.reliefUnit || unit),
-    nutHighE: formatLength(stage.nutHighE, stage.nutHighEUnit || unit),
-    nutLowE: formatLength(stage.nutLowE, stage.nutLowEUnit || unit),
-    actionHighE12th: formatLength(stage.actionHighE12th, stage.actionHighE12thUnit || unit),
-    actionLowE12th: formatLength(stage.actionLowE12th, stage.actionLowE12thUnit || unit)
+    relief: formatLength(stage.relief, unit),
+    nutHighE: formatLength(stage.nutHighE, unit),
+    nutLowE: formatLength(stage.nutLowE, unit),
+    actionHighE12th: formatLength(stage.actionHighE12th, unit),
+    actionLowE12th: formatLength(stage.actionLowE12th, unit)
   };
 }

@@ -151,7 +151,7 @@ export function formatShopCurrency(value, shopProfile) {
   });
 }
 
-export function formatActionMeasurement(value, shopProfile, storedUnit = '') {
+export function formatActionMeasurement(value, shopProfile) {
   const localization = resolveShopLocalization(shopProfile);
-  return formatLength(value, storedUnit || localization.lengthUnit);
+  return formatLength(value, localization.lengthUnit);
 }

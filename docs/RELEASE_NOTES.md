@@ -4,6 +4,8 @@
 
 FretTrack `0.2.9-beta.3` adds server-enforced email and photo usage caps while retaining the Pro Team Assignment Foundation, localization, Current Jobs, scheduling, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundations.
 
+Measurement-unit hotfix: the explicit Shop Settings choice is now authoritative across new-job defaults, Job Details, neck-measurement fields, Job Sheet printing, customer reports, generated document emails, exports, and advanced report summaries. Existing stale per-job inch metadata no longer overrides a shop configured for millimeters.
+
 ## Job Dates and Scheduling Sync
 
 Jobs now support an optional **Drop-off date and time** and the shared job status list includes **Drop Off**. Job writers can set or clear the timestamp in New Job and Job Detail, while read-only roles retain the existing view-only behavior. Job Detail formats the saved value with the shop's existing date and time preferences.

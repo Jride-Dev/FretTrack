@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.3 - Current Beta Candidate
 
+- Fixed measurement-unit propagation so explicit Shop Settings (Imperial/inches or Metric/millimeters) now drive new jobs, Job Details, neck-measurement entry, print sheets, customer reports, generated document emails, exports, and advanced report measurement summaries instead of stale job-level unit defaults.
 - Added operator-published system notices and a persisted Operational/Maintenance/Degraded/Outage status shared by the authenticated app and public website, including server-timestamp-based uptime/incident duration, locally persisted notice-sound preferences, and a public-safe status endpoint. The additive migration is included for review and is not applied by this branch.
 - Fixed Job Detail’s `Close Detail` action so it returns to the page that opened the job, preserves the selected job context, and retains the existing unsaved-change confirmation without changing job status.
 - Hardened production deployment rollover recovery so stale Vite chunks cannot cache Cloudflare's HTML app-shell fallback as JavaScript or CSS, and a failed dynamic import receives one guarded automatic reload without entering a reload loop.
