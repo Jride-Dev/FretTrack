@@ -1,21 +1,14 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import AppNotice from '../shared/components/AppNotice.jsx';
+import WorkspaceRouter from './WorkspaceRouter.jsx';
+import useWorkspaceNavigation from './useWorkspaceNavigation.js';
 import AuthGate from '../modules/auth/AuthGate.jsx';
-import AccountingReports from '../modules/accounting/AccountingReports.jsx';
-import BillingPage from '../modules/billing/BillingPage.jsx';
-import { CustomerManager, getCustomers } from '../modules/customers';
-import InventoryPage from '../modules/inventory/InventoryPage.jsx';
-import JobDetail from '../modules/jobs/JobDetail.jsx';
+import { getCustomers } from '../modules/customers';
 import JobForm from '../modules/jobs/JobForm.jsx';
 import JobList from '../modules/jobs/JobList.jsx';
-import CurrentJobsPage from '../modules/jobs/CurrentJobsPage.jsx';
 import { getAssignableShopMembers } from '../modules/jobs/teamAssignmentService.js';
-import OfflineDraftQueue from '../modules/jobs/OfflineDraftQueue.jsx';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
-import AdvancedReportsPage from '../modules/reports/AdvancedReportsPage.jsx';
-import SchedulingPage from '../modules/scheduling/SchedulingPage.jsx';
 import UpcomingSchedulePanel from '../modules/scheduling/UpcomingSchedulePanel.jsx';
-import ShippingDashboard from '../modules/shipping/ShippingDashboard.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import FeedbackReporter from '../modules/system/FeedbackReporter.jsx';
 import SystemAnnouncements from '../modules/system/SystemAnnouncements.jsx';
@@ -69,10 +62,8 @@ import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pw
 const APP_VERSION = '0.2.9-beta.3';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
-const WORKSPACE_STATE_PREFIX = 'frettrack_workspace_state';
 const PWA_INSTALL_HELP_DISMISSED_KEY = 'frettrack_pwa_install_help_dismissed';
 const NEW_JOB_SIDEBAR_COLLAPSED_KEY = 'frettrack:new-job-sidebar-collapsed';
-const UNSAVED_CHANGES_MESSAGE = 'You have unsaved changes. Leave without saving?';
 
 export default function App() {
   const [jobs, setJobs] = useState([]);
@@ -81,8 +72,6 @@ export default function App() {
   const [assignableMembersError, setAssignableMembersError] = useState('');
   const [assignableMembersLoading, setAssignableMembersLoading] = useState(false);
   const [currentJobsAssigneeFilter, setCurrentJobsAssigneeFilter] = useState('');
-  const [selectedJobId, setSelectedJobId] = useState(null);
-  const [mode, setMode] = useState('new');
   const [supabaseStatus, setSupabaseStatus] = useState(hasSupabaseConfig ? 'checking' : 'not-configured');
   const [session, setSession] = useState(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
@@ -115,10 +104,7 @@ export default function App() {
   const [offlineDrafts, setOfflineDrafts] = useState([]);
   const [selectedOfflineDraftId, setSelectedOfflineDraftId] = useState('');
   const [syncingDraftId, setSyncingDraftId] = useState('');
-  const [hasUnsavedPageChanges, setHasUnsavedPageChanges] = useState(false);
   const manualSignOutRef = useRef(false);
-  const jobDetailReturnModeRef = useRef('new');
-  const selectedJob = jobs.find((job) => job.id === selectedJobId);
 
   useEffect(() => {
     clearVitePreloadReloadGuard();
@@ -158,6 +144,25 @@ export default function App() {
   const dateOptions = getShopDateOptions(shopProfile || undefined);
   const shouldShowPwaInstallButton = Boolean(deferredInstallPrompt) && !isStandalonePwa;
   const shouldShowIosInstallHelp = !isStandalonePwa && showInstallHelp && isIosInstallCandidate();
+  const {
+    mode,
+    selectedJobId,
+    setMode,
+    setSelectedJobId,
+    setHasUnsavedPageChanges,
+    confirmUnsavedNavigation,
+    navigateTo,
+    selectJob: handleSelectJob,
+    closeJobDetail,
+    resetWorkspaceNavigation
+  } = useWorkspaceNavigation({
+    shopId: membership?.shopId,
+    jobs,
+    isReady: Boolean(membership?.shopId && shopProfile && !isMembershipLoading && !isShopProfileLoading),
+    access: { isOperator, canManageShop, canViewBilling, canWrite },
+    onAccessDenied: () => setNotice({ type: 'error', message: 'This area is not available for your account.' })
+  });
+  const selectedJob = jobs.find((job) => job.id === selectedJobId);
 
   async function refreshJobs() {
     const loadedJobs = await getJobs();
@@ -270,8 +275,7 @@ export default function App() {
           setCustomers([]);
           setOfflineDrafts([]);
           setSelectedOfflineDraftId('');
-          setSelectedJobId(null);
-          setMode('new');
+          resetWorkspaceNavigation();
           if (!nextSession) {
             clearSelectedShop();
             setShopName(getCurrentShopName());
@@ -328,8 +332,7 @@ export default function App() {
       setEntitlementSnapshot(getDefaultEntitlementSnapshot());
       setJobs([]);
       setCustomers([]);
-      setSelectedJobId(null);
-      setMode('new');
+      resetWorkspaceNavigation();
       setSupabaseStatus('auth-required');
       clearSelectedShop();
     } catch (error) {
@@ -347,20 +350,6 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (!membership?.shopId || !jobs.length || selectedJobId) {
-      return;
-    }
-
-    const workspaceState = getStoredWorkspaceState(membership.shopId);
-    if (workspaceState.mode === 'detail' && jobs.some((job) => job.id === workspaceState.selectedJobId)) {
-      setSelectedJobId(workspaceState.selectedJobId);
-      setMode('detail');
-    } else if (workspaceState.mode && workspaceState.mode !== 'detail' && isAllowedWorkspaceMode(workspaceState.mode, { isOperator, canManageShop, canViewBilling, canWrite })) {
-      setMode(workspaceState.mode);
-    }
-  }, [canManageShop, canViewBilling, canWrite, isOperator, membership?.shopId, jobs, selectedJobId]);
-
-  useEffect(() => {
     if (!membership?.shopId) {
       setAssignableMembers([]);
       setAssignableMembersError('');
@@ -368,17 +357,6 @@ export default function App() {
     }
     refreshAssignableMembers(membership.shopId);
   }, [membership?.shopId]);
-
-  useEffect(() => {
-    if (!membership?.shopId) {
-      return;
-    }
-
-    saveWorkspaceState(membership.shopId, {
-      mode,
-      selectedJobId
-    });
-  }, [membership?.shopId, mode, selectedJobId]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -567,7 +545,6 @@ export default function App() {
     manualSignOutRef.current = true;
     setJobs([]);
     setCustomers([]);
-    setSelectedJobId(null);
     setMembership(null);
     setMemberships([]);
     setShopProfile(null);
@@ -578,7 +555,7 @@ export default function App() {
     setEntitlementSnapshot(getDefaultEntitlementSnapshot());
     setOfflineDrafts([]);
     setSelectedOfflineDraftId('');
-    setMode('new');
+    resetWorkspaceNavigation();
     clearSelectedShop();
     try {
       await signOut();
@@ -651,24 +628,6 @@ export default function App() {
       type: 'success',
       message: `Saved job ${savedJob?.jobNumber || ''} successfully.`
     });
-  }
-
-  function handleSelectJob(jobId) {
-    if (!confirmUnsavedNavigation()) {
-      return;
-    }
-
-    if (mode !== 'detail') {
-      jobDetailReturnModeRef.current = mode;
-    }
-    setHasUnsavedPageChanges(false);
-    setSelectedJobId(jobId);
-    setMode('detail');
-  }
-
-  function closeJobDetail() {
-    setHasUnsavedPageChanges(false);
-    setMode(jobDetailReturnModeRef.current || 'new');
   }
 
   function handleAssignmentChanged(jobId, assignment) {
@@ -803,29 +762,6 @@ export default function App() {
     setOfflineDrafts([]);
     setSelectedOfflineDraftId('');
     clearSelectedShop();
-  }
-
-  function confirmUnsavedNavigation() {
-    if (!hasUnsavedPageChanges) {
-      return true;
-    }
-
-    return window.confirm(UNSAVED_CHANGES_MESSAGE);
-  }
-
-  function navigateTo(nextMode) {
-    if (!isAllowedWorkspaceMode(nextMode, { isOperator, canManageShop, canViewBilling, canWrite })) {
-      setNotice({ type: 'error', message: 'This area is not available for your account.' });
-      setMode('new');
-      return;
-    }
-
-    if (!confirmUnsavedNavigation()) {
-      return;
-    }
-
-    setHasUnsavedPageChanges(false);
-    setMode(nextMode);
   }
 
   const offlineDraftCount = offlineDrafts.filter((draft) => draft.status !== 'synced').length;
@@ -1356,225 +1292,77 @@ export default function App() {
           </div>
         </aside>}
         <div className="content">
-          {mode === 'new' && (
-            <section className="panel empty-state">
-              {isNewJobSidebarCollapsed ? 'Show sections to enter a new job.' : 'Enter a new job on the left, then click Save Job.'}
-            </section>
-          )}
-
-          {mode === 'list' && (
-            <CurrentJobsPage
-              jobs={jobs}
-              onSelectJob={handleSelectJob}
-              shopProfile={shopProfile}
-              assignableMembers={assignableMembers}
-              teamAssignmentEnabled={teamAssignmentEnabled}
-              initialAssigneeFilter={currentJobsAssigneeFilter}
-            />
-          )}
-
-          {mode === 'settings' && (
-            <ShopSettings
-              canManageShop={canEditShopSettings}
-              canManageTeamMembers={canManageTeamMembers}
-              currentUserId={session?.user?.id || ''}
-              initialSettings={shopProfile}
-              entitlementSnapshot={billingAccess}
-              jobs={jobs}
-              assignableMembers={assignableMembers}
-              assignableMembersLoading={assignableMembersLoading}
-              assignableMembersError={assignableMembersError}
-              teamAssignmentEnabled={teamAssignmentEnabled}
-              onOpenCurrentJobsForAssignee={openCurrentJobsForAssignee}
-              onSave={(settings) => {
+          <WorkspaceRouter
+            mode={mode}
+            data={{
+              assignableMembers,
+              assignableMembersError,
+              assignableMembersLoading,
+              betaApproved,
+              billingAccess,
+              currentJobsAssigneeFilter,
+              customers,
+              dateOptions,
+              isOnline,
+              jobs,
+              membership,
+              moneyOptions,
+              offlineDrafts,
+              selectedJob,
+              selectedOfflineDraftId,
+              session,
+              shopId: membership?.shopId || getSelectedShop().shopId,
+              shopProfile,
+              syncingDraftId,
+              teamAssignmentEnabled
+            }}
+            access={{
+              canDeletePhotos,
+              canEditCustomers,
+              canEditJobs,
+              canEditPhotos,
+              canEditScheduling,
+              canEditShopSettings,
+              canManageInventory,
+              canManageShipments,
+              canManageTeamMembers,
+              canOverwritePhotos,
+              canPreviewCustomerImport,
+              canSendEmail,
+              canSendSms,
+              canUploadPhotos,
+              canViewBilling,
+              canWrite,
+              entitlementMessage,
+              isOperator
+            }}
+            actions={{
+              isNewJobSidebarCollapsed,
+              onAssignmentChanged: handleAssignmentChanged,
+              onCloseJobDetail: closeJobDetail,
+              onCreateJobForCustomer: showNewJob,
+              onCustomerSaved: handleCustomerSaved,
+              onDirtyChange: setHasUnsavedPageChanges,
+              onDiscardOfflineDraft: handleDiscardOfflineDraft,
+              onImageDelete: handleImageDelete,
+              onImageUpload: handleImageUpload,
+              onNotice: setNotice,
+              onOpenCurrentJobsForAssignee: openCurrentJobsForAssignee,
+              onRefreshJobs: refreshJobs,
+              onSelectJob: handleSelectJob,
+              onSelectOfflineDraft: setSelectedOfflineDraftId,
+              onShopSettingsSave: (settings) => {
                 setShopProfile(settings);
                 setShopName(settings.shopName);
-              }}
-              onNotice={setNotice}
-            />
-          )}
-
-          {mode === 'customers' && (
-            <CustomerManager
-              customers={customers}
-              jobs={jobs}
-              canWrite={canEditCustomers}
-              canPreviewCustomerImport={canPreviewCustomerImport}
-              dateOptions={dateOptions}
-              moneyOptions={moneyOptions}
-              shopProfile={shopProfile}
-              onCustomerSaved={handleCustomerSaved}
-              onCreateJobForCustomer={showNewJob}
-              onNotice={setNotice}
-              onDirtyChange={setHasUnsavedPageChanges}
-            />
-          )}
-
-          {mode === 'accounting' && (
-            <AccountingReports jobs={jobs} shopId={membership?.shopId || getSelectedShop().shopId} shopProfile={shopProfile} />
-          )}
-
-          {mode === 'reports' && (
-            <AdvancedReportsPage
-              customers={customers}
-              entitlementSnapshot={billingAccess}
-              jobs={jobs}
-              onOpenJob={handleSelectJob}
-              shopId={membership?.shopId || getSelectedShop().shopId}
-              shopProfile={shopProfile}
-              onNotice={setNotice}
-            />
-          )}
-
-          {mode === 'inventory' && (
-            <InventoryPage
-              canWrite={canManageInventory}
-              shopId={membership?.shopId || getSelectedShop().shopId}
-              onNotice={setNotice}
-              onDirtyChange={setHasUnsavedPageChanges}
-            />
-          )}
-
-          {mode === 'shipping' && (
-            <ShippingDashboard
-              canWrite={canManageShipments}
-              customers={customers}
-              jobs={jobs}
-              shopId={membership?.shopId || getSelectedShop().shopId}
-              shopProfile={shopProfile}
-              onNotice={setNotice}
-            />
-          )}
-
-          {mode === 'scheduling' && (
-            <SchedulingPage
-              canWrite={canEditScheduling}
-              customers={customers}
-              jobs={jobs}
-              shopId={membership?.shopId || getSelectedShop().shopId}
-              onNotice={setNotice}
-              onDirtyChange={setHasUnsavedPageChanges}
-            />
-          )}
-
-          {mode === 'drafts' && (
-            <OfflineDraftQueue
-              drafts={offlineDrafts}
-              selectedDraftId={selectedOfflineDraftId}
-              onSelectDraft={setSelectedOfflineDraftId}
-              onSyncDraft={handleSyncOfflineDraft}
-              onDiscardDraft={handleDiscardOfflineDraft}
-              isOnline={isOnline}
-              isSyncingDraftId={syncingDraftId}
-              canWrite={canWrite}
-              dateOptions={dateOptions}
-              moneyOptions={moneyOptions}
-            />
-          )}
-
-          {mode === 'billing' && (
-            <BillingPage
-              canManageShop={canViewBilling}
-              entitlementSnapshot={billingAccess}
-              shopProfile={shopProfile}
-            />
-          )}
-
-          {mode === 'operator' && canAccessOperatorDashboard({ isOperator }) && (
-            <BetaOperatorDashboard onNotice={setNotice} />
-          )}
-
-          {mode === 'operator' && !canAccessOperatorDashboard({ isOperator }) && (
-            <section className="panel empty-state">
-              <h2>Operator Access Required</h2>
-              <p>This area is not available for your account.</p>
-            </section>
-          )}
-
-          {mode === 'detail' && selectedJob && (
-            <JobDetail
-              job={selectedJob}
-              jobs={jobs}
-              onUpdate={handleUpdate}
-              onImageUpload={handleImageUpload}
-              onImageDelete={handleImageDelete}
-              onRefresh={refreshJobs}
-              onClose={closeJobDetail}
-              onNotice={setNotice}
-              canWrite={canEditJobs}
-              canUploadPhotos={canUploadPhotos}
-              canEditPhotos={canEditPhotos}
-              canOverwritePhotos={canOverwritePhotos}
-              canDeletePhotos={canDeletePhotos}
-              canSendEmail={canSendEmail}
-              canSendSms={canSendSms}
-              entitlementMessage={entitlementMessage}
-              shopProfile={shopProfile}
-              membership={membership}
-              entitlementSnapshot={billingAccess}
-              betaApproved={betaApproved}
-              assignableMembers={assignableMembers}
-              assignableMembersLoading={assignableMembersLoading}
-              assignableMembersError={assignableMembersError}
-              onAssignmentChanged={handleAssignmentChanged}
-              onDirtyChange={setHasUnsavedPageChanges}
-            />
-          )}
-
-          {mode === 'detail' && !selectedJob && (
-            <section className="panel empty-state">Select a saved job from the list.</section>
-          )}
+              },
+              onSyncOfflineDraft: handleSyncOfflineDraft,
+              onUpdateJob: handleUpdate
+            }}
+          />
         </div>
       </div>
     </main>
   );
-}
-
-function getWorkspaceStateKey(shopId) {
-  return `${WORKSPACE_STATE_PREFIX}:${shopId || 'unknown'}`;
-}
-
-function getStoredWorkspaceState(shopId) {
-  try {
-    return JSON.parse(localStorage.getItem(getWorkspaceStateKey(shopId))) || {};
-  } catch {
-    return {};
-  }
-}
-
-function saveWorkspaceState(shopId, state) {
-  try {
-    localStorage.setItem(getWorkspaceStateKey(shopId), JSON.stringify(state));
-  } catch {
-    // Non-critical: workspace restore should never block normal app use.
-  }
-}
-
-function isAllowedWorkspaceMode(mode, { isOperator = false, canManageShop = false, canViewBilling = false, canWrite = false } = {}) {
-  if (mode === 'operator') {
-    return canAccessOperatorDashboard({ isOperator });
-  }
-
-  if (mode === 'billing') {
-    return Boolean(canViewBilling);
-  }
-
-  if (mode === 'drafts') {
-    return Boolean(canWrite);
-  }
-
-  return [
-    'new',
-    'list',
-    'detail',
-    'settings',
-    'customers',
-    'accounting',
-    'reports',
-    'inventory',
-    'shipping',
-    'scheduling'
-  ].includes(mode);
 }
 
 function getCurrentShopProfileFallback() {

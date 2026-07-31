@@ -3,7 +3,7 @@ import { formatShopDate } from '../../shared/utils/dateFormat';
 import { getShopDateOptions } from '../shops/shopConfig';
 import { sortNewestFirst } from './jobSelectors';
 import { getJobPriorityOption, getJobPriorityShortLabel } from './jobPriority';
-import { isCurrentJob } from './CurrentJobsPage.jsx';
+import { isCurrentJob } from './currentJobStatus.js';
 
 function searchableText(job) {
   return [

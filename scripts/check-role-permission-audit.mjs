@@ -17,6 +17,8 @@ function assertMatches(value, pattern, message) {
 
 const helpers = source('src/modules/auth/permissionService.js');
 const app = source('src/app/App.jsx');
+const workspaceRouter = source('src/app/WorkspaceRouter.jsx');
+const workspaceNavigation = source('src/app/useWorkspaceNavigation.js');
 const inventory = source('src/modules/inventory/InventoryPage.jsx');
 const shipping = source('src/modules/shipping/ShippingDashboard.jsx');
 const scheduling = source('src/modules/scheduling/SchedulingPage.jsx');
@@ -64,8 +66,8 @@ assertMatches(helpers, /export function canManageTeamMembers[\s\S]*?SHOP_MANAGE_
 assertMatches(helpers, /export function canAccessOperatorDashboard[\s\S]*?return Boolean\(isOperator\)/, 'Operator access must require verified operator state.');
 assertMatches(helpers, /export function canViewAdvancedReporting[\s\S]*?canUseAdvancedReporting/, 'Advanced reports must remain entitlement gated.');
 
-assertIncludes(app, "mode === 'operator' && canAccessOperatorDashboard({ isOperator })", 'Operator route must remain verified-operator gated.');
-assertIncludes(app, "return canAccessOperatorDashboard({ isOperator });", 'Workspace restoration must not restore operator mode for a non-operator.');
+assertIncludes(workspaceRouter, 'canAccessOperatorDashboard({ isOperator: access.isOperator })', 'Operator route must remain verified-operator gated.');
+assertIncludes(workspaceNavigation, 'return canAccessOperatorDashboard({ isOperator });', 'Workspace restoration must not restore operator mode for a non-operator.');
 assertIncludes(app, 'canEditCustomersForRole(permissionContext)', 'Customers must receive the centralized edit permission.');
 assertIncludes(app, 'canManageInventoryForRole(permissionContext)', 'Inventory must receive the centralized inventory permission.');
 assertIncludes(app, 'canManageShipmentsForRole(permissionContext)', 'Shipping must receive the centralized shipping permission.');

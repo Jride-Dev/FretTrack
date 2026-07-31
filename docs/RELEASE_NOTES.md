@@ -4,6 +4,10 @@
 
 FretTrack `0.2.9-beta.3` adds server-enforced email and photo usage caps while retaining the Pro Team Assignment Foundation, localization, Current Jobs, scheduling, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundations.
 
+The first 0.3.0 architecture-foundation slice extracts top-level workspace page selection and persisted navigation state from the application shell and lazy-loads feature pages through that boundary. Permissions, dirty-state protection, Close Detail return behavior, and feature workflows remain unchanged; the change reduces startup coupling and establishes a safe path toward module-owned data and page state. The architecture findings and remaining priorities are recorded in `docs/ARCHITECTURE_HEALTH_AUDIT_0.3.0.md`.
+
+Workspace refresh restoration now waits until the authenticated shop profile and job data are ready before writing navigation state. This prevents the hook's initial New Job mode from replacing a saved Inventory, Scheduling, Customers, Reports, or Job Detail destination during startup.
+
 The public Community section now uses the supplied JR's Custom Shop / Torrance Guitar Repair logo instead of the temporary TGR letter mark.
 
 The public Support page now includes a dedicated FAQ for uptime resets, Operational status interpretation, Shop Settings defaults, read-only access, photo persistence, and complete privacy-conscious bug reports. Status documentation also clarifies that the FretTrack uptime clock measures time since the latest relevant Supabase or Cloudflare recovery. A reset can reflect a provider-wide or regional incident and does not by itself mean FretTrack restarted, was redeployed, or became unavailable to a particular shop.

@@ -6,6 +6,9 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.3 - Current Beta Candidate
 
+- Began the 0.3.0 modular architecture foundation by extracting top-level workspace page rendering and navigation state from `App.jsx`, lazy-loading feature pages behind a shared workspace boundary, and separating the current-job status rule from page UI; page restoration, permissions, Close Detail, and dirty-state handlers remain unchanged.
+- Corrected the extracted workspace restoration lifecycle so refresh waits for the active shop and its data to hydrate before persisting navigation; Inventory, Scheduling, Customers, Reports, and valid Job Detail selections now restore instead of being overwritten by the initial New Job mode.
+- Added a repository architecture health audit covering validation status, module boundaries, growing source hotspots, test-suite brittleness, local test-environment policy, and the unattended backup reliability blocker.
 - Replaced the Community section's temporary TGR letter mark with the supplied JR's Custom Shop / Torrance Guitar Repair logo.
 - Expanded the public Support page with a dedicated FAQ covering uptime resets, Operational status interpretation, Shop Settings defaults, read-only access, photo persistence, and useful privacy-conscious bug reports; also documented that the uptime clock is a conservative shared-infrastructure recovery indicator rather than proof of an app restart or shop outage.
 - Fixed Shop Settings VAT-rate inheritance for existing jobs: legacy and shop-linked jobs now use the current shop default across Job Detail, newly generated invoices, customer balances, and accounting reports, while a rate edited inside a job remains an explicit override and previously sent email content is untouched.

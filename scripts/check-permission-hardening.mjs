@@ -25,6 +25,8 @@ function functionBody(sql, name) {
 
 const permissionService = read('src/modules/auth/permissionService.js');
 const app = read('src/app/App.jsx');
+const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
+const workspaceNavigation = read('src/app/useWorkspaceNavigation.js');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
 const imagesSection = read('src/modules/jobs/ImagesSection.js');
 const photoGallery = read('src/modules/photos/PhotoGallery.jsx');
@@ -40,8 +42,8 @@ assertIncludes(permissionService, 'canUseAdvancedReporting(entitlementSnapshot)'
 assertMatches(usageCapsMigration, /private\.can_write_shop\(target_shop_id\)[\s\S]*private\.shop_lifecycle_allows_write\(target_shop_id\)/, 'Photo quota must preserve role and lifecycle write restrictions.');
 assertMatches(usageCapsMigration, /not private\.is_shop_member\(target_shop_id\) and not private\.is_operator\(\)/, 'Usage reads must stay shop-scoped.');
 
-assertIncludes(app, "return canAccessOperatorDashboard({ isOperator });", 'Workspace restore must use operator helper.');
-assertIncludes(app, "mode === 'operator' && canAccessOperatorDashboard({ isOperator })", 'Operator route render must use operator helper.');
+assertIncludes(workspaceNavigation, 'return canAccessOperatorDashboard({ isOperator });', 'Workspace restore must use operator helper.');
+assertIncludes(workspaceRouter, 'canAccessOperatorDashboard({ isOperator: access.isOperator })', 'Operator route render must use operator helper.');
 assertIncludes(app, 'canUploadPhotosForRole(permissionContext)', 'Photo upload permission must use permission service.');
 assertIncludes(app, 'canOverwritePhotosForRole(permissionContext)', 'Photo overwrite permission must use permission service.');
 assertIncludes(app, 'canEditJobsForRole(permissionContext)', 'Job writes must use permission service.');

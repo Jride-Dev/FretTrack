@@ -14,6 +14,7 @@ function assertIncludes(source, expected, message) {
 
 const permissionService = read('src/modules/auth/permissionService.js');
 const app = read('src/app/App.jsx');
+const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
 const imagesSection = read('src/modules/jobs/ImagesSection.js');
 const photoGallery = read('src/modules/photos/PhotoGallery.jsx');
@@ -24,7 +25,8 @@ assertIncludes(permissionService, 'return canWriteShop({ role, entitlementSnapsh
 assert.ok(!permissionService.includes('entitlementSnapshot?.access?.canUploadPhotos !== false'), 'A stale upload flag must not hide core job photo controls.');
 assertIncludes(permissionService, 'return canUploadPhotos({ role, entitlementSnapshot }) && hasPhotoEditorEntitlement(entitlementSnapshot);', 'Photo Editor must remain separately entitlement-gated.');
 
-assertIncludes(app, 'canUploadPhotos={canUploadPhotos}', 'App must pass the core photo upload permission into Job Detail.');
+assertIncludes(app, 'canUploadPhotos,', 'App must pass the core photo upload permission across the workspace boundary.');
+assertIncludes(workspaceRouter, 'canUploadPhotos={access.canUploadPhotos}', 'Workspace router must pass the core photo upload permission into Job Detail.');
 assertIncludes(app, 'if (!canUploadPhotos)', 'App upload handler must retain a permission guard.');
 assertIncludes(jobDetail, 'canUploadPhotos={canUploadPhotos}', 'Job Detail must pass core upload permission into ImagesSection.');
 assertIncludes(jobDetail, 'if (!canUploadPhotos)', 'Job Detail upload handlers must retain a permission guard.');

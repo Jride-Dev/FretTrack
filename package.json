@@ -19,6 +19,7 @@
     "check:pro-team-assignment": "node scripts/check-pro-team-assignment.mjs",
     "check:usage-caps": "node scripts/check-usage-caps.mjs",
     "check:version-consistency": "node scripts/check-version-consistency.mjs",
+    "check:workspace-router-foundation": "node scripts/check-workspace-router-foundation.mjs",
     "check:scheduling-week-event-layout": "node scripts/check-scheduling-week-event-layout.mjs",
     "check:job-dates-scheduling-sync": "node scripts/check-job-dates-scheduling-sync.mjs",
     "check:job-status-default": "node scripts/check-job-status-default.mjs",

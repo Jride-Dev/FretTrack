@@ -25,6 +25,7 @@ Start here for the current product path:
 - [Shipping foundation](SHIPPING.md)
 - [Photo editor](PHOTO_EDITOR.md)
 - [Architecture review beta 14](ARCHITECTURE_REVIEW_BETA14.md)
+- [Architecture health audit for 0.3.0](ARCHITECTURE_HEALTH_AUDIT_0.3.0.md)
 - [Print renderer rebuild plan](PRINT_RENDERER_REBUILD_PLAN.md)
 - [Security review checklist](SECURITY_REVIEW_CHECKLIST.md)
 - [Supabase RPC security audit](SUPABASE_RPC_SECURITY_AUDIT.md)
