@@ -155,6 +155,8 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /\/community\/discord-frettrack\.png/);
   assert.match(html, /\/community\/reddit-frettrack\.png/);
   assert.match(html, /\/community\/github-frettrack\.png/);
+  assert.match(html, /\/community\/torrance-guitar-repair\.png/);
+  assert.doesNotMatch(html, /community-card-mark[\s\S]*>TGR</);
   assert.match(html, /View FretTrack on GitHub/);
   assert.match(html, /Visit Torrance Guitar Repair/);
   assert.match(html, /href="\/beta-tester"/);
@@ -192,7 +194,8 @@ async function testCommunityAssetRoutes() {
     '/community/frettrack-discord.jpg',
     '/community/discord-frettrack.png',
     '/community/reddit-frettrack.png',
-    '/community/github-frettrack.png'
+    '/community/github-frettrack.png',
+    '/community/torrance-guitar-repair.png'
   ];
 
   for (const pathname of paths) {

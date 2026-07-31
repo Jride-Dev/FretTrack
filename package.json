@@ -14,6 +14,7 @@
     "check:legacy-damage-map-photos": "node scripts/check-legacy-damage-map-photo-hydration.mjs",
     "check:damage-map-image-required": "node scripts/check-damage-map-image-required.mjs",
     "check:shop-localization": "node scripts/check-shop-localization.mjs",
+    "check:vat-default-existing-jobs": "node scripts/check-vat-default-existing-jobs.mjs",
     "check:current-jobs-page": "node scripts/check-current-jobs-page.mjs",
     "check:pro-team-assignment": "node scripts/check-pro-team-assignment.mjs",
     "check:usage-caps": "node scripts/check-usage-caps.mjs",

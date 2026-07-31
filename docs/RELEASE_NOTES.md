@@ -4,6 +4,12 @@
 
 FretTrack `0.2.9-beta.3` adds server-enforced email and photo usage caps while retaining the Pro Team Assignment Foundation, localization, Current Jobs, scheduling, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundations.
 
+The public Community section now uses the supplied JR's Custom Shop / Torrance Guitar Repair logo instead of the temporary TGR letter mark.
+
+The public Support page now includes a dedicated FAQ for uptime resets, Operational status interpretation, Shop Settings defaults, read-only access, photo persistence, and complete privacy-conscious bug reports. Status documentation also clarifies that the FretTrack uptime clock measures time since the latest relevant Supabase or Cloudflare recovery. A reset can reflect a provider-wide or regional incident and does not by itself mean FretTrack restarted, was redeployed, or became unavailable to a particular shop.
+
+VAT inheritance correction: existing jobs that inherited their tax configuration now use the current Shop Settings VAT rate in Job Detail, replacement/newly generated invoices, customer balances, accounting reports, and CSV calculations. Editing the rate inside a job creates an explicit per-job override, with a control to return to the shop default. Previously sent email content remains unchanged, and no stored job or invoice history is bulk rewritten.
+
 The authenticated status banner now uses one concise `OPERATIONAL` label, quiet Supabase and Cloudflare health dots, and a FretTrack uptime clock based on the latest resolved incident affecting the provider services FretTrack actually uses. Provider history refreshes every 30 minutes while the clock advances locally without repeated network requests. The animated database plug has been replaced by a static status dot.
 
 Production schema consistency hotfix: newly inserted jobs now default to the canonical `Checked In` status instead of the legacy, disallowed `Intake` value. Existing job rows and statuses are not rewritten.

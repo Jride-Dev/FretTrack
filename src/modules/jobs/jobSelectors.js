@@ -1,4 +1,5 @@
-import { calculateJobAccounting } from '../billing/accounting';
+import { calculateJobAccounting } from '../billing/accounting.js';
+import { resolveJobTaxSettings } from '../billing/jobTaxSettings.js';
 
 export function sortNewestFirst(jobs) {
   return [...jobs].sort((a, b) => {
@@ -6,9 +7,12 @@ export function sortNewestFirst(jobs) {
   });
 }
 
-export function calculateTillSummary(jobs) {
+export function calculateTillSummary(jobs, options = {}) {
   return jobs.reduce((summary, job) => {
-    const accounting = calculateJobAccounting(job);
+    const accounting = calculateJobAccounting(
+      job,
+      resolveJobTaxSettings(job, options.shopProfile || options)
+    );
     summary.paidTotal += accounting.paidTotal;
     summary.salesTaxAccrued += accounting.salesTaxAmount;
     summary.openBalance += accounting.balanceDue;

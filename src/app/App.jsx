@@ -153,7 +153,7 @@ export default function App() {
   const canSendSms = canWrite && billingAccess.access?.canSendSms === true;
   const teamAssignmentEnabled = hasTeamAssignmentEntitlement(billingAccess, { betaApproved });
   const entitlementMessage = getEntitlementMessage(billingAccess);
-  const tillSummary = calculateTillSummary(jobs);
+  const tillSummary = calculateTillSummary(jobs, { shopProfile });
   const moneyOptions = getShopMoneyOptions(shopProfile || undefined);
   const dateOptions = getShopDateOptions(shopProfile || undefined);
   const shouldShowPwaInstallButton = Boolean(deferredInstallPrompt) && !isStandalonePwa;
@@ -1402,6 +1402,7 @@ export default function App() {
               canPreviewCustomerImport={canPreviewCustomerImport}
               dateOptions={dateOptions}
               moneyOptions={moneyOptions}
+              shopProfile={shopProfile}
               onCustomerSaved={handleCustomerSaved}
               onCreateJobForCustomer={showNewJob}
               onNotice={setNotice}

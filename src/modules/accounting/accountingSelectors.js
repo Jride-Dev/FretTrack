@@ -1,4 +1,5 @@
 import { calculateJobTotals, retailTotal, rowQuantity } from '../billing/accounting.js';
+import { resolveJobTaxSettings } from '../billing/jobTaxSettings.js';
 import { formatLength, normalizeLengthUnit } from '../../shared/utils/measurements.js';
 
 const DEFAULT_RANGE_DAYS = 30;
@@ -24,7 +25,14 @@ export function buildAccountingReport(jobs = [], options = {}) {
   const range = normalizeDateRange(options);
   const scopedJobs = jobs
     .filter((job) => !shopId || job.shopId === shopId || job.shop_id === shopId)
-    .map((job) => buildJobAccountingSnapshot(job, { currencyCode, locale, taxLabel, dateFormat, lengthUnit }))
+    .map((job) => buildJobAccountingSnapshot(job, {
+      currencyCode,
+      locale,
+      taxLabel,
+      dateFormat,
+      lengthUnit,
+      shopProfile: options.shopProfile
+    }))
     .filter((snapshot) => snapshot.currencyCode === currencyCode);
 
   const jobsInRange = scopedJobs.filter((snapshot) => isDateInRange(snapshot.accountingDate, range));
@@ -57,10 +65,10 @@ export function buildAccountingReport(jobs = [], options = {}) {
 }
 
 export function buildJobAccountingSnapshot(job = {}, options = {}) {
-  const totals = calculateJobTotals(job);
+  const taxSettings = resolveJobTaxSettings(job, options.shopProfile || options);
+  const totals = calculateJobTotals(job, taxSettings);
   const parts = job.parts || [];
   const services = job.services || job.labor || [];
-  const taxSettings = job.techDetails?.tax || {};
   const payments = job.techDetails?.payments || [];
   const accountingDate = job.completedAt || job.pickedUpAt || job.jobDate || job.dateReceived || job.createdAt || job.updatedAt || '';
   const taxRatePercent = Number(taxSettings.salesTaxRate) || 0;

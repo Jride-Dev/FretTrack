@@ -12,11 +12,13 @@ export default function TotalsSection({
   payments,
   removePayment,
   setPayment,
+  shopTaxRate = '',
   taxSettings,
   totals,
   updateDiscountField,
   updatePayment,
-  updateTaxField
+  updateTaxField,
+  useShopTaxRate
 }) {
   const taxLabel = taxSettings.taxLabel || 'Sales Tax';
   const moneyOptions = getShopMoneyOptions({
@@ -56,6 +58,11 @@ export default function TotalsSection({
           {taxLabel} %
           <input type="number" min="0" step="0.001" name="salesTaxRate" value={taxSettings.salesTaxRate || ''} onChange={updateTaxField} disabled={!canWrite} />
         </label>
+        {taxSettings.rateSource === 'job' && shopTaxRate !== '' && (
+          <button type="button" className="button-tertiary" onClick={useShopTaxRate} disabled={!canWrite}>
+            Use Shop {taxLabel} ({shopTaxRate}%)
+          </button>
+        )}
         <label className="checkline">
           <input type="checkbox" name="taxableParts" checked={taxSettings.taxableParts !== false} onChange={updateTaxField} disabled={!canWrite} />
           Tax Parts

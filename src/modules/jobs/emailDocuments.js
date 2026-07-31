@@ -445,6 +445,12 @@ export function resolveScopedShopEmailSettings(job = {}, shopSettings = {}) {
     website: cleanText(shopSettings.website),
     logoUrl: cleanText(shopSettings.logoUrl || shopSettings.logo_url),
     taxLabel: cleanText(shopSettings.taxLabel || shopSettings.tax_label),
+    defaultTaxRate: cleanText(
+      shopSettings.defaultTaxRate
+      ?? shopSettings.default_tax_rate
+      ?? shopSettings.salesTaxRate
+      ?? shopSettings.sales_tax_rate
+    ),
     currencyCode: cleanText(shopSettings.currencyCode || shopSettings.currency_code),
     locale: cleanText(shopSettings.locale),
     dateFormat: cleanText(shopSettings.dateFormat || shopSettings.date_format),
