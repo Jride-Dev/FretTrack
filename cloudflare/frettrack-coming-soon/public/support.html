@@ -226,6 +226,7 @@
         <p class="lede">FretTrack is currently in beta. The fastest way to report an in-app problem is to use the Report Issue button inside FretTrack when available.</p>
         <div class="actions">
           <a class="button" href="mailto:support@frettrack-app.com">Email Support</a>
+          <a class="button secondary" href="#faq">Browse FAQ</a>
           <a class="button secondary" href="https://app.frettrack-app.com/">Open FretTrack</a>
           <a class="button secondary" href="/beta-tester">Beta Tester Workbook</a>
         </div>
@@ -248,6 +249,41 @@
             <li>Reporting Bugs</li>
             <li>Contact Support</li>
           </ul>
+        </section>
+
+        <section class="section panel" id="faq" aria-labelledby="faq-heading">
+          <h2 id="faq-heading">Frequently Asked Questions</h2>
+          <p class="lede">Quick answers to the questions shops and beta testers ask most often.</p>
+
+          <details open>
+            <summary>Why did the FretTrack uptime reset?</summary>
+            <p>The clock restarts when Supabase or Cloudflare reports that an incident involving a monitored service has been resolved. A reset does not necessarily mean FretTrack restarted, was redeployed, or was unavailable to your shop. Provider incidents may be global, regional, or limited to some customers, so the clock is a conservative shared-infrastructure recovery indicator rather than a formal measurement of FretTrack availability. Use the Supabase and Cloudflare links in the app banner to review their status history.</p>
+          </details>
+
+          <details>
+            <summary>Why does the banner say Operational when I am having a problem?</summary>
+            <p>Operational means the monitored shared services are currently reporting healthy and no FretTrack-wide incident has been declared. A browser, device, connection, account, permission, or individual workflow problem can still occur. Refresh the app and use Report Issue if the problem continues.</p>
+          </details>
+
+          <details>
+            <summary>Do Shop Settings control measurements, currency, and tax?</summary>
+            <p>Yes. Shop Settings provide the shop defaults used throughout FretTrack, including measurement units, currency, locale, and tax terminology or rate. Some job-level values can be explicitly overridden. If a document disagrees with what the app displays, report the job number, document type, and expected setting.</p>
+          </details>
+
+          <details>
+            <summary>Why can I view a record but not edit it?</summary>
+            <p>Your shop role may be read-only, your trial or subscription may have expired, or the feature may require a different plan or permission. Owners and admins can review the shop member's role and current plan status.</p>
+          </details>
+
+          <details>
+            <summary>Are uploaded photos saved immediately?</summary>
+            <p>A local preview is not proof that an upload finished. Wait for the saved photo to appear before leaving the job. If a saved photo is missing after refresh or on another device, report the job number and image details.</p>
+          </details>
+
+          <details>
+            <summary>What should I include when reporting a problem?</summary>
+            <p>Include what happened, what you expected, the page or workflow, job number when applicable, your shop role, browser and device, steps to reproduce, and a screenshot or short recording. Do not include passwords, payment card details, or unnecessary sensitive customer information.</p>
+          </details>
         </section>
 
         <section class="section grid">

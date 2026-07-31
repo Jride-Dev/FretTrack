@@ -14,6 +14,7 @@ FretTrack's old live baseline is `v0.2.6-beta.14`. Current branch planning uses 
 Start here for the current product path:
 
 - [Release notes](RELEASE_NOTES.md)
+- [System status and uptime](SYSTEM_STATUS_AND_UPTIME.md)
 - [Shop localization and Current Jobs](SHOP_LOCALIZATION_AND_CURRENT_JOBS.md)
 - [Pro Team Assignment Foundation](PRO_TEAM_ASSIGNMENT_FOUNDATION.md)
 - [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md)
@@ -109,6 +110,7 @@ Current docs:
 - [Photo editor](PHOTO_EDITOR.md)
 - [Mobile/tablet readiness audit](MOBILE_TABLET_READINESS_AUDIT.md)
 - [Release notes](RELEASE_NOTES.md)
+- [System status and uptime](SYSTEM_STATUS_AND_UPTIME.md)
 - [Shop provisioning and installer packaging](shop-provisioning-and-installer.md)
 - [Trial readiness checklist](TRIAL_READINESS.md)
 - [Supabase migration workflow](supabase-migrations.md)

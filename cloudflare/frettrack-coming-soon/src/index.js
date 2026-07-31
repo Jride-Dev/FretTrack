@@ -770,21 +770,6 @@ function landingPage() {
         width: 92px;
       }
 
-      .community-card-mark {
-        align-items: center;
-        background: #202b3b;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 18px;
-        color: var(--amber);
-        display: flex;
-        font-size: 24px;
-        font-weight: 900;
-        height: 64px;
-        justify-content: center;
-        margin-bottom: 24px;
-        width: 64px;
-      }
-
       .community-card h3 {
         font-size: 24px;
         line-height: 1.06;
@@ -1385,7 +1370,7 @@ function landingPage() {
               <span class="community-card-action">View FretTrack on GitHub <span aria-hidden="true">→</span></span>
             </a>
             <a class="community-card" href="https://torranceguitarrepair.com/" target="_blank" rel="noopener">
-              <span class="community-card-mark" aria-hidden="true">TGR</span>
+              <img class="community-card-art" src="/community/torrance-guitar-repair.png" alt="JR's Custom Shop, Torrance Guitar Setup and Repair logo" loading="lazy">
               <h3>Built in a real repair shop</h3>
               <p>Meet Torrance Guitar Repair, the working shop where FretTrack’s tools and workflows are put to the test.</p>
               <span class="community-card-action">Visit Torrance Guitar Repair <span aria-hidden="true">→</span></span>
