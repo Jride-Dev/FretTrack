@@ -2090,7 +2090,7 @@ form.panel button {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 10px;
+  gap: 5px 10px;
 }
 
 .operator-current-status {
@@ -2105,6 +2105,7 @@ form.panel button {
   background: var(--success-bg);
   border: 1px solid var(--success-border);
   border-radius: 999px;
+  color: var(--success-text);
   display: inline-flex;
   font-size: 10px;
   font-weight: 800;
@@ -2117,17 +2118,40 @@ form.panel button {
 .system-status-banner.degraded .system-status-label {
   background: var(--warning-bg);
   border-color: var(--warning);
+  color: var(--warning);
 }
 
 .system-status-banner.outage .system-status-label {
   background: var(--error-bg);
   border-color: var(--danger);
+  color: var(--error-text);
 }
 
 .system-status-message {
   color: var(--text-muted);
   font-size: 12px;
   min-width: 180px;
+}
+
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.frettrack-uptime {
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.frettrack-uptime strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .system-incident-guidance {
@@ -2159,17 +2183,22 @@ form.panel button {
   text-decoration: none;
 }
 
-.infrastructure-status-chip strong {
-  color: var(--success-text);
+.infrastructure-status-dot,
+.connection-status-dot {
+  background: currentColor;
+  border-radius: 999px;
+  display: inline-block;
+  height: 7px;
+  width: 7px;
+}
+
+.infrastructure-status-chip.operational .infrastructure-status-dot {
+  background: var(--success-text);
 }
 
 .infrastructure-status-chip.maintenance,
 .infrastructure-status-chip.degraded {
   border-color: var(--warning);
-}
-
-.infrastructure-status-chip.maintenance strong,
-.infrastructure-status-chip.degraded strong {
   color: var(--warning);
 }
 
@@ -2177,8 +2206,8 @@ form.panel button {
   border-color: var(--danger);
 }
 
-.infrastructure-status-chip.outage strong,
-.infrastructure-status-chip.unknown strong {
+.infrastructure-status-chip.outage,
+.infrastructure-status-chip.unknown {
   color: var(--error-text);
 }
 
@@ -2241,7 +2270,8 @@ form.panel button {
     align-items: flex-start;
   }
 
-  .system-status-message {
+  .system-status-message,
+  .frettrack-uptime {
     flex-basis: 100%;
     order: 3;
   }
@@ -2454,91 +2484,6 @@ form.panel button {
   align-items: start;
 }
 
-.plug-status {
-  align-items: center;
-  display: inline-flex;
-  height: 14px;
-  position: relative;
-  width: 32px;
-}
-
-.plug-head {
-  background: currentColor;
-  border-radius: 2px;
-  height: 8px;
-  left: 6px;
-  position: absolute;
-  width: 10px;
-}
-
-.plug-head::before,
-.plug-head::after {
-  background: currentColor;
-  content: '';
-  height: 2px;
-  position: absolute;
-  right: -4px;
-  width: 4px;
-}
-
-.plug-head::before {
-  top: 1px;
-}
-
-.plug-head::after {
-  bottom: 1px;
-}
-
-.plug-cord {
-  background: currentColor;
-  height: 2px;
-  left: 0;
-  opacity: 0.72;
-  position: absolute;
-  width: 7px;
-}
-
-.plug-socket {
-  border: 2px solid currentColor;
-  border-radius: 999px;
-  height: 12px;
-  position: absolute;
-  right: 0;
-  width: 12px;
-}
-
-.plug-socket::before,
-.plug-socket::after {
-  background: currentColor;
-  content: '';
-  height: 4px;
-  position: absolute;
-  top: 2px;
-  width: 1px;
-}
-
-.plug-socket::before {
-  left: 3px;
-}
-
-.plug-socket::after {
-  right: 3px;
-}
-
-.connection-status.connected .plug-head {
-  animation: plug-connect 1.4s ease-in-out infinite;
-}
-
-.connection-status.connected .plug-socket {
-  animation: socket-pulse 1.4s ease-in-out infinite;
-}
-
-.connection-status.not-configured .plug-head,
-.connection-status.auth-required .plug-head,
-.connection-status.error .plug-head {
-  left: 3px;
-}
-
 .auth-shell {
   min-height: 100vh;
   display: grid;
@@ -2610,24 +2555,6 @@ form.panel button {
 
 .muted-text {
   color: var(--muted);
-}
-
-@keyframes plug-connect {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  45%, 65% {
-    transform: translateX(7px);
-  }
-}
-
-@keyframes socket-pulse {
-  0%, 100% {
-    box-shadow: none;
-  }
-  55% {
-    box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 28%, transparent);
-  }
 }
 
 .entries {
