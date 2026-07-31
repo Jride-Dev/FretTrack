@@ -24,7 +24,10 @@ import {
 } from './inventoryService';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
-import BarcodeLabelSheet from './BarcodeLabelSheet.jsx';
+import InventoryHistoryTab from './InventoryHistoryTab.jsx';
+import InventoryLabelsTab from './InventoryLabelsTab.jsx';
+import InventoryVendorsTab from './InventoryVendorsTab.jsx';
+import { formatInventoryDate as formatDate, formatInventoryStatus as formatStatusLabel } from './inventoryFormatting.js';
 import {
   PURCHASE_UNIT_OPTIONS,
   inventoryUnitsForPurchaseQuantity,
@@ -96,46 +99,8 @@ const emptyPurchaseOrderForm = {
 const purchaseOrderStatuses = ['draft', 'ordered', 'partially_received', 'received', 'cancelled'];
 const purchaseOrderFilterOptions = ['all', ...purchaseOrderStatuses];
 
-function formatStatusLabel(status = '') {
-  return status
-    .split('_')
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ') || 'Draft';
-}
-
-function formatDate(value) {
-  if (!value) {
-    return '-';
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleDateString();
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return '-';
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleString();
-}
-
 function getBarcodeLabel(part) {
   return part?.barcodeCode ? `FT-PART-${part.barcodeCode}` : '-';
-}
-
-function vendorLocationLabel(vendor) {
-  const cityState = [vendor?.city, vendor?.state].filter(Boolean).join(', ');
-  if (cityState) {
-    return cityState;
-  }
-  return vendor?.addressLine1 || '';
 }
 
 function remainingForItem(item) {
@@ -1166,102 +1131,6 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     );
   }
 
-  function renderVendorsTab() {
-    return (
-      <div className="inventory-layout">
-        <div className="inventory-table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Company</th>
-                <th>Sales Rep</th>
-                <th>Location</th>
-                <th>Email / Website</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vendors.map((vendor) => (
-                <tr
-                  key={vendor.id}
-                  className={`${selectedVendorId === vendor.id ? 'selected-row' : ''}${vendor.isActive ? '' : ' inactive-row'}`}
-                  onClick={() => loadVendorIntoForm(vendor)}
-                >
-                  <td>
-                    <strong>{vendor.name}</strong>
-                    {vendor.onlineOnly && <span className="status-pill muted">Online Only</span>}
-                  </td>
-                  <td>{vendor.contactName || '-'}</td>
-                  <td>{vendor.onlineOnly ? 'Online only' : vendorLocationLabel(vendor) || '-'}</td>
-                  <td>
-                    <div className="vendor-list-meta">
-                      <span>{vendor.email || '-'}</span>
-                      {vendor.website && <span>{vendor.website}</span>}
-                    </div>
-                  </td>
-                  <td><span className={`status-pill ${vendor.isActive ? 'success' : 'muted'}`}>{vendor.isActive ? 'Active' : 'Inactive'}</span></td>
-                </tr>
-              ))}
-              {!vendors.length && (
-                <tr><td colSpan="5">No vendors yet.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="inventory-editor">
-          <form onSubmit={saveVendor}>
-            <div className="editor-heading">
-              <h3>{selectedVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
-              {canWrite && selectedVendor && <button type="button" onClick={resetVendorForm}>Cancel</button>}
-            </div>
-            <div className="form-grid">
-              <label>Company<input disabled={!canWrite} required value={vendorForm.name} onChange={(event) => setVendorForm((current) => ({ ...current, name: event.target.value }))} /></label>
-              <label>Sales Rep<input disabled={!canWrite} value={vendorForm.contactName} onChange={(event) => setVendorForm((current) => ({ ...current, contactName: event.target.value }))} /></label>
-              <label>Email<input disabled={!canWrite} type="email" value={vendorForm.email} onChange={(event) => setVendorForm((current) => ({ ...current, email: event.target.value }))} /></label>
-              <label>Website<input disabled={!canWrite} value={vendorForm.website} onChange={(event) => setVendorForm((current) => ({ ...current, website: event.target.value }))} /></label>
-            </div>
-            <label className="table-checkbox">
-              <input
-                disabled={!canWrite}
-                type="checkbox"
-                checked={vendorForm.onlineOnly}
-                onChange={(event) => setVendorForm((current) => ({ ...current, onlineOnly: event.target.checked }))}
-              />
-              Online Only
-            </label>
-            {!vendorForm.onlineOnly && (
-              <div className="form-grid">
-                <label>Phone<input disabled={!canWrite} value={vendorForm.phone} onChange={(event) => setVendorForm((current) => ({ ...current, phone: event.target.value }))} /></label>
-                <label>Address Line 1<input disabled={!canWrite} value={vendorForm.addressLine1} onChange={(event) => setVendorForm((current) => ({ ...current, addressLine1: event.target.value }))} /></label>
-                <label>Address Line 2<input disabled={!canWrite} value={vendorForm.addressLine2} onChange={(event) => setVendorForm((current) => ({ ...current, addressLine2: event.target.value }))} /></label>
-                <label>City<input disabled={!canWrite} value={vendorForm.city} onChange={(event) => setVendorForm((current) => ({ ...current, city: event.target.value }))} /></label>
-                <label>State / Region<input disabled={!canWrite} value={vendorForm.state} onChange={(event) => setVendorForm((current) => ({ ...current, state: event.target.value }))} /></label>
-                <label>Postal Code<input disabled={!canWrite} value={vendorForm.postalCode} onChange={(event) => setVendorForm((current) => ({ ...current, postalCode: event.target.value }))} /></label>
-                <label>Country<input disabled={!canWrite} value={vendorForm.country} onChange={(event) => setVendorForm((current) => ({ ...current, country: event.target.value }))} /></label>
-              </div>
-            )}
-            <label>Notes<input disabled={!canWrite} value={vendorForm.notes} onChange={(event) => setVendorForm((current) => ({ ...current, notes: event.target.value }))} /></label>
-            <label className="table-checkbox">
-              <input
-                disabled={!canWrite}
-                type="checkbox"
-                checked={vendorForm.isActive}
-                onChange={(event) => setVendorForm((current) => ({ ...current, isActive: event.target.checked }))}
-              />
-              Active
-            </label>
-            {canWrite && (
-              <div className="mode-actions">
-                <button type="submit" className="primary-action" disabled={isSaving}>{isSaving ? 'Saving...' : selectedVendor ? 'Save Changes' : 'Save Vendor'}</button>
-              </div>
-            )}
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   function renderPurchaseOrdersTab() {
     return (
       <div className="inventory-layout inventory-layout-wide">
@@ -1493,111 +1362,6 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     );
   }
 
-  function renderHistoryTab() {
-    return (
-      <div className="inventory-history-grid">
-        <section className="inventory-editor">
-          <h3>{selectedPart ? `Purchase History: ${selectedPart.name}` : 'Purchase History'}</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Part</th>
-                <th>Vendor</th>
-                <th>PO</th>
-                <th>Receipt</th>
-                <th>Purchase Qty</th>
-                <th>Inventory Qty</th>
-                <th>Purchase Unit Cost</th>
-                <th>Shipping Allocated</th>
-                <th>Landed Inventory Unit Cost</th>
-                <th>Total Landed Cost</th>
-                <th>Received By</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(selectedPart ? partPurchaseHistory : purchaseHistory).map((row) => (
-                <tr key={row.id}>
-                  <td>{formatDateTime(row.receivedAt)}</td>
-                  <td>{row.partName || row.description || '-'}</td>
-                  <td>{row.vendorName || '-'}</td>
-                  <td>{row.poNumber || 'Manual'}</td>
-                  <td>{row.receiptNumber || '-'}</td>
-                  <td>{row.quantityReceived} {purchaseUnitLabel(row.purchaseUnit, row.quantityReceived)}</td>
-                  <td>{row.inventoryQuantityReceived}</td>
-                  <td>{money(row.baseUnitCost ?? row.unitCost, moneyOptions)}</td>
-                  <td>{row.shippingAllocated ? money(row.shippingAllocated, moneyOptions) : '-'}</td>
-                  <td>{money(row.landedUnitCost ?? row.unitCost, moneyOptions)}</td>
-                  <td>{money(row.totalLandedCost ?? row.totalCost ?? row.quantityReceived * row.unitCost, moneyOptions)}</td>
-                  <td>{row.receivedBy ? `${row.receivedBy.slice(0, 8)}...` : '-'}</td>
-                  <td>{row.receiptNotes || '-'}</td>
-                </tr>
-              ))}
-              {!(selectedPart ? partPurchaseHistory : purchaseHistory).length && (
-                <tr><td colSpan="12">No purchase receipts yet.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </section>
-
-        <section className="inventory-editor">
-          {selectedPart ? (
-            <>
-              <h3>Stock Movements: {selectedPart.name}</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Qty</th>
-                    <th>Cost</th>
-                    <th>Note</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {partMovements.map((movement) => (
-                    <tr key={movement.id}>
-                      <td>{formatStatusLabel(movement.movementType)}</td>
-                      <td>{movement.quantity}</td>
-                      <td>{movement.unitCost === null ? '-' : money(movement.unitCost, moneyOptions)}</td>
-                      <td>{movement.note || '-'}</td>
-                      <td>{formatDateTime(movement.createdAt)}</td>
-                    </tr>
-                  ))}
-                  {!partMovements.length && (
-                    <tr><td colSpan="5">No stock movements yet.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </>
-          ) : (
-            <p className="muted-text">Select a part from the Parts tab to view stock movement history for that specific item.</p>
-          )}
-        </section>
-      </div>
-    );
-  }
-
-  function renderLabelsTab() {
-    return (
-      <div className="inventory-label-panel">
-        <section className="inventory-editor">
-          <div className="editor-heading">
-            <h3>Barcode Labels</h3>
-            <div className="mode-actions">
-              <button type="button" onClick={() => setActiveTab('parts')}>Select Parts</button>
-              <button type="button" onClick={printBarcodeLabels} className="primary-action" disabled={!selectedLabelParts.length}>Print Labels</button>
-            </div>
-          </div>
-          <p className="muted-text">Labels use stable barcode identity only. Prices, quantities, and other mutable stock data are not encoded.</p>
-          <p className="muted-text">Current printer preset: {shippingLabelSettings.preset === 'shipping_4x6' ? '4 x 6 thermal shipping label' : shippingLabelSettings.preset === 'letter' ? 'Letter / plain paper' : '2.25 x 1.25 parts/bin label'}.</p>
-          <BarcodeLabelSheet parts={selectedLabelParts} labelPreset={shippingLabelSettings.preset} />
-        </section>
-      </div>
-    );
-  }
-
   return (
     <section className="panel inventory-page">
       <div className="section-header">
@@ -1610,10 +1374,38 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
 
       {renderTabs()}
       {activeTab === 'parts' && renderPartsTab()}
-      {activeTab === 'vendors' && renderVendorsTab()}
+      {activeTab === 'vendors' && (
+        <InventoryVendorsTab
+          vendors={vendors}
+          selectedVendorId={selectedVendorId}
+          selectedVendor={selectedVendor}
+          vendorForm={vendorForm}
+          setVendorForm={setVendorForm}
+          canWrite={canWrite}
+          isSaving={isSaving}
+          onSelectVendor={loadVendorIntoForm}
+          onResetVendor={resetVendorForm}
+          onSaveVendor={saveVendor}
+        />
+      )}
       {activeTab === 'purchase-orders' && renderPurchaseOrdersTab()}
-      {activeTab === 'history' && renderHistoryTab()}
-      {activeTab === 'labels' && renderLabelsTab()}
+      {activeTab === 'history' && (
+        <InventoryHistoryTab
+          selectedPart={selectedPart}
+          partPurchaseHistory={partPurchaseHistory}
+          purchaseHistory={purchaseHistory}
+          partMovements={partMovements}
+          moneyOptions={moneyOptions}
+        />
+      )}
+      {activeTab === 'labels' && (
+        <InventoryLabelsTab
+          selectedLabelParts={selectedLabelParts}
+          labelPreset={shippingLabelSettings.preset}
+          onSelectParts={() => setActiveTab('parts')}
+          onPrintLabels={printBarcodeLabels}
+        />
+      )}
     </section>
   );
 }

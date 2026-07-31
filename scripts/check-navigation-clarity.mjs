@@ -9,6 +9,7 @@ const printActions = read('src/modules/jobs/PrintActions.js');
 const customerManager = read('src/modules/customers/CustomerManager.jsx');
 const customerImportPreview = read('src/modules/customers/CustomerImportPreviewPanel.jsx');
 const inventoryPage = read('src/modules/inventory/InventoryPage.jsx');
+const inventoryVendorsTab = read('src/modules/inventory/InventoryVendorsTab.jsx');
 const schedulingPage = read('src/modules/scheduling/SchedulingPage.jsx');
 const scheduleEventDetails = read('src/modules/scheduling/ScheduleEventDetailsDialog.jsx');
 const auditedNavigationSource = [
@@ -16,6 +17,7 @@ const auditedNavigationSource = [
   customerManager,
   customerImportPreview,
   inventoryPage,
+  inventoryVendorsTab,
   schedulingPage,
   scheduleEventDetails
 ].join('\n');
@@ -29,8 +31,8 @@ assert.match(customerImportPreview, />Close Preview<\/button>/, 'Customer import
 
 assert.match(inventoryPage, /selectedPart \? 'Save Changes' : 'Save Part'/, 'Part editing must distinguish Save Changes from creating a part.');
 assert.ok(inventoryPage.includes("selectedPart && <button type=\"button\" onClick={() => resetForm()} disabled={isSaving}>Cancel</button>"), 'Part editing must expose a Cancel action.');
-assert.ok(inventoryPage.includes('selectedVendor && <button type="button" onClick={resetVendorForm}>Cancel</button>'), 'Vendor editing must expose a Cancel action.');
-assert.match(inventoryPage, /selectedVendor \? 'Save Changes' : 'Save Vendor'/, 'Vendor editing must distinguish Save Changes from creating a vendor.');
+assert.ok(inventoryVendorsTab.includes('selectedVendor && <button type="button" onClick={onResetVendor}>Cancel</button>'), 'Vendor editing must expose a Cancel action.');
+assert.match(inventoryVendorsTab, /selectedVendor \? 'Save Changes' : 'Save Vendor'/, 'Vendor editing must distinguish Save Changes from creating a vendor.');
 assert.match(inventoryPage, /onClick={closePurchaseOrderDetail}>Close Detail<\/button>/, 'Purchase Order detail must expose Close Detail.');
 
 assert.match(schedulingPage, /editingEventId \? 'Save Changes' : 'Save Event'/, 'Schedule editing must distinguish Save Changes from creating an event.');
