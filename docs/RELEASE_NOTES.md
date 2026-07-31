@@ -4,6 +4,8 @@
 
 FretTrack `0.2.9-beta.3` adds server-enforced email and photo usage caps while retaining the Pro Team Assignment Foundation, localization, Current Jobs, scheduling, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundations.
 
+The authenticated status banner now uses one concise `OPERATIONAL` label, quiet Supabase and Cloudflare health dots, and a FretTrack uptime clock based on the latest resolved incident affecting the provider services FretTrack actually uses. Provider history refreshes every 30 minutes while the clock advances locally without repeated network requests. The animated database plug has been replaced by a static status dot.
+
 Production schema consistency hotfix: newly inserted jobs now default to the canonical `Checked In` status instead of the legacy, disallowed `Intake` value. Existing job rows and statuses are not rewritten.
 
 The authenticated operational-status banner is now substantially smaller. Its former uptime value measured only time since an operator published the Operational state, so it has been removed from the app and replaced with live Supabase and Cloudflare Pages/Workers health from their official status feeds. FretTrack incident duration remains visible when an operator declares an active incident.

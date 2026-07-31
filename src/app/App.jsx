@@ -1216,11 +1216,7 @@ export default function App() {
         </div>
         <div className="mode-actions no-print header-actions">
           <span className={`connection-status ${supabaseStatus}`} title={statusText}>
-            <span className="plug-status" aria-hidden="true">
-              <i className="plug-head" />
-              <i className="plug-cord" />
-              <i className="plug-socket" />
-            </span>
+            <span className="connection-status-dot" aria-hidden="true" />
             Database
           </span>
           {!isOnline && (

@@ -12,6 +12,9 @@ import {
   setNoticeSoundsEnabled
 } from '../src/modules/system/noticeSound.js';
 import {
+  formatInfrastructureUptime,
+  getCombinedInfrastructureHealth,
+  getCombinedInfrastructureUptimeStart,
   getInfrastructureStatus,
   INFRASTRUCTURE_PROVIDERS,
   summarizeProviderStatus
@@ -40,12 +43,17 @@ const packageJson = read('package.json');
 assert.match(appNotice, /system-status-banner/, 'The authenticated app must render a compact system status banner.');
 assert.match(appNotice, /Unexpected errors may be related to this incident\./, 'Active incidents must explain their possible relationship to unexpected errors.');
 assert.match(appNotice, />\s*Sound\s*</, 'The app must expose a compact accessible notice sound preference.');
-assert.match(appNotice, /setInterval\(loadAnnouncements, REFRESH_INTERVAL_MS\)/, 'Status and notices must refresh without a page reload.');
+assert.match(appNotice, /setInterval\(loadAnnouncements, ANNOUNCEMENT_REFRESH_INTERVAL_MS\)/, 'Status and notices must refresh without a page reload.');
 assert.doesNotMatch(appNotice, /updateSystemStatus|\.insert\(|\.update\(/, 'The app status timer must not write to the backend.');
 assert.match(appNotice, /getInfrastructureStatus\(\)/, 'The app must load infrastructure health independently of the manual FretTrack status.');
 assert.match(appNotice, /infrastructure-status-chip/, 'Supabase and Cloudflare health must render in the compact status UI.');
-assert.doesNotMatch(appNotice, /getElapsedStatusText\(systemStatus,\s*clock\)|Uptime/, 'The authenticated app must not present the manual status transition as infrastructure uptime.');
+assert.match(appNotice, /INFRASTRUCTURE_REFRESH_INTERVAL_MS = 30 \* 60 \* 1000/, 'Provider health and incident history must refresh every 30 minutes.');
+assert.match(appNotice, /formatInfrastructureUptime\(infrastructureUptimeStart,\s*clock\)/, 'FretTrack uptime must advance locally between provider refreshes.');
+assert.match(appNotice, /hasFretTrackIncident && \([\s\S]*systemStatus\?\.publicNoticeTitle/, 'Operational status must not repeat the default public notice title.');
+assert.match(appNotice, /displayedStatus = hasFretTrackIncident \? systemStatus : infrastructureHealth/, 'The single headline must reflect provider degradation when FretTrack has no manual incident.');
+assert.doesNotMatch(appNotice, /<strong>\{provider\.statusLabel\}<\/strong>/, 'Provider chips must not repeat Operational in visible copy.');
 assert.match(styles, /\.system-status-banner\s*{[\s\S]*border:\s*1px[\s\S]*gap:\s*6px;[\s\S]*padding:\s*7px 10px;/, 'The authenticated status banner must use the compact layout.');
+assert.doesNotMatch(styles, /@keyframes plug-connect|@keyframes socket-pulse/, 'The database status indicator must not animate.');
 assert.match(headers, /connect-src[^;]*https:\/\/status\.supabase\.com[^;]*https:\/\/www\.cloudflarestatus\.com/, 'The production CSP must allow only the official provider status feeds used by the compact banner.');
 assert.match(service, /rpc\('get_public_system_status'\)/, 'The app must use the shared persisted public status source.');
 assert.match(operatorPanel, /updateSystemStatus/, 'Operators must have a status publishing control.');
@@ -100,7 +108,9 @@ assert.deepEqual(
   'Infrastructure status must report the two hosting dependencies.'
 );
 assert.match(infrastructureStatus, /https:\/\/status\.supabase\.com\/api\/v2\/summary\.json/, 'Supabase health must come from its official status feed.');
+assert.match(infrastructureStatus, /https:\/\/status\.supabase\.com\/api\/v2\/incidents\.json/, 'Supabase uptime must use its official incident history.');
 assert.match(infrastructureStatus, /https:\/\/www\.cloudflarestatus\.com\/api\/v2\/summary\.json/, 'Cloudflare health must come from its official status feed.');
+assert.match(infrastructureStatus, /https:\/\/www\.cloudflarestatus\.com\/api\/v2\/incidents\.json/, 'Cloudflare uptime must use its official incident history.');
 assert.match(infrastructureStatus, /'API Gateway', 'Auth', 'Database', 'Realtime', 'Storage'/, 'Supabase health must cover the FretTrack backend services.');
 assert.match(infrastructureStatus, /'Pages', 'Workers', 'Workers Assets'/, 'Cloudflare health must cover FretTrack hosting and Worker services.');
 
@@ -121,8 +131,20 @@ const providerResponses = new Map([
   ['https://status.supabase.com/api/v2/summary.json', {
     components: INFRASTRUCTURE_PROVIDERS[0].componentNames.map((name) => ({ name, status: 'operational' }))
   }],
+  ['https://status.supabase.com/api/v2/incidents.json', {
+    incidents: [{
+      resolved_at: '2026-07-28T22:07:03.000Z',
+      components: [{ name: 'Auth' }]
+    }]
+  }],
   ['https://www.cloudflarestatus.com/api/v2/summary.json', {
     components: INFRASTRUCTURE_PROVIDERS[1].componentNames.map((name) => ({ name, status: 'operational' }))
+  }],
+  ['https://www.cloudflarestatus.com/api/v2/incidents.json', {
+    incidents: [{
+      resolved_at: '2026-07-29T20:31:15.000Z',
+      components: [{ name: 'Workers' }]
+    }]
   }]
 ]);
 const providerHealth = await getInfrastructureStatus(async (url) => (
@@ -138,6 +160,29 @@ assert.deepEqual(
     { label: 'Cloudflare', status: 'operational' }
   ],
   'Official provider summaries must resolve to the compact infrastructure health display.'
+);
+assert.equal(
+  getCombinedInfrastructureUptimeStart(providerHealth),
+  '2026-07-29T20:31:15.000Z',
+  'Combined uptime must begin at the latest relevant provider recovery.'
+);
+assert.deepEqual(
+  getCombinedInfrastructureHealth(providerHealth),
+  { status: 'operational', statusLabel: 'Operational', priority: 0 },
+  'Healthy dependencies must produce one Operational headline.'
+);
+assert.equal(
+  getCombinedInfrastructureHealth([
+    providerHealth[0],
+    { ...providerHealth[1], status: 'degraded' }
+  ]).status,
+  'degraded',
+  'A degraded dependency must replace the Operational headline.'
+);
+assert.equal(
+  formatInfrastructureUptime('2026-07-29T20:31:15.000Z', Date.parse('2026-07-31T08:04:25.000Z')),
+  '1 day 11 hours 33 min 10 sec',
+  'FretTrack uptime must use the requested readable duration.'
 );
 const recovered = normalizeSystemStatus({
   status: 'operational',
