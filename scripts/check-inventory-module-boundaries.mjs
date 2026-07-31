@@ -8,6 +8,7 @@ const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
 const page = read('src/modules/inventory/InventoryPage.jsx');
 const history = read('src/modules/inventory/InventoryHistoryTab.jsx');
 const labels = read('src/modules/inventory/InventoryLabelsTab.jsx');
+const partsList = read('src/modules/inventory/InventoryPartsList.jsx');
 const vendors = read('src/modules/inventory/InventoryVendorsTab.jsx');
 const formattingPath = join(root, 'src/modules/inventory/inventoryFormatting.js');
 const formatting = read('src/modules/inventory/inventoryFormatting.js');
@@ -15,13 +16,15 @@ const packageJson = read('package.json');
 
 assert.match(page, /import InventoryHistoryTab from ['"]\.\/InventoryHistoryTab\.jsx['"]/, 'Inventory must use the History tab boundary.');
 assert.match(page, /import InventoryLabelsTab from ['"]\.\/InventoryLabelsTab\.jsx['"]/, 'Inventory must use the Labels tab boundary.');
+assert.match(page, /import InventoryPartsList from ['"]\.\/InventoryPartsList\.jsx['"]/, 'Inventory must use the Parts list boundary.');
 assert.match(page, /import InventoryVendorsTab from ['"]\.\/InventoryVendorsTab\.jsx['"]/, 'Inventory must use the Vendors tab boundary.');
 assert.match(page, /<InventoryHistoryTab[\s\S]*?partPurchaseHistory=\{partPurchaseHistory\}[\s\S]*?partMovements=\{partMovements\}/, 'History data must remain connected.');
 assert.match(page, /<InventoryLabelsTab[\s\S]*?onPrintLabels=\{printBarcodeLabels\}/, 'Barcode printing must retain the established handler.');
+assert.match(page, /<InventoryPartsList[\s\S]*?onSearch=\{handleSearch\}[\s\S]*?onSelectPart=\{selectPart\}[\s\S]*?onToggleLabelPart=\{toggleLabelPart\}/, 'Parts search, selection, and label handlers must remain connected.');
 assert.match(page, /<InventoryVendorsTab[\s\S]*?onSelectVendor=\{loadVendorIntoForm\}[\s\S]*?onSaveVendor=\{saveVendor\}/, 'Vendor selection and saving must retain the established handlers.');
 assert.doesNotMatch(page, /function renderHistoryTab|function renderLabelsTab|function renderVendorsTab/, 'Extracted tabs must not remain duplicated in InventoryPage.');
 
-for (const source of [history, labels, vendors]) {
+for (const source of [history, labels, partsList, vendors]) {
   assert.doesNotMatch(source, /inventoryService|supabase/i, 'Display tabs must not load or mutate inventory data directly.');
 }
 
@@ -32,6 +35,11 @@ assert.match(history, /purchaseUnitLabel\(row\.purchaseUnit, row\.quantityReceiv
 assert.match(history, /row\.inventoryQuantityReceived/, 'History must render the stored converted inventory quantity.');
 assert.match(labels, /Labels use stable barcode identity only/, 'Label identity guidance must remain visible.');
 assert.match(labels, /<BarcodeLabelSheet parts=\{selectedLabelParts\} labelPreset=\{labelPreset\}/, 'Labels must retain the existing print sheet.');
+assert.match(partsList, /Low stock only/, 'Parts list must retain the low-stock filter.');
+assert.match(partsList, /onClick=\{\(\) => onSelectPart\(part\)\}/, 'Parts list rows must retain part selection.');
+assert.match(partsList, /onToggleLabelPart\(part\.id, event\.target\.checked\)/, 'Parts list must retain individual barcode-label selection.');
+assert.match(partsList, /part\.quantityOnHand <= part\.reorderPoint/, 'Parts list must retain low-stock status behavior.');
+assert.match(partsList, /\{children\}/, 'Parts list boundary must preserve the existing editor alongside the table.');
 assert.match(vendors, /<form onSubmit=\{onSaveVendor\}>/, 'Vendor saves must remain connected to the parent controller.');
 assert.match(vendors, /onClick=\{\(\) => onSelectVendor\(vendor\)\}/, 'Vendor selection must remain connected to the parent controller.');
 assert.match(vendors, /disabled=\{!canWrite\}/, 'Vendor editing must remain disabled without write access.');
@@ -40,12 +48,14 @@ for (const field of ['Online Only', 'Postal Code', 'Country']) {
   assert.match(vendors, new RegExp(field), `Vendor editing must retain ${field}.`);
 }
 
-const { formatInventoryStatus, formatInventoryDate, formatInventoryDateTime } = await import(pathToFileURL(formattingPath));
+const { formatInventoryStatus, formatInventoryDate, formatInventoryDateTime, getInventoryBarcodeLabel } = await import(pathToFileURL(formattingPath));
 assert.equal(formatInventoryStatus('partially_received'), 'Partially Received', 'Inventory statuses must retain readable formatting.');
 assert.equal(formatInventoryStatus(''), 'Draft', 'Blank inventory statuses must retain the Draft fallback.');
 assert.equal(formatInventoryDate(''), '-', 'Blank inventory dates must retain the empty fallback.');
 assert.equal(formatInventoryDate('not-a-date'), 'not-a-date', 'Invalid stored dates must remain visible instead of throwing.');
 assert.equal(formatInventoryDateTime('not-a-date'), 'not-a-date', 'Invalid stored date-times must remain visible instead of throwing.');
+assert.equal(getInventoryBarcodeLabel({ barcodeCode: '123' }), 'FT-PART-123', 'Part barcode labels must retain their stable prefix.');
+assert.equal(getInventoryBarcodeLabel({}), '-', 'Parts without barcode identity must retain the empty fallback.');
 assert.match(formatting, /Number\.isNaN\(date\.getTime\(\)\)/, 'Shared formatting must guard invalid dates.');
 assert.match(packageJson, /"check:inventory-module-boundaries": "node scripts\/check-inventory-module-boundaries\.mjs"/, 'The focused Inventory boundary check must be exposed.');
 

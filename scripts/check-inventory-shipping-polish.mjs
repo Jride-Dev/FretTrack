@@ -11,6 +11,7 @@ assert.ok(migrationFile, 'Inventory/vendor/shipping polish migration must exist.
 
 const migration = read(join(migrationsDir, migrationFile));
 const inventoryPage = read(join(root, 'src/modules/inventory/InventoryPage.jsx'));
+const inventoryPartsList = read(join(root, 'src/modules/inventory/InventoryPartsList.jsx'));
 const inventoryService = read(join(root, 'src/modules/inventory/inventoryService.js'));
 const barcodeLabels = read(join(root, 'src/modules/inventory/BarcodeLabelSheet.jsx'));
 const shopSettings = read(join(root, 'src/modules/shops/ShopSettings.jsx'));
@@ -71,8 +72,8 @@ assert.ok(inventoryPage.includes('Special Order Part'), 'Inventory UI must expos
 assert.ok(inventoryPage.includes('Special order parts are not treated as stocked items.'), 'Special-order helper text must explain stocked behavior.');
 assert.ok(inventoryPage.includes('Part Image'), 'Inventory UI must expose part image upload.');
 assert.ok(inventoryPage.includes('300x300 px or smaller'), 'Part image UI must show the 300x300 hard limit.');
-assert.ok(inventoryPage.includes('Search name, manufacturer UPC, barcode, vendor SKU, vendor UPC, category, or vendor'), 'Inventory search placeholder must use UPC/vendor wording.');
-assert.ok(inventoryPage.includes('<th>UPC</th>'), 'Parts table must show UPC instead of SKU.');
+assert.ok(inventoryPartsList.includes('Search name, manufacturer UPC, barcode, vendor SKU, vendor UPC, category, or vendor'), 'Inventory search placeholder must use UPC/vendor wording.');
+assert.ok(inventoryPartsList.includes('<th>UPC</th>'), 'Parts table must show UPC instead of SKU.');
 assert.ok(inventoryPage.includes('Part Name'), 'Part form must show Part Name.');
 assert.ok(inventoryPage.includes('Part Number'), 'Part form must show Part Number.');
 assert.ok(inventoryPage.includes('Vendor SKU'), 'Legacy supplier text field must be presented as Vendor SKU.');

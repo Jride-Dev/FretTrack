@@ -27,3 +27,7 @@ export function formatInventoryDateTime(value) {
   }
   return date.toLocaleString();
 }
+
+export function getInventoryBarcodeLabel(part) {
+  return part?.barcodeCode ? `FT-PART-${part.barcodeCode}` : '-';
+}

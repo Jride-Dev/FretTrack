@@ -26,8 +26,13 @@ import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
 import InventoryHistoryTab from './InventoryHistoryTab.jsx';
 import InventoryLabelsTab from './InventoryLabelsTab.jsx';
+import InventoryPartsList from './InventoryPartsList.jsx';
 import InventoryVendorsTab from './InventoryVendorsTab.jsx';
-import { formatInventoryDate as formatDate, formatInventoryStatus as formatStatusLabel } from './inventoryFormatting.js';
+import {
+  formatInventoryDate as formatDate,
+  formatInventoryStatus as formatStatusLabel,
+  getInventoryBarcodeLabel
+} from './inventoryFormatting.js';
 import {
   PURCHASE_UNIT_OPTIONS,
   inventoryUnitsForPurchaseQuantity,
@@ -98,10 +103,6 @@ const emptyPurchaseOrderForm = {
 
 const purchaseOrderStatuses = ['draft', 'ordered', 'partially_received', 'received', 'cancelled'];
 const purchaseOrderFilterOptions = ['all', ...purchaseOrderStatuses];
-
-function getBarcodeLabel(part) {
-  return part?.barcodeCode ? `FT-PART-${part.barcodeCode}` : '-';
-}
 
 function remainingForItem(item) {
   return Math.max(Number(item.quantityOrdered || 0) - Number(item.quantityReceived || 0), 0);
@@ -860,99 +861,25 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
 
   function renderPartsTab() {
     return (
-      <>
-        <form className="row-form inventory-search" onSubmit={handleSearch}>
-          <input
-            placeholder="Search name, manufacturer UPC, barcode, vendor SKU, vendor UPC, category, or vendor"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <label className="table-checkbox">
-            <input
-              type="checkbox"
-              checked={showInactive}
-              onChange={(event) => setShowInactive(event.target.checked)}
-            />
-            Show inactive
-          </label>
-          <label className="table-checkbox">
-            <input
-              type="checkbox"
-              checked={lowStockOnly}
-              onChange={(event) => setLowStockOnly(event.target.checked)}
-            />
-            Low stock only
-          </label>
-          <button type="submit" disabled={isLoading}>{isLoading ? 'Searching...' : 'Search'}</button>
-        </form>
-
-        <div className="inventory-label-toolbar">
-          <span>{selectedLabelPartIds.length} label part{selectedLabelPartIds.length === 1 ? '' : 's'} selected</span>
-          <button type="button" onClick={selectVisibleLabelParts}>Select visible with barcodes</button>
-          <button type="button" onClick={() => setSelectedLabelPartIds([])}>Clear labels</button>
-          <button type="button" className="primary-action" onClick={() => setActiveTab('labels')}>Preview Labels</button>
-        </div>
-
-        <div className="inventory-layout">
-          <div className="inventory-table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Label</th>
-                  <th>UPC</th>
-                  <th>Name</th>
-                  <th>Barcode</th>
-                  <th>On hand</th>
-                  <th>Reorder</th>
-                  <th>Desired</th>
-                  <th>Retail</th>
-                  <th>Location</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {parts.map((part) => {
-                  const isLowStock = !part.specialOrder && part.quantityOnHand <= part.reorderPoint;
-                  return (
-                    <tr
-                      key={part.id}
-                      className={`${selectedPartId === part.id ? 'selected-row' : ''}${part.isActive ? '' : ' inactive-row'}`}
-                      onClick={() => selectPart(part)}
-                    >
-                      <td onClick={(event) => event.stopPropagation()}>
-                        <input
-                          aria-label={`Select ${part.name} barcode label`}
-                          disabled={!part.barcodeCode}
-                          type="checkbox"
-                          checked={selectedLabelPartIds.includes(part.id)}
-                          onChange={(event) => toggleLabelPart(part.id, event.target.checked)}
-                        />
-                      </td>
-                      <td>{part.sku || '-'}</td>
-                      <td><strong>{part.name}</strong></td>
-                      <td><code>{getBarcodeLabel(part)}</code></td>
-                      <td>{part.quantityOnHand}</td>
-                      <td>{part.reorderPoint}</td>
-                      <td>{part.specialOrder ? '-' : part.desiredStockLevel}</td>
-                      <td>{money(part.retailPrice, moneyOptions)}</td>
-                      <td>{part.location || '-'}</td>
-                      <td>
-                        <span className={`status-pill ${part.isActive ? (isLowStock ? 'warning' : 'success') : 'muted'}`}>
-                          {part.isActive ? (part.specialOrder ? 'Special order' : isLowStock ? 'Low stock' : 'Active') : 'Inactive'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {!parts.length && (
-                  <tr>
-                    <td colSpan="10">{isLoading ? 'Loading parts...' : 'No parts found.'}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
+      <InventoryPartsList
+        parts={parts}
+        selectedPartId={selectedPartId}
+        selectedLabelPartIds={selectedLabelPartIds}
+        search={search}
+        showInactive={showInactive}
+        lowStockOnly={lowStockOnly}
+        isLoading={isLoading}
+        moneyOptions={moneyOptions}
+        onSearchChange={setSearch}
+        onShowInactiveChange={setShowInactive}
+        onLowStockOnlyChange={setLowStockOnly}
+        onSearch={handleSearch}
+        onSelectPart={selectPart}
+        onToggleLabelPart={toggleLabelPart}
+        onSelectVisibleLabelParts={selectVisibleLabelParts}
+        onClearLabelParts={() => setSelectedLabelPartIds([])}
+        onPreviewLabels={() => setActiveTab('labels')}
+      >
           <div className="inventory-editor">
             <form onSubmit={savePart}>
               <div className="editor-heading">
@@ -1066,7 +993,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               )}
               {selectedPart && (
                 <div className="inventory-meta-grid">
-                  <span>Barcode label <strong><code>{getBarcodeLabel(selectedPart)}</code></strong></span>
+                  <span>Barcode label <strong><code>{getInventoryBarcodeLabel(selectedPart)}</code></strong></span>
                   <span>Vendor <strong>{vendorsById.get(selectedPart.vendorId)?.name || '-'}</strong></span>
                   <span>Vendor UPC <strong>{selectedPart.vendorSku || '-'}</strong></span>
                   <span>Location <strong>{selectedPart.location || '-'}</strong></span>
@@ -1126,8 +1053,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               </div>
             )}
           </div>
-        </div>
-      </>
+      </InventoryPartsList>
     );
   }
 
