@@ -1,14 +1,13 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AppNotice from '../shared/components/AppNotice.jsx';
+import NewJobSidebar from './NewJobSidebar.jsx';
+import { getAppAccess } from './appAccess.js';
 import WorkspaceRouter from './WorkspaceRouter.jsx';
 import useWorkspaceNavigation from './useWorkspaceNavigation.js';
 import AuthGate from '../modules/auth/AuthGate.jsx';
 import { getCustomers } from '../modules/customers';
-import JobForm from '../modules/jobs/JobForm.jsx';
-import JobList from '../modules/jobs/JobList.jsx';
 import { getAssignableShopMembers } from '../modules/jobs/teamAssignmentService.js';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
-import UpcomingSchedulePanel from '../modules/scheduling/UpcomingSchedulePanel.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import FeedbackReporter from '../modules/system/FeedbackReporter.jsx';
 import SystemAnnouncements from '../modules/system/SystemAnnouncements.jsx';
@@ -17,21 +16,7 @@ import { getCurrentSession, onAuthSessionChange, signOut } from '../modules/auth
 import {
   canAccessOperatorDashboard,
   canAccessShopAsMember,
-  canDeletePhotos as canDeletePhotosForRole,
-  canEditCustomers as canEditCustomersForRole,
-  canEditJobs as canEditJobsForRole,
-  canEditPhotos as canEditPhotosForRole,
-  canEditScheduling as canEditSchedulingForRole,
-  canManageInventory as canManageInventoryForRole,
-  canManageShipments as canManageShipmentsForRole,
-  canManageTeamMembers as canManageTeamMembersForRole,
-  canManageShopSettings,
-  canOverwritePhotos as canOverwritePhotosForRole,
-  canPreviewCustomerImport as canPreviewCustomerImportForRole,
-  canUploadPhotos as canUploadPhotosForRole,
-  canViewBilling as canViewBillingForRole,
-  getCurrentAccessPermissions,
-  getShopWriteAccess
+  getCurrentAccessPermissions
 } from '../modules/auth/permissionService';
 import { addJob, findRemoteJobByNumber, getJobs, isDuplicateWorkOrderError, updateJob } from '../modules/jobs/jobService';
 import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService';
@@ -42,7 +27,6 @@ import { clearVitePreloadReloadGuard } from '../shared/pwa/preloadRecovery';
 import { bootstrapCurrentUserAsOwner, getCurrentUserShopMemberships } from '../modules/shops/shopMembershipService';
 import { getCurrentShopProfile } from '../modules/shops/shopProfileService';
 import { getCountryLocalizationDefaults } from '../modules/shops/shopLocalization.js';
-import { money } from '../shared/utils/money';
 import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes';
 import {
   getBillingStatusLabel,
@@ -50,7 +34,6 @@ import {
   getEffectiveStatus,
   getPremiumFeatureAvailability,
   getShopEntitlementSnapshot,
-  canUseTeamAssignment as hasTeamAssignmentEntitlement,
   isGraceStatus,
   isReadOnlyStatus
 } from '../modules/billing/entitlementService';
@@ -113,32 +96,28 @@ export default function App() {
   const betaApproved = betaAccess?.status === 'approved';
   const planStatus = getPlanStatus(billingAccess);
   const appVersionText = getPlanVersionText(APP_VERSION, planStatus);
-  const permissionContext = {
-    role: membership?.role,
-    entitlementSnapshot: billingAccess,
-    betaApproved
-  };
-  const canEditJobs = !hasSupabaseConfig || canEditJobsForRole(permissionContext);
-  const canWrite = hasSupabaseConfig
-    ? getShopWriteAccess({ ...permissionContext, hasSupabaseConfig })
-    : canEditJobs;
-  const canManageShop = !hasSupabaseConfig || canManageShopSettings({ role: membership?.role });
-  const canEditShopSettings = canManageShop && canWrite;
-  const canManageTeamMembers = !hasSupabaseConfig || canManageTeamMembersForRole(permissionContext);
-  const canManageInventory = !hasSupabaseConfig || canManageInventoryForRole(permissionContext);
-  const canManageShipments = !hasSupabaseConfig || canManageShipmentsForRole(permissionContext);
-  const canEditCustomers = !hasSupabaseConfig || canEditCustomersForRole(permissionContext);
-  const canEditScheduling = !hasSupabaseConfig || canEditSchedulingForRole(permissionContext);
-  const canPreviewCustomerImport = !hasSupabaseConfig || canPreviewCustomerImportForRole(permissionContext);
-  const canUploadPhotos = !hasSupabaseConfig || canUploadPhotosForRole(permissionContext);
-  const canEditPhotos = !hasSupabaseConfig || canEditPhotosForRole(permissionContext);
-  const canOverwritePhotos = !hasSupabaseConfig || canOverwritePhotosForRole(permissionContext);
-  const canDeletePhotos = !hasSupabaseConfig || canDeletePhotosForRole(permissionContext);
-  const canViewBilling = !hasSupabaseConfig || canViewBillingForRole(permissionContext);
-  const canSendEmail = canWrite && billingAccess.access?.canSendEmail !== false;
-  const canSendSms = canWrite && billingAccess.access?.canSendSms === true;
-  const teamAssignmentEnabled = hasTeamAssignmentEntitlement(billingAccess, { betaApproved });
-  const entitlementMessage = getEntitlementMessage(billingAccess);
+  const {
+    permissionContext,
+    canEditJobs,
+    canWrite,
+    canManageShop,
+    canEditShopSettings,
+    canManageTeamMembers,
+    canManageInventory,
+    canManageShipments,
+    canEditCustomers,
+    canEditScheduling,
+    canPreviewCustomerImport,
+    canUploadPhotos,
+    canEditPhotos,
+    canOverwritePhotos,
+    canDeletePhotos,
+    canViewBilling,
+    canSendEmail,
+    canSendSms,
+    teamAssignmentEnabled,
+    entitlementMessage
+  } = getAppAccess({ membership, billingAccess, betaApproved, hasSupabaseConfig });
   const tillSummary = calculateTillSummary(jobs, { shopProfile });
   const moneyOptions = getShopMoneyOptions(shopProfile || undefined);
   const dateOptions = getShopDateOptions(shopProfile || undefined);
@@ -1238,59 +1217,30 @@ export default function App() {
       )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       <div className={`layout app-layout${mode === 'detail' && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${mode === 'list' ? ' full-content' : ''}`}>
-        {mode !== 'list' && <aside className="new-job-sidebar no-print" aria-label="New job sections">
-          <div className="new-job-sidebar-controls">
-            <button
-              type="button"
-              className="button-tertiary new-job-sidebar-toggle"
-              onClick={toggleNewJobSidebar}
-              aria-expanded={!isNewJobSidebarCollapsed}
-              aria-controls="new-job-sidebar-content"
-            >
-              {isNewJobSidebarCollapsed ? 'Show sections' : 'Hide sections'}
-            </button>
-          </div>
-          <div id="new-job-sidebar-content" className="new-job-sidebar-content" hidden={isNewJobSidebarCollapsed}>
-            <JobForm
-              jobs={jobs}
-              customers={customers}
-              canWrite={canEditJobs}
-              shopProfile={shopProfile}
-              assignableMembers={assignableMembers}
-              membership={membership}
-              entitlementSnapshot={billingAccess}
-              betaApproved={betaApproved}
-              initialCustomer={pendingNewJobCustomer}
-              onJobSaved={handleJobSaved}
-              onOfflineDraftSaved={handleOfflineDraftSaved}
-              onNotice={setNotice}
-            />
-            <JobList jobs={jobs} selectedJobId={selectedJobId} onSelectJob={handleSelectJob} onViewAll={() => navigateTo('list')} />
-            <section className="panel till-summary">
-              <h2>Till Summary</h2>
-              <div className="totals">
-                <span>Paid In</span>
-                <strong>{money(tillSummary.paidTotal, moneyOptions)}</strong>
-                <span>{shopProfile?.taxLabel || 'Sales Tax'}</span>
-                <strong>{money(tillSummary.salesTaxAccrued, moneyOptions)}</strong>
-                <span>Open Balance</span>
-                <strong>{money(tillSummary.openBalance, moneyOptions)}</strong>
-                {Object.entries(tillSummary.byMethod).map(([method, amount]) => (
-                  <Fragment key={method}>
-                    <span>{method}</span>
-                    <strong>{money(amount, moneyOptions)}</strong>
-                  </Fragment>
-                ))}
-              </div>
-            </section>
-            {membership?.shopId && (
-              <UpcomingSchedulePanel
-                shopId={membership.shopId}
-                onOpenSchedule={() => navigateTo('scheduling')}
-              />
-            )}
-          </div>
-        </aside>}
+        {mode !== 'list' && (
+          <NewJobSidebar
+            isCollapsed={isNewJobSidebarCollapsed}
+            onToggle={toggleNewJobSidebar}
+            jobs={jobs}
+            customers={customers}
+            selectedJobId={selectedJobId}
+            shopProfile={shopProfile}
+            membership={membership}
+            assignableMembers={assignableMembers}
+            billingAccess={billingAccess}
+            betaApproved={betaApproved}
+            canEditJobs={canEditJobs}
+            pendingNewJobCustomer={pendingNewJobCustomer}
+            tillSummary={tillSummary}
+            moneyOptions={moneyOptions}
+            onJobSaved={handleJobSaved}
+            onOfflineDraftSaved={handleOfflineDraftSaved}
+            onSelectJob={handleSelectJob}
+            onOpenCurrentJobs={() => navigateTo('list')}
+            onOpenSchedule={() => navigateTo('scheduling')}
+            onNotice={setNotice}
+          />
+        )}
         <div className="content">
           <WorkspaceRouter
             mode={mode}
@@ -1569,23 +1519,6 @@ function BillingStateBanner({ canManageShop, entitlementSnapshot }) {
       <span>{message}</span>
     </section>
   );
-}
-
-function getEntitlementMessage(entitlementSnapshot) {
-  if (getEffectiveStatus(entitlementSnapshot) === 'expired') {
-    return 'Trial expired. Viewing, printing, and exports remain available where safe, but new writes and customer messages require upgraded access.';
-  }
-
-  if (isReadOnlyStatus(entitlementSnapshot)) {
-    return 'This shop is read-only. Viewing, printing, and exports remain available, but new writes and customer messages are paused.';
-  }
-
-  const status = getEffectiveStatus(entitlementSnapshot);
-  if (status === 'grace') {
-    return '';
-  }
-
-  return '';
 }
 
 function getErrorMessage(error, fallback) {

@@ -8,6 +8,8 @@ The first 0.3.0 architecture-foundation slice extracts top-level workspace page 
 
 Workspace refresh restoration now waits until the authenticated shop profile and job data are ready before writing navigation state. This prevents the hook's initial New Job mode from replacing a saved Inventory, Scheduling, Customers, Reports, or Job Detail destination during startup.
 
+The application shell now delegates its New Job sidebar composition and derived role/entitlement access map to focused modules. Existing feature permission helpers remain authoritative, while `App.jsx` no longer renders sidebar internals or calculates each page permission inline.
+
 The public Community section now uses the supplied JR's Custom Shop / Torrance Guitar Repair logo instead of the temporary TGR letter mark.
 
 The public Support page now includes a dedicated FAQ for uptime resets, Operational status interpretation, Shop Settings defaults, read-only access, photo persistence, and complete privacy-conscious bug reports. Status documentation also clarifies that the FretTrack uptime clock measures time since the latest relevant Supabase or Cloudflare recovery. A reset can reflect a provider-wide or regional incident and does not by itself mean FretTrack restarted, was redeployed, or became unavailable to a particular shop.

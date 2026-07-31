@@ -17,6 +17,7 @@ function assertMatches(value, pattern, message) {
 
 const helpers = source('src/modules/auth/permissionService.js');
 const app = source('src/app/App.jsx');
+const appAccess = source('src/app/appAccess.js');
 const workspaceRouter = source('src/app/WorkspaceRouter.jsx');
 const workspaceNavigation = source('src/app/useWorkspaceNavigation.js');
 const inventory = source('src/modules/inventory/InventoryPage.jsx');
@@ -68,11 +69,12 @@ assertMatches(helpers, /export function canViewAdvancedReporting[\s\S]*?canUseAd
 
 assertIncludes(workspaceRouter, 'canAccessOperatorDashboard({ isOperator: access.isOperator })', 'Operator route must remain verified-operator gated.');
 assertIncludes(workspaceNavigation, 'return canAccessOperatorDashboard({ isOperator });', 'Workspace restoration must not restore operator mode for a non-operator.');
-assertIncludes(app, 'canEditCustomersForRole(permissionContext)', 'Customers must receive the centralized edit permission.');
-assertIncludes(app, 'canManageInventoryForRole(permissionContext)', 'Inventory must receive the centralized inventory permission.');
-assertIncludes(app, 'canManageShipmentsForRole(permissionContext)', 'Shipping must receive the centralized shipping permission.');
-assertIncludes(app, 'canEditSchedulingForRole(permissionContext)', 'Scheduling must receive the centralized scheduling permission.');
-assertIncludes(app, 'canEditJobsForRole(permissionContext)', 'Jobs must receive the centralized job permission.');
+assertIncludes(appAccess, 'canEditCustomersForRole(permissionContext)', 'Customers must receive the centralized edit permission.');
+assertIncludes(appAccess, 'canManageInventoryForRole(permissionContext)', 'Inventory must receive the centralized inventory permission.');
+assertIncludes(appAccess, 'canManageShipmentsForRole(permissionContext)', 'Shipping must receive the centralized shipping permission.');
+assertIncludes(appAccess, 'canEditSchedulingForRole(permissionContext)', 'Scheduling must receive the centralized scheduling permission.');
+assertIncludes(appAccess, 'canEditJobsForRole(permissionContext)', 'Jobs must receive the centralized job permission.');
+assertIncludes(app, 'getAppAccess({ membership, billingAccess, betaApproved, hasSupabaseConfig })', 'App must use the centralized derived access boundary.');
 assertIncludes(inventory, 'if (!canWrite)', 'Inventory mutation handlers must enforce write access.');
 assertIncludes(shipping, 'if (!canWrite)', 'Shipping mutation handlers must enforce write access.');
 assertIncludes(scheduling, 'canWrite={canWrite}', 'Scheduling details must receive the centralized write permission.');

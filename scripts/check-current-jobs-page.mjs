@@ -11,6 +11,7 @@ const compactList = source('src/modules/jobs/JobList.jsx');
 const currentJobStatus = source('src/modules/jobs/currentJobStatus.js');
 const app = source('src/app/App.jsx');
 const workspaceRouter = source('src/app/WorkspaceRouter.jsx');
+const newJobSidebar = source('src/app/NewJobSidebar.jsx');
 const styles = source('src/styles.css');
 
 assert.ok(page.includes('<h2>Current Jobs</h2>'), 'Full Current Jobs page must exist.');
@@ -22,7 +23,8 @@ assert.ok(workspaceRouter.includes("mode === 'list'"), 'Current Jobs application
 assert.ok(workspaceRouter.includes('<CurrentJobsPage') && workspaceRouter.includes('onSelectJob={actions.onSelectJob}'), 'Current Jobs mode must render the full page through the workspace boundary.');
 assert.ok(app.includes('onSelectJob: handleSelectJob'), 'Current Jobs must retain the established job-selection handler.');
 assert.ok(compactList.includes('View all current jobs'), 'Dashboard summary must link to the full Current Jobs page.');
-assert.ok(app.includes("onViewAll={() => navigateTo('list')}"), 'Dashboard link must use existing application navigation.');
+assert.ok(newJobSidebar.includes('onViewAll={onOpenCurrentJobs}'), 'Dashboard link must cross the sidebar navigation boundary.');
+assert.ok(app.includes("onOpenCurrentJobs={() => navigateTo('list')}"), 'Dashboard link must use existing application navigation.');
 assert.ok(page.includes('type="search"'), 'Current Jobs must include search.');
 assert.ok(page.includes('Priority'), 'Current Jobs must include priority filtering and display.');
 assert.ok(page.includes('Status'), 'Current Jobs must include status filtering.');

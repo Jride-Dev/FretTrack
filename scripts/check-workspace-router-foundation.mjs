@@ -8,9 +8,13 @@ const appPath = path.join(root, 'src', 'app', 'App.jsx');
 const routerPath = path.join(root, 'src', 'app', 'WorkspaceRouter.jsx');
 const navigationPath = path.join(root, 'src', 'app', 'useWorkspaceNavigation.js');
 const workspaceStatePath = path.join(root, 'src', 'app', 'workspaceState.js');
+const sidebarPath = path.join(root, 'src', 'app', 'NewJobSidebar.jsx');
+const appAccessPath = path.join(root, 'src', 'app', 'appAccess.js');
 const appSource = fs.readFileSync(appPath, 'utf8');
 const routerSource = fs.readFileSync(routerPath, 'utf8');
 const navigationSource = fs.readFileSync(navigationPath, 'utf8');
+const sidebarSource = fs.readFileSync(sidebarPath, 'utf8');
+const appAccessSource = fs.readFileSync(appAccessPath, 'utf8');
 const { resolveStoredWorkspaceState } = await import(pathToFileURL(workspaceStatePath));
 
 assert.match(
@@ -19,6 +23,18 @@ assert.match(
   'App must use the workspace page boundary.'
 );
 assert.match(appSource, /import useWorkspaceNavigation from ['"]\.\/useWorkspaceNavigation\.js['"]/, 'App must use the workspace navigation boundary.');
+assert.match(appSource, /import NewJobSidebar from ['"]\.\/NewJobSidebar\.jsx['"]/, 'App must use the New Job sidebar boundary.');
+assert.match(appSource, /import \{ getAppAccess \} from ['"]\.\/appAccess\.js['"]/, 'App must use the derived access boundary.');
+assert.match(appSource, /getAppAccess\(\{ membership, billingAccess, betaApproved, hasSupabaseConfig \}\)/, 'App must derive feature access through one boundary.');
+assert.doesNotMatch(appSource, /canEditJobsForRole|canManageInventoryForRole|canUploadPhotosForRole/, 'App must not derive individual feature permissions inline.');
+for (const accessRule of ['canEditJobsForRole', 'canManageInventoryForRole', 'canManageShipmentsForRole', 'canEditSchedulingForRole', 'canUploadPhotosForRole']) {
+  assert.match(appAccessSource, new RegExp(accessRule), `App access must preserve ${accessRule}.`);
+}
+assert.match(appSource, /<NewJobSidebar[\s\S]*?onSelectJob=\{handleSelectJob\}/, 'App must connect the established job-selection handler to the sidebar boundary.');
+assert.doesNotMatch(appSource, /<JobForm\b|<JobList\b|<UpcomingSchedulePanel\b/, 'App must not render sidebar module internals directly.');
+for (const sidebarFeature of ['JobForm', 'JobList', 'UpcomingSchedulePanel', 'Till Summary']) {
+  assert.match(sidebarSource, new RegExp(sidebarFeature), `New Job sidebar must retain ${sidebarFeature}.`);
+}
 assert.match(appSource, /useWorkspaceNavigation\(\{/, 'App must obtain workspace state from the navigation hook.');
 assert.doesNotMatch(appSource, /useState\(['"]new['"]\)/, 'App must not own workspace mode state directly.');
 assert.doesNotMatch(appSource, /jobDetailReturnModeRef/, 'App must not own Job Detail return navigation state directly.');

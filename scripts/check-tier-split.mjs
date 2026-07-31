@@ -19,6 +19,8 @@ function assertMatches(source, pattern, message) {
 const entitlementService = read('src/modules/billing/entitlementService.js');
 const permissionService = read('src/modules/auth/permissionService.js');
 const app = read('src/app/App.jsx');
+const appAccess = read('src/app/appAccess.js');
+const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
 const photoGallery = read('src/modules/photos/PhotoGallery.jsx');
 const shopMembersPanel = read('src/modules/shops/ShopMembersPanel.jsx');
@@ -103,14 +105,14 @@ assertIncludes(permissionService, 'hasPhotoEditorEntitlement(entitlementSnapshot
 assertIncludes(permissionService, 'return canUploadPhotos({ role, entitlementSnapshot }) && hasPhotoEditorEntitlement(entitlementSnapshot);', 'Photo editor must require writable photo access and entitlement.');
 assertIncludes(permissionService, 'hasTeamMembersEntitlement(entitlementSnapshot)', 'Team member management must require entitlement.');
 assertIncludes(permissionService, 'return canWriteShop({ role, entitlementSnapshot })', 'Team member management must require writable shop access.');
-assertIncludes(app, 'const canEditShopSettings = canManageShop && canWrite;', 'Shop settings edits must respect read-only lifecycle while billing remains viewable.');
-assertIncludes(app, 'canManageShop={canEditShopSettings}', 'Shop settings should receive write-aware manage permission.');
+assertIncludes(appAccess, 'canEditShopSettings: canManageShop && canWrite', 'Shop settings edits must respect read-only lifecycle while billing remains viewable.');
+assertIncludes(workspaceRouter, 'canManageShop={access.canEditShopSettings}', 'Shop settings should receive write-aware manage permission.');
 
 assertIncludes(membershipService, "supabase.rpc('get_current_user_shop_memberships')", 'Membership loading must use effective-access RPC.');
 assertIncludes(membershipService, "supabase.rpc('bootstrap_current_user_as_owner'", 'Shop bootstrap must use server-side RPC.');
 assertIncludes(app, 'effectiveMemberAccess === false', 'App must detect locked memberships.');
 assertIncludes(app, 'Shop Access Locked', 'Locked staff accounts must get a clear screen.');
-assertIncludes(app, 'canManageTeamMembersForRole', 'App must derive team management permission centrally.');
+assertIncludes(appAccess, 'canManageTeamMembersForRole', 'App access must derive team management permission centrally.');
 
 assertIncludes(jobDetail, "message: 'Photo Editor is available in Pro.'", 'Photo editor launch must be guarded with Pro wording.');
 assertIncludes(photoGallery, 'Photo Editor - Available in Pro', 'Photo gallery must show Pro lock state.');

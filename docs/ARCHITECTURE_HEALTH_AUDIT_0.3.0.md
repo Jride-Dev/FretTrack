@@ -80,6 +80,8 @@ The first implementation slice is on `refactor/workspace-router-foundation`:
 - `WorkspaceRouter.jsx` owns top-level page selection and lazy feature loading.
 - `useWorkspaceNavigation.js` owns workspace mode, selected-job state, persisted restoration, access-aware transitions, dirty-state confirmation, and Job Detail return behavior.
 - The compact Current Jobs list and full Current Jobs page now share a small domain status helper without importing one page from another.
+- `NewJobSidebar.jsx` owns the Job Form, compact Current Jobs, Till Summary, and Upcoming Schedule composition.
+- `appAccess.js` owns the derived application permission and entitlement map while continuing to call the centralized permission and billing helpers.
 - Focused regression checks follow the new architecture boundary instead of requiring feature JSX to remain inside `App.jsx`.
 
 An authenticated local navigation smoke test is required before proceeding into deeper component and data-ownership extraction.

@@ -25,6 +25,7 @@ function functionBody(sql, name) {
 
 const permissionService = read('src/modules/auth/permissionService.js');
 const app = read('src/app/App.jsx');
+const appAccess = read('src/app/appAccess.js');
 const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
 const workspaceNavigation = read('src/app/useWorkspaceNavigation.js');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
@@ -44,12 +45,13 @@ assertMatches(usageCapsMigration, /not private\.is_shop_member\(target_shop_id\)
 
 assertIncludes(workspaceNavigation, 'return canAccessOperatorDashboard({ isOperator });', 'Workspace restore must use operator helper.');
 assertIncludes(workspaceRouter, 'canAccessOperatorDashboard({ isOperator: access.isOperator })', 'Operator route render must use operator helper.');
-assertIncludes(app, 'canUploadPhotosForRole(permissionContext)', 'Photo upload permission must use permission service.');
-assertIncludes(app, 'canOverwritePhotosForRole(permissionContext)', 'Photo overwrite permission must use permission service.');
-assertIncludes(app, 'canEditJobsForRole(permissionContext)', 'Job writes must use permission service.');
-assertIncludes(app, 'canManageInventoryForRole(permissionContext)', 'Inventory writes must use permission service.');
-assertIncludes(app, 'canEditSchedulingForRole(permissionContext)', 'Scheduling writes must use permission service.');
-assertIncludes(app, 'canEditCustomersForRole(permissionContext)', 'Customer writes must use permission service.');
+assertIncludes(appAccess, 'canUploadPhotosForRole(permissionContext)', 'Photo upload permission must use permission service.');
+assertIncludes(appAccess, 'canOverwritePhotosForRole(permissionContext)', 'Photo overwrite permission must use permission service.');
+assertIncludes(appAccess, 'canEditJobsForRole(permissionContext)', 'Job writes must use permission service.');
+assertIncludes(appAccess, 'canManageInventoryForRole(permissionContext)', 'Inventory writes must use permission service.');
+assertIncludes(appAccess, 'canEditSchedulingForRole(permissionContext)', 'Scheduling writes must use permission service.');
+assertIncludes(appAccess, 'canEditCustomersForRole(permissionContext)', 'Customer writes must use permission service.');
+assertIncludes(app, 'getAppAccess({ membership, billingAccess, betaApproved, hasSupabaseConfig })', 'App must use the centralized derived access boundary.');
 assertIncludes(app, '<InternalCurrentAccessPanel', 'Internal access panel should be wired into app shell.');
 assertIncludes(app, 'if (!canAccessOperatorDashboard({ isOperator }))', 'Internal access panel must be operator-only.');
 
