@@ -326,7 +326,8 @@ export default function JobForm({
           }
         },
         tax: {
-          ...getDefaultTaxSettings(shopProfile)
+          ...getDefaultTaxSettings(shopProfile),
+          rateSource: 'shop'
         },
         payments: [],
         actionHighE3rd: '',

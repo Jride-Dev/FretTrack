@@ -17,6 +17,7 @@ import WorkLogSection from './WorkLogSection';
 import CustomerDamageReport from './CustomerDamageReport';
 import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
+import { getShopDefaultTaxRate, resolveJobTaxSettings, withResolvedJobTaxSettings } from '../billing/jobTaxSettings';
 import MessagesPanel from '../messaging/MessagesPanel';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { formatLength, formatMeasurementChange } from '../../shared/utils/measurements';
@@ -187,21 +188,17 @@ export default function JobDetail({
   const images = draftJob.images || [];
   const workOrderImageIds = draftJob.techDetails.workOrderImageIds || [];
   const workOrderImages = images.filter((image) => workOrderImageIds.includes(image.id));
-  const storedTaxSettings = draftJob.techDetails.tax || {};
   const shopSettings = shopProfile || getShopSettings();
-  const taxSettings = {
-    ...storedTaxSettings,
-    currencyCode: shopSettings.currencyCode || storedTaxSettings.currencyCode,
-    locale: shopSettings.locale || storedTaxSettings.locale,
-    dateFormat: shopSettings.dateFormat || storedTaxSettings.dateFormat,
-    taxLabel: shopSettings.taxLabel || storedTaxSettings.taxLabel
-  };
+  const taxSettings = resolveJobTaxSettings(draftJob, shopSettings);
   const payments = draftJob.techDetails.payments || [];
   const instrumentStringCount = getInstrumentStringCount(draftJob);
   const outerStringLabels = getOuterStringLabels(draftJob.instrumentType, instrumentStringCount);
   const measurementOptions = getShopMeasurementOptions(shopSettings);
 
-  const totals = useMemo(() => calculateJobTotals(draftJob), [draftJob]);
+  const totals = useMemo(
+    () => calculateJobTotals(draftJob, taxSettings),
+    [draftJob, taxSettings.salesTaxRate, taxSettings.taxableParts, taxSettings.taxableServices]
+  );
   const dateOptions = getShopDateOptions({
     dateFormat: taxSettings.dateFormat || shopSettings.dateFormat,
     locale: taxSettings.locale || shopSettings.locale
@@ -283,7 +280,21 @@ export default function JobDetail({
         ...draftJob.techDetails,
         tax: {
           ...(draftJob.techDetails.tax || {}),
-          [name]: type === 'checkbox' ? checked : value
+          [name]: type === 'checkbox' ? checked : value,
+          ...(name === 'salesTaxRate' ? { rateSource: 'job' } : {})
+        }
+      }
+    });
+  }
+
+  function useShopTaxRate() {
+    patchJob({
+      techDetails: {
+        ...draftJob.techDetails,
+        tax: {
+          ...(draftJob.techDetails.tax || {}),
+          salesTaxRate: getShopDefaultTaxRate(shopSettings),
+          rateSource: 'shop'
         }
       }
     });
@@ -1236,14 +1247,16 @@ export default function JobDetail({
     let scopedShopSettings;
     try {
       scopedShopSettings = resolveScopedShopEmailSettings(jobToSend, shopProfile);
-      documentContent = buildSelectedDocumentEmailContent(jobToSend, {
+      const jobWithCurrentTax = withResolvedJobTaxSettings(jobToSend, scopedShopSettings);
+      const resolvedTaxSettings = jobWithCurrentTax.techDetails.tax;
+      documentContent = buildSelectedDocumentEmailContent(jobWithCurrentTax, {
         shopSettings: scopedShopSettings,
         lengthUnit: measurementOptions.lengthUnit,
         dateOptions,
         moneyOptions,
-        totals: calculateJobTotals(jobToSend),
-        taxLabel: jobToSend.techDetails?.tax?.taxLabel || scopedShopSettings.taxLabel || 'Sales Tax',
-        instrumentLabel: formatInstrumentLabel(jobToSend)
+        totals: calculateJobTotals(jobWithCurrentTax, resolvedTaxSettings),
+        taxLabel: resolvedTaxSettings.taxLabel || scopedShopSettings.taxLabel || 'Sales Tax',
+        instrumentLabel: formatInstrumentLabel(jobWithCurrentTax)
       }, {
         includeJobSheet,
         includeCustomerReport
@@ -1447,10 +1460,12 @@ export default function JobDetail({
         removePayment={removePayment}
         setPayment={setPayment}
         taxSettings={taxSettings}
+        shopTaxRate={getShopDefaultTaxRate(shopSettings)}
         totals={totals}
         updateDiscountField={updateDiscountField}
         updatePayment={updatePayment}
         updateTaxField={updateTaxField}
+        useShopTaxRate={useShopTaxRate}
       />
     </>
   );

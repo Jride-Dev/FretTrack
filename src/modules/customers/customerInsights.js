@@ -1,20 +1,21 @@
 import { calculateJobTotals } from '../billing/accounting';
+import { resolveJobTaxSettings } from '../billing/jobTaxSettings';
 import { normalizeCustomer, normalizePhone, normalizeText } from './customerNormalize';
 
 const CLOSED_JOB_STATUSES = new Set(['completed', 'picked up', 'closed']);
 
-export function buildCustomerDirectory(customers = [], jobs = []) {
+export function buildCustomerDirectory(customers = [], jobs = [], options = {}) {
   return customers
-    .map((customer) => buildCustomerProfile(customer, jobs))
+    .map((customer) => buildCustomerProfile(customer, jobs, options))
     .sort((left, right) => new Date(right.lastActivityAt || right.updatedAt || right.createdAt || 0) - new Date(left.lastActivityAt || left.updatedAt || left.createdAt || 0));
 }
 
-export function buildCustomerProfile(customer = {}, jobs = []) {
+export function buildCustomerProfile(customer = {}, jobs = [], options = {}) {
   const normalizedCustomer = normalizeCustomer(customer);
   const relatedJobs = getRelatedJobs(normalizedCustomer, jobs);
   const jobSnapshots = relatedJobs.map((job) => ({
     job,
-    totals: calculateJobTotals(job)
+    totals: calculateJobTotals(job, resolveJobTaxSettings(job, options.shopProfile || options))
   }));
   const paymentRows = collectPaymentRows(relatedJobs);
   const summary = summarizeBalance(jobSnapshots);

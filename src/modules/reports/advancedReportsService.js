@@ -25,6 +25,7 @@ export function buildAdvancedReportMetrics({
   const scopedCustomers = customers.filter((customer) => matchesShop(customer, shopId));
   const scopedParts = parts.filter((part) => matchesShop(part, shopId));
   const accountingJobs = scopedJobs.map((job) => buildJobAccountingSnapshot(job, {
+    shopProfile,
     currencyCode: shopProfile?.currencyCode,
     locale: shopProfile?.locale,
     taxLabel: shopProfile?.taxLabel,

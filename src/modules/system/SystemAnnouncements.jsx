@@ -119,7 +119,7 @@ export default function SystemAnnouncements() {
             {isOperational && infrastructureUptimeStart && (
               <span
                 className="frettrack-uptime"
-                title="Continuous time since the latest resolved incident affecting FretTrack's monitored Supabase or Cloudflare services. Provider history refreshes every 30 minutes."
+                title="Time since the latest resolved incident involving a monitored Supabase or Cloudflare service. A reset may reflect a provider-wide incident and does not necessarily mean FretTrack restarted or your shop experienced an outage. Provider history refreshes every 30 minutes."
               >
                 FretTrack uptime <strong>{formatInfrastructureUptime(infrastructureUptimeStart, clock)}</strong>
               </span>

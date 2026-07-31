@@ -19,6 +19,7 @@ export default function CustomerManager({
   canPreviewCustomerImport = false,
   dateOptions = {},
   moneyOptions = {},
+  shopProfile = null,
   onCustomerSaved,
   onCreateJobForCustomer,
   onDirtyChange,
@@ -31,7 +32,10 @@ export default function CustomerManager({
   const [isImportPreviewOpen, setIsImportPreviewOpen] = useState(false);
   const [isCustomerFormDirty, setIsCustomerFormDirty] = useState(false);
 
-  const directoryCustomers = useMemo(() => buildCustomerDirectory(customers, jobs), [customers, jobs]);
+  const directoryCustomers = useMemo(
+    () => buildCustomerDirectory(customers, jobs, { shopProfile }),
+    [customers, jobs, shopProfile]
+  );
 
   useEffect(() => {
     if (!directoryCustomers.length) {

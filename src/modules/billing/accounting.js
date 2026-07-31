@@ -10,10 +10,10 @@ export function sumRows(rows, key) {
   return rows.reduce((total, row) => total + ((Number(row[key]) || 0) * rowQuantity(row)), 0);
 }
 
-export function calculateJobTotals(job) {
+export function calculateJobTotals(job, resolvedTaxSettings = null) {
   const parts = job.parts || [];
   const services = job.services || job.labor || [];
-  const taxSettings = job.techDetails?.tax || {};
+  const taxSettings = resolvedTaxSettings || job.techDetails?.tax || {};
   const payments = job.techDetails?.payments || [];
   const billablePartsTotal = parts.reduce((total, row) => {
     return row.includedInService ? total : total + retailTotal(row);
@@ -48,8 +48,8 @@ export function calculateJobTotals(job) {
   };
 }
 
-export function calculateJobAccounting(job) {
-  const totals = calculateJobTotals(job);
+export function calculateJobAccounting(job, resolvedTaxSettings = null) {
+  const totals = calculateJobTotals(job, resolvedTaxSettings);
   return {
     paidTotal: totals.paidTotal,
     salesTaxAmount: totals.salesTaxAmount,
