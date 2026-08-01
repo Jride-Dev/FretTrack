@@ -45,3 +45,25 @@ export function purchaseOrderTotals(order) {
     landedReceivedTotal
   };
 }
+
+export function preparePurchaseOrderReceiptItems(order, receiveQuantities = {}, receiveCosts = {}) {
+  const sourceItems = order?.items || [];
+  const receiptItems = sourceItems
+    .map((item) => ({
+      purchaseOrderItemId: item.id,
+      quantityReceived: receiveQuantities[item.id],
+      unitCost: receiveCosts[item.id] || item.unitCost
+    }))
+    .filter((item) => Number(item.quantityReceived || 0) > 0);
+  const invalidReceipt = receiptItems.find((receiptItem) => {
+    const sourceItem = sourceItems.find((item) => item.id === receiptItem.purchaseOrderItemId);
+    const quantity = Number(receiptItem.quantityReceived || 0);
+    const cost = Number(receiptItem.unitCost || 0);
+    return !sourceItem
+      || quantity < 1
+      || quantity > remainingForPurchaseOrderItem(sourceItem)
+      || !Number.isFinite(cost)
+      || cost < 0;
+  });
+  return { receiptItems, invalidReceipt };
+}

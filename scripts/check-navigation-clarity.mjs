@@ -10,6 +10,7 @@ const customerManager = read('src/modules/customers/CustomerManager.jsx');
 const customerImportPreview = read('src/modules/customers/CustomerImportPreviewPanel.jsx');
 const inventoryPage = read('src/modules/inventory/InventoryPage.jsx');
 const inventoryPartEditor = read('src/modules/inventory/InventoryPartEditor.jsx');
+const inventoryPurchaseOrderEditor = read('src/modules/inventory/InventoryPurchaseOrderEditor.jsx');
 const inventoryVendorsTab = read('src/modules/inventory/InventoryVendorsTab.jsx');
 const schedulingPage = read('src/modules/scheduling/SchedulingPage.jsx');
 const scheduleEventDetails = read('src/modules/scheduling/ScheduleEventDetailsDialog.jsx');
@@ -19,6 +20,7 @@ const auditedNavigationSource = [
   customerImportPreview,
   inventoryPage,
   inventoryPartEditor,
+  inventoryPurchaseOrderEditor,
   inventoryVendorsTab,
   schedulingPage,
   scheduleEventDetails
@@ -35,7 +37,7 @@ assert.match(inventoryPartEditor, /selectedPart \? 'Save Changes' : 'Save Part'/
 assert.ok(inventoryPartEditor.includes('selectedPart && <button type="button" onClick={onResetPart} disabled={isSaving}>Cancel</button>'), 'Part editing must expose a Cancel action.');
 assert.ok(inventoryVendorsTab.includes('selectedVendor && <button type="button" onClick={onResetVendor}>Cancel</button>'), 'Vendor editing must expose a Cancel action.');
 assert.match(inventoryVendorsTab, /selectedVendor \? 'Save Changes' : 'Save Vendor'/, 'Vendor editing must distinguish Save Changes from creating a vendor.');
-assert.match(inventoryPage, /onClick={closePurchaseOrderDetail}>Close Detail<\/button>/, 'Purchase Order detail must expose Close Detail.');
+assert.match(inventoryPurchaseOrderEditor, /onClick=\{onCloseDetail\}>Close Detail<\/button>/, 'Purchase Order detail must expose Close Detail.');
 
 assert.match(schedulingPage, /editingEventId \? 'Save Changes' : 'Save Event'/, 'Schedule editing must distinguish Save Changes from creating an event.');
 assert.match(schedulingPage, /editingEventId \? 'Cancel' : 'Clear Form'/, 'Schedule editing must expose Cancel without labeling form reset ambiguously.');

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { money } from '../../shared/utils/money';
 import { getCurrentShopId, getShopMoneyOptions, getShopSettings, normalizeShippingLabelSettings } from '../shops/shopConfig';
 import {
   adjustPart,
@@ -27,18 +26,10 @@ import InventoryHistoryTab from './InventoryHistoryTab.jsx';
 import InventoryLabelsTab from './InventoryLabelsTab.jsx';
 import InventoryPartEditor from './InventoryPartEditor.jsx';
 import InventoryPartsList from './InventoryPartsList.jsx';
+import InventoryPurchaseOrderEditor from './InventoryPurchaseOrderEditor.jsx';
 import InventoryPurchaseOrdersList from './InventoryPurchaseOrdersList.jsx';
 import InventoryVendorsTab from './InventoryVendorsTab.jsx';
-import {
-  formatInventoryDate as formatDate,
-  formatInventoryStatus as formatStatusLabel
-} from './inventoryFormatting.js';
-import {
-  PURCHASE_UNIT_OPTIONS,
-  purchaseConversionSummary,
-  purchaseUnitLabel
-} from './purchaseUnits';
-import { purchaseOrderTotals, remainingForPurchaseOrderItem } from './purchaseOrderCalculations.js';
+import { preparePurchaseOrderReceiptItems } from './purchaseOrderCalculations.js';
 
 const emptyPartForm = {
   vendorId: '',
@@ -740,29 +731,16 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     if (!canWrite || !selectedPurchaseOrder) {
       return;
     }
-    const receiptItems = (selectedPurchaseOrder.items || [])
-      .map((item) => ({
-        purchaseOrderItemId: item.id,
-        quantityReceived: purchaseReceiveQuantities[item.id],
-        unitCost: purchaseReceiveCosts[item.id] || item.unitCost
-      }))
-      .filter((item) => Number(item.quantityReceived || 0) > 0);
+    const { receiptItems, invalidReceipt } = preparePurchaseOrderReceiptItems(
+      selectedPurchaseOrder,
+      purchaseReceiveQuantities,
+      purchaseReceiveCosts
+    );
 
     if (!receiptItems.length) {
       onNotice?.({ type: 'error', message: 'Enter a received quantity for at least one item.' });
       return;
     }
-
-    const invalidReceipt = receiptItems.find((receiptItem) => {
-      const sourceItem = selectedPurchaseOrder.items.find((item) => item.id === receiptItem.purchaseOrderItemId);
-      const quantity = Number(receiptItem.quantityReceived || 0);
-      const cost = Number(receiptItem.unitCost || 0);
-      return !sourceItem
-        || quantity < 1
-        || quantity > remainingForItem(sourceItem)
-        || !Number.isFinite(cost)
-        || cost < 0;
-    });
 
     if (invalidReceipt) {
       onNotice?.({ type: 'error', message: 'Receipt quantities must be positive and cannot exceed the remaining ordered quantity.' });
@@ -877,168 +855,31 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
         onStatusFilterChange={setPoStatusFilter}
         onSelectPurchaseOrder={selectPurchaseOrder}
       >
-        <div className="inventory-editor">
-          <form onSubmit={savePurchaseOrder}>
-            <h3>New Purchase Order</h3>
-            <div className="form-grid">
-              <label>Vendor
-                <select disabled={!canWrite} value={purchaseOrderForm.vendorId} onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, vendorId: event.target.value }))}>
-                  <option value="">No vendor</option>
-                  {vendors.filter((vendor) => vendor.isActive).map((vendor) => (
-                    <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
-                  ))}
-                </select>
-              </label>
-              <label>Status
-                <select disabled={!canWrite} value={purchaseOrderForm.status} onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, status: event.target.value }))}>
-                  {purchaseOrderStatuses.map((status) => (
-                    <option key={status} value={status}>{formatStatusLabel(status)}</option>
-                  ))}
-                </select>
-              </label>
-              <label>Ordered<input disabled={!canWrite} type="date" value={purchaseOrderForm.orderedAt} onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, orderedAt: event.target.value }))} /></label>
-              <label>Expected<input disabled={!canWrite} type="date" value={purchaseOrderForm.expectedAt} onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, expectedAt: event.target.value }))} /></label>
-              <label>Shipping Cost<input disabled={!canWrite} type="number" min="0" step="0.01" value={purchaseOrderForm.shippingCost} onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, shippingCost: event.target.value }))} /></label>
-              <label>Notes<input disabled={!canWrite} value={purchaseOrderForm.notes} onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, notes: event.target.value }))} /></label>
-            </div>
-            <label className="table-checkbox">
-              <input
-                disabled={!canWrite}
-                type="checkbox"
-                checked={purchaseOrderForm.addShippingToCost}
-                onChange={(event) => setPurchaseOrderForm((current) => ({ ...current, addShippingToCost: event.target.checked }))}
-              />
-              Add shipping to cost
-            </label>
-            <p className="muted-text">Use this for inbound vendor shipping. Customer/outbound shipping is planned separately.</p>
-
-            <div className="inventory-subsection">
-              <div className="editor-heading">
-                <h4>Items</h4>
-                {canWrite && <button type="button" onClick={addPurchaseOrderItem}>Add Item</button>}
-              </div>
-              <p className="muted-text">Choose an existing part, or leave the selector on Create new inventory part. New PO items are added to inventory with quantity 0 until received.</p>
-              {purchaseOrderForm.items.map((item, index) => (
-                <div className="purchase-order-item-block" key={`${index}-${item.partId || 'manual'}`}>
-                  <div className="purchase-order-item-row">
-                    <select disabled={!canWrite} value={item.partId} onChange={(event) => updatePurchaseOrderItem(index, 'partId', event.target.value)}>
-                      <option value="">Create new inventory part</option>
-                      {parts.filter((part) => part.isActive).map((part) => (
-                        <option key={part.id} value={part.id}>{part.name}</option>
-                      ))}
-                    </select>
-                    <input disabled={!canWrite} placeholder="Description" value={item.description} onChange={(event) => updatePurchaseOrderItem(index, 'description', event.target.value)} />
-                    <input disabled={!canWrite} placeholder="Vendor UPC" value={item.vendorSku} onChange={(event) => updatePurchaseOrderItem(index, 'vendorSku', event.target.value)} />
-                    <input aria-label="Purchase quantity" disabled={!canWrite} type="number" min="1" step="1" placeholder="Purchase qty" value={item.quantityOrdered} onChange={(event) => updatePurchaseOrderItem(index, 'quantityOrdered', event.target.value)} />
-                    <select aria-label="Purchase unit" disabled={!canWrite || Boolean(item.partId)} value={item.purchaseUnit} onChange={(event) => updatePurchaseOrderItem(index, 'purchaseUnit', event.target.value)}>
-                      {PURCHASE_UNIT_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                    <input aria-label="Units per purchase unit" disabled={!canWrite || Boolean(item.partId)} type="number" min="1" max="999999" step="1" placeholder="Units each" value={item.unitsPerPurchaseUnit} onChange={(event) => updatePurchaseOrderItem(index, 'unitsPerPurchaseUnit', event.target.value)} />
-                    <input aria-label="Cost per purchase unit" disabled={!canWrite} type="number" min="0" step="0.01" placeholder={`Cost per ${purchaseUnitLabel(item.purchaseUnit)}`} value={item.unitCost} onChange={(event) => updatePurchaseOrderItem(index, 'unitCost', event.target.value)} />
-                    {canWrite && <button type="button" onClick={() => removePurchaseOrderItem(index)}>Remove</button>}
-                  </div>
-                  <small className="purchase-conversion-summary">{purchaseConversionSummary(item.quantityOrdered || 0, item.purchaseUnit, item.unitsPerPurchaseUnit)}</small>
-                </div>
-              ))}
-            </div>
-            {canWrite && (
-              <div className="mode-actions">
-                <button type="submit" className="primary-action" disabled={isSaving}>{isSaving ? 'Saving...' : 'Create PO'}</button>
-              </div>
-            )}
-          </form>
-
-          {selectedPurchaseOrder && (
-            <form className="inventory-stock-actions" onSubmit={handlePurchaseReceive}>
-              <div className="editor-heading">
-                <h3>Receive {selectedPurchaseOrder.poNumber}</h3>
-                <div className="mode-actions no-print">
-                  <span className={`status-pill ${selectedPurchaseOrder.status === 'received' ? 'success' : selectedPurchaseOrder.status === 'cancelled' ? 'muted' : 'warning'}`}>{formatStatusLabel(selectedPurchaseOrder.status)}</span>
-                  <button type="button" onClick={closePurchaseOrderDetail}>Close Detail</button>
-                </div>
-              </div>
-              <div className="inventory-meta-grid">
-                {(() => {
-                  const totals = purchaseOrderTotals(selectedPurchaseOrder);
-                  return (
-                    <>
-                      <span>Vendor <strong>{vendorsById.get(selectedPurchaseOrder.vendorId)?.name || '-'}</strong></span>
-                      <span>Ordered <strong>{formatDate(selectedPurchaseOrder.orderedAt)}</strong></span>
-                      <span>Expected <strong>{formatDate(selectedPurchaseOrder.expectedAt)}</strong></span>
-                      <span>Received <strong>{formatDate(selectedPurchaseOrder.latestReceivedAt)}</strong></span>
-                      <span>Line count <strong>{totals.lineCount}</strong></span>
-                      <span>Purchase units ordered <strong>{totals.ordered}</strong></span>
-                      <span>Purchase units received <strong>{totals.received}</strong></span>
-                      <span>Purchase units remaining <strong>{totals.remaining}</strong></span>
-                      <span>Inventory units ordered <strong>{totals.inventoryOrdered}</strong></span>
-                      <span>Inventory units received <strong>{totals.inventoryReceived}</strong></span>
-                      <span>Inventory units remaining <strong>{totals.inventoryRemaining}</strong></span>
-                      <span>Item subtotal <strong>{money(totals.itemSubtotal, moneyOptions)}</strong></span>
-                      <span>Shipping cost <strong>{money(totals.shippingCost, moneyOptions)}</strong></span>
-                      <span>Estimated total <strong>{money(totals.estimatedTotal, moneyOptions)}</strong></span>
-                      <span>Add shipping to cost <strong>{selectedPurchaseOrder.addShippingToCost ? 'Yes' : 'No'}</strong></span>
-                      <span>Received subtotal <strong>{money(totals.receivedSubtotal, moneyOptions)}</strong></span>
-                      <span>Allocated shipping <strong>{money(totals.allocatedShipping, moneyOptions)}</strong></span>
-                      <span>Landed received total <strong>{money(totals.landedReceivedTotal, moneyOptions)}</strong></span>
-                    </>
-                  );
-                })()}
-              </div>
-              {canWrite && (
-                <div className="mode-actions">
-                  <button type="button" onClick={() => handlePurchaseOrderStatus('ordered')} disabled={isSaving || selectedPurchaseOrder.status === 'cancelled' || selectedPurchaseOrder.status === 'received'}>Mark Ordered</button>
-                  <button type="button" onClick={() => handlePurchaseOrderStatus('cancelled')} disabled={isSaving || selectedPurchaseOrder.status === 'cancelled' || selectedPurchaseOrder.status === 'received'}>Cancel PO</button>
-                </div>
-              )}
-              <div className="inventory-receive-list">
-                {(selectedPurchaseOrder.items || []).map((item) => {
-                    const remaining = remainingForPurchaseOrderItem(item);
-                  return (
-                    <div className="receive-item-row" key={item.id}>
-                      <span>
-                        <strong>{item.description}</strong>
-                        <small>{item.vendorSku || 'No vendor UPC'} - ordered {item.quantityOrdered} - received {item.quantityReceived} - remaining {remaining} {purchaseUnitLabel(item.purchaseUnit, remaining)}</small>
-                        <small>{purchaseConversionSummary(item.quantityOrdered, item.purchaseUnit, item.unitsPerPurchaseUnit)}</small>
-                        {Number(purchaseReceiveQuantities[item.id] || 0) > 0 && (
-                          <small>Receiving: {purchaseConversionSummary(purchaseReceiveQuantities[item.id], item.purchaseUnit, item.unitsPerPurchaseUnit)}</small>
-                        )}
-                      </span>
-                      <input
-                        disabled={!canWrite || remaining <= 0 || selectedPurchaseOrder.status === 'cancelled'}
-                        type="number"
-                        min="0"
-                        max={remaining}
-                        step="1"
-                        aria-label={`Receive purchase quantity in ${purchaseUnitLabel(item.purchaseUnit, 2)}`}
-                        placeholder={`Receive ${purchaseUnitLabel(item.purchaseUnit, 2)}`}
-                        value={purchaseReceiveQuantities[item.id] ?? ''}
-                        onChange={(event) => setPurchaseReceiveQuantities((current) => ({ ...current, [item.id]: event.target.value }))}
-                      />
-                      <input
-                        disabled={!canWrite || remaining <= 0 || selectedPurchaseOrder.status === 'cancelled'}
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        aria-label={`Cost per ${purchaseUnitLabel(item.purchaseUnit)}`}
-                        placeholder={`Cost per ${purchaseUnitLabel(item.purchaseUnit)}`}
-                        value={purchaseReceiveCosts[item.id] ?? ''}
-                        onChange={(event) => setPurchaseReceiveCosts((current) => ({ ...current, [item.id]: event.target.value }))}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              <input disabled={!canWrite} placeholder="Receipt note" value={purchaseReceiveNote} onChange={(event) => setPurchaseReceiveNote(event.target.value)} />
-              {canWrite && (
-                <div className="mode-actions">
-                  <button type="submit" className="primary-action" disabled={isSaving || selectedPurchaseOrder.status === 'cancelled'}>{isSaving ? 'Receiving...' : 'Receive Selected'}</button>
-                </div>
-              )}
-            </form>
-          )}
-        </div>
+        <InventoryPurchaseOrderEditor
+          purchaseOrderForm={purchaseOrderForm}
+          selectedPurchaseOrder={selectedPurchaseOrder}
+          vendors={vendors}
+          vendorsById={vendorsById}
+          parts={parts}
+          statusOptions={purchaseOrderStatuses}
+          canWrite={canWrite}
+          isSaving={isSaving}
+          purchaseReceiveQuantities={purchaseReceiveQuantities}
+          purchaseReceiveCosts={purchaseReceiveCosts}
+          purchaseReceiveNote={purchaseReceiveNote}
+          moneyOptions={moneyOptions}
+          onPurchaseOrderFormChange={(field, value) => setPurchaseOrderForm((current) => ({ ...current, [field]: value }))}
+          onAddItem={addPurchaseOrderItem}
+          onUpdateItem={updatePurchaseOrderItem}
+          onRemoveItem={removePurchaseOrderItem}
+          onSavePurchaseOrder={savePurchaseOrder}
+          onCloseDetail={closePurchaseOrderDetail}
+          onStatusChange={handlePurchaseOrderStatus}
+          onReceiveQuantityChange={(itemId, value) => setPurchaseReceiveQuantities((current) => ({ ...current, [itemId]: value }))}
+          onReceiveCostChange={(itemId, value) => setPurchaseReceiveCosts((current) => ({ ...current, [itemId]: value }))}
+          onReceiveNoteChange={setPurchaseReceiveNote}
+          onReceive={handlePurchaseReceive}
+        />
       </InventoryPurchaseOrdersList>
     );
   }

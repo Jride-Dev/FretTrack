@@ -38,6 +38,7 @@ Known weak spots:
 - SMS remains disabled
 - staff permissions are centralized but still broad-role based, not task-by-task custom ACLs
 - public invoice and work-order links are planned but not implemented
+- jobs cannot yet be voided or excluded from accounting reports; cancelling or archiving a test job does not currently remove it from accounting job counts
 - deeper inventory operations such as vendor import/export, supplier integrations, vendor returns, forecasting, outbound/customer shipping, carrier labels, and tracking numbers are still future work
 - commerce, licensing, billing automation, production backups, and monitoring are later release tracks
 - Photo Editor Phase 1 is practical canvas editing, not a full Photoshop-style editor or AI cutout tool
@@ -87,6 +88,7 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - expired trials preserve data and memberships, allow safe viewing, block writes, and show upgrade-required messaging
 - Pro entitlement boundaries are explicit for Photo Editor, Team Members, Advanced Reporting, and advanced Team Assignment/workload controls
 - practical shop settings for currency, tax labels, date formats, and measurement preferences
+- owner/admin accounting-safe job void/exclusion: remove test or invalid jobs from operational accounting totals and counts without physically deleting customer, invoice, payment, or audit history; finalized invoices and recorded payments must require explicit void/refund handling
 - known launch limitations documented clearly
 
 ## v0.3.x: Commerce Foundation
