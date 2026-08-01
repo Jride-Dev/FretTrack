@@ -8,12 +8,14 @@ const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
 const detail = read('src/modules/jobs/JobDetail.jsx');
 const header = read('src/modules/jobs/JobDetailHeader.jsx');
 const dialogs = read('src/modules/jobs/JobDetailDialogs.jsx');
+const damageReportView = read('src/modules/jobs/JobDamageReportView.jsx');
 const formattingPath = join(root, 'src/modules/jobs/jobDetailFormatting.js');
 const packageJson = read('package.json');
 
 assert.match(detail, /import JobDetailHeader from ['"]\.\/JobDetailHeader\.jsx['"]/, 'Job Detail must use the focused header boundary.');
 assert.match(detail, /import JobDetailDialogs from ['"]\.\/JobDetailDialogs\.jsx['"]/, 'Job Detail must use the focused dialogs boundary.');
 assert.match(detail, /from ['"]\.\/jobDetailFormatting\.js['"]/, 'Job Detail must use the pure formatting boundary.');
+assert.match(detail, /import JobDamageReportView from ['"]\.\/JobDamageReportView\.jsx['"]/, 'Job Detail must use the focused damage report boundary.');
 assert.match(
   detail,
   /<JobDetailHeader[\s\S]*?onStatusChange=\{updateField\}[\s\S]*?onAssignmentChanged=\{handleAssignmentChanged\}/,
@@ -21,7 +23,7 @@ assert.match(
 );
 assert.doesNotMatch(detail, /className="detail-header"/, 'Header presentation must not remain duplicated in JobDetail.');
 assert.doesNotMatch(detail, /function markerColorForReport|function getInstrumentSelectionPatch|function buildMeasurementDisplay|function formatMeasurementStageForExport/, 'Extracted pure helpers must not remain duplicated in JobDetail.');
-for (const source of [header, dialogs]) {
+for (const source of [header, dialogs, damageReportView]) {
   assert.doesNotMatch(source, /jobService|supabase/i, 'Job Detail presentation boundaries must not load or mutate job data directly.');
 }
 assert.match(header, /<JobStatusSelect canWrite=\{canWrite\}/, 'Job status editing must retain write permission enforcement.');
@@ -31,6 +33,9 @@ assert.match(detail, /<JobDetailDialogs[\s\S]*?onSendDocumentEmail=\{handleSendD
 assert.match(dialogs, /onOverwrite=\{canOverwritePhotos \? onOverwritePhoto : null\}/, 'Photo overwrite must retain its permission gate.');
 assert.match(dialogs, /onSend=\{onSendDocumentEmail\}/, 'Document email sending must remain connected.');
 assert.match(dialogs, /onSend=\{onSendSubcontractorPickup\}/, 'Subcontractor email sending must remain connected.');
+assert.match(detail, /return <JobDamageReportView damageMap=\{draftJob\.techDetails\.damageMap \|\| \{\}\} viewName=\{viewName\} \/>/, 'Customer damage report rendering must retain the active job damage map.');
+assert.match(damageReportView, /if \(!hasBaseImage && marks\.length === 0\)[\s\S]*?return null/, 'Completely empty damage maps must remain omitted from reports.');
+assert.match(damageReportView, /hasBaseImage && imageUrl && marks\.length > 0/, 'Marker tables must remain tied to a visible reference image.');
 
 const { buildMeasurementDisplay, getInstrumentSelectionPatch, markerColorForReport } = await import(pathToFileURL(formattingPath));
 assert.deepEqual(
