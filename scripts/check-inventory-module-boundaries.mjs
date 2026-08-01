@@ -10,8 +10,10 @@ const history = read('src/modules/inventory/InventoryHistoryTab.jsx');
 const labels = read('src/modules/inventory/InventoryLabelsTab.jsx');
 const partEditor = read('src/modules/inventory/InventoryPartEditor.jsx');
 const partsList = read('src/modules/inventory/InventoryPartsList.jsx');
+const purchaseOrdersList = read('src/modules/inventory/InventoryPurchaseOrdersList.jsx');
 const vendors = read('src/modules/inventory/InventoryVendorsTab.jsx');
 const formattingPath = join(root, 'src/modules/inventory/inventoryFormatting.js');
+const purchaseOrderCalculationsPath = join(root, 'src/modules/inventory/purchaseOrderCalculations.js');
 const formatting = read('src/modules/inventory/inventoryFormatting.js');
 const packageJson = read('package.json');
 
@@ -19,15 +21,17 @@ assert.match(page, /import InventoryHistoryTab from ['"]\.\/InventoryHistoryTab\
 assert.match(page, /import InventoryLabelsTab from ['"]\.\/InventoryLabelsTab\.jsx['"]/, 'Inventory must use the Labels tab boundary.');
 assert.match(page, /import InventoryPartsList from ['"]\.\/InventoryPartsList\.jsx['"]/, 'Inventory must use the Parts list boundary.');
 assert.match(page, /import InventoryPartEditor from ['"]\.\/InventoryPartEditor\.jsx['"]/, 'Inventory must use the Part editor boundary.');
+assert.match(page, /import InventoryPurchaseOrdersList from ['"]\.\/InventoryPurchaseOrdersList\.jsx['"]/, 'Inventory must use the Purchase Orders list boundary.');
 assert.match(page, /import InventoryVendorsTab from ['"]\.\/InventoryVendorsTab\.jsx['"]/, 'Inventory must use the Vendors tab boundary.');
 assert.match(page, /<InventoryHistoryTab[\s\S]*?partPurchaseHistory=\{partPurchaseHistory\}[\s\S]*?partMovements=\{partMovements\}/, 'History data must remain connected.');
 assert.match(page, /<InventoryLabelsTab[\s\S]*?onPrintLabels=\{printBarcodeLabels\}/, 'Barcode printing must retain the established handler.');
 assert.match(page, /<InventoryPartsList[\s\S]*?onSearch=\{handleSearch\}[\s\S]*?onSelectPart=\{selectPart\}[\s\S]*?onToggleLabelPart=\{toggleLabelPart\}/, 'Parts search, selection, and label handlers must remain connected.');
 assert.match(page, /<InventoryPartEditor[\s\S]*?onSavePart=\{savePart\}[\s\S]*?onReceive=\{handleReceive\}[\s\S]*?onAdjust=\{handleAdjust\}/, 'Part editor mutations must remain connected to the established controller handlers.');
+assert.match(page, /<InventoryPurchaseOrdersList[\s\S]*?onStatusFilterChange=\{setPoStatusFilter\}[\s\S]*?onSelectPurchaseOrder=\{selectPurchaseOrder\}/, 'PO filtering and selection must remain connected to the established handlers.');
 assert.match(page, /<InventoryVendorsTab[\s\S]*?onSelectVendor=\{loadVendorIntoForm\}[\s\S]*?onSaveVendor=\{saveVendor\}/, 'Vendor selection and saving must retain the established handlers.');
 assert.doesNotMatch(page, /function renderHistoryTab|function renderLabelsTab|function renderVendorsTab/, 'Extracted tabs must not remain duplicated in InventoryPage.');
 
-for (const source of [history, labels, partEditor, partsList, vendors]) {
+for (const source of [history, labels, partEditor, partsList, purchaseOrdersList, vendors]) {
   assert.doesNotMatch(source, /inventoryService|supabase/i, 'Display tabs must not load or mutate inventory data directly.');
 }
 
@@ -49,6 +53,10 @@ assert.match(partEditor, /onSubmit=\{onSavePart\}/, 'Part saves must use the par
 assert.match(partEditor, /onSubmit=\{onReceive\}/, 'Direct receiving must use the parent controller handler.');
 assert.match(partEditor, /onSubmit=\{onAdjust\}/, 'Stock adjustments must use the parent controller handler.');
 assert.match(partEditor, /isDirty \|\| saveStatus === 'saving' \|\| saveStatus === 'error'/, 'The existing dirty-state badge must remain visible.');
+assert.match(purchaseOrdersList, /Purchase Remaining/, 'PO list must retain purchase-unit remaining quantities.');
+assert.match(purchaseOrdersList, /totals\.inventoryReceived} \/ \{totals\.inventoryOrdered/, 'PO list must retain converted inventory-unit totals.');
+assert.match(purchaseOrdersList, /onClick=\{\(\) => onSelectPurchaseOrder\(order\)\}/, 'PO rows must retain detail selection.');
+assert.match(purchaseOrdersList, /\{children\}/, 'PO list boundary must preserve the creation and receiving editor alongside the table.');
 assert.match(vendors, /<form onSubmit=\{onSaveVendor\}>/, 'Vendor saves must remain connected to the parent controller.');
 assert.match(vendors, /onClick=\{\(\) => onSelectVendor\(vendor\)\}/, 'Vendor selection must remain connected to the parent controller.');
 assert.match(vendors, /disabled=\{!canWrite\}/, 'Vendor editing must remain disabled without write access.');
@@ -66,6 +74,34 @@ assert.equal(formatInventoryDateTime('not-a-date'), 'not-a-date', 'Invalid store
 assert.equal(getInventoryBarcodeLabel({ barcodeCode: '123' }), 'FT-PART-123', 'Part barcode labels must retain their stable prefix.');
 assert.equal(getInventoryBarcodeLabel({}), '-', 'Parts without barcode identity must retain the empty fallback.');
 assert.match(formatting, /Number\.isNaN\(date\.getTime\(\)\)/, 'Shared formatting must guard invalid dates.');
+
+const { purchaseOrderTotals, remainingForPurchaseOrderItem } = await import(pathToFileURL(purchaseOrderCalculationsPath));
+const snapshotOrder = {
+  shippingCost: 2,
+  items: [{ quantityOrdered: 2, quantityReceived: 1, unitsPerPurchaseUnit: 12, unitCost: 10 }]
+};
+assert.equal(remainingForPurchaseOrderItem(snapshotOrder.items[0]), 1, 'PO remaining quantity must stay in purchase units.');
+assert.deepEqual(
+  purchaseOrderTotals(snapshotOrder),
+  {
+    lineCount: 1,
+    ordered: 2,
+    received: 1,
+    remaining: 1,
+    inventoryOrdered: 24,
+    inventoryReceived: 12,
+    inventoryRemaining: 12,
+    itemSubtotal: 20,
+    receivedSubtotalFallback: 10,
+    estimatedCost: 20,
+    shippingCost: 2,
+    estimatedTotal: 22,
+    receivedSubtotal: 10,
+    allocatedShipping: 0,
+    landedReceivedTotal: 10
+  },
+  'PO summaries must use each line\'s stored conversion snapshot.'
+);
 assert.match(packageJson, /"check:inventory-module-boundaries": "node scripts\/check-inventory-module-boundaries\.mjs"/, 'The focused Inventory boundary check must be exposed.');
 
 console.log('Inventory module boundary checks passed.');

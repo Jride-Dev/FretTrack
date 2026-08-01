@@ -82,7 +82,7 @@ The first implementation slice is on `refactor/workspace-router-foundation`:
 - The compact Current Jobs list and full Current Jobs page now share a small domain status helper without importing one page from another.
 - `NewJobSidebar.jsx` owns the Job Form, compact Current Jobs, Till Summary, and Upcoming Schedule composition.
 - `appAccess.js` owns the derived application permission and entitlement map while continuing to call the centralized permission and billing helpers.
-- Inventory History, Barcode Labels, Vendors, the Parts search/list, and the controlled Part editor now have focused presentation boundaries. `InventoryPage.jsx` remains the controller for part/vendor mutations, image handling, stock adjustments, barcode printing, and purchasing state, reducing its size from approximately 1,619 to 1,190 lines without moving transactional behavior.
+- Inventory History, Barcode Labels, Vendors, the Parts search/list, the controlled Part editor, and the Purchase Orders list now have focused presentation boundaries. Pure PO snapshot totals also live outside the page. `InventoryPage.jsx` remains the controller for part/vendor mutations, image handling, stock adjustments, barcode printing, PO creation/receiving, and purchasing state, reducing its size from approximately 1,619 to 1,092 lines without moving transactional behavior.
 - Focused regression checks follow the new architecture boundary instead of requiring feature JSX to remain inside `App.jsx`.
 
 An authenticated local navigation smoke test is required before proceeding into deeper component and data-ownership extraction.

@@ -27,6 +27,7 @@ import InventoryHistoryTab from './InventoryHistoryTab.jsx';
 import InventoryLabelsTab from './InventoryLabelsTab.jsx';
 import InventoryPartEditor from './InventoryPartEditor.jsx';
 import InventoryPartsList from './InventoryPartsList.jsx';
+import InventoryPurchaseOrdersList from './InventoryPurchaseOrdersList.jsx';
 import InventoryVendorsTab from './InventoryVendorsTab.jsx';
 import {
   formatInventoryDate as formatDate,
@@ -34,10 +35,10 @@ import {
 } from './inventoryFormatting.js';
 import {
   PURCHASE_UNIT_OPTIONS,
-  inventoryUnitsForPurchaseQuantity,
   purchaseConversionSummary,
   purchaseUnitLabel
 } from './purchaseUnits';
+import { purchaseOrderTotals, remainingForPurchaseOrderItem } from './purchaseOrderCalculations.js';
 
 const emptyPartForm = {
   vendorId: '',
@@ -102,52 +103,6 @@ const emptyPurchaseOrderForm = {
 
 const purchaseOrderStatuses = ['draft', 'ordered', 'partially_received', 'received', 'cancelled'];
 const purchaseOrderFilterOptions = ['all', ...purchaseOrderStatuses];
-
-function remainingForItem(item) {
-  return Math.max(Number(item.quantityOrdered || 0) - Number(item.quantityReceived || 0), 0);
-}
-
-function purchaseOrderTotals(order) {
-  const items = order?.items || [];
-  const totals = items.reduce((summary, item) => {
-    const ordered = Number(item.quantityOrdered || 0);
-    const received = Number(item.quantityReceived || 0);
-    const cost = Number(item.unitCost || 0);
-    summary.lineCount += 1;
-    summary.ordered += ordered;
-    summary.received += received;
-    summary.remaining += Math.max(ordered - received, 0);
-    summary.inventoryOrdered += inventoryUnitsForPurchaseQuantity(ordered, item.unitsPerPurchaseUnit) || 0;
-    summary.inventoryReceived += inventoryUnitsForPurchaseQuantity(received, item.unitsPerPurchaseUnit) || 0;
-    summary.inventoryRemaining += inventoryUnitsForPurchaseQuantity(Math.max(ordered - received, 0), item.unitsPerPurchaseUnit) || 0;
-    summary.itemSubtotal += ordered * cost;
-    summary.receivedSubtotalFallback += received * cost;
-    return summary;
-  }, {
-    lineCount: 0,
-    ordered: 0,
-    received: 0,
-    remaining: 0,
-    inventoryOrdered: 0,
-    inventoryReceived: 0,
-    inventoryRemaining: 0,
-    itemSubtotal: 0,
-    receivedSubtotalFallback: 0
-  });
-  const shippingCost = Number(order?.shippingCost || 0);
-  const receivedSubtotal = Number(order?.receivedSubtotal || totals.receivedSubtotalFallback || 0);
-  const allocatedShipping = Number(order?.allocatedShipping || 0);
-  const landedReceivedTotal = Number(order?.landedReceivedTotal || receivedSubtotal + allocatedShipping || 0);
-  return {
-    ...totals,
-    estimatedCost: totals.itemSubtotal,
-    shippingCost,
-    estimatedTotal: totals.itemSubtotal + shippingCost,
-    receivedSubtotal,
-    allocatedShipping,
-    landedReceivedTotal
-  };
-}
 
 function mergePresetOptions(...optionSources) {
   const seen = new Set();
@@ -912,69 +867,16 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
 
   function renderPurchaseOrdersTab() {
     return (
-      <div className="inventory-layout inventory-layout-wide">
-        <div className="inventory-table-wrap">
-          <div className="inventory-label-toolbar">
-            <label>Filter
-              <select value={poStatusFilter} onChange={(event) => setPoStatusFilter(event.target.value)}>
-                {purchaseOrderFilterOptions.map((status) => (
-                  <option key={status} value={status}>{status === 'all' ? 'All' : formatStatusLabel(status)}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>PO</th>
-                <th>Vendor</th>
-                <th>Status</th>
-                <th>Ordered</th>
-                <th>Expected</th>
-                <th>Received</th>
-                <th>Lines</th>
-                <th>Purchase Qty</th>
-                <th>Purchase Remaining</th>
-                <th>Inventory Qty</th>
-                <th>Item Subtotal</th>
-                <th>Shipping</th>
-                <th>Est. Total</th>
-                <th>Receipts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPurchaseOrders.map((order) => {
-                const totals = purchaseOrderTotals(order);
-                return (
-                  <tr
-                    key={order.id}
-                    className={selectedPurchaseOrderId === order.id ? 'selected-row' : ''}
-                    onClick={() => selectPurchaseOrder(order)}
-                  >
-                    <td><strong>{order.poNumber}</strong></td>
-                    <td>{vendorsById.get(order.vendorId)?.name || '-'}</td>
-                    <td><span className={`status-pill ${order.status === 'received' ? 'success' : order.status === 'cancelled' ? 'muted' : 'warning'}`}>{formatStatusLabel(order.status)}</span></td>
-                    <td>{formatDate(order.orderedAt)}</td>
-                    <td>{formatDate(order.expectedAt)}</td>
-                    <td>{formatDate(order.latestReceivedAt)}</td>
-                    <td>{totals.lineCount}</td>
-                    <td>{totals.received} / {totals.ordered}</td>
-                    <td>{totals.remaining}</td>
-                    <td>{totals.inventoryReceived} / {totals.inventoryOrdered}</td>
-                    <td>{money(totals.itemSubtotal, moneyOptions)}</td>
-                    <td>{money(totals.shippingCost, moneyOptions)}</td>
-                    <td>{money(totals.estimatedTotal, moneyOptions)}</td>
-                    <td>{order.receiptCount || 0}</td>
-                  </tr>
-                );
-              })}
-              {!filteredPurchaseOrders.length && (
-                <tr><td colSpan="13">No purchase orders found.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
+      <InventoryPurchaseOrdersList
+        purchaseOrders={filteredPurchaseOrders}
+        selectedPurchaseOrderId={selectedPurchaseOrderId}
+        statusFilter={poStatusFilter}
+        statusOptions={purchaseOrderFilterOptions}
+        vendorsById={vendorsById}
+        moneyOptions={moneyOptions}
+        onStatusFilterChange={setPoStatusFilter}
+        onSelectPurchaseOrder={selectPurchaseOrder}
+      >
         <div className="inventory-editor">
           <form onSubmit={savePurchaseOrder}>
             <h3>New Purchase Order</h3>
@@ -1092,7 +994,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
               )}
               <div className="inventory-receive-list">
                 {(selectedPurchaseOrder.items || []).map((item) => {
-                  const remaining = remainingForItem(item);
+                    const remaining = remainingForPurchaseOrderItem(item);
                   return (
                     <div className="receive-item-row" key={item.id}>
                       <span>
@@ -1137,7 +1039,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
             </form>
           )}
         </div>
-      </div>
+      </InventoryPurchaseOrdersList>
     );
   }
 
