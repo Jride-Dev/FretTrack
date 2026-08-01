@@ -12,7 +12,7 @@ The primary architectural concern is that several files have accumulated too man
 
 The following baseline was green when this audit was recorded:
 
-- All 38 package-level focused regression checks passed.
+- All 39 package-level focused regression checks passed.
 - The production Vite build passed.
 - `git diff --check` passed.
 - `npm audit --audit-level=moderate` reported zero vulnerabilities.
@@ -43,7 +43,7 @@ These files are not inherently defective, but future changes inside them have an
 
 ## Regression coverage findings
 
-FretTrack has broad feature-specific validation coverage: 38 `check-*.mjs` files totaling approximately 4,476 lines. The suite contained hundreds of source and runtime assertions.
+FretTrack has broad feature-specific validation coverage: 39 `check-*.mjs` files totaling more than 4,500 lines. The suite contains hundreds of source and runtime assertions.
 
 The main weakness is test style rather than test quantity:
 
@@ -83,6 +83,7 @@ The first implementation slice is on `refactor/workspace-router-foundation`:
 - `NewJobSidebar.jsx` owns the Job Form, compact Current Jobs, Till Summary, and Upcoming Schedule composition.
 - `appAccess.js` owns the derived application permission and entitlement map while continuing to call the centralized permission and billing helpers.
 - Inventory History, Barcode Labels, Vendors, the Parts search/list, the controlled Part editor, the Purchase Orders list, and the controlled PO creation/receiving editor now have focused presentation boundaries. Pure PO snapshot totals also live outside the page. `InventoryPage.jsx` remains the controller for part/vendor mutations, image handling, stock adjustments, barcode printing, PO creation/receiving, and purchasing state, reducing its size from approximately 1,619 to 945 lines without moving transactional behavior.
+- `JobDetailHeader.jsx` now owns status, assignment, and unsaved-state presentation, while `JobDetailDialogs.jsx` owns document email, subcontractor pickup, and photo-editor modal composition. Their existing handlers and all persistence remain in `JobDetail.jsx`.
 - Focused regression checks follow the new architecture boundary instead of requiring feature JSX to remain inside `App.jsx`.
 
 An authenticated local navigation smoke test is required before proceeding into deeper component and data-ownership extraction.

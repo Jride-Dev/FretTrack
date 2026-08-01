@@ -3,13 +3,10 @@ import PartsList from '../../components/PartsList';
 import ServicesList from '../../components/ServicesList';
 import DamageMapSection from './DamageMapSection';
 import ImagesSection from '../images/ImagesSection';
-import PhotoEditorModal from '../photos/PhotoEditorModal.jsx';
 import JobInfoSection from './JobInfoSection';
 import JobPrintSheet from './JobPrintSheet';
-import JobStatusSelect from './JobStatusSelect';
 import PrintActions from './PrintActions';
-import SubcontractorPickupEmailDialog, { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
-import JobDocumentEmailDialog from './JobDocumentEmailDialog.jsx';
+import { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
 import TechDetailsSection from './TechDetailsSection';
 import TotalsSection from './TotalsSection';
@@ -42,8 +39,8 @@ import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInv
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
 import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
-import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
-import JobAssignmentControl from './JobAssignmentControl.jsx';
+import JobDetailHeader from './JobDetailHeader.jsx';
+import JobDetailDialogs from './JobDetailDialogs.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 
 const intakeTypes = JOB_SOURCE_OPTIONS;
@@ -1515,54 +1512,36 @@ export default function JobDetail({
 
   return (
     <section className="panel detail job-detail">
-      <JobDocumentEmailDialog
-        isOpen={Boolean(documentEmailDraft)}
-        draft={documentEmailDraft}
-        kind={documentEmailDraft?.kind || 'work_order'}
-        onClose={() => setDocumentEmailDraft(null)}
-        onSend={handleSendDocumentEmail}
+      <JobDetailDialogs
+        documentEmailDraft={documentEmailDraft}
+        subcontractorPickupJob={subcontractorPickupJob}
+        isSendingSubcontractorEmail={isSendingSubcontractorEmail}
+        photoEditorImage={photoEditorImage}
+        isSavingEditedPhoto={isSavingEditedPhoto}
+        canOverwritePhotos={canOverwritePhotos}
+        onCloseDocumentEmail={() => setDocumentEmailDraft(null)}
+        onSendDocumentEmail={handleSendDocumentEmail}
+        onCancelSubcontractorPickup={() => setSubcontractorPickupJob(null)}
+        onSendSubcontractorPickup={sendSubcontractorPickupEmail}
+        onClosePhotoEditor={() => setPhotoEditorImage(null)}
+        onSavePhotoCopy={saveEditedPhotoCopy}
+        onOverwritePhoto={overwriteEditedPhoto}
       />
-      <SubcontractorPickupEmailDialog
-        job={subcontractorPickupJob}
-        isSending={isSendingSubcontractorEmail}
-        onCancel={() => setSubcontractorPickupJob(null)}
-        onSend={sendSubcontractorPickupEmail}
-      />
-      <PhotoEditorModal
-        image={photoEditorImage}
-        isOpen={Boolean(photoEditorImage)}
-        isSaving={isSavingEditedPhoto}
-        onClose={() => setPhotoEditorImage(null)}
-        onSaveCopy={saveEditedPhotoCopy}
-        onOverwrite={canOverwritePhotos ? overwriteEditedPhoto : null}
-      />
-      <div className="detail-header">
-        <div>
-          <h2>{draftJob.customerName}</h2>
-          <p>
-            {draftJob.guitarBrand} {draftJob.model} {draftJob.jobNumber ? `- Job ${draftJob.jobNumber}` : ''}
-          </p>
-        </div>
-        <JobStatusSelect canWrite={canWrite} value={draftJob.status} onChange={updateField} />
-      </div>
-      <JobAssignmentControl
-        job={draftJob}
-        members={assignableMembers}
-        membersError={assignableMembersError}
-        membersLoading={assignableMembersLoading}
+      <JobDetailHeader
+        draftJob={draftJob}
+        canWrite={canWrite}
+        isDirty={isDirty}
+        saveStatus={saveStatus}
+        assignableMembers={assignableMembers}
+        assignableMembersLoading={assignableMembersLoading}
+        assignableMembersError={assignableMembersError}
         membership={membership}
         entitlementSnapshot={entitlementSnapshot}
         betaApproved={betaApproved}
+        onStatusChange={updateField}
         onAssignmentChanged={handleAssignmentChanged}
         onNotice={onNotice}
       />
-
-      {(isDirty || saveStatus === 'saving' || saveStatus === 'error') && (
-        <UnsavedChangesBadge
-          state={saveStatus}
-          reminder={isDirty ? 'Remember to save before leaving.' : ''}
-        />
-      )}
       <JobDetailTabs
         activityTimeline={activityTimeline}
         billingSections={billingSections}
