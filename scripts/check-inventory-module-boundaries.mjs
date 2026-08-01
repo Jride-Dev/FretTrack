@@ -8,6 +8,7 @@ const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
 const page = read('src/modules/inventory/InventoryPage.jsx');
 const history = read('src/modules/inventory/InventoryHistoryTab.jsx');
 const labels = read('src/modules/inventory/InventoryLabelsTab.jsx');
+const partEditor = read('src/modules/inventory/InventoryPartEditor.jsx');
 const partsList = read('src/modules/inventory/InventoryPartsList.jsx');
 const vendors = read('src/modules/inventory/InventoryVendorsTab.jsx');
 const formattingPath = join(root, 'src/modules/inventory/inventoryFormatting.js');
@@ -17,14 +18,16 @@ const packageJson = read('package.json');
 assert.match(page, /import InventoryHistoryTab from ['"]\.\/InventoryHistoryTab\.jsx['"]/, 'Inventory must use the History tab boundary.');
 assert.match(page, /import InventoryLabelsTab from ['"]\.\/InventoryLabelsTab\.jsx['"]/, 'Inventory must use the Labels tab boundary.');
 assert.match(page, /import InventoryPartsList from ['"]\.\/InventoryPartsList\.jsx['"]/, 'Inventory must use the Parts list boundary.');
+assert.match(page, /import InventoryPartEditor from ['"]\.\/InventoryPartEditor\.jsx['"]/, 'Inventory must use the Part editor boundary.');
 assert.match(page, /import InventoryVendorsTab from ['"]\.\/InventoryVendorsTab\.jsx['"]/, 'Inventory must use the Vendors tab boundary.');
 assert.match(page, /<InventoryHistoryTab[\s\S]*?partPurchaseHistory=\{partPurchaseHistory\}[\s\S]*?partMovements=\{partMovements\}/, 'History data must remain connected.');
 assert.match(page, /<InventoryLabelsTab[\s\S]*?onPrintLabels=\{printBarcodeLabels\}/, 'Barcode printing must retain the established handler.');
 assert.match(page, /<InventoryPartsList[\s\S]*?onSearch=\{handleSearch\}[\s\S]*?onSelectPart=\{selectPart\}[\s\S]*?onToggleLabelPart=\{toggleLabelPart\}/, 'Parts search, selection, and label handlers must remain connected.');
+assert.match(page, /<InventoryPartEditor[\s\S]*?onSavePart=\{savePart\}[\s\S]*?onReceive=\{handleReceive\}[\s\S]*?onAdjust=\{handleAdjust\}/, 'Part editor mutations must remain connected to the established controller handlers.');
 assert.match(page, /<InventoryVendorsTab[\s\S]*?onSelectVendor=\{loadVendorIntoForm\}[\s\S]*?onSaveVendor=\{saveVendor\}/, 'Vendor selection and saving must retain the established handlers.');
 assert.doesNotMatch(page, /function renderHistoryTab|function renderLabelsTab|function renderVendorsTab/, 'Extracted tabs must not remain duplicated in InventoryPage.');
 
-for (const source of [history, labels, partsList, vendors]) {
+for (const source of [history, labels, partEditor, partsList, vendors]) {
   assert.doesNotMatch(source, /inventoryService|supabase/i, 'Display tabs must not load or mutate inventory data directly.');
 }
 
@@ -40,6 +43,12 @@ assert.match(partsList, /onClick=\{\(\) => onSelectPart\(part\)\}/, 'Parts list 
 assert.match(partsList, /onToggleLabelPart\(part\.id, event\.target\.checked\)/, 'Parts list must retain individual barcode-label selection.');
 assert.match(partsList, /part\.quantityOnHand <= part\.reorderPoint/, 'Parts list must retain low-stock status behavior.');
 assert.match(partsList, /\{children\}/, 'Parts list boundary must preserve the existing editor alongside the table.');
+assert.match(partEditor, /disabled=\{!canWrite\}/, 'Part editor fields must remain disabled without write access.');
+assert.match(partEditor, /\{selectedPart && canWrite && \(/, 'Stock mutation controls must remain hidden without write access.');
+assert.match(partEditor, /onSubmit=\{onSavePart\}/, 'Part saves must use the parent controller handler.');
+assert.match(partEditor, /onSubmit=\{onReceive\}/, 'Direct receiving must use the parent controller handler.');
+assert.match(partEditor, /onSubmit=\{onAdjust\}/, 'Stock adjustments must use the parent controller handler.');
+assert.match(partEditor, /isDirty \|\| saveStatus === 'saving' \|\| saveStatus === 'error'/, 'The existing dirty-state badge must remain visible.');
 assert.match(vendors, /<form onSubmit=\{onSaveVendor\}>/, 'Vendor saves must remain connected to the parent controller.');
 assert.match(vendors, /onClick=\{\(\) => onSelectVendor\(vendor\)\}/, 'Vendor selection must remain connected to the parent controller.');
 assert.match(vendors, /disabled=\{!canWrite\}/, 'Vendor editing must remain disabled without write access.');

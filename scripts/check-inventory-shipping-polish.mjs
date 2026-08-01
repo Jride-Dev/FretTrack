@@ -11,6 +11,7 @@ assert.ok(migrationFile, 'Inventory/vendor/shipping polish migration must exist.
 
 const migration = read(join(migrationsDir, migrationFile));
 const inventoryPage = read(join(root, 'src/modules/inventory/InventoryPage.jsx'));
+const inventoryPartEditor = read(join(root, 'src/modules/inventory/InventoryPartEditor.jsx'));
 const inventoryPartsList = read(join(root, 'src/modules/inventory/InventoryPartsList.jsx'));
 const inventoryService = read(join(root, 'src/modules/inventory/inventoryService.js'));
 const barcodeLabels = read(join(root, 'src/modules/inventory/BarcodeLabelSheet.jsx'));
@@ -68,21 +69,21 @@ assert.deepEqual(
 assert.ok(shopSettings.includes("split('\\n')"), 'Preset textareas must split presets by newline only.');
 assert.doesNotMatch(shopSettings, /split\([^)]*\\s|slug|slugify|replace\([^)]*\\s/g, 'Preset editing must not split on whitespace or slugify display values.');
 
-assert.ok(inventoryPage.includes('Special Order Part'), 'Inventory UI must expose the Special Order Part checkbox.');
-assert.ok(inventoryPage.includes('Special order parts are not treated as stocked items.'), 'Special-order helper text must explain stocked behavior.');
-assert.ok(inventoryPage.includes('Part Image'), 'Inventory UI must expose part image upload.');
-assert.ok(inventoryPage.includes('300x300 px or smaller'), 'Part image UI must show the 300x300 hard limit.');
+assert.ok(inventoryPartEditor.includes('Special Order Part'), 'Inventory UI must expose the Special Order Part checkbox.');
+assert.ok(inventoryPartEditor.includes('Special order parts are not treated as stocked items.'), 'Special-order helper text must explain stocked behavior.');
+assert.ok(inventoryPartEditor.includes('Part Image'), 'Inventory UI must expose part image upload.');
+assert.ok(inventoryPartEditor.includes('300x300 px or smaller'), 'Part image UI must show the 300x300 hard limit.');
 assert.ok(inventoryPartsList.includes('Search name, manufacturer UPC, barcode, vendor SKU, vendor UPC, category, or vendor'), 'Inventory search placeholder must use UPC/vendor wording.');
 assert.ok(inventoryPartsList.includes('<th>UPC</th>'), 'Parts table must show UPC instead of SKU.');
-assert.ok(inventoryPage.includes('Part Name'), 'Part form must show Part Name.');
-assert.ok(inventoryPage.includes('Part Number'), 'Part form must show Part Number.');
-assert.ok(inventoryPage.includes('Vendor SKU'), 'Legacy supplier text field must be presented as Vendor SKU.');
-assert.ok(inventoryPage.includes('Vendor UPC'), 'Vendor SKU field must be presented as Vendor UPC.');
-assert.ok(inventoryPage.includes('Manufacturer UPC'), 'Part form must show Manufacturer UPC.');
-assert.ok(inventoryPage.includes('QTY On Hand'), 'Part form must show QTY On Hand.');
-assert.ok(inventoryPage.includes('Reorder Point'), 'Part form must show Reorder Point.');
-assert.ok(inventoryPage.includes('Desired Stock'), 'Part form must show Desired Stock.');
-assertLabelsAppearInOrder(inventoryPage, [
+assert.ok(inventoryPartEditor.includes('Part Name'), 'Part form must show Part Name.');
+assert.ok(inventoryPartEditor.includes('Part Number'), 'Part form must show Part Number.');
+assert.ok(inventoryPartEditor.includes('Vendor SKU'), 'Legacy supplier text field must be presented as Vendor SKU.');
+assert.ok(inventoryPartEditor.includes('Vendor UPC'), 'Vendor SKU field must be presented as Vendor UPC.');
+assert.ok(inventoryPartEditor.includes('Manufacturer UPC'), 'Part form must show Manufacturer UPC.');
+assert.ok(inventoryPartEditor.includes('QTY On Hand'), 'Part form must show QTY On Hand.');
+assert.ok(inventoryPartEditor.includes('Reorder Point'), 'Part form must show Reorder Point.');
+assert.ok(inventoryPartEditor.includes('Desired Stock'), 'Part form must show Desired Stock.');
+assertLabelsAppearInOrder(inventoryPartEditor, [
   '<label>Vendor',
   '<label>Part Name',
   '<label>Part Number',
@@ -101,8 +102,8 @@ assertLabelsAppearInOrder(inventoryPage, [
   '<label>Desired Stock',
   '<label className="inventory-image-field">'
 ]);
-assert.doesNotMatch(inventoryPage, />Supplier</, 'Inventory UI must not show Supplier as a visible label.');
-assert.doesNotMatch(inventoryPage, new RegExp(`${staleVendorText}|${staleBarcodeCode}`), 'Inventory UI must not show stale vendor-text or barcode-code wording.');
+assert.doesNotMatch(inventoryPartEditor, />Supplier</, 'Inventory UI must not show Supplier as a visible label.');
+assert.doesNotMatch(inventoryPartEditor, new RegExp(`${staleVendorText}|${staleBarcodeCode}`), 'Inventory UI must not show stale vendor-text or barcode-code wording.');
 
 [
   'special_order: Boolean(specialOrder)',

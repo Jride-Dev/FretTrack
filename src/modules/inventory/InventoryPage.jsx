@@ -23,15 +23,14 @@ import {
   uploadPartImage
 } from './inventoryService';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
-import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
 import InventoryHistoryTab from './InventoryHistoryTab.jsx';
 import InventoryLabelsTab from './InventoryLabelsTab.jsx';
+import InventoryPartEditor from './InventoryPartEditor.jsx';
 import InventoryPartsList from './InventoryPartsList.jsx';
 import InventoryVendorsTab from './InventoryVendorsTab.jsx';
 import {
   formatInventoryDate as formatDate,
-  formatInventoryStatus as formatStatusLabel,
-  getInventoryBarcodeLabel
+  formatInventoryStatus as formatStatusLabel
 } from './inventoryFormatting.js';
 import {
   PURCHASE_UNIT_OPTIONS,
@@ -880,179 +879,33 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
         onClearLabelParts={() => setSelectedLabelPartIds([])}
         onPreviewLabels={() => setActiveTab('labels')}
       >
-          <div className="inventory-editor">
-            <form onSubmit={savePart}>
-              <div className="editor-heading">
-                <h3>{selectedPart ? 'Edit Part' : 'Add Part'}</h3>
-                {(isDirty || saveStatus === 'saving' || saveStatus === 'error') && (
-                  <UnsavedChangesBadge
-                    state={saveStatus}
-                    reminder={isDirty ? 'Remember to save before leaving.' : ''}
-                  />
-                )}
-              </div>
-              <div className="form-grid">
-                <label>Vendor
-                  <select disabled={!canWrite} value={partForm.vendorId} onChange={(event) => updatePartForm('vendorId', event.target.value)}>
-                    <option value="">No vendor</option>
-                    {vendors.map((vendor) => (
-                      <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
-                    ))}
-                  </select>
-                </label>
-                <label>Part Name<input disabled={!canWrite} value={partForm.name} onChange={(event) => updatePartForm('name', event.target.value)} required /></label>
-                <label>Part Number<input disabled={!canWrite} value={partForm.partNumber} onChange={(event) => updatePartForm('partNumber', event.target.value)} /></label>
-                <label>Category
-                  <select disabled={!canWrite} value={partForm.category} onChange={(event) => updatePartForm('category', event.target.value)}>
-                    <option value="">No category</option>
-                    {categoryOptions.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </label>
-                <label>Location
-                  <select disabled={!canWrite} value={partForm.location} onChange={(event) => updatePartForm('location', event.target.value)}>
-                    <option value="">No location</option>
-                    {locationOptions.map((location) => (
-                      <option key={location} value={location}>{location}</option>
-                    ))}
-                  </select>
-                </label>
-                <label>Description<input disabled={!canWrite} value={partForm.description} onChange={(event) => updatePartForm('description', event.target.value)} /></label>
-                <label>Vendor SKU<input disabled={!canWrite} value={partForm.supplier} onChange={(event) => updatePartForm('supplier', event.target.value)} /></label>
-                <label>Vendor UPC<input disabled={!canWrite} value={partForm.vendorSku} onChange={(event) => updatePartForm('vendorSku', event.target.value)} /></label>
-                <label>Barcode<input disabled={!canWrite} value={partForm.barcodeCode} onChange={(event) => updatePartForm('barcodeCode', event.target.value)} /></label>
-                <label>Manufacturer<input disabled={!canWrite} value={partForm.manufacturer} onChange={(event) => updatePartForm('manufacturer', event.target.value)} /></label>
-                <label>Manufacturer UPC<input disabled={!canWrite} value={partForm.sku} onChange={(event) => updatePartForm('sku', event.target.value)} /></label>
-                {canWrite && <label>Unit Cost (Inventory Each)<input type="number" min="0" step="0.01" value={partForm.unitCost} onChange={(event) => updatePartForm('unitCost', event.target.value)} /></label>}
-                <label>Purchase Unit
-                  <select disabled={!canWrite} value={partForm.purchaseUnit} onChange={(event) => updatePartForm('purchaseUnit', event.target.value)}>
-                    {PURCHASE_UNIT_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </label>
-                <label>Units per Purchase Unit
-                  <input
-                    disabled={!canWrite}
-                    type="number"
-                    min="1"
-                    max="999999"
-                    step="1"
-                    value={partForm.unitsPerPurchaseUnit}
-                    onChange={(event) => updatePartForm('unitsPerPurchaseUnit', event.target.value)}
-                  />
-                </label>
-                <label>Retail Price<input disabled={!canWrite} type="number" min="0" step="0.01" value={partForm.retailPrice} onChange={(event) => updatePartForm('retailPrice', event.target.value)} /></label>
-                <label>QTY On Hand<input disabled={!canWrite} type="number" step="1" value={partForm.quantityOnHand} onChange={(event) => updatePartForm('quantityOnHand', event.target.value)} /></label>
-                <label>Reorder Point<input disabled={!canWrite} type="number" min="0" step="1" value={partForm.reorderPoint} onChange={(event) => updatePartForm('reorderPoint', event.target.value)} /></label>
-                <div className="inventory-stock-policy-field">
-                  <label>Desired Stock
-                  <input
-                    disabled={!canWrite || partForm.specialOrder}
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={partForm.specialOrder ? '0' : partForm.desiredStockLevel}
-                    onChange={(event) => updatePartForm('desiredStockLevel', event.target.value)}
-                  />
-                  {partForm.specialOrder && <small>Special order parts are not treated as stocked items.</small>}
-                  </label>
-                  <label className="table-checkbox">
-                    <input
-                      disabled={!canWrite}
-                      type="checkbox"
-                      checked={partForm.specialOrder}
-                      onChange={(event) => updatePartForm('specialOrder', event.target.checked)}
-                    />
-                    Special Order Part
-                  </label>
-                </div>
-              </div>
-              <label className="inventory-image-field">
-                Part Image
-                <input
-                  disabled={!canWrite}
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePartImageChange}
-                />
-                <small>Must already be 300x300 px or smaller. FretTrack will reject larger images and will not resize or compress.</small>
-              </label>
-              {(partImagePreviewUrl || selectedPart?.imagePath || partImageFile) && (
-                <div className="inventory-part-image-preview">
-                  {partImagePreviewUrl ? (
-                    <img src={partImagePreviewUrl} alt={`${selectedPart?.name || partForm.name || 'Part'} preview`} />
-                  ) : (
-                    <span>{partImageFile ? partImageFile.name : 'Part image saved.'}</span>
-                  )}
-                  {selectedPart?.imageWidth && selectedPart?.imageHeight && (
-                    <small>{selectedPart.imageWidth}x{selectedPart.imageHeight} px</small>
-                  )}
-                </div>
-              )}
-              {selectedPart && (
-                <div className="inventory-meta-grid">
-                  <span>Barcode label <strong><code>{getInventoryBarcodeLabel(selectedPart)}</code></strong></span>
-                  <span>Vendor <strong>{vendorsById.get(selectedPart.vendorId)?.name || '-'}</strong></span>
-                  <span>Vendor UPC <strong>{selectedPart.vendorSku || '-'}</strong></span>
-                  <span>Location <strong>{selectedPart.location || '-'}</strong></span>
-                  <span>On hand <strong>{selectedPart.quantityOnHand}</strong></span>
-                  <span>Purchase conversion <strong>{purchaseUnitLabel(selectedPart.purchaseUnit)} × {selectedPart.unitsPerPurchaseUnit} Each</strong></span>
-                  <span>Reorder point <strong>{selectedPart.reorderPoint}</strong></span>
-                  <span>Desired stock <strong>{selectedPart.specialOrder ? 'Special order' : selectedPart.desiredStockLevel}</strong></span>
-                  <span>Last cost <strong>{selectedPart.lastCost === null ? '-' : money(selectedPart.lastCost, moneyOptions)}</strong></span>
-                  <span>Average cost <strong>{selectedPart.averageCost === null ? '-' : money(selectedPart.averageCost, moneyOptions)}</strong></span>
-                </div>
-              )}
-              {selectedPart && !selectedPart.barcodeCode && canWrite && (
-                <div className="mode-actions">
-                  <button type="button" onClick={handleGenerateBarcodeCode} disabled={isSaving}>Generate Barcode</button>
-                </div>
-              )}
-              <label className="table-checkbox">
-                <input
-                  disabled={!canWrite}
-                  type="checkbox"
-                  checked={partForm.isActive}
-                  onChange={(event) => updatePartForm('isActive', event.target.checked)}
-                />
-                Active
-              </label>
-              {canWrite && (
-                <div className="mode-actions">
-                  <button type="submit" className="primary-action" disabled={isSaving}>{isSaving ? 'Saving...' : selectedPart ? 'Save Changes' : 'Save Part'}</button>
-                  {selectedPart && <button type="button" onClick={() => resetForm()} disabled={isSaving}>Cancel</button>}
-                  {selectedPart && <button type="button" onClick={handleDeactivate} disabled={isSaving}>Deactivate</button>}
-                </div>
-              )}
-            </form>
-
-            {selectedPart && canWrite && (
-              <div className="inventory-stock-actions">
-                <form onSubmit={handleReceive}>
-                  <h3>Receive Stock</h3>
-                  <p className="muted-text">
-                    Enter purchase units. {purchaseConversionSummary(receiveForm.quantity || 0, selectedPart.purchaseUnit, selectedPart.unitsPerPurchaseUnit)}
-                  </p>
-                  <div className="row-form">
-                    <input aria-label="Purchase quantity" type="number" min="1" step="1" placeholder={`Qty (${purchaseUnitLabel(selectedPart.purchaseUnit, 2)})`} value={receiveForm.quantity} onChange={(event) => setReceiveForm((current) => ({ ...current, quantity: event.target.value }))} />
-                    <input aria-label="Cost per purchase unit" type="number" min="0" step="0.01" placeholder={`Cost per ${purchaseUnitLabel(selectedPart.purchaseUnit)}`} value={receiveForm.cost} onChange={(event) => setReceiveForm((current) => ({ ...current, cost: event.target.value }))} />
-                    <input placeholder="Note" value={receiveForm.note} onChange={(event) => setReceiveForm((current) => ({ ...current, note: event.target.value }))} />
-                    <button type="submit" disabled={isSaving}>Receive</button>
-                  </div>
-                </form>
-                <form onSubmit={handleAdjust}>
-                  <h3>Adjust Stock</h3>
-                  <div className="row-form">
-                    <input type="number" step="1" placeholder="+/- Qty" value={adjustForm.quantityDelta} onChange={(event) => setAdjustForm((current) => ({ ...current, quantityDelta: event.target.value }))} />
-                    <input placeholder="Reason" value={adjustForm.note} onChange={(event) => setAdjustForm((current) => ({ ...current, note: event.target.value }))} />
-                    <button type="submit" disabled={isSaving}>Adjust</button>
-                  </div>
-                </form>
-              </div>
-            )}
-          </div>
+          <InventoryPartEditor
+            selectedPart={selectedPart}
+            partForm={partForm}
+            vendors={vendors}
+            vendorsById={vendorsById}
+            categoryOptions={categoryOptions}
+            locationOptions={locationOptions}
+            canWrite={canWrite}
+            isSaving={isSaving}
+            isDirty={isDirty}
+            saveStatus={saveStatus}
+            partImagePreviewUrl={partImagePreviewUrl}
+            partImageFile={partImageFile}
+            receiveForm={receiveForm}
+            adjustForm={adjustForm}
+            moneyOptions={moneyOptions}
+            onPartFormChange={updatePartForm}
+            onPartImageChange={handlePartImageChange}
+            onSavePart={savePart}
+            onGenerateBarcodeCode={handleGenerateBarcodeCode}
+            onResetPart={() => resetForm()}
+            onDeactivatePart={handleDeactivate}
+            onReceiveFormChange={(field, value) => setReceiveForm((current) => ({ ...current, [field]: value }))}
+            onReceive={handleReceive}
+            onAdjustFormChange={(field, value) => setAdjustForm((current) => ({ ...current, [field]: value }))}
+            onAdjust={handleAdjust}
+          />
       </InventoryPartsList>
     );
   }

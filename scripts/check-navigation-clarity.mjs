@@ -9,6 +9,7 @@ const printActions = read('src/modules/jobs/PrintActions.js');
 const customerManager = read('src/modules/customers/CustomerManager.jsx');
 const customerImportPreview = read('src/modules/customers/CustomerImportPreviewPanel.jsx');
 const inventoryPage = read('src/modules/inventory/InventoryPage.jsx');
+const inventoryPartEditor = read('src/modules/inventory/InventoryPartEditor.jsx');
 const inventoryVendorsTab = read('src/modules/inventory/InventoryVendorsTab.jsx');
 const schedulingPage = read('src/modules/scheduling/SchedulingPage.jsx');
 const scheduleEventDetails = read('src/modules/scheduling/ScheduleEventDetailsDialog.jsx');
@@ -17,6 +18,7 @@ const auditedNavigationSource = [
   customerManager,
   customerImportPreview,
   inventoryPage,
+  inventoryPartEditor,
   inventoryVendorsTab,
   schedulingPage,
   scheduleEventDetails
@@ -29,8 +31,8 @@ assert.match(printActions, />Finish \/ Picked Up<\/button>/, 'Job completion mus
 assert.match(customerManager, /aria-label="Cancel customer form">Cancel<\/button>/, 'Customer forms must expose a clear Cancel action.');
 assert.match(customerImportPreview, />Close Preview<\/button>/, 'Customer import preview must name the view being closed.');
 
-assert.match(inventoryPage, /selectedPart \? 'Save Changes' : 'Save Part'/, 'Part editing must distinguish Save Changes from creating a part.');
-assert.ok(inventoryPage.includes("selectedPart && <button type=\"button\" onClick={() => resetForm()} disabled={isSaving}>Cancel</button>"), 'Part editing must expose a Cancel action.');
+assert.match(inventoryPartEditor, /selectedPart \? 'Save Changes' : 'Save Part'/, 'Part editing must distinguish Save Changes from creating a part.');
+assert.ok(inventoryPartEditor.includes('selectedPart && <button type="button" onClick={onResetPart} disabled={isSaving}>Cancel</button>'), 'Part editing must expose a Cancel action.');
 assert.ok(inventoryVendorsTab.includes('selectedVendor && <button type="button" onClick={onResetVendor}>Cancel</button>'), 'Vendor editing must expose a Cancel action.');
 assert.match(inventoryVendorsTab, /selectedVendor \? 'Save Changes' : 'Save Vendor'/, 'Vendor editing must distinguish Save Changes from creating a vendor.');
 assert.match(inventoryPage, /onClick={closePurchaseOrderDetail}>Close Detail<\/button>/, 'Purchase Order detail must expose Close Detail.');
