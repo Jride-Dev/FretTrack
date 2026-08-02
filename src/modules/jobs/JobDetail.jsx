@@ -7,7 +7,6 @@ import PrintActions from './PrintActions';
 import { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
 import TotalsSection from './TotalsSection';
-import WorkLogSection from './WorkLogSection';
 import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
 import { getShopDefaultTaxRate, resolveJobTaxSettings, withResolvedJobTaxSettings } from '../billing/jobTaxSettings';
@@ -38,6 +37,7 @@ import JobDetailHeader from './JobDetailHeader.jsx';
 import JobDetailDialogs from './JobDetailDialogs.jsx';
 import JobPrintDocuments from './JobPrintDocuments.jsx';
 import JobInspectionSections from './JobInspectionSections.jsx';
+import JobWorkSections from './JobWorkSections.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import { buildMeasurementDisplay, getInstrumentSelectionPatch } from './jobDetailFormatting.js';
 
@@ -1286,19 +1286,22 @@ export default function JobDetail({
   );
 
   const workSections = (
-    <>
-      <WorkLogSection
-        canWrite={canWrite}
-        appendWorkLog={appendWorkLog}
-        draftJob={draftJob}
-        removeWorkLogEntry={removeWorkLogEntry}
-        saveWorkLogChanges={saveWorkLogChanges}
-        setWorkLogText={setWorkLogText}
-        updateWorkLogEntry={updateWorkLogEntry}
-        workLogText={workLogText}
-      />
-      <ServicesList canWrite={canWrite} services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
-    </>
+    <JobWorkSections
+      canWrite={canWrite}
+      draftJob={draftJob}
+      onAddService={addService}
+      onAppendWorkLog={appendWorkLog}
+      onRemoveService={removeService}
+      onRemoveWorkLogEntry={removeWorkLogEntry}
+      onSaveWorkLogChanges={saveWorkLogChanges}
+      onUpdateService={updateService}
+      onUpdateWorkLogEntry={updateWorkLogEntry}
+      service={service}
+      services={services}
+      setService={setService}
+      setWorkLogText={setWorkLogText}
+      workLogText={workLogText}
+    />
   );
 
   const billingSections = (

@@ -88,6 +88,7 @@ The first implementation slice is on `refactor/workspace-router-foundation`:
 - Customer-report Damage Map presentation now lives in `JobDamageReportView.jsx`; marker edits and image persistence remain in Job Detail. Together these initial boundaries reduce `JobDetail.jsx` from approximately 1,584 to 1,462 lines.
 - `JobPrintDocuments.jsx` now composes the Job Sheet and Customer Damage Report, including the extracted Damage Map renderer. Print commands, document-email generation, measurement settings, totals, and job persistence remain controlled by Job Detail and their established helpers.
 - `JobInspectionSections.jsx` now composes technical measurements and the Damage Map as a controlled Inspection-tab boundary. It introduces no state or persistence; Job Detail continues to supply shop units, permissions, mutations, and upload handlers.
+- `JobWorkSections.jsx` now composes the Work Log and service-line editor as a controlled Work-tab boundary. Work-log and service state, persistence, and permission decisions remain in Job Detail and the existing child components.
 - Focused regression checks follow the new architecture boundary instead of requiring feature JSX to remain inside `App.jsx`.
 
 An authenticated local navigation smoke test is required before proceeding into deeper component and data-ownership extraction.
