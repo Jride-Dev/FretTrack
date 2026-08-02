@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PartsList from '../../components/PartsList';
 import ServicesList from '../../components/ServicesList';
-import DamageMapSection from './DamageMapSection';
 import ImagesSection from '../images/ImagesSection';
 import JobInfoSection from './JobInfoSection';
 import PrintActions from './PrintActions';
 import { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
-import TechDetailsSection from './TechDetailsSection';
 import TotalsSection from './TotalsSection';
 import WorkLogSection from './WorkLogSection';
 import ActivityTimeline from './ActivityTimeline.jsx';
@@ -39,6 +37,7 @@ import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import JobDetailHeader from './JobDetailHeader.jsx';
 import JobDetailDialogs from './JobDetailDialogs.jsx';
 import JobPrintDocuments from './JobPrintDocuments.jsx';
+import JobInspectionSections from './JobInspectionSections.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import { buildMeasurementDisplay, getInstrumentSelectionPatch } from './jobDetailFormatting.js';
 
@@ -1271,26 +1270,19 @@ export default function JobDetail({
   );
 
   const inspectionSections = (
-    <>
-      <TechDetailsSection
-        canWrite={canWrite}
-        draftJob={draftJob}
-        formatMeasurementDelta={formatMeasurementDelta}
-        lengthUnit={measurementOptions.lengthUnit}
-        outerStringLabels={outerStringLabels}
-        updateNeckInspection={updateNeckInspection}
-        updateStringGauge={updateStringGauge}
-        updateStringGauges={updateStringGauges}
-        updateTechField={updateTechField}
-      />
-      <DamageMapSection
-        canWrite={canWrite}
-        instrumentType={normalizeInstrumentType(draftJob.instrumentType)}
-        damageMap={draftJob.techDetails.damageMap}
-        onChange={updateDamageMap}
-        onViewImageUpload={handleDamageViewImageUpload}
-      />
-    </>
+    <JobInspectionSections
+      canWrite={canWrite}
+      draftJob={draftJob}
+      formatMeasurementDelta={formatMeasurementDelta}
+      lengthUnit={measurementOptions.lengthUnit}
+      outerStringLabels={outerStringLabels}
+      onDamageMapChange={updateDamageMap}
+      onDamageViewImageUpload={handleDamageViewImageUpload}
+      onNeckInspectionChange={updateNeckInspection}
+      onStringGaugeChange={updateStringGauge}
+      onStringGaugesChange={updateStringGauges}
+      onTechFieldChange={updateTechField}
+    />
   );
 
   const workSections = (

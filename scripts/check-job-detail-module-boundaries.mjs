@@ -10,6 +10,7 @@ const header = read('src/modules/jobs/JobDetailHeader.jsx');
 const dialogs = read('src/modules/jobs/JobDetailDialogs.jsx');
 const damageReportView = read('src/modules/jobs/JobDamageReportView.jsx');
 const printDocuments = read('src/modules/jobs/JobPrintDocuments.jsx');
+const inspectionSections = read('src/modules/jobs/JobInspectionSections.jsx');
 const formattingPath = join(root, 'src/modules/jobs/jobDetailFormatting.js');
 const packageJson = read('package.json');
 
@@ -17,6 +18,7 @@ assert.match(detail, /import JobDetailHeader from ['"]\.\/JobDetailHeader\.jsx['
 assert.match(detail, /import JobDetailDialogs from ['"]\.\/JobDetailDialogs\.jsx['"]/, 'Job Detail must use the focused dialogs boundary.');
 assert.match(detail, /from ['"]\.\/jobDetailFormatting\.js['"]/, 'Job Detail must use the pure formatting boundary.');
 assert.match(detail, /import JobPrintDocuments from ['"]\.\/JobPrintDocuments\.jsx['"]/, 'Job Detail must use the focused print-document boundary.');
+assert.match(detail, /import JobInspectionSections from ['"]\.\/JobInspectionSections\.jsx['"]/, 'Job Detail must use the focused inspection boundary.');
 assert.match(
   detail,
   /<JobDetailHeader[\s\S]*?onStatusChange=\{updateField\}[\s\S]*?onAssignmentChanged=\{handleAssignmentChanged\}/,
@@ -24,7 +26,7 @@ assert.match(
 );
 assert.doesNotMatch(detail, /className="detail-header"/, 'Header presentation must not remain duplicated in JobDetail.');
 assert.doesNotMatch(detail, /function markerColorForReport|function getInstrumentSelectionPatch|function buildMeasurementDisplay|function formatMeasurementStageForExport/, 'Extracted pure helpers must not remain duplicated in JobDetail.');
-for (const source of [header, dialogs, damageReportView, printDocuments]) {
+for (const source of [header, dialogs, damageReportView, printDocuments, inspectionSections]) {
   assert.doesNotMatch(source, /jobService|supabase/i, 'Job Detail presentation boundaries must not load or mutate job data directly.');
 }
 assert.match(header, /<JobStatusSelect canWrite=\{canWrite\}/, 'Job status editing must retain write permission enforcement.');
@@ -38,6 +40,9 @@ assert.match(detail, /<JobPrintDocuments[\s\S]*?lengthUnit=\{measurementOptions\
 assert.match(printDocuments, /<JobPrintSheet[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?totals=\{totals\}/, 'Job Sheet rendering must retain calculated totals and the selected measurement unit.');
 assert.match(printDocuments, /<CustomerDamageReport[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?reportDamageView=\{renderDamageView\}/, 'Customer Report rendering must retain measurement formatting and damage-map composition.');
 assert.match(printDocuments, /<JobDamageReportView damageMap=\{draftJob\.techDetails\.damageMap \|\| \{\}\} viewName=\{viewName\} \/>/, 'Customer damage report rendering must retain the active job damage map.');
+assert.match(detail, /<JobInspectionSections[\s\S]*?lengthUnit=\{measurementOptions\.lengthUnit\}[\s\S]*?onDamageMapChange=\{updateDamageMap\}[\s\S]*?onNeckInspectionChange=\{updateNeckInspection\}[\s\S]*?onTechFieldChange=\{updateTechField\}/, 'Inspection presentation must retain shop measurement units and established Job Detail handlers.');
+assert.match(inspectionSections, /<TechDetailsSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?updateNeckInspection=\{onNeckInspectionChange\}[\s\S]*?updateTechField=\{onTechFieldChange\}/, 'Technical measurements must retain write permissions and controlled update handlers.');
+assert.match(inspectionSections, /<DamageMapSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?onChange=\{onDamageMapChange\}[\s\S]*?onViewImageUpload=\{onDamageViewImageUpload\}/, 'Damage Map must retain write permissions, persistence, and upload handlers.');
 assert.match(damageReportView, /if \(!hasBaseImage && marks\.length === 0\)[\s\S]*?return null/, 'Completely empty damage maps must remain omitted from reports.');
 assert.match(damageReportView, /hasBaseImage && imageUrl && marks\.length > 0/, 'Marker tables must remain tied to a visible reference image.');
 
