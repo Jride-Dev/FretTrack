@@ -86,6 +86,7 @@ The first implementation slice is on `refactor/workspace-router-foundation`:
 - `JobDetailHeader.jsx` now owns status, assignment, and unsaved-state presentation, while `JobDetailDialogs.jsx` owns document email, subcontractor pickup, and photo-editor modal composition. Their existing handlers and all persistence remain in `JobDetail.jsx`.
 - Pure Job Detail instrument-selection, measurement-export, and report-marker formatting now lives in `jobDetailFormatting.js` with executable regression cases for custom instrument values, metric measurements, and marker severity colors.
 - Customer-report Damage Map presentation now lives in `JobDamageReportView.jsx`; marker edits and image persistence remain in Job Detail. Together these initial boundaries reduce `JobDetail.jsx` from approximately 1,584 to 1,462 lines.
+- `JobPrintDocuments.jsx` now composes the Job Sheet and Customer Damage Report, including the extracted Damage Map renderer. Print commands, document-email generation, measurement settings, totals, and job persistence remain controlled by Job Detail and their established helpers.
 - Focused regression checks follow the new architecture boundary instead of requiring feature JSX to remain inside `App.jsx`.
 
 An authenticated local navigation smoke test is required before proceeding into deeper component and data-ownership extraction.

@@ -4,14 +4,12 @@ import ServicesList from '../../components/ServicesList';
 import DamageMapSection from './DamageMapSection';
 import ImagesSection from '../images/ImagesSection';
 import JobInfoSection from './JobInfoSection';
-import JobPrintSheet from './JobPrintSheet';
 import PrintActions from './PrintActions';
 import { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
 import TechDetailsSection from './TechDetailsSection';
 import TotalsSection from './TotalsSection';
 import WorkLogSection from './WorkLogSection';
-import CustomerDamageReport from './CustomerDamageReport';
 import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
 import { getShopDefaultTaxRate, resolveJobTaxSettings, withResolvedJobTaxSettings } from '../billing/jobTaxSettings';
@@ -40,7 +38,7 @@ import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import JobDetailHeader from './JobDetailHeader.jsx';
 import JobDetailDialogs from './JobDetailDialogs.jsx';
-import JobDamageReportView from './JobDamageReportView.jsx';
+import JobPrintDocuments from './JobPrintDocuments.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import { buildMeasurementDisplay, getInstrumentSelectionPatch } from './jobDetailFormatting.js';
 
@@ -1078,10 +1076,6 @@ export default function JobDetail({
     }
   }
 
-  function reportDamageView(viewName) {
-    return <JobDamageReportView damageMap={draftJob.techDetails.damageMap || {}} viewName={viewName} />;
-  }
-
   function updateContactPreference(field, value) {
     patchJob({ [field]: value });
   }
@@ -1248,30 +1242,18 @@ export default function JobDetail({
   );
 
   const printSections = (
-    <>
-      <JobPrintSheet
-        draftJob={draftJob}
-        formatInstrumentLabel={formatInstrumentLabel}
-        lengthUnit={measurementOptions.lengthUnit}
-        normalizeInstrumentType={normalizeInstrumentType}
-        outerStringLabels={outerStringLabels}
-        parts={parts}
-        services={services}
-        totals={totals}
-      />
-      <CustomerDamageReport
-        draftJob={draftJob}
-        formatInstrumentLabel={formatInstrumentLabel}
-        formatMeasurementDelta={formatMeasurementDelta}
-        lengthUnit={measurementOptions.lengthUnit}
-        outerStringLabels={outerStringLabels}
-        normalizeInstrumentType={normalizeInstrumentType}
-        parts={parts}
-        reportDamageView={reportDamageView}
-        services={services}
-        workOrderImages={workOrderImages}
-      />
-    </>
+    <JobPrintDocuments
+      draftJob={draftJob}
+      formatInstrumentLabel={formatInstrumentLabel}
+      formatMeasurementDelta={formatMeasurementDelta}
+      lengthUnit={measurementOptions.lengthUnit}
+      normalizeInstrumentType={normalizeInstrumentType}
+      outerStringLabels={outerStringLabels}
+      parts={parts}
+      services={services}
+      totals={totals}
+      workOrderImages={workOrderImages}
+    />
   );
 
   const intakeSection = (
