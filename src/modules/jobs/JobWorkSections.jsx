@@ -4,8 +4,10 @@ import WorkLogSection from './WorkLogSection';
 export default function JobWorkSections({
   canWrite,
   draftJob,
+  hasPendingWorkLog,
   onAddService,
   onAppendWorkLog,
+  onDiscardWorkLogDraft,
   onRemoveService,
   onRemoveWorkLogEntry,
   onSaveWorkLogChanges,
@@ -23,6 +25,8 @@ export default function JobWorkSections({
         canWrite={canWrite}
         appendWorkLog={onAppendWorkLog}
         draftJob={draftJob}
+        hasPendingWorkLog={hasPendingWorkLog}
+        discardWorkLogDraft={onDiscardWorkLogDraft}
         removeWorkLogEntry={onRemoveWorkLogEntry}
         saveWorkLogChanges={onSaveWorkLogChanges}
         setWorkLogText={setWorkLogText}

@@ -1672,6 +1672,18 @@ form.panel button {
   gap: 8px;
 }
 
+.work-log-draft-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.work-log-draft-status {
+  margin: 0.5rem 0 1rem;
+  color: var(--warning);
+  font-weight: 700;
+}
+
 .two-column {
   grid-template-columns: 1fr 140px 110px;
 }

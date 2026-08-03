@@ -4,7 +4,9 @@ import { getShopDateOptions } from '../shops/shopConfig';
 export default function WorkLogSection({
   canWrite = true,
   appendWorkLog,
+  discardWorkLogDraft,
   draftJob,
+  hasPendingWorkLog = false,
   removeWorkLogEntry,
   saveWorkLogChanges,
   setWorkLogText,
@@ -17,9 +19,24 @@ export default function WorkLogSection({
     <section>
       <h3>Work Log</h3>
       <form className="row-form" onSubmit={appendWorkLog}>
-        <textarea value={workLogText} onChange={(event) => setWorkLogText(event.target.value)} rows="3" disabled={!canWrite} />
-        <button type="submit" disabled={!canWrite}>Append Entry</button>
+        <textarea
+          aria-label="New Work Note"
+          value={workLogText}
+          onChange={(event) => setWorkLogText(event.target.value)}
+          placeholder="Type the work performed, then choose Save Work Note."
+          rows="3"
+          disabled={!canWrite}
+        />
+        <div className="work-log-draft-actions">
+          <button type="submit" disabled={!canWrite || !hasPendingWorkLog}>Save Work Note</button>
+          {hasPendingWorkLog && (
+            <button type="button" className="button-tertiary" onClick={discardWorkLogDraft}>Discard Draft</button>
+          )}
+        </div>
       </form>
+      {hasPendingWorkLog && (
+        <p className="work-log-draft-status" role="status">Unsaved Work Note — save or discard it before printing or leaving this job.</p>
+      )}
       <div className="entries">
         {draftJob.workLog.map((entry) => (
           <div key={entry.id} className="entry">

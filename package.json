@@ -37,6 +37,7 @@
     "check:inventory-shipping-polish": "node scripts/check-inventory-shipping-polish.mjs",
     "check:inventory-module-boundaries": "node scripts/check-inventory-module-boundaries.mjs",
     "check:job-detail-module-boundaries": "node scripts/check-job-detail-module-boundaries.mjs",
+    "check:work-log-draft-safety": "node scripts/check-work-log-draft-safety.mjs",
     "check:purchase-unit-conversion": "node scripts/check-purchase-unit-conversion.mjs",
     "check:invoice-email-modal": "node scripts/check-invoice-email-modal.mjs",
     "check:email-shop-isolation": "node scripts/check-email-shop-isolation.mjs",
