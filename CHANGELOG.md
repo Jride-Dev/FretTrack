@@ -1,12 +1,10 @@
 # Changelog
 
-- Prevent local development from silently using a hosted Supabase project, and repair the local test-shop seed accounts for current GoTrue email authentication.
-
-Current version: `0.2.9-beta.3`
+Current version: `0.2.9-beta.4`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.9-beta.3 - Current Beta Candidate
+## v0.2.9-beta.4 - Current Beta Candidate
 
 - Began the 0.3.0 modular architecture foundation by extracting top-level workspace page rendering and navigation state from `App.jsx`, lazy-loading feature pages behind a shared workspace boundary, and separating the current-job status rule from page UI; page restoration, permissions, Close Detail, and dirty-state handlers remain unchanged.
 - Corrected the extracted workspace restoration lifecycle so refresh waits for the active shop and its data to hydrate before persisting navigation; Inventory, Scheduling, Customers, Reports, and valid Job Detail selections now restore instead of being overwritten by the initial New Job mode.
@@ -25,6 +23,10 @@ This file tracks what changed in each release, including fixes that were added b
 - Extracted the Job Detail Parts & Billing tab composition into a controlled module while retaining inventory-backed/manual parts, services, payments, discounts, tax/VAT defaults, invoice email, totals, and permission behavior through established handlers.
 - Fixed direct receiving, stock adjustments, and purchase-order receiving so the selected Inventory editor refreshes its authoritative quantity and cost; a later Save Changes action can no longer overwrite received or adjusted stock with stale form values.
 - Added a repository architecture health audit covering validation status, module boundaries, growing source hotspots, test-suite brittleness, local test-environment policy, and the unattended backup reliability blocker.
+- Prevented local development from silently using a hosted Supabase project, repaired local test-shop lifecycle/authentication records for the current local Supabase stack, and added a focused isolation check.
+
+## v0.2.9-beta.3
+
 - Replaced the Community section's temporary TGR letter mark with the supplied JR's Custom Shop / Torrance Guitar Repair logo.
 - Expanded the public Support page with a dedicated FAQ covering uptime resets, Operational status interpretation, Shop Settings defaults, read-only access, photo persistence, and useful privacy-conscious bug reports; also documented that the uptime clock is a conservative shared-infrastructure recovery indicator rather than proof of an app restart or shop outage.
 - Fixed Shop Settings VAT-rate inheritance for existing jobs: legacy and shop-linked jobs now use the current shop default across Job Detail, newly generated invoices, customer balances, and accounting reports, while a rate edited inside a job remains an explicit override and previously sent email content is untouched.

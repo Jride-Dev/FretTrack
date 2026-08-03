@@ -26,7 +26,7 @@
         <section class="section grid">
           <article class="panel">
             <h2>Parts</h2>
-            <p>A part can include name, part number, vendor, category, location, description, Vendor SKU, Vendor UPC, Barcode, manufacturer, unit cost, retail price, quantity on hand, reorder point, desired stock, special-order status, and an optional image.</p>
+            <p>A part can include name, part number, vendor, category, location, description, Vendor SKU, Vendor UPC, Barcode, manufacturer, unit cost, retail price, quantity on hand, reorder point, desired stock, special-order status, an optional image, and an optional purchase unit with the number of individual inventory units it contains.</p>
           </article>
 
           <article class="panel">
@@ -49,8 +49,13 @@
 
           <article class="panel">
             <h2>Receiving and landed cost</h2>
-            <p>Receiving increases stock, records purchase history, and creates movement history. When Add shipping to cost is enabled, inbound vendor shipping can be allocated into the received part cost.</p>
+            <p>Receiving increases stock, records purchase history, and creates movement history. Purchase-order quantities use the saved purchase unit: receiving one 12-pack adds 12 individual inventory units. Partial receipts and historical receipts retain the conversion saved on their PO line even if the part setting changes later. When Add shipping to cost is enabled, inbound vendor shipping can be allocated into the received part cost.</p>
           </article>
+        </section>
+
+        <section class="section callout">
+          <h2>Stock quantity safety</h2>
+          <p>After a direct receive, stock adjustment, or purchase-order receipt, the open part editor refreshes its quantity and cost from the saved inventory result. Saving other part details afterward should preserve the new stock quantity.</p>
         </section>
 
         <section class="section callout">

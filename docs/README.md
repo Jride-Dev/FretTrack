@@ -4,12 +4,14 @@ This folder is the home for product and technical documentation that does not be
 
 Customer-facing and tester-facing docs should also be reachable from the public FretTrack site at `https://frettrack-app.com/docs`. The public docs hub now hosts a complete screenshot-backed how-to manual at `https://frettrack-app.com/docs/how-to-use-frettrack`, plus shorter topic guides for getting started, beta testing, shops/accounts, customers, jobs, estimates, photos/damage maps, inventory, shipping/custody, scheduling, reports, billing basics, roles, troubleshooting, and FAQ. GitHub Wiki can still be useful for project/developer notes, but beta testers and repair shops should not need GitHub access to read support, legal, checklist, or day-to-day user-guide material.
 
-FretTrack's old live baseline is `v0.2.6-beta.14`. Current branch planning uses product milestone versions:
+FretTrack's historical pre-milestone baseline was `v0.2.6-beta.14`. Current branch planning uses product milestone versions:
 
 - `v0.2.61 beta`: Customers complete
 - `v0.2.62 beta`: Inventory complete
 - `v0.2.63 beta`: Scheduling complete
 - `v0.3.0 beta`: Operational Shop Release
+
+Current release candidate: `v0.2.9-beta.4`. This candidate completes the first architecture-hardening pass around workspace navigation, Inventory presentation, and Job Detail presentation; fixes stale Inventory editor quantities after receiving/adjustments; and prevents ordinary local development from silently targeting hosted Supabase.
 
 Start here for the current product path:
 

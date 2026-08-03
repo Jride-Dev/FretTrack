@@ -8,7 +8,7 @@
 
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
-Current version: `0.2.9-beta.3`
+Current version: `0.2.9-beta.4`
 
 FretTrack is a guitar and bass repair shop check-in and work order system for real bench workflow: customer intake, instrument details, inspection notes, damage photos, parts and services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
@@ -22,7 +22,7 @@ Public tester/customer docs are available at [frettrack-app.com/docs](https://fr
 
 ## Current Status
 
-Current milestone branch: `v0.2.63 beta candidate`
+Current release candidate: `v0.2.9-beta.4`
 
 This includes:
 
@@ -41,9 +41,17 @@ This includes:
 - Pro Team Assignment Foundation with same-shop technician assignment, Current Jobs filtering, workload visibility, audit history, and role-safe self-assignment
 - Server-enforced monthly email-recipient, source-photo upload, and current photo-storage caps with Shop Settings usage warnings
 
-Old live baseline:
+### beta.4 architecture and reliability upgrade
 
-- `v0.2.6-beta.14` remains the last older live beta baseline before the milestone version ladder.
+FretTrack's working screens now sit behind clearer feature boundaries instead of continuing to accumulate inside a few oversized application files. Workspace navigation, the New Job sidebar, Inventory lists/editors/purchase orders, and Job Detail inspection/work/printing/billing sections have been separated into focused modules while preserving their existing handlers, permissions, dirty-state protection, and database behavior.
+
+This is intentionally an internal reliability upgrade rather than a visual redesign. It reduces the amount of unrelated code involved in future changes, lazy-loads top-level workspaces, and adds focused regression coverage around the new boundaries. Refresh restoration was hardened so the selected workspace or valid Job Detail survives authenticated startup.
+
+Inventory reliability was also tightened: direct receiving, stock adjustments, and purchase-order receiving now refresh the selected part editor from the saved stock result. Clicking **Save Changes** afterward no longer writes an older quantity back over received or adjusted stock. Local development is now explicitly isolated from hosted Supabase by default so fictional test work cannot silently mutate a live shop.
+
+Historical beta baseline:
+
+- `v0.2.6-beta.14` was the earlier baseline before the current milestone release line.
 
 Product milestone ladder:
 

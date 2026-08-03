@@ -10,7 +10,7 @@ The primary architectural concern is that several files have accumulated too man
 
 ## Validation baseline
 
-The following baseline was green when this audit was recorded:
+The following baseline was green when this audit was recorded; the beta.4 checkpoint later expanded the configured suite to 40 checks:
 
 - All 39 package-level focused regression checks passed.
 - The production Vite build passed.
@@ -92,9 +92,11 @@ The first implementation slice is on `refactor/workspace-router-foundation`:
 - `JobBillingSections.jsx` now composes Parts, Services, and Totals/Payments as a controlled Parts & Billing boundary. Inventory operations, tax/VAT resolution, payment mutation, invoice email, calculations, and persistence remain owned by Job Detail and established domain helpers.
 - Focused regression checks follow the new architecture boundary instead of requiring feature JSX to remain inside `App.jsx`.
 
-An authenticated local navigation smoke test is required before proceeding into deeper component and data-ownership extraction.
+Authenticated local smoke testing now covers navigation restoration, read-only restrictions, Job Detail tabs, Inventory edits, direct receiving, stock adjustments, and partial/full purchase-order receiving. Deeper component and data-ownership extraction should continue behind the same checkpoint discipline.
 
 The first local smoke test confirmed permission restrictions and Job Detail return behavior. It also exposed a startup hydration race: the initial New Job mode was persisted before asynchronous shop data could restore the saved page. The navigation hook now uses a per-shop hydration barrier, and the focused check executes restoration cases for ordinary pages, valid Job Detail selections, and stale job selections.
+
+Later smoke testing exposed stale Inventory editor stock after a successful receive or adjustment. The controller now refreshes authoritative quantity and cost fields after all three stock mutation paths while preserving unrelated unsaved form edits. Local testing also revealed that an ordinary Vite session could inherit the hosted Supabase URL; beta.4 adds a development startup guard and complete fictional local auth/shop seed records so this cannot happen silently again.
 
 ## 0.3.0 priorities
 
