@@ -12,6 +12,7 @@ const damageReportView = read('src/modules/jobs/JobDamageReportView.jsx');
 const printDocuments = read('src/modules/jobs/JobPrintDocuments.jsx');
 const inspectionSections = read('src/modules/jobs/JobInspectionSections.jsx');
 const workSections = read('src/modules/jobs/JobWorkSections.jsx');
+const billingSections = read('src/modules/jobs/JobBillingSections.jsx');
 const formattingPath = join(root, 'src/modules/jobs/jobDetailFormatting.js');
 const packageJson = read('package.json');
 
@@ -21,6 +22,7 @@ assert.match(detail, /from ['"]\.\/jobDetailFormatting\.js['"]/, 'Job Detail mus
 assert.match(detail, /import JobPrintDocuments from ['"]\.\/JobPrintDocuments\.jsx['"]/, 'Job Detail must use the focused print-document boundary.');
 assert.match(detail, /import JobInspectionSections from ['"]\.\/JobInspectionSections\.jsx['"]/, 'Job Detail must use the focused inspection boundary.');
 assert.match(detail, /import JobWorkSections from ['"]\.\/JobWorkSections\.jsx['"]/, 'Job Detail must use the focused work boundary.');
+assert.match(detail, /import JobBillingSections from ['"]\.\/JobBillingSections\.jsx['"]/, 'Job Detail must use the focused billing boundary.');
 assert.match(
   detail,
   /<JobDetailHeader[\s\S]*?onStatusChange=\{updateField\}[\s\S]*?onAssignmentChanged=\{handleAssignmentChanged\}/,
@@ -28,7 +30,7 @@ assert.match(
 );
 assert.doesNotMatch(detail, /className="detail-header"/, 'Header presentation must not remain duplicated in JobDetail.');
 assert.doesNotMatch(detail, /function markerColorForReport|function getInstrumentSelectionPatch|function buildMeasurementDisplay|function formatMeasurementStageForExport/, 'Extracted pure helpers must not remain duplicated in JobDetail.');
-for (const source of [header, dialogs, damageReportView, printDocuments, inspectionSections, workSections]) {
+for (const source of [header, dialogs, damageReportView, printDocuments, inspectionSections, workSections, billingSections]) {
   assert.doesNotMatch(source, /jobService|supabase/i, 'Job Detail presentation boundaries must not load or mutate job data directly.');
 }
 assert.match(header, /<JobStatusSelect canWrite=\{canWrite\}/, 'Job status editing must retain write permission enforcement.');
@@ -48,6 +50,9 @@ assert.match(inspectionSections, /<DamageMapSection[\s\S]*?canWrite=\{canWrite\}
 assert.match(detail, /<JobWorkSections[\s\S]*?onAddService=\{addService\}[\s\S]*?onAppendWorkLog=\{appendWorkLog\}[\s\S]*?onSaveWorkLogChanges=\{saveWorkLogChanges\}[\s\S]*?onUpdateService=\{updateService\}/, 'Work presentation must retain established service and work-log handlers.');
 assert.match(workSections, /<WorkLogSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?appendWorkLog=\{onAppendWorkLog\}[\s\S]*?saveWorkLogChanges=\{onSaveWorkLogChanges\}/, 'Work Log must retain write permissions, append behavior, and blur-save behavior.');
 assert.match(workSections, /<ServicesList[\s\S]*?canWrite=\{canWrite\}[\s\S]*?onAddService=\{onAddService\}[\s\S]*?onUpdateService=\{onUpdateService\}[\s\S]*?onRemoveService=\{onRemoveService\}/, 'Work services must retain write permissions and controlled mutations.');
+assert.match(detail, /<JobBillingSections[\s\S]*?onAddInventoryPart=\{addInventoryPart\}[\s\S]*?onAddPayment=\{addPayment\}[\s\S]*?onEmailInvoice=\{openInvoiceEmail\}[\s\S]*?shopTaxRate=\{getShopDefaultTaxRate\(shopSettings\)\}[\s\S]*?taxSettings=\{taxSettings\}/, 'Billing presentation must retain inventory, payment, invoice, and shop-tax behavior.');
+assert.match(billingSections, /<PartsList[\s\S]*?canWrite=\{canWrite\}[\s\S]*?onAddInventoryPart=\{onAddInventoryPart\}[\s\S]*?onUpdatePart=\{onUpdatePart\}/, 'Billing parts must retain write permissions and controlled inventory mutations.');
+assert.match(billingSections, /<TotalsSection[\s\S]*?canSendEmail=\{canSendEmail\}[\s\S]*?canWrite=\{canWrite\}[\s\S]*?emailInvoice=\{onEmailInvoice\}[\s\S]*?shopTaxRate=\{shopTaxRate\}[\s\S]*?useShopTaxRate=\{onUseShopTaxRate\}/, 'Totals and payments must retain email, permission, tax, and payment wiring.');
 assert.match(damageReportView, /if \(!hasBaseImage && marks\.length === 0\)[\s\S]*?return null/, 'Completely empty damage maps must remain omitted from reports.');
 assert.match(damageReportView, /hasBaseImage && imageUrl && marks\.length > 0/, 'Marker tables must remain tied to a visible reference image.');
 

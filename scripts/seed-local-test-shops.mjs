@@ -53,6 +53,7 @@ try {
   for (const shop of shops) {
     const ownerId = deterministicUuid(`owner-${shop.id}`);
     await ensureOwnerUser(ownerId, shop);
+    await ensureShopProfile(ownerId, shop);
     await ensureOwnerMembership(ownerId, shop);
     const shopSummary = await seedShopAsOwner(ownerId, shop);
     summary.push(shopSummary);
@@ -120,6 +121,10 @@ async function ensureOwnerUser(ownerId, shop) {
       email,
       encrypted_password,
       email_confirmed_at,
+      confirmation_token,
+      recovery_token,
+      email_change_token_new,
+      email_change,
       raw_app_meta_data,
       raw_user_meta_data,
       created_at,
@@ -133,6 +138,10 @@ async function ensureOwnerUser(ownerId, shop) {
       ${shop.ownerEmail},
       crypt(${ownerPassword}, gen_salt('bf')),
       now(),
+      '',
+      '',
+      '',
+      '',
       '{"provider":"email","providers":["email"]}'::jsonb,
       ${sql.json({ display_name: `${shop.name} Owner` })},
       now(),
@@ -141,7 +150,37 @@ async function ensureOwnerUser(ownerId, shop) {
     on conflict (id) do update
     set email = excluded.email,
         encrypted_password = excluded.encrypted_password,
+        email_confirmed_at = excluded.email_confirmed_at,
+        confirmation_token = '',
+        recovery_token = '',
+        email_change_token_new = '',
+        email_change = '',
         raw_user_meta_data = excluded.raw_user_meta_data,
+        updated_at = now()
+  `;
+
+  await sql`
+    insert into auth.identities (
+      provider_id,
+      user_id,
+      identity_data,
+      provider,
+      last_sign_in_at,
+      created_at,
+      updated_at
+    )
+    values (
+      ${ownerId},
+      ${ownerId}::uuid,
+      ${sql.json({ sub: ownerId, email: shop.ownerEmail, email_verified: true, phone_verified: false })},
+      'email',
+      now(),
+      now(),
+      now()
+    )
+    on conflict (provider_id, provider) do update
+    set user_id = excluded.user_id,
+        identity_data = excluded.identity_data,
         updated_at = now()
   `;
 }
@@ -347,6 +386,61 @@ function buildParts(shop, job, customerNumber) {
       created_at: new Date().toISOString()
     }
   ];
+}
+
+async function ensureShopProfile(ownerId, shop) {
+  await sql`
+    insert into shop_profiles (
+      shop_id,
+      shop_name,
+      email,
+      onboarded_at,
+      created_by,
+      subscription_tier,
+      subscription_status,
+      created_at,
+      updated_at
+    )
+    values (
+      ${shop.id},
+      ${shop.name},
+      ${shop.ownerEmail},
+      now(),
+      ${ownerId}::uuid,
+      'pro',
+      'active',
+      now(),
+      now()
+    )
+    on conflict (shop_id) do update
+    set shop_name = excluded.shop_name,
+        email = excluded.email,
+        onboarded_at = excluded.onboarded_at,
+        created_by = excluded.created_by,
+        subscription_tier = 'pro',
+        subscription_status = 'active',
+        trial_ends_at = null,
+        updated_at = now()
+  `;
+
+  await sql`
+    insert into shop_subscriptions (
+      shop_id,
+      plan_id,
+      status,
+      billing_email,
+      created_at,
+      updated_at
+    )
+    values (${shop.id}, 'pro', 'active', ${shop.ownerEmail}, now(), now())
+    on conflict (shop_id) do update
+    set plan_id = 'pro',
+        status = 'active',
+        trial_ends_at = null,
+        grace_ends_at = null,
+        billing_email = excluded.billing_email,
+        updated_at = now()
+  `;
 }
 
 function buildServices(shop, job, customerNumber) {

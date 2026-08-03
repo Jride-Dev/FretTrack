@@ -15,6 +15,7 @@ const purchaseOrdersList = read('src/modules/inventory/InventoryPurchaseOrdersLi
 const vendors = read('src/modules/inventory/InventoryVendorsTab.jsx');
 const formattingPath = join(root, 'src/modules/inventory/inventoryFormatting.js');
 const purchaseOrderCalculationsPath = join(root, 'src/modules/inventory/purchaseOrderCalculations.js');
+const stockFormPath = join(root, 'src/modules/inventory/inventoryStockForm.js');
 const formatting = read('src/modules/inventory/inventoryFormatting.js');
 const packageJson = read('package.json');
 
@@ -32,6 +33,10 @@ assert.match(page, /<InventoryPartEditor[\s\S]*?onSavePart=\{savePart\}[\s\S]*?o
 assert.match(page, /<InventoryPurchaseOrdersList[\s\S]*?onStatusFilterChange=\{setPoStatusFilter\}[\s\S]*?onSelectPurchaseOrder=\{selectPurchaseOrder\}/, 'PO filtering and selection must remain connected to the established handlers.');
 assert.match(page, /<InventoryPurchaseOrderEditor[\s\S]*?onSavePurchaseOrder=\{savePurchaseOrder\}[\s\S]*?onStatusChange=\{handlePurchaseOrderStatus\}[\s\S]*?onReceive=\{handlePurchaseReceive\}/, 'PO mutations must remain connected to the established controller handlers.');
 assert.match(page, /preparePurchaseOrderReceiptItems\([\s\S]*?selectedPurchaseOrder,[\s\S]*?purchaseReceiveQuantities,[\s\S]*?purchaseReceiveCosts/, 'PO receipt submission must use the executable receipt-validation boundary.');
+assert.match(page, /function refreshPartsAfterStockMutation\([\s\S]*?withAuthoritativeStockFields\(current, authoritativePart\)/, 'Stock mutations must synchronize the selected editor from authoritative inventory state.');
+assert.match(page, /const updatedPart = await receivePart\([\s\S]*?refreshPartsAfterStockMutation\(updatedPart\)/, 'Direct receiving must synchronize the selected part form.');
+assert.match(page, /const updatedPart = await adjustPart\([\s\S]*?refreshPartsAfterStockMutation\(updatedPart\)/, 'Stock adjustments must synchronize the selected part form.');
+assert.match(page, /receivePurchaseOrderItems\([\s\S]*?refreshPartsAfterStockMutation\(\)/, 'Purchase-order receiving must synchronize any selected part form.');
 assert.doesNotMatch(page, /\bremainingForItem\(/, 'PO receipt validation must not call the removed local helper.');
 assert.match(page, /<InventoryVendorsTab[\s\S]*?onSelectVendor=\{loadVendorIntoForm\}[\s\S]*?onSaveVendor=\{saveVendor\}/, 'Vendor selection and saving must retain the established handlers.');
 assert.doesNotMatch(page, /function renderHistoryTab|function renderLabelsTab|function renderVendorsTab/, 'Extracted tabs must not remain duplicated in InventoryPage.');
@@ -86,6 +91,15 @@ assert.equal(getInventoryBarcodeLabel({}), '-', 'Parts without barcode identity 
 assert.match(formatting, /Number\.isNaN\(date\.getTime\(\)\)/, 'Shared formatting must guard invalid dates.');
 
 const { preparePurchaseOrderReceiptItems, purchaseOrderTotals, remainingForPurchaseOrderItem } = await import(pathToFileURL(purchaseOrderCalculationsPath));
+const { withAuthoritativeStockFields } = await import(pathToFileURL(stockFormPath));
+assert.deepEqual(
+  withAuthoritativeStockFields(
+    { name: 'Keep this edit', quantityOnHand: '3', unitCost: '2.50', retailPrice: '9.99' },
+    { quantityOnHand: 15, unitCost: 3.25 }
+  ),
+  { name: 'Keep this edit', quantityOnHand: '15', unitCost: '3.25', retailPrice: '9.99' },
+  'Authoritative receiving must refresh stock and cost without discarding unrelated editor changes.'
+);
 const snapshotOrder = {
   shippingCost: 2,
   items: [{ quantityOrdered: 2, quantityReceived: 1, unitsPerPurchaseUnit: 12, unitCost: 10 }]

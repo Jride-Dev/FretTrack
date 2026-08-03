@@ -1,0 +1,87 @@
+import PartsList from '../../components/PartsList';
+import ServicesList from '../../components/ServicesList';
+import TotalsSection from './TotalsSection';
+
+export default function JobBillingSections({
+  canSendEmail,
+  canWrite,
+  draftJob,
+  inventoryParts,
+  inventorySearch,
+  isInventoryLoading,
+  onAddInventoryPart,
+  onAddPart,
+  onAddPayment,
+  onAddService,
+  onEmailInvoice,
+  onRemovePart,
+  onRemovePayment,
+  onRemoveService,
+  onSearchInventoryParts,
+  onUpdateDiscountField,
+  onUpdatePart,
+  onUpdatePayment,
+  onUpdateService,
+  onUpdateTaxField,
+  onUseShopTaxRate,
+  part,
+  parts,
+  payment,
+  payments,
+  service,
+  services,
+  setInventorySearch,
+  setPart,
+  setPayment,
+  setService,
+  shopTaxRate,
+  taxSettings,
+  totals
+}) {
+  return (
+    <>
+      <PartsList
+        canWrite={canWrite}
+        inventoryParts={inventoryParts}
+        inventorySearch={inventorySearch}
+        isInventoryLoading={isInventoryLoading}
+        part={part}
+        parts={parts}
+        setInventorySearch={setInventorySearch}
+        setPart={setPart}
+        onAddInventoryPart={onAddInventoryPart}
+        onAddPart={onAddPart}
+        onRemovePart={onRemovePart}
+        onSearchInventoryParts={onSearchInventoryParts}
+        onUpdatePart={onUpdatePart}
+      />
+      <ServicesList
+        canWrite={canWrite}
+        services={services}
+        service={service}
+        setService={setService}
+        onAddService={onAddService}
+        onUpdateService={onUpdateService}
+        onRemoveService={onRemoveService}
+      />
+      <TotalsSection
+        canSendEmail={canSendEmail}
+        canWrite={canWrite}
+        addPayment={onAddPayment}
+        draftJob={draftJob}
+        emailInvoice={onEmailInvoice}
+        payment={payment}
+        payments={payments}
+        removePayment={onRemovePayment}
+        setPayment={setPayment}
+        taxSettings={taxSettings}
+        shopTaxRate={shopTaxRate}
+        totals={totals}
+        updateDiscountField={onUpdateDiscountField}
+        updatePayment={onUpdatePayment}
+        updateTaxField={onUpdateTaxField}
+        useShopTaxRate={onUseShopTaxRate}
+      />
+    </>
+  );
+}

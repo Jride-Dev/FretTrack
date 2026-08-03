@@ -8,6 +8,7 @@ import {
   createVendor,
   deactivatePart,
   fixMissingPartBarcodeCode,
+  getPart,
   listPartMovements,
   listPartPurchaseHistory,
   listParts,
@@ -30,6 +31,7 @@ import InventoryPurchaseOrderEditor from './InventoryPurchaseOrderEditor.jsx';
 import InventoryPurchaseOrdersList from './InventoryPurchaseOrdersList.jsx';
 import InventoryVendorsTab from './InventoryVendorsTab.jsx';
 import { preparePurchaseOrderReceiptItems } from './purchaseOrderCalculations.js';
+import { withAuthoritativeStockFields } from './inventoryStockForm.js';
 
 const emptyPartForm = {
   vendorId: '',
@@ -308,6 +310,24 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     }
   }
 
+  async function refreshPartsAfterStockMutation(updatedPart = null) {
+    const loadedParts = await loadPartsOnly({ search, activeOnly: !showInactive, lowStockOnly });
+    if (!selectedPartId) {
+      return loadedParts;
+    }
+
+    let authoritativePart = updatedPart?.id === selectedPartId
+      ? updatedPart
+      : loadedParts.find((part) => part.id === selectedPartId);
+    if (!authoritativePart) {
+      authoritativePart = await getPart(selectedPartId);
+    }
+    if (authoritativePart) {
+      setPartForm((current) => withAuthoritativeStockFields(current, authoritativePart));
+    }
+    return loadedParts;
+  }
+
   async function refreshPurchasingData() {
     const [loadedVendors, loadedOrders, loadedHistory] = await Promise.all([
       listVendors(shopId, { activeOnly: false }),
@@ -453,11 +473,11 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     }
     setIsSaving(true);
     try {
-      await receivePart(selectedPart.id, receiveForm.quantity, receiveForm.cost, receiveForm.note);
+      const updatedPart = await receivePart(selectedPart.id, receiveForm.quantity, receiveForm.cost, receiveForm.note);
       onNotice?.({ type: 'success', message: 'Stock received.' });
       setReceiveForm({ quantity: '1', cost: receiveForm.cost, note: '' });
       await Promise.all([
-        loadPartsOnly({ search, activeOnly: !showInactive, lowStockOnly }),
+        refreshPartsAfterStockMutation(updatedPart),
         refreshPurchasingData()
       ]);
       const [movements, purchaseRows] = await Promise.all([
@@ -525,10 +545,10 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
     }
     setIsSaving(true);
     try {
-      await adjustPart(selectedPart.id, adjustForm.quantityDelta, adjustForm.note);
+      const updatedPart = await adjustPart(selectedPart.id, adjustForm.quantityDelta, adjustForm.note);
       onNotice?.({ type: 'success', message: 'Stock adjusted.' });
       setAdjustForm({ quantityDelta: '0', note: '' });
-      await loadPartsOnly({ search, activeOnly: !showInactive, lowStockOnly });
+      await refreshPartsAfterStockMutation(updatedPart);
     } catch (error) {
       console.error('Adjust stock failed.', error);
       onNotice?.({ type: 'error', message: error.message || 'Unable to adjust stock.' });
@@ -752,7 +772,7 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
       const result = await receivePurchaseOrderItems(selectedPurchaseOrder.id, receiptItems, purchaseReceiveNote);
       onNotice?.({ type: 'success', message: `Received ${result?.receivedUnits || 'stock'} inventory unit(s).` });
       await Promise.all([
-        loadPartsOnly({ search, activeOnly: !showInactive, lowStockOnly }),
+        refreshPartsAfterStockMutation(),
         refreshPurchasingData()
       ]);
       const refreshedOrder = (await listPurchaseOrders(shopId)).find((order) => order.id === selectedPurchaseOrder.id);

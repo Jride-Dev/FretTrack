@@ -1,5 +1,7 @@
 # Changelog
 
+- Prevent local development from silently using a hosted Supabase project, and repair the local test-shop seed accounts for current GoTrue email authentication.
+
 Current version: `0.2.9-beta.3`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
@@ -20,6 +22,8 @@ This file tracks what changed in each release, including fixes that were added b
 - Moved Job Sheet and Customer Damage Report composition into a focused print-document boundary while keeping print commands, shop measurement formatting, calculated totals, and job state in their existing owners.
 - Extracted the Job Detail Inspection tab composition into a controlled module while retaining measurement units, technical-field updates, Damage Map persistence/uploads, and write permissions in their established paths.
 - Extracted the Job Detail Work tab composition into a controlled module while retaining Work Log append/edit/blur-save behavior, service-line mutations, and write permissions through the existing Job Detail handlers.
+- Extracted the Job Detail Parts & Billing tab composition into a controlled module while retaining inventory-backed/manual parts, services, payments, discounts, tax/VAT defaults, invoice email, totals, and permission behavior through established handlers.
+- Fixed direct receiving, stock adjustments, and purchase-order receiving so the selected Inventory editor refreshes its authoritative quantity and cost; a later Save Changes action can no longer overwrite received or adjusted stock with stale form values.
 - Added a repository architecture health audit covering validation status, module boundaries, growing source hotspots, test-suite brittleness, local test-environment policy, and the unattended backup reliability blocker.
 - Replaced the Community section's temporary TGR letter mark with the supplied JR's Custom Shop / Torrance Guitar Repair logo.
 - Expanded the public Support page with a dedicated FAQ covering uptime resets, Operational status interpretation, Shop Settings defaults, read-only access, photo persistence, and useful privacy-conscious bug reports; also documented that the uptime clock is a conservative shared-infrastructure recovery indicator rather than proof of an app restart or shop outage.

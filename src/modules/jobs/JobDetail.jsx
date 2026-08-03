@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import PartsList from '../../components/PartsList';
-import ServicesList from '../../components/ServicesList';
 import ImagesSection from '../images/ImagesSection';
 import JobInfoSection from './JobInfoSection';
 import PrintActions from './PrintActions';
 import { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
-import TotalsSection from './TotalsSection';
 import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
 import { getShopDefaultTaxRate, resolveJobTaxSettings, withResolvedJobTaxSettings } from '../billing/jobTaxSettings';
@@ -38,6 +35,7 @@ import JobDetailDialogs from './JobDetailDialogs.jsx';
 import JobPrintDocuments from './JobPrintDocuments.jsx';
 import JobInspectionSections from './JobInspectionSections.jsx';
 import JobWorkSections from './JobWorkSections.jsx';
+import JobBillingSections from './JobBillingSections.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import { buildMeasurementDisplay, getInstrumentSelectionPatch } from './jobDetailFormatting.js';
 
@@ -1305,42 +1303,42 @@ export default function JobDetail({
   );
 
   const billingSections = (
-    <>
-      <PartsList
-        canWrite={canWrite}
-        inventoryParts={inventoryParts}
-        inventorySearch={inventorySearch}
-        isInventoryLoading={isInventoryLoading}
-        part={part}
-        parts={parts}
-        setInventorySearch={setInventorySearch}
-        setPart={setPart}
-        onAddInventoryPart={addInventoryPart}
-        onAddPart={addPart}
-        onRemovePart={removePart}
-        onSearchInventoryParts={searchInventoryParts}
-        onUpdatePart={updatePart}
-      />
-      <ServicesList canWrite={canWrite} services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
-      <TotalsSection
-        canSendEmail={canSendEmail}
-        canWrite={canWrite}
-        addPayment={addPayment}
-        draftJob={draftJob}
-        emailInvoice={openInvoiceEmail}
-        payment={payment}
-        payments={payments}
-        removePayment={removePayment}
-        setPayment={setPayment}
-        taxSettings={taxSettings}
-        shopTaxRate={getShopDefaultTaxRate(shopSettings)}
-        totals={totals}
-        updateDiscountField={updateDiscountField}
-        updatePayment={updatePayment}
-        updateTaxField={updateTaxField}
-        useShopTaxRate={useShopTaxRate}
-      />
-    </>
+    <JobBillingSections
+      canSendEmail={canSendEmail}
+      canWrite={canWrite}
+      draftJob={draftJob}
+      inventoryParts={inventoryParts}
+      inventorySearch={inventorySearch}
+      isInventoryLoading={isInventoryLoading}
+      onAddInventoryPart={addInventoryPart}
+      onAddPart={addPart}
+      onAddPayment={addPayment}
+      onAddService={addService}
+      onEmailInvoice={openInvoiceEmail}
+      onRemovePart={removePart}
+      onRemovePayment={removePayment}
+      onRemoveService={removeService}
+      onSearchInventoryParts={searchInventoryParts}
+      onUpdateDiscountField={updateDiscountField}
+      onUpdatePart={updatePart}
+      onUpdatePayment={updatePayment}
+      onUpdateService={updateService}
+      onUpdateTaxField={updateTaxField}
+      onUseShopTaxRate={useShopTaxRate}
+      part={part}
+      parts={parts}
+      payment={payment}
+      payments={payments}
+      service={service}
+      services={services}
+      setInventorySearch={setInventorySearch}
+      setPart={setPart}
+      setPayment={setPayment}
+      setService={setService}
+      shopTaxRate={getShopDefaultTaxRate(shopSettings)}
+      taxSettings={taxSettings}
+      totals={totals}
+    />
   );
 
   const imagesSection = (
