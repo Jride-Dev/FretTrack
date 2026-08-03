@@ -10,6 +10,7 @@ const migrationPath = migrationFile ? join(migrationsDir, migrationFile) : '';
 const servicePath = join(root, 'src/modules/shipping/shippingService.js');
 const dashboardPath = join(root, 'src/modules/shipping/ShippingDashboard.jsx');
 const appPath = join(root, 'src/app/App.jsx');
+const workspaceRouterPath = join(root, 'src/app/WorkspaceRouter.jsx');
 const shopConfigPath = join(root, 'src/modules/shops/shopConfig.js');
 const packagePath = join(root, 'package.json');
 
@@ -36,6 +37,7 @@ const migration = read(migrationPath);
 const service = read(servicePath);
 const dashboard = read(dashboardPath);
 const app = read(appPath);
+const workspaceRouter = read(workspaceRouterPath);
 const shopConfig = read(shopConfigPath);
 const packageJson = read(packagePath);
 
@@ -140,9 +142,9 @@ assert.ok(dashboard.includes('inventoryCategoryPresets'), 'Dashboard must reuse 
   assert.ok(dashboard.includes(label), `Shipping dashboard label must exist: ${label}`);
 });
 
-assert.ok(app.includes('ShippingDashboard'), 'App must import the Shipping dashboard.');
+assert.ok(workspaceRouter.includes('ShippingDashboard'), 'Workspace router must import the Shipping dashboard.');
 assert.ok(app.includes("navigateTo('shipping')"), 'App navigation must include Shipping.');
-assert.ok(app.includes("mode === 'shipping'"), 'App must render Shipping mode.');
+assert.ok(workspaceRouter.includes("mode === 'shipping'"), 'Workspace router must render Shipping mode.');
 
 assert.ok(service.includes('listShippingDashboardRecords'), 'Shipping service must list dashboard records.');
 assert.ok(service.includes('createShippingRecord'), 'Shipping service must create manual records.');

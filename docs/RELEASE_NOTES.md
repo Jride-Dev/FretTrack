@@ -1,8 +1,24 @@
 # Release Notes
 
-## GitHub Release Summary: v0.2.9-beta.3
+## GitHub Release Summary: v0.2.9-beta.4
 
-FretTrack `0.2.9-beta.3` adds server-enforced email and photo usage caps while retaining the Pro Team Assignment Foundation, localization, Current Jobs, scheduling, Pro reporting, beta resources, shipping, and Trial/Shop/Pro entitlement foundations.
+FretTrack `0.2.9-beta.4` is an architecture and workflow-reliability release candidate. It preserves the existing repair-shop experience while separating workspace navigation, Inventory, and Job Detail presentation into smaller feature boundaries that are safer to maintain and test.
+
+## Architecture and inventory reliability
+
+The first 0.3.0 architecture-foundation slice extracts top-level workspace page selection and persisted navigation state from the application shell and lazy-loads feature pages through that boundary. Permissions, dirty-state protection, Close Detail return behavior, and feature workflows remain unchanged; the change reduces startup coupling and establishes a safe path toward module-owned data and page state. The architecture findings and remaining priorities are recorded in `docs/ARCHITECTURE_HEALTH_AUDIT_0.3.0.md`.
+
+Workspace refresh restoration now waits until the authenticated shop profile and job data are ready before writing navigation state. This prevents the hook's initial New Job mode from replacing a saved Inventory, Scheduling, Customers, Reports, or Job Detail destination during startup.
+
+The application shell now delegates its New Job sidebar composition and derived role/entitlement access map to focused modules. Existing feature permission helpers remain authoritative, while `App.jsx` no longer renders sidebar internals or calculates each page permission inline.
+
+Inventory now separates its History, Labels, Vendors, Parts list, Part editor, Purchase Order list, and Purchase Order editor into focused presentation modules. Job Detail likewise separates its shell/header, dialogs, formatting, Damage Report, print documents, Inspection, Work, and Parts & Billing presentation. Existing persistence services, transactional receiving, permissions, role restrictions, and dirty-state behavior remain authoritative.
+
+Direct receiving, stock adjustments, and purchase-order receiving now synchronize the selected part editor with the authoritative saved quantity and cost. A later **Save Changes** action therefore preserves the received or adjusted stock instead of restoring stale form values. Purchase-unit conversion snapshots and individual-unit job usage remain unchanged.
+
+Local development now refuses a hosted Supabase URL unless a developer deliberately enables the documented override. The fictional local-shop seeder also creates complete shop lifecycle, subscription, membership, and current GoTrue email-identity records. These protections affect development only and do not alter production authentication or shop data.
+
+This release candidate adds no Supabase migration, Edge Function change, billing change, or customer-data rewrite for the architecture and inventory reliability work.
 
 The public Community section now uses the supplied JR's Custom Shop / Torrance Guitar Repair logo instead of the temporary TGR letter mark.
 

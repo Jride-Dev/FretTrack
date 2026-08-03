@@ -1,26 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import PartsList from '../../components/PartsList';
-import ServicesList from '../../components/ServicesList';
-import DamageMapSection from './DamageMapSection';
 import ImagesSection from '../images/ImagesSection';
-import PhotoEditorModal from '../photos/PhotoEditorModal.jsx';
 import JobInfoSection from './JobInfoSection';
-import JobPrintSheet from './JobPrintSheet';
-import JobStatusSelect from './JobStatusSelect';
 import PrintActions from './PrintActions';
-import SubcontractorPickupEmailDialog, { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
-import JobDocumentEmailDialog from './JobDocumentEmailDialog.jsx';
+import { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
-import TechDetailsSection from './TechDetailsSection';
-import TotalsSection from './TotalsSection';
-import WorkLogSection from './WorkLogSection';
-import CustomerDamageReport from './CustomerDamageReport';
 import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
 import { getShopDefaultTaxRate, resolveJobTaxSettings, withResolvedJobTaxSettings } from '../billing/jobTaxSettings';
 import MessagesPanel from '../messaging/MessagesPanel';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
-import { formatLength, formatMeasurementChange } from '../../shared/utils/measurements';
+import { formatMeasurementChange } from '../../shared/utils/measurements';
 import { getShopDateOptions, getShopMeasurementOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
 import { combineCustomerName } from '../customers';
 import {
@@ -30,7 +19,6 @@ import {
   normalizeInstrumentType,
   normalizeStringCount,
   resizeStringGauges,
-  shouldResetBrandForInstrumentType,
   shouldResetModelForBrand,
   stringCountForInstrument
 } from '../instruments/instrumentService';
@@ -42,58 +30,16 @@ import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInv
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
 import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
-import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
-import JobAssignmentControl from './JobAssignmentControl.jsx';
+import JobDetailHeader from './JobDetailHeader.jsx';
+import JobDetailDialogs from './JobDetailDialogs.jsx';
+import JobPrintDocuments from './JobPrintDocuments.jsx';
+import JobInspectionSections from './JobInspectionSections.jsx';
+import JobWorkSections from './JobWorkSections.jsx';
+import JobBillingSections from './JobBillingSections.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
+import { buildMeasurementDisplay, getInstrumentSelectionPatch } from './jobDetailFormatting.js';
 
 const intakeTypes = JOB_SOURCE_OPTIONS;
-const damageViewLabels = {
-  front: 'Front',
-  back: 'Back',
-  headstock: 'Headstock',
-  serial_number: 'Serial Number'
-};
-
-function markerColorForReport(severity) {
-  if (severity === 'Critical') return '#b3261e';
-  if (severity === 'Structural') return '#a15c00';
-  return '#255f85';
-}
-
-function getInstrumentSelectionPatch(currentJob, instrumentType) {
-  const normalizedInstrumentType = normalizeInstrumentType(instrumentType);
-  const shouldResetBrand = shouldResetBrandForInstrumentType(normalizedInstrumentType, currentJob.guitarBrand);
-  const guitarBrand = shouldResetBrand ? '' : currentJob.guitarBrand;
-  const model = shouldResetBrand || shouldResetModelForBrand(normalizedInstrumentType, guitarBrand, currentJob.model)
-    ? ''
-    : currentJob.model;
-
-  return {
-    instrumentType: normalizedInstrumentType,
-    guitarBrand,
-    model
-  };
-}
-
-function buildMeasurementDisplay(job, lengthUnit) {
-  const neckInspection = job.techDetails?.neckInspection || {};
-  return {
-    lengthUnit,
-    initial: formatMeasurementStageForExport(neckInspection.initial, lengthUnit),
-    final: formatMeasurementStageForExport(neckInspection.final, lengthUnit)
-  };
-}
-
-function formatMeasurementStageForExport(stage = {}, fallbackUnit = 'in') {
-  return {
-    relief: formatLength(stage.relief, fallbackUnit),
-    nutHighE: formatLength(stage.nutHighE, fallbackUnit),
-    nutLowE: formatLength(stage.nutLowE, fallbackUnit),
-    actionHighE12th: formatLength(stage.actionHighE12th, fallbackUnit),
-    actionLowE12th: formatLength(stage.actionLowE12th, fallbackUnit)
-  };
-}
-
 export default function JobDetail({
   job,
   jobs = [],
@@ -1127,65 +1073,6 @@ export default function JobDetail({
     }
   }
 
-  function reportDamageView(viewName) {
-    const damageMap = draftJob.techDetails.damageMap || {};
-    const view = damageMap.views?.[viewName] || { marks: [] };
-    const imageUrl = view.imageUrl || '';
-    const hasBaseImage = Boolean(imageUrl || view.storagePath || view.imageId);
-    const marks = view.marks || [];
-    const title = `${damageViewLabels[viewName] || 'Damage'} Damage Map`;
-
-    if (!hasBaseImage && marks.length === 0) {
-      return null;
-    }
-
-    return (
-      <div className="report-damage-view">
-        <h3>{title}</h3>
-        {hasBaseImage && imageUrl ? (
-          <div className="report-damage-canvas">
-            <img src={imageUrl} alt={`${viewName} damage map`} />
-            {marks.map((mark, index) => (
-              <span
-                key={mark.id}
-                className="damage-marker"
-                style={{ left: `${mark.x}%`, top: `${mark.y}%`, backgroundColor: markerColorForReport(mark.severity) }}
-              >
-                {index + 1}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="report-damage-missing">No damage map image was attached.</p>
-        )}
-        {hasBaseImage && imageUrl && marks.length > 0 && (
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Area</th>
-                <th>Severity</th>
-                <th>Note</th>
-                <th>Recommended Repair</th>
-              </tr>
-            </thead>
-            <tbody>
-              {marks.map((mark, index) => (
-                <tr key={mark.id}>
-                  <td>{index + 1}</td>
-                  <td>{mark.area}</td>
-                  <td>{mark.severity}</td>
-                  <td>{mark.note}</td>
-                  <td>{mark.recommendedRepair}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    );
-  }
-
   function updateContactPreference(field, value) {
     patchJob({ [field]: value });
   }
@@ -1352,30 +1239,18 @@ export default function JobDetail({
   );
 
   const printSections = (
-    <>
-      <JobPrintSheet
-        draftJob={draftJob}
-        formatInstrumentLabel={formatInstrumentLabel}
-        lengthUnit={measurementOptions.lengthUnit}
-        normalizeInstrumentType={normalizeInstrumentType}
-        outerStringLabels={outerStringLabels}
-        parts={parts}
-        services={services}
-        totals={totals}
-      />
-      <CustomerDamageReport
-        draftJob={draftJob}
-        formatInstrumentLabel={formatInstrumentLabel}
-        formatMeasurementDelta={formatMeasurementDelta}
-        lengthUnit={measurementOptions.lengthUnit}
-        outerStringLabels={outerStringLabels}
-        normalizeInstrumentType={normalizeInstrumentType}
-        parts={parts}
-        reportDamageView={reportDamageView}
-        services={services}
-        workOrderImages={workOrderImages}
-      />
-    </>
+    <JobPrintDocuments
+      draftJob={draftJob}
+      formatInstrumentLabel={formatInstrumentLabel}
+      formatMeasurementDelta={formatMeasurementDelta}
+      lengthUnit={measurementOptions.lengthUnit}
+      normalizeInstrumentType={normalizeInstrumentType}
+      outerStringLabels={outerStringLabels}
+      parts={parts}
+      services={services}
+      totals={totals}
+      workOrderImages={workOrderImages}
+    />
   );
 
   const intakeSection = (
@@ -1393,81 +1268,77 @@ export default function JobDetail({
   );
 
   const inspectionSections = (
-    <>
-      <TechDetailsSection
-        canWrite={canWrite}
-        draftJob={draftJob}
-        formatMeasurementDelta={formatMeasurementDelta}
-        lengthUnit={measurementOptions.lengthUnit}
-        outerStringLabels={outerStringLabels}
-        updateNeckInspection={updateNeckInspection}
-        updateStringGauge={updateStringGauge}
-        updateStringGauges={updateStringGauges}
-        updateTechField={updateTechField}
-      />
-      <DamageMapSection
-        canWrite={canWrite}
-        instrumentType={normalizeInstrumentType(draftJob.instrumentType)}
-        damageMap={draftJob.techDetails.damageMap}
-        onChange={updateDamageMap}
-        onViewImageUpload={handleDamageViewImageUpload}
-      />
-    </>
+    <JobInspectionSections
+      canWrite={canWrite}
+      draftJob={draftJob}
+      formatMeasurementDelta={formatMeasurementDelta}
+      lengthUnit={measurementOptions.lengthUnit}
+      outerStringLabels={outerStringLabels}
+      onDamageMapChange={updateDamageMap}
+      onDamageViewImageUpload={handleDamageViewImageUpload}
+      onNeckInspectionChange={updateNeckInspection}
+      onStringGaugeChange={updateStringGauge}
+      onStringGaugesChange={updateStringGauges}
+      onTechFieldChange={updateTechField}
+    />
   );
 
   const workSections = (
-    <>
-      <WorkLogSection
-        canWrite={canWrite}
-        appendWorkLog={appendWorkLog}
-        draftJob={draftJob}
-        removeWorkLogEntry={removeWorkLogEntry}
-        saveWorkLogChanges={saveWorkLogChanges}
-        setWorkLogText={setWorkLogText}
-        updateWorkLogEntry={updateWorkLogEntry}
-        workLogText={workLogText}
-      />
-      <ServicesList canWrite={canWrite} services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
-    </>
+    <JobWorkSections
+      canWrite={canWrite}
+      draftJob={draftJob}
+      onAddService={addService}
+      onAppendWorkLog={appendWorkLog}
+      onRemoveService={removeService}
+      onRemoveWorkLogEntry={removeWorkLogEntry}
+      onSaveWorkLogChanges={saveWorkLogChanges}
+      onUpdateService={updateService}
+      onUpdateWorkLogEntry={updateWorkLogEntry}
+      service={service}
+      services={services}
+      setService={setService}
+      setWorkLogText={setWorkLogText}
+      workLogText={workLogText}
+    />
   );
 
   const billingSections = (
-    <>
-      <PartsList
-        canWrite={canWrite}
-        inventoryParts={inventoryParts}
-        inventorySearch={inventorySearch}
-        isInventoryLoading={isInventoryLoading}
-        part={part}
-        parts={parts}
-        setInventorySearch={setInventorySearch}
-        setPart={setPart}
-        onAddInventoryPart={addInventoryPart}
-        onAddPart={addPart}
-        onRemovePart={removePart}
-        onSearchInventoryParts={searchInventoryParts}
-        onUpdatePart={updatePart}
-      />
-      <ServicesList canWrite={canWrite} services={services} service={service} setService={setService} onAddService={addService} onUpdateService={updateService} onRemoveService={removeService} />
-      <TotalsSection
-        canSendEmail={canSendEmail}
-        canWrite={canWrite}
-        addPayment={addPayment}
-        draftJob={draftJob}
-        emailInvoice={openInvoiceEmail}
-        payment={payment}
-        payments={payments}
-        removePayment={removePayment}
-        setPayment={setPayment}
-        taxSettings={taxSettings}
-        shopTaxRate={getShopDefaultTaxRate(shopSettings)}
-        totals={totals}
-        updateDiscountField={updateDiscountField}
-        updatePayment={updatePayment}
-        updateTaxField={updateTaxField}
-        useShopTaxRate={useShopTaxRate}
-      />
-    </>
+    <JobBillingSections
+      canSendEmail={canSendEmail}
+      canWrite={canWrite}
+      draftJob={draftJob}
+      inventoryParts={inventoryParts}
+      inventorySearch={inventorySearch}
+      isInventoryLoading={isInventoryLoading}
+      onAddInventoryPart={addInventoryPart}
+      onAddPart={addPart}
+      onAddPayment={addPayment}
+      onAddService={addService}
+      onEmailInvoice={openInvoiceEmail}
+      onRemovePart={removePart}
+      onRemovePayment={removePayment}
+      onRemoveService={removeService}
+      onSearchInventoryParts={searchInventoryParts}
+      onUpdateDiscountField={updateDiscountField}
+      onUpdatePart={updatePart}
+      onUpdatePayment={updatePayment}
+      onUpdateService={updateService}
+      onUpdateTaxField={updateTaxField}
+      onUseShopTaxRate={useShopTaxRate}
+      part={part}
+      parts={parts}
+      payment={payment}
+      payments={payments}
+      service={service}
+      services={services}
+      setInventorySearch={setInventorySearch}
+      setPart={setPart}
+      setPayment={setPayment}
+      setService={setService}
+      shopTaxRate={getShopDefaultTaxRate(shopSettings)}
+      taxSettings={taxSettings}
+      totals={totals}
+    />
   );
 
   const imagesSection = (
@@ -1515,54 +1386,36 @@ export default function JobDetail({
 
   return (
     <section className="panel detail job-detail">
-      <JobDocumentEmailDialog
-        isOpen={Boolean(documentEmailDraft)}
-        draft={documentEmailDraft}
-        kind={documentEmailDraft?.kind || 'work_order'}
-        onClose={() => setDocumentEmailDraft(null)}
-        onSend={handleSendDocumentEmail}
+      <JobDetailDialogs
+        documentEmailDraft={documentEmailDraft}
+        subcontractorPickupJob={subcontractorPickupJob}
+        isSendingSubcontractorEmail={isSendingSubcontractorEmail}
+        photoEditorImage={photoEditorImage}
+        isSavingEditedPhoto={isSavingEditedPhoto}
+        canOverwritePhotos={canOverwritePhotos}
+        onCloseDocumentEmail={() => setDocumentEmailDraft(null)}
+        onSendDocumentEmail={handleSendDocumentEmail}
+        onCancelSubcontractorPickup={() => setSubcontractorPickupJob(null)}
+        onSendSubcontractorPickup={sendSubcontractorPickupEmail}
+        onClosePhotoEditor={() => setPhotoEditorImage(null)}
+        onSavePhotoCopy={saveEditedPhotoCopy}
+        onOverwritePhoto={overwriteEditedPhoto}
       />
-      <SubcontractorPickupEmailDialog
-        job={subcontractorPickupJob}
-        isSending={isSendingSubcontractorEmail}
-        onCancel={() => setSubcontractorPickupJob(null)}
-        onSend={sendSubcontractorPickupEmail}
-      />
-      <PhotoEditorModal
-        image={photoEditorImage}
-        isOpen={Boolean(photoEditorImage)}
-        isSaving={isSavingEditedPhoto}
-        onClose={() => setPhotoEditorImage(null)}
-        onSaveCopy={saveEditedPhotoCopy}
-        onOverwrite={canOverwritePhotos ? overwriteEditedPhoto : null}
-      />
-      <div className="detail-header">
-        <div>
-          <h2>{draftJob.customerName}</h2>
-          <p>
-            {draftJob.guitarBrand} {draftJob.model} {draftJob.jobNumber ? `- Job ${draftJob.jobNumber}` : ''}
-          </p>
-        </div>
-        <JobStatusSelect canWrite={canWrite} value={draftJob.status} onChange={updateField} />
-      </div>
-      <JobAssignmentControl
-        job={draftJob}
-        members={assignableMembers}
-        membersError={assignableMembersError}
-        membersLoading={assignableMembersLoading}
+      <JobDetailHeader
+        draftJob={draftJob}
+        canWrite={canWrite}
+        isDirty={isDirty}
+        saveStatus={saveStatus}
+        assignableMembers={assignableMembers}
+        assignableMembersLoading={assignableMembersLoading}
+        assignableMembersError={assignableMembersError}
         membership={membership}
         entitlementSnapshot={entitlementSnapshot}
         betaApproved={betaApproved}
+        onStatusChange={updateField}
         onAssignmentChanged={handleAssignmentChanged}
         onNotice={onNotice}
       />
-
-      {(isDirty || saveStatus === 'saving' || saveStatus === 'error') && (
-        <UnsavedChangesBadge
-          state={saveStatus}
-          reminder={isDirty ? 'Remember to save before leaving.' : ''}
-        />
-      )}
       <JobDetailTabs
         activityTimeline={activityTimeline}
         billingSections={billingSections}

@@ -1,10 +1,31 @@
 # Changelog
 
-Current version: `0.2.9-beta.3`
+Current version: `0.2.9-beta.4`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.9-beta.3 - Current Beta Candidate
+## v0.2.9-beta.4 - Current Beta Candidate
+
+- Began the 0.3.0 modular architecture foundation by extracting top-level workspace page rendering and navigation state from `App.jsx`, lazy-loading feature pages behind a shared workspace boundary, and separating the current-job status rule from page UI; page restoration, permissions, Close Detail, and dirty-state handlers remain unchanged.
+- Corrected the extracted workspace restoration lifecycle so refresh waits for the active shop and its data to hydrate before persisting navigation; Inventory, Scheduling, Customers, Reports, and valid Job Detail selections now restore instead of being overwritten by the initial New Job mode.
+- Continued the modular shell extraction by moving the New Job sidebar composition and centralized role/entitlement derivation out of `App.jsx`; the existing Job Form, compact Current Jobs, Till Summary, Upcoming Schedule, write restrictions, photo permissions, team assignment access, and billing visibility remain connected through explicit boundaries.
+- Continued the 0.3.0 Inventory decomposition by extracting the read-only History, Barcode Labels, and Vendors tab presentation from `InventoryPage.jsx`; existing vendor mutations, barcode printing, purchase-history snapshots, permissions, and Inventory controller state remain connected through their established handlers.
+- Separated Inventory part searching, stock filters, compact list rendering, and barcode-label selection into a focused presentation boundary while keeping part editing, images, receiving, stock adjustments, permissions, and persistence in the existing controller.
+- Extracted the controlled Inventory Part editor and stock-action presentation while retaining dirty-state ownership, save/deactivate/receive/adjust handlers, image processing, permissions, and persistence in `InventoryPage.jsx`.
+- Extracted Purchase Order filtering, summary-table rendering, and pure snapshot-total calculations while keeping PO creation, receipt entry, status changes, permissions, and persistence in the existing Inventory controller.
+- Extracted the controlled Purchase Order creation, detail, status-action, and receiving presentation while retaining PO mutations, partial-receipt state, permissions, and persistence in `InventoryPage.jsx`.
+- Began the `JobDetail.jsx` decomposition by extracting its status/assignment/unsaved-state header and document/subcontractor/photo dialog composition; all job updates, permission decisions, email/photo actions, dirty state, and persistence remain owned by Job Detail.
+- Moved Job Detail’s pure instrument-selection, measurement-export, and damage-marker formatting into an executable helper boundary without changing saved job values, shop measurement units, or document rendering.
+- Extracted the customer-report Damage Map renderer from `JobDetail.jsx` while preserving image-required marker output, empty-map omission, missing-image copy, severity colors, and the existing print layout contract.
+- Moved Job Sheet and Customer Damage Report composition into a focused print-document boundary while keeping print commands, shop measurement formatting, calculated totals, and job state in their existing owners.
+- Extracted the Job Detail Inspection tab composition into a controlled module while retaining measurement units, technical-field updates, Damage Map persistence/uploads, and write permissions in their established paths.
+- Extracted the Job Detail Work tab composition into a controlled module while retaining Work Log append/edit/blur-save behavior, service-line mutations, and write permissions through the existing Job Detail handlers.
+- Extracted the Job Detail Parts & Billing tab composition into a controlled module while retaining inventory-backed/manual parts, services, payments, discounts, tax/VAT defaults, invoice email, totals, and permission behavior through established handlers.
+- Fixed direct receiving, stock adjustments, and purchase-order receiving so the selected Inventory editor refreshes its authoritative quantity and cost; a later Save Changes action can no longer overwrite received or adjusted stock with stale form values.
+- Added a repository architecture health audit covering validation status, module boundaries, growing source hotspots, test-suite brittleness, local test-environment policy, and the unattended backup reliability blocker.
+- Prevented local development from silently using a hosted Supabase project, repaired local test-shop lifecycle/authentication records for the current local Supabase stack, and added a focused isolation check.
+
+## v0.2.9-beta.3
 
 - Replaced the Community section's temporary TGR letter mark with the supplied JR's Custom Shop / Torrance Guitar Repair logo.
 - Expanded the public Support page with a dedicated FAQ covering uptime resets, Operational status interpretation, Shop Settings defaults, read-only access, photo persistence, and useful privacy-conscious bug reports; also documented that the uptime clock is a conservative shared-infrastructure recovery indicator rather than proof of an app restart or shop outage.

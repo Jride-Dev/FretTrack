@@ -274,7 +274,7 @@
               </figure>
             </div>
             <h3>Part fields</h3>
-            <p>A part can include Vendor, Part Name, Part Number, Category, Location, Description, Vendor SKU, Vendor UPC, Barcode, Manufacturer, Manufacturer UPC, Unit Cost, Retail Price, QTY On Hand, Reorder Point, Desired Stock, Special Order status, and Part Image.</p>
+            <p>A part can include Vendor, Part Name, Part Number, Category, Location, Description, Vendor SKU, Vendor UPC, Barcode, Manufacturer, Manufacturer UPC, Unit Cost, Retail Price, QTY On Hand, Reorder Point, Desired Stock, Special Order status, Part Image, Purchase Unit, and Units per Purchase Unit. Normal stock adjustments and job usage continue to use individual inventory units.</p>
             <h3>Using parts on jobs</h3>
             <ol class="steps">
               <li>Add the part from inventory when the item should affect stock.</li>
@@ -322,7 +322,7 @@
               <li>Create a new purchase order.</li>
               <li>Select the vendor.</li>
               <li>Add existing parts or create new part lines from the order.</li>
-              <li>Enter quantity ordered, unit cost, vendor SKU, and notes.</li>
+              <li>Enter the purchase-unit quantity ordered, unit cost, vendor SKU, and notes. Review the calculated individual inventory quantity for packs, boxes, bags, cases, sets, rolls, or bottles.</li>
               <li>Add shipping cost when the vendor charged inbound shipping.</li>
               <li>Choose whether shipping should be added into part cost.</li>
               <li>Save the purchase order.</li>
@@ -343,7 +343,7 @@
               </figure>
             </div>
             <h3>Partial receiving</h3>
-            <p>If a vendor ships part of an order, receive only the quantity that arrived. The purchase order remains open for the remaining quantity. When the rest arrives, receive the rest.</p>
+            <p>If a vendor ships part of an order, receive only the purchase-unit quantity that arrived. FretTrack converts it into individual inventory units using the conversion saved on that PO line. The purchase order remains open for the remaining purchase units, and historical receipts keep their original conversion if the part setting changes later.</p>
             <h3>Shipping and landed cost</h3>
             <p>Inbound vendor shipping can be tracked on the purchase order. If Add shipping to cost is enabled, FretTrack can allocate that shipping into the received item cost so purchase history reflects landed cost.</p>
           </section>

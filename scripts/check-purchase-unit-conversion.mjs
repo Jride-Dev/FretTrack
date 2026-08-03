@@ -14,7 +14,8 @@ const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'u
 const migrationPath = 'supabase/migrations/20260730145549_purchase_unit_conversion.sql';
 const migration = read(migrationPath);
 const service = read('src/modules/inventory/inventoryService.js');
-const page = read('src/modules/inventory/InventoryPage.jsx');
+const partEditor = read('src/modules/inventory/InventoryPartEditor.jsx');
+const purchaseOrderEditor = read('src/modules/inventory/InventoryPurchaseOrderEditor.jsx');
 const reportsPage = read('src/modules/reports/AdvancedReportsPage.jsx');
 const packageJson = JSON.parse(read('package.json'));
 
@@ -49,11 +50,11 @@ assert.match(migration, /grant execute on function public\.receive_purchase_orde
 
 assert.match(service, /purchase_unit: normalizePurchaseUnit/i, 'Part and PO persistence must map purchase units.');
 assert.match(service, /units_per_purchase_unit:/i, 'Part and PO persistence must map conversion factors.');
-assert.match(page, /Purchase Unit/i, 'Inventory must expose purchase-unit configuration.');
-assert.match(page, /Units per Purchase Unit/i, 'Inventory must expose conversion configuration.');
-assert.match(page, /Purchase units ordered/i, 'PO details must distinguish purchase quantities.');
-assert.match(page, /Inventory units ordered/i, 'PO details must show converted inventory quantities.');
-assert.match(page, /Receive purchase quantity/i, 'Partial receiving must be entered in purchase units.');
+assert.match(partEditor, /Purchase Unit/i, 'Inventory must expose purchase-unit configuration.');
+assert.match(partEditor, /Units per Purchase Unit/i, 'Inventory must expose conversion configuration.');
+assert.match(purchaseOrderEditor, /Purchase units ordered/i, 'PO details must distinguish purchase quantities.');
+assert.match(purchaseOrderEditor, /Inventory units ordered/i, 'PO details must show converted inventory quantities.');
+assert.match(purchaseOrderEditor, /Receive purchase quantity/i, 'Partial receiving must be entered in purchase units.');
 assert.match(reportsPage, /Purchase Qty/i, 'Reports must distinguish purchase quantities.');
 assert.match(reportsPage, /Inventory Qty/i, 'Reports must show converted inventory quantities.');
 

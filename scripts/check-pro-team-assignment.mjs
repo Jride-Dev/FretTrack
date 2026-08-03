@@ -34,6 +34,7 @@ const migration = read(migrationPath);
 const assignmentHelpers = read('src/modules/jobs/teamAssignment.js');
 const assignmentService = read('src/modules/jobs/teamAssignmentService.js');
 const assignmentControl = read('src/modules/jobs/JobAssignmentControl.jsx');
+const jobDetailHeader = read('src/modules/jobs/JobDetailHeader.jsx');
 const jobService = read('src/modules/jobs/jobService.js');
 const jobForm = read('src/modules/jobs/JobForm.jsx');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
@@ -83,7 +84,8 @@ assert.ok(assignmentService.includes("supabase.rpc('get_assignable_shop_members'
 assert.ok(assignmentService.includes("supabase.rpc('update_job_assignment'"), 'Assignment changes must use the targeted RPC.');
 assert.ok(assignmentService.includes("data.shopId !== shopId"), 'Client assignment responses must be reconciled to explicit shop context.');
 
-assert.ok(jobDetail.includes('<JobAssignmentControl'), 'Job Detail must render assignment controls.');
+assert.ok(jobDetail.includes('<JobDetailHeader'), 'Job Detail must render its header boundary.');
+assert.ok(jobDetailHeader.includes('<JobAssignmentControl'), 'Job Detail header must render assignment controls.');
 assert.ok(jobForm.includes('Assigned Technician'), 'New Job must support optional assignment.');
 assert.ok(jobForm.includes('<option value="">Unassigned</option>'), 'New Job must default to Unassigned.');
 assert.ok(jobService.includes('assignedMemberId: job.assigned_member_id'), 'Loaded jobs must preserve assignment identity.');

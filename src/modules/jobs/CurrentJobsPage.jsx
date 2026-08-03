@@ -5,17 +5,12 @@ import { formatInstrumentLabel } from '../instruments/instrumentService.js';
 import { JOB_PRIORITY_OPTIONS, getJobPriorityOption, getJobPriorityShortLabel, normalizeJobPriority } from './jobPriority.js';
 import { JOB_STATUSES } from './JobStatusSelect.jsx';
 import { listAssignableShopMembers, resolveJobAssignee } from './teamAssignment.js';
-
-export const CLOSED_JOB_STATUSES = new Set(['completed', 'picked up', 'cancelled', 'archived']);
+import { isCurrentJob } from './currentJobStatus.js';
 
 const PRIORITY_ORDER = { high: 0, medium: 1, regular: 2 };
 
 function cleanText(value) {
   return String(value || '').trim().toLowerCase();
-}
-
-export function isCurrentJob(job = {}) {
-  return !CLOSED_JOB_STATUSES.has(cleanText(job.status));
 }
 
 export function getJobDueDate(job = {}) {

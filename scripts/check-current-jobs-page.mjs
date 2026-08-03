@@ -8,7 +8,10 @@ const source = (path) => readFileSync(join(root, path), 'utf8');
 
 const page = source('src/modules/jobs/CurrentJobsPage.jsx');
 const compactList = source('src/modules/jobs/JobList.jsx');
+const currentJobStatus = source('src/modules/jobs/currentJobStatus.js');
 const app = source('src/app/App.jsx');
+const workspaceRouter = source('src/app/WorkspaceRouter.jsx');
+const newJobSidebar = source('src/app/NewJobSidebar.jsx');
 const styles = source('src/styles.css');
 
 assert.ok(page.includes('<h2>Current Jobs</h2>'), 'Full Current Jobs page must exist.');
@@ -16,10 +19,12 @@ assert.ok(compactList.includes('className="panel current-jobs-summary"'), 'Compa
 assert.ok(compactList.includes('className="current-jobs-summary-list"'), 'Compact Current Jobs must use a summary-specific list.');
 assert.ok(compactList.includes("'current-jobs-summary-item selected' : 'current-jobs-summary-item'"), 'Compact Current Jobs rows must use summary-specific item classes.');
 assert.ok(!compactList.includes("className={job.id === selectedJobId ? 'job-row"), 'Compact Current Jobs must not use the legacy shared job-row class.');
-assert.ok(app.includes("mode === 'list'"), 'Current Jobs application mode must exist.');
-assert.ok(app.includes('<CurrentJobsPage') && app.includes('onSelectJob={handleSelectJob}'), 'Current Jobs mode must render the full page.');
+assert.ok(workspaceRouter.includes("mode === 'list'"), 'Current Jobs application mode must exist.');
+assert.ok(workspaceRouter.includes('<CurrentJobsPage') && workspaceRouter.includes('onSelectJob={actions.onSelectJob}'), 'Current Jobs mode must render the full page through the workspace boundary.');
+assert.ok(app.includes('onSelectJob: handleSelectJob'), 'Current Jobs must retain the established job-selection handler.');
 assert.ok(compactList.includes('View all current jobs'), 'Dashboard summary must link to the full Current Jobs page.');
-assert.ok(app.includes("onViewAll={() => navigateTo('list')}"), 'Dashboard link must use existing application navigation.');
+assert.ok(newJobSidebar.includes('onViewAll={onOpenCurrentJobs}'), 'Dashboard link must cross the sidebar navigation boundary.');
+assert.ok(app.includes("onOpenCurrentJobs={() => navigateTo('list')}"), 'Dashboard link must use existing application navigation.');
 assert.ok(page.includes('type="search"'), 'Current Jobs must include search.');
 assert.ok(page.includes('Priority'), 'Current Jobs must include priority filtering and display.');
 assert.ok(page.includes('Status'), 'Current Jobs must include status filtering.');
@@ -31,7 +36,9 @@ for (const sortValue of ['priority', 'dateReceived', 'dueDate', 'jobNumber', 'st
 }
 assert.ok(page.includes('onClick={() => onSelectJob(job.id)}'), 'Clicking a current job must open existing Job Detail selection.');
 assert.ok(page.includes('type="button"'), 'Current Jobs rows must remain keyboard-accessible buttons.');
-assert.ok(page.includes("new Set(['completed', 'picked up', 'cancelled', 'archived'])"), 'Default current scope must exclude closed job statuses.');
+assert.ok(currentJobStatus.includes("new Set(['completed', 'picked up', 'cancelled', 'archived'])"), 'Default current scope must exclude closed job statuses.');
+assert.ok(page.includes("import { isCurrentJob } from './currentJobStatus.js'"), 'The full Current Jobs page must use the shared current-job rule.');
+assert.ok(compactList.includes("import { isCurrentJob } from './currentJobStatus.js'"), 'The compact Current Jobs list must not import the full page just to classify jobs.');
 assert.match(styles, /\.app-layout\.full-content\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/, 'Current Jobs must use the full content width.');
 assert.match(styles, /\.current-jobs-summary-item\s*\{[^}]*border-radius:\s*6px;[^}]*box-sizing:\s*border-box;[^}]*max-width:\s*100%;[^}]*min-width:\s*0;[^}]*overflow:\s*hidden;[^}]*width:\s*100%;/, 'Compact Current Jobs rows must be restrained and contained.');
 const compactItemRule = styles.match(/\.current-jobs-summary-item\s*\{([^}]*)\}/)?.[1] || '';

@@ -4,7 +4,7 @@ FretTrack is moving from the old `v0.2.6-beta.14` live baseline into product mil
 
 ## Current Product State
 
-The old live baseline is `v0.2.6-beta.14`. The current branch builds on that baseline with inventory purchasing and landed-cost foundation work, Scheduling / Calendar Phase 1, premium entitlement/reporting foundations, operator-controlled premium trial management, beta approval notifications, Photo Editor Phase 1, and Shop Tier Foundation Phase 1.
+The current release candidate is `v0.2.9-beta.4`. It builds toward the `v0.3.0` Operational Shop Release with the existing inventory, scheduling, reporting, trial, photo, and shop foundations plus a completed first pass at safer workspace, Inventory, and Job Detail module boundaries.
 
 Shipped or current-branch foundations:
 
@@ -30,14 +30,21 @@ Shipped or current-branch foundations:
 - Shop Tier Foundation Phase 1 with Trial, Shop, and Pro entitlement boundaries: Shop covers the paid core workflow, Pro unlocks Photo Editor, Team Members, and Advanced Reporting, and internal unpaid compatibility rows remain preserved for migration safety
 - Pro Team Assignment Foundation with primary technician assignment, Current Jobs assignee filtering, role-safe self-assignment, audit history, stale-update protection, and non-scoring workload visibility
 - Email and Photo Usage Caps Foundation with atomic recipient/upload reservations, repair-photo byte accounting, failure release, and owner/admin usage visibility
+- workspace routing and persisted-navigation boundaries with lazy-loaded top-level pages
+- focused Inventory presentation modules for parts, vendors, history, labels, purchase orders, and receiving
+- focused Job Detail presentation modules for inspection, work, billing, reports, print documents, dialogs, and header state
+- authoritative Inventory editor refresh after receiving or stock adjustments
+- local-development protection against accidental hosted Supabase mutations
 
 Known weak spots:
 
 - Customer Damage Report print rendering still needs a proper isolated rebuild
+- broad job and inventory persistence services still need later query/mutation decomposition; beta.4 deliberately changed presentation boundaries first
 - offline continuity only supports new-job drafts, not existing job edits
 - SMS remains disabled
 - staff permissions are centralized but still broad-role based, not task-by-task custom ACLs
 - public invoice and work-order links are planned but not implemented
+- jobs cannot yet be voided or excluded from accounting reports; cancelling or archiving a test job does not currently remove it from accounting job counts
 - deeper inventory operations such as vendor import/export, supplier integrations, vendor returns, forecasting, outbound/customer shipping, carrier labels, and tracking numbers are still future work
 - commerce, licensing, billing automation, production backups, and monitoring are later release tracks
 - Photo Editor Phase 1 is practical canvas editing, not a full Photoshop-style editor or AI cutout tool
@@ -87,6 +94,7 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - expired trials preserve data and memberships, allow safe viewing, block writes, and show upgrade-required messaging
 - Pro entitlement boundaries are explicit for Photo Editor, Team Members, Advanced Reporting, and advanced Team Assignment/workload controls
 - practical shop settings for currency, tax labels, date formats, and measurement preferences
+- owner/admin accounting-safe job void/exclusion: remove test or invalid jobs from operational accounting totals and counts without physically deleting customer, invoice, payment, or audit history; finalized invoices and recorded payments must require explicit void/refund handling
 - known launch limitations documented clearly
 
 ## v0.3.x: Commerce Foundation

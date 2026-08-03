@@ -15,12 +15,14 @@ function functionSource(source, signature) {
 }
 
 const app = read('src/app/App.jsx');
+const workspaceNavigation = read('src/app/useWorkspaceNavigation.js');
+const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
 const printActions = read('src/modules/jobs/PrintActions.js');
 const packageJson = read('package.json');
 
-const selectHandler = functionSource(app, 'function handleSelectJob(jobId)');
-const appCloseHandler = functionSource(app, 'function closeJobDetail()');
+const selectHandler = functionSource(workspaceNavigation, 'function selectJob(jobId)');
+const appCloseHandler = functionSource(workspaceNavigation, 'function closeJobDetail()');
 const detailCloseHandler = functionSource(jobDetail, 'function closeDetail()');
 const finishHandler = functionSource(jobDetail, 'async function finishJob()');
 
@@ -28,11 +30,13 @@ assert.match(printActions, /onClick=\{closeDetail\}>Close Detail<\/button>/, 'Th
 assert.match(detailCloseHandler, /if \(!confirmIfDirty\(\)\) \{\s*return;/, 'Close Detail must retain the existing dirty-state confirmation.');
 assert.match(detailCloseHandler, /onDirtyChange\?\.\(false\);[\s\S]*onClose\(\);/, 'The dirty-aware Job Detail handler must delegate to the parent close callback.');
 
-assert.match(app, /const jobDetailReturnModeRef = useRef\('new'\);/, 'App must remember the page that opened Job Detail.');
+assert.match(workspaceNavigation, /const jobDetailReturnModeRef = useRef\('new'\);/, 'Workspace navigation must remember the page that opened Job Detail.');
 assert.match(selectHandler, /if \(mode !== 'detail'\) \{\s*jobDetailReturnModeRef\.current = mode;/, 'Opening Job Detail must capture the underlying page without overwriting it during detail-to-detail selection.');
 assert.match(appCloseHandler, /setMode\(jobDetailReturnModeRef\.current \|\| 'new'\);/, 'Closing Job Detail must return to the captured page.');
 assert.doesNotMatch(appCloseHandler, /setSelectedJobId|showNewJob|updateJob|saveCurrentJob|status|Picked Up/, 'Closing Job Detail must not clear selection, create a new-job transition, save, or change completion state.');
-assert.match(app, /onClose=\{closeJobDetail\}/, 'Job Detail must receive the corrected parent close callback.');
+assert.match(app, /closeJobDetail,[\s\S]*?resetWorkspaceNavigation/, 'App must use the extracted workspace close callback.');
+assert.match(app, /onCloseJobDetail: closeJobDetail/, 'App must pass the corrected parent close callback across the workspace boundary.');
+assert.match(workspaceRouter, /onClose=\{actions\.onCloseJobDetail\}/, 'Job Detail must receive the corrected parent close callback.');
 assert.doesNotMatch(app, /onClose=\{\(\) => showNewJob\(null, \{ skipDirtyGuard: true \}\)\}/, 'The broken forced New Job callback must be removed.');
 
 assert.match(finishHandler, /status: 'Picked Up'/, 'Job completion must remain isolated in the Finish / Picked Up handler.');

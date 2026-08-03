@@ -25,7 +25,7 @@ function assertMatches(value, pattern, message) {
 
 const damageMap = source('src/components/DamageMap.js');
 const styles = source('src/styles.css');
-const jobDetail = source('src/modules/jobs/JobDetail.jsx');
+const jobDamageReportView = source('src/modules/jobs/JobDamageReportView.jsx');
 const emailDocuments = source('src/modules/jobs/emailDocuments.js');
 const packageJson = source('package.json');
 
@@ -41,8 +41,8 @@ assertIncludes(damageMap, 'disabled={!canWrite}', 'Existing write permissions mu
 assertIncludes(damageMap, '{hasBaseImage && (', 'Marker rendering must remain tied to image-backed views.');
 assertIncludes(damageMap, '{hasBaseImage && marks.length > 0 && (', 'Damage mark edit controls must remain hidden without a base image.');
 assertIncludes(styles, '.damage-canvas[aria-disabled="true"]', 'No-image damage canvas must not use the active marking cursor.');
-assertIncludes(jobDetail, 'No damage map image was attached.', 'Customer-facing print report must avoid misleading no-image marker output.');
-assertMatches(jobDetail, /hasBaseImage && imageUrl && marks\.length > 0/, 'Customer-facing report marker tables must require a renderable image.');
+assertIncludes(jobDamageReportView, 'No damage map image was attached.', 'Customer-facing print report must avoid misleading no-image marker output.');
+assertMatches(jobDamageReportView, /hasBaseImage && imageUrl && marks\.length > 0/, 'Customer-facing report marker tables must require a renderable image.');
 assertIncludes(emailDocuments, 'No damage map image was attached.', 'Customer-facing email document must explain missing damage map images.');
 assertMatches(emailDocuments, /if \(!hasBaseImage\) \{[\s\S]*?return \[\];[\s\S]*?\}/, 'Email document damage rows must ignore marks without a base image.');
 assertIncludes(packageJson, '"check:damage-map-image-required": "node scripts/check-damage-map-image-required.mjs"', 'Package script must expose the Damage Map image-required check.');

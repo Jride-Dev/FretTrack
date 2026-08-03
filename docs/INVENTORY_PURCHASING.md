@@ -16,6 +16,12 @@ Current inventory documentation covers the 0.2.8 purchasing foundation:
 
 Inventory receiving and purchase-order work remain online-only until a future offline sync/outbox design exists.
 
+## Purchase units and inventory units
+
+Inventory parts may optionally describe how a vendor sells the item with a Purchase Unit and a positive whole-number Units per Purchase Unit value. Existing parts default to Each and 1. Purchase-order quantities and partial receipts are entered in purchase units, while stock adjustments and job usage remain individual inventory units.
+
+Each purchase-order line and receipt stores the conversion used at the time of the transaction. Editing a part from a 12-pack to a 10-pack later does not reinterpret an older order or receipt. Receiving two saved 12-packs adds 24 individual units to stock.
+
 ## Shop Inventory Presets
 
 Shop owners/admins can manage Inventory Locations and Inventory Categories in Shop Settings under Inventory / Vendor Controls.
@@ -97,6 +103,8 @@ Rules:
 ## Receiving
 
 Manual receives and purchase order receives are written through transactional Supabase RPCs. A receive should create receipt history, update stock, update last cost, update average cost, and create a `part_movements` row together.
+
+After a direct receive, manual stock adjustment, or purchase-order receipt, the Inventory controller refreshes the selected editor's authoritative quantity and cost from the saved part while preserving unrelated unsaved fields. This prevents a later Save Changes action from overwriting the stock mutation with a stale form quantity.
 
 Purchase orders cannot be received when cancelled. Partial receives keep remaining quantities visible and move the purchase order to `partially_received`; full receives move it to `received`.
 
