@@ -35,6 +35,7 @@ Shipped or current-branch foundations:
 - focused Job Detail presentation modules for inspection, work, billing, reports, print documents, dialogs, and header state
 - authoritative Inventory editor refresh after receiving or stock adjustments
 - local-development protection against accidental hosted Supabase mutations
+- active-shop business address included consistently in generated invoice email and printable invoice-style Job Sheet output
 
 Known weak spots:
 
@@ -85,6 +86,7 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - stable intake-to-pickup job workflow
 - customers, inventory purchasing foundation, and scheduling working together
 - reliable work-order and invoice email summaries
+- customer-facing **Drop Off Scheduled** email template using the authoritative appointment date and time from Scheduling, including: “Your appointment is scheduled for [date and time].”
 - reliable beta application and approval notification flow
 - practical photo documentation editor for annotated customer/shop records
 - dependable basic print output
@@ -118,6 +120,8 @@ This series deepens back-office and repeat-workflow tools after the core operati
 - reporting
 - vendor import/export
 - low stock management
+- configurable customer service reminders based on the last completed setup/job, supporting 6-month or 12-month timing and shop-editable email wording for seasonal setup advice and returning-customer offers
+- lower-priority customer loyalty tracking based on completed-job history, with shop-defined rewards such as a complimentary restring and clear reward redemption history
 - supplier integrations
 - vendor returns
 - inventory forecasting

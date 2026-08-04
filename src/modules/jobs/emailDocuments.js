@@ -176,6 +176,7 @@ function buildJobSheetEmailSection(job = {}, context = {}) {
   const services = job.services || job.labor || [];
   const parts = job.parts || [];
   const fields = [
+    ['Shop Address', base.shopSettings.address || '-'],
     ['Customer', base.customerName],
     ['Phone', cleanText(job.phone) || '-'],
     ['Email', cleanText(job.email) || '-'],

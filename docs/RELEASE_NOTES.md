@@ -6,6 +6,8 @@ FretTrack `0.2.9-beta.4` is an architecture and workflow-reliability release can
 
 ## Architecture and inventory reliability
 
+Invoice address correction: customer invoice emails, attached Job Sheet email content, and printable invoice-style Job Sheets now consistently use the business address from the active shop's Shop Settings. No database migration or stored document rewrite is required.
+
 Work Note safety hotfix: text entered in the new Work Note box is now clearly marked unsaved until **Save Work Note** succeeds. Pending text participates in dirty-state and browser-exit protection, the global Save Job action saves it, and customer printing/email is blocked until the note is saved or deliberately discarded. Existing Work Note edit failures now surface an error instead of failing silently.
 
 The first 0.3.0 architecture-foundation slice extracts top-level workspace page selection and persisted navigation state from the application shell and lazy-loads feature pages through that boundary. Permissions, dirty-state protection, Close Detail return behavior, and feature workflows remain unchanged; the change reduces startup coupling and establishes a safe path toward module-owned data and page state. The architecture findings and remaining priorities are recorded in `docs/ARCHITECTURE_HEALTH_AUDIT_0.3.0.md`.
