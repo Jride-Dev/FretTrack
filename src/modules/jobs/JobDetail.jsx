@@ -1305,6 +1305,7 @@ export default function JobDetail({
       outerStringLabels={outerStringLabels}
       parts={parts}
       services={services}
+      shopSettings={shopSettings}
       totals={totals}
       workOrderImages={workOrderImages}
     />

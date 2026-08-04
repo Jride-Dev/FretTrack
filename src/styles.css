@@ -3890,6 +3890,10 @@ th.internal-only {
   text-align: right;
 }
 
+.print-shop-address {
+  white-space: pre-line;
+}
+
 @media (max-width: 1024px) {
   .photo-editor-backdrop {
     padding: 8px;

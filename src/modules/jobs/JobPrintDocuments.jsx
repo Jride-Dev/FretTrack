@@ -11,6 +11,7 @@ export default function JobPrintDocuments({
   outerStringLabels,
   parts,
   services,
+  shopSettings,
   totals,
   workOrderImages
 }) {
@@ -28,6 +29,7 @@ export default function JobPrintDocuments({
         outerStringLabels={outerStringLabels}
         parts={parts}
         services={services}
+        shopSettings={shopSettings}
         totals={totals}
       />
       <CustomerDamageReport

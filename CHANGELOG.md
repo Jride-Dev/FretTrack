@@ -6,6 +6,7 @@ This file tracks what changed in each release, including fixes that were added b
 
 ## v0.2.9-beta.4 - Current Beta Candidate
 
+- Added the active shop's business address to printable invoice-style Job Sheets and attached Job Sheet email content, while preserving the existing shop-scoped address in generated invoice emails.
 - Protected new Work Notes from silent loss: pending text is visibly unsaved, participates in refresh/navigation protection, saves through Save Job, blocks customer printing/email until resolved, supports explicit draft discard, and reports failed Work Note saves.
 - Began the 0.3.0 modular architecture foundation by extracting top-level workspace page rendering and navigation state from `App.jsx`, lazy-loading feature pages behind a shared workspace boundary, and separating the current-job status rule from page UI; page restoration, permissions, Close Detail, and dirty-state handlers remain unchanged.
 - Corrected the extracted workspace restoration lifecycle so refresh waits for the active shop and its data to hydrate before persisting navigation; Inventory, Scheduling, Customers, Reports, and valid Job Detail selections now restore instead of being overwritten by the initial New Job mode.

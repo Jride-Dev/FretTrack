@@ -13,9 +13,10 @@ export default function JobPrintSheet({
   outerStringLabels = { treble: 'High E', bass: 'Low E' },
   parts,
   services,
+  shopSettings: providedShopSettings = null,
   totals
 }) {
-  const shopSettings = getShopSettings();
+  const shopSettings = providedShopSettings || getShopSettings();
   const printFooterText = getPrintFooterText();
   const taxSettings = draftJob.techDetails?.tax || {};
   const moneyOptions = getShopMoneyOptions({
@@ -44,6 +45,7 @@ export default function JobPrintSheet({
         <div>
           <h2>Job Sheet</h2>
           <p>{shopSettings.shopName}</p>
+          {shopSettings.address && <p className="print-shop-address">{shopSettings.address}</p>}
           <p>{[shopSettings.phone, shopSettings.email].filter(Boolean).join(' | ')}</p>
         </div>
       </div>
