@@ -38,6 +38,7 @@ import JobWorkSections from './JobWorkSections.jsx';
 import JobBillingSections from './JobBillingSections.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import { buildMeasurementDisplay, getInstrumentSelectionPatch } from './jobDetailFormatting.js';
+import { PENDING_WORK_LOG_MESSAGE, appendWorkLogDraft, hasPendingWorkLogDraft } from './workLogDraft.js';
 
 const intakeTypes = JOB_SOURCE_OPTIONS;
 export default function JobDetail({
@@ -88,6 +89,9 @@ export default function JobDetail({
   const [isInventoryLoading, setIsInventoryLoading] = useState(false);
   const imageImportInputRef = useRef(null);
   const paymentAutosaveTimeoutRef = useRef(null);
+  const hasPendingWorkLog = hasPendingWorkLogDraft(workLogText);
+  const hasUnsavedChanges = isDirty || hasPendingWorkLog;
+  const displayedSaveStatus = hasPendingWorkLog && saveStatus === 'saved' ? 'unsaved' : saveStatus;
 
   const setIsDirty = useCallback((value) => {
     setDirty(value);
@@ -98,6 +102,7 @@ export default function JobDetail({
     setDraftJob(job);
     setTimelineEvents(job.events || []);
     setDocumentEmailDraft(null);
+    setWorkLogText('');
     setIsDirty(false);
   }, [job, setIsDirty]);
 
@@ -106,9 +111,24 @@ export default function JobDetail({
   }, [draftJob.id, draftJob.shopId, shopProfile?.shopId, shopProfile?.updatedAt]);
 
   useEffect(() => {
-    onDirtyChange?.(isDirty);
+    onDirtyChange?.(hasUnsavedChanges);
     return () => onDirtyChange?.(false);
-  }, [isDirty, onDirtyChange]);
+  }, [hasUnsavedChanges, onDirtyChange]);
+
+  useEffect(() => {
+    if (!hasPendingWorkLog) {
+      return undefined;
+    }
+
+    function handlePendingWorkLogBeforeUnload(event) {
+      event.preventDefault();
+      event.returnValue = 'You have an unsaved Work Note.';
+      return event.returnValue;
+    }
+
+    window.addEventListener('beforeunload', handlePendingWorkLogBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handlePendingWorkLogBeforeUnload);
+  }, [hasPendingWorkLog]);
 
   useEffect(() => {
     refreshTimelineEvents();
@@ -301,7 +321,11 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    await saveDraftNow().catch(() => {});
+    try {
+      await saveDraftNow();
+    } catch (error) {
+      onNotice?.({ type: 'error', message: error?.message || 'Work Note changes could not be saved.' });
+    }
   }
 
   async function removeWorkLogEntry(entryId) {
@@ -512,7 +536,8 @@ export default function JobDetail({
       event.detail?.reject?.(new Error('Your shop role is read-only.'));
       return;
     }
-    saveDraftNow()
+    const saveRequest = hasPendingWorkLog ? savePendingWorkLog : saveDraftNow;
+    saveRequest()
       .then((savedJob) => event.detail?.resolve?.(savedJob))
       .catch((error) => event.detail?.reject?.(error));
   }
@@ -526,32 +551,48 @@ export default function JobDetail({
 
   async function appendWorkLog(event) {
     event.preventDefault();
-    if (!canWrite) {
-      return;
-    }
-    const text = workLogText.trim();
-    if (!text) {
-      return;
-    }
-    const nextJob = {
-      ...draftJob,
-      workLog: [
-        ...draftJob.workLog,
-        {
-          id: crypto.randomUUID(),
-          jobId: draftJob.id,
-          text,
-          entry: text,
-          createdAt: new Date().toISOString(),
-          timestamp: new Date().toISOString()
-        }
-      ]
-    };
+    await savePendingWorkLog().catch(() => {});
+  }
 
-    setDraftJob(nextJob);
-    setIsDirty(true);
-    setWorkLogText('');
-    await saveDraftNow(nextJob).catch(() => {});
+  async function savePendingWorkLog() {
+    if (!canWrite) {
+      throw new Error('Your shop role is read-only.');
+    }
+    if (!hasPendingWorkLog) {
+      return saveDraftNow();
+    }
+    const timestamp = new Date().toISOString();
+    const nextJob = appendWorkLogDraft(draftJob, workLogText, {
+      id: crypto.randomUUID(),
+      timestamp
+    });
+
+    try {
+      const savedJob = await saveDraftNow(nextJob);
+      setWorkLogText('');
+      return savedJob;
+    } catch (error) {
+      onNotice?.({ type: 'error', message: error?.message || 'Work Note could not be saved.' });
+      throw error;
+    }
+  }
+
+  function discardWorkLogDraft() {
+    if (!hasPendingWorkLog || window.confirm('Discard this unsaved Work Note?')) {
+      setWorkLogText('');
+    }
+  }
+
+  function guardPendingWorkLogDocumentAction() {
+    if (!hasPendingWorkLog) {
+      if (!isDirty) {
+        return true;
+      }
+      window.alert('Save the job changes before printing or sending customer documents.');
+      return false;
+    }
+    window.alert(PENDING_WORK_LOG_MESSAGE);
+    return false;
   }
 
   function addPart(event) {
@@ -941,26 +982,39 @@ export default function JobDetail({
   }
 
   function closeDetail() {
+    if (hasPendingWorkLog && !window.confirm('This Work Note has not been saved. Discard it and close the detail view?')) {
+      return;
+    }
     if (!confirmIfDirty()) {
       return;
     }
 
+    setWorkLogText('');
     onDirtyChange?.(false);
     onClose();
   }
 
   function printJobSheet() {
+    if (!guardPendingWorkLogDocumentAction()) {
+      return;
+    }
     document.body.classList.remove('customer-report-printing');
     window.print();
   }
 
   function printCustomerReport() {
+    if (!guardPendingWorkLogDocumentAction()) {
+      return;
+    }
     document.body.classList.add('customer-report-printing');
     window.print();
   }
 
   function openWorkOrderEmail() {
     if (!canWrite || !canSendEmail) {
+      return;
+    }
+    if (!guardPendingWorkLogDocumentAction()) {
       return;
     }
     try {
@@ -1119,6 +1173,9 @@ export default function JobDetail({
     }
     if (!canSendEmail) {
       return { ok: false, error: entitlementMessage || 'Email sending is unavailable for this shop plan or billing state.' };
+    }
+    if (hasPendingWorkLog) {
+      return { ok: false, error: PENDING_WORK_LOG_MESSAGE };
     }
 
     let jobToSend = draftJob;
@@ -1287,8 +1344,10 @@ export default function JobDetail({
     <JobWorkSections
       canWrite={canWrite}
       draftJob={draftJob}
+      hasPendingWorkLog={hasPendingWorkLog}
       onAddService={addService}
       onAppendWorkLog={appendWorkLog}
+      onDiscardWorkLogDraft={discardWorkLogDraft}
       onRemoveService={removeService}
       onRemoveWorkLogEntry={removeWorkLogEntry}
       onSaveWorkLogChanges={saveWorkLogChanges}
@@ -1404,8 +1463,8 @@ export default function JobDetail({
       <JobDetailHeader
         draftJob={draftJob}
         canWrite={canWrite}
-        isDirty={isDirty}
-        saveStatus={saveStatus}
+        isDirty={hasUnsavedChanges}
+        saveStatus={displayedSaveStatus}
         assignableMembers={assignableMembers}
         assignableMembersLoading={assignableMembersLoading}
         assignableMembersError={assignableMembersError}
@@ -1424,7 +1483,7 @@ export default function JobDetail({
         imagesSection={imagesSection}
         intakeSection={intakeSection}
         inspectionSections={inspectionSections}
-        isDirty={isDirty}
+        isDirty={hasUnsavedChanges}
         messagesPanel={messagesPanel}
         printActions={printActions}
         printSections={printSections}
