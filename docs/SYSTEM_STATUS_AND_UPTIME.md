@@ -1,8 +1,8 @@
 # System Status and Uptime
 
-FretTrack's status banner combines two different signals:
+FretTrack's status banner presents two different signals without merging their current states:
 
-- The green, yellow, or red status shows the current health reported for the Supabase and Cloudflare services FretTrack depends on.
+- The headline shows the operator-published FretTrack status. Supabase and Cloudflare health appears separately on each provider chip; a provider incident does not by itself relabel FretTrack as Degraded.
 - **FretTrack uptime** shows the time since the most recently resolved incident involving one of those monitored provider services.
 
 The uptime clock uses the official Supabase and Cloudflare status feeds. FretTrack monitors Supabase API Gateway, Auth, Database, Realtime, and Storage, plus Cloudflare Pages, Workers, and Workers Assets. Provider history is refreshed every 30 minutes, while the displayed clock advances locally between refreshes.
@@ -24,4 +24,4 @@ For example, if Supabase resolves a Database or API Gateway incident at 6:26 AM,
 
 Treat the clock as a shared-infrastructure recovery indicator, not a formal service-level measurement or proof of continuous application availability. When investigating a reset, open the Supabase and Cloudflare links in the banner to review their current status and incident history.
 
-An operator-declared FretTrack incident takes priority over the provider summary and displays its own incident status and duration.
+The provider summary is used for the headline only if the FretTrack status cannot be loaded. An operator-declared FretTrack incident displays its own incident status and duration.

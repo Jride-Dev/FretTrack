@@ -101,7 +101,7 @@ export default function SystemAnnouncements() {
   const infrastructureUptimeStart = getCombinedInfrastructureUptimeStart(infrastructureStatus);
   const infrastructureHealth = getCombinedInfrastructureHealth(infrastructureStatus);
   const hasFretTrackIncident = Boolean(systemStatus && systemStatus.status !== 'operational');
-  const displayedStatus = hasFretTrackIncident ? systemStatus : infrastructureHealth;
+  const displayedStatus = systemStatus || infrastructureHealth;
   const isOperational = displayedStatus.status === 'operational';
 
   return (
