@@ -50,7 +50,8 @@ assert.match(appNotice, /infrastructure-status-chip/, 'Supabase and Cloudflare h
 assert.match(appNotice, /INFRASTRUCTURE_REFRESH_INTERVAL_MS = 30 \* 60 \* 1000/, 'Provider health and incident history must refresh every 30 minutes.');
 assert.match(appNotice, /formatInfrastructureUptime\(infrastructureUptimeStart,\s*clock\)/, 'FretTrack uptime must advance locally between provider refreshes.');
 assert.match(appNotice, /hasFretTrackIncident && \([\s\S]*systemStatus\?\.publicNoticeTitle/, 'Operational status must not repeat the default public notice title.');
-assert.match(appNotice, /displayedStatus = hasFretTrackIncident \? systemStatus : infrastructureHealth/, 'The single headline must reflect provider degradation when FretTrack has no manual incident.');
+assert.match(appNotice, /displayedStatus = systemStatus \|\| infrastructureHealth/, 'The headline must keep the FretTrack status authoritative and use provider health only as a fallback.');
+assert.doesNotMatch(appNotice, /displayedStatus = hasFretTrackIncident \? systemStatus : infrastructureHealth/, 'Provider degradation must not relabel an operational FretTrack status.');
 assert.doesNotMatch(appNotice, /<strong>\{provider\.statusLabel\}<\/strong>/, 'Provider chips must not repeat Operational in visible copy.');
 assert.match(styles, /\.system-status-banner\s*{[\s\S]*border:\s*1px[\s\S]*gap:\s*6px;[\s\S]*padding:\s*7px 10px;/, 'The authenticated status banner must use the compact layout.');
 assert.doesNotMatch(styles, /@keyframes plug-connect|@keyframes socket-pulse/, 'The database status indicator must not animate.');
