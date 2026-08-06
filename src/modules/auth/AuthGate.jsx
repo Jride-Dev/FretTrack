@@ -7,6 +7,8 @@ import {
   updateCurrentUserPassword
 } from './authService';
 import { getErrorMessage, logLegacyDebug } from '../../shared/legacy/legacyDebug';
+import { isLocalSupabaseConfig } from '../../shared/lib/supabaseClient.js';
+import { getDisplayedAuthError } from './authErrorMessage.js';
 
 const AUTH_REQUEST_TIMEOUT_MS = 20000;
 
@@ -88,7 +90,10 @@ export default function AuthGate({ initialMode = 'sign-in', onAuthCompleted, onP
         onAuthCompleted?.(session);
       }
     } catch (error) {
-      const message = getErrorMessage(error, 'Authentication failed.');
+      const message = getDisplayedAuthError(error, {
+        fallback: getErrorMessage(error, 'Authentication failed.'),
+        usesLocalBackend: import.meta.env.DEV && isLocalSupabaseConfig
+      });
       logLegacyDebug('login request failure', message);
       setInlineError(message);
       onNotice?.({
