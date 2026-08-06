@@ -68,7 +68,7 @@ assertIncludes(jobService, 'url: storagePath ?', 'jobService.js');
 assertIncludes(jobService, 'getJobImageStoragePath({', 'jobService.js');
 assertIncludes(jobService, 'resolveJobImageUrl({', 'jobService.js');
 
-assertIncludes(photoGallery, 'Photo unavailable. Storage path missing.', 'PhotoGallery.jsx');
+assertIncludes(photoGallery, 'getPhotoUnavailableMessage(image)', 'PhotoGallery.jsx');
 assertIncludes(damageMap, 'storagePath: uploadedImage.storagePath ||', 'DamageMap.js');
 assertNotMatches(
   jobService,

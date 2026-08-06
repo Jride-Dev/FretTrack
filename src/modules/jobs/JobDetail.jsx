@@ -28,6 +28,7 @@ import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
 import { SHOP_EMAIL_CONTEXT_ERROR, buildDocumentEmailHtml, buildInvoiceEmailDraft, buildSelectedDocumentEmailContent, buildWorkOrderEmailDraft, resolveScopedShopEmailSettings } from './emailDocuments';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
+import { findUploadedJobImage, mergeUploadedJobImages } from '../photos/photoState.js';
 import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import JobDetailHeader from './JobDetailHeader.jsx';
@@ -867,7 +868,7 @@ export default function JobDetail({
     }
 
     const category = uploadOptions.category || `damage-map-${viewName}`;
-    const existingImageIds = new Set((draftJob.images || []).map((image) => image.id));
+    const beforeImages = draftJob.images || [];
     const result = await onImageUpload(draftJob, [file], { category, skipRefresh: true });
     if (result?.errors?.length) {
       const uploadError = new Error(result.errors[0].message || 'Damage photo upload failed.');
@@ -875,12 +876,16 @@ export default function JobDetail({
       throw uploadError;
     }
     if (result?.job) {
-      setDraftJob(result.job);
-      setIsDirty(false);
       const uploadedImages = result.job.images || [];
-      return uploadedImages.find((image) => !existingImageIds.has(image.id) && image.category === category && image.originalFileName === file.name)
-        || uploadedImages.find((image) => !existingImageIds.has(image.id) && image.category === category)
-        || null;
+      const uploadedImage = findUploadedJobImage({
+        beforeImages,
+        uploadedImages,
+        category,
+        originalFileName: file.name
+      });
+
+      setDraftJob((current) => mergeUploadedJobImages(current, result.job));
+      return uploadedImage;
     }
     return null;
   }

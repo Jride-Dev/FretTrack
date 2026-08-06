@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import useJobImageUrl from '../modules/photos/useJobImageUrl.js';
 
 const damageAreas = [
   'Tuners',
@@ -116,6 +117,26 @@ async function loadHeic2Any() {
   return module.default || module;
 }
 
+function DamageMarkerPhoto({ mark, index }) {
+  const { displayUrl, isResolving, retry } = useJobImageUrl({
+    id: mark.photoId || mark.id,
+    url: mark.photoUrl || '',
+    storagePath: mark.storagePath || ''
+  });
+
+  if (!displayUrl) {
+    return isResolving ? <span>Loading photo...</span> : null;
+  }
+
+  return (
+    <img
+      src={displayUrl}
+      alt={mark.photoName || `Damage mark ${index + 1} photo`}
+      onError={() => retry()}
+    />
+  );
+}
+
 export default function DamageMap({ canWrite = true, instrumentType = 'Electric', damageMap = {}, onChange, onViewImageUpload }) {
   const [importError, setImportError] = useState('');
   const viewImageInputRef = useRef(null);
@@ -127,7 +148,11 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
   const views = damageMap.views || {};
   const currentView = views[selectedView] || { marks: [] };
   const marks = currentView.marks || [];
-  const imageUrl = currentView.imageUrl || '';
+  const { displayUrl: imageUrl, isResolving: isViewImageResolving, retry: retryViewImage } = useJobImageUrl({
+    id: currentView.imageId || `${selectedView}-damage-view`,
+    url: currentView.imageUrl || '',
+    storagePath: currentView.storagePath || ''
+  });
   const hasBaseImage = hasDamageMapBaseImage(currentView);
   const canvasClassName = `damage-canvas ${instrumentType.toLowerCase()}-${selectedView}-damage-canvas ${hasBaseImage ? 'has-damage-image' : 'empty-damage-canvas'}`;
 
@@ -244,11 +269,10 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
             return;
           }
         } catch (error) {
-          if (String(error?.code || '').startsWith('PHOTO_')) {
-            throw error;
-          }
-          console.error('Damage marker photo upload failed. Using local preview.', error);
+          throw error;
         }
+
+        throw new Error('Damage marker photo upload did not return a stored photo.');
       }
       updateMark(markId, {
         photoUrl: await readFileAsDataUrl(file),
@@ -283,11 +307,10 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
             return;
           }
         } catch (error) {
-          if (String(error?.code || '').startsWith('PHOTO_')) {
-            throw error;
-          }
-          console.error('Damage view image upload failed. Using local preview.', error);
+          throw error;
         }
+
+        throw new Error('Damage view image upload did not return a stored photo.');
       }
       updateCurrentView({
         imageUrl: await readFileAsDataUrl(file),
@@ -368,7 +391,16 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
         disabled={!canWrite}
       >
         {imageUrl ? (
-          <img src={imageUrl} alt={`${instrumentType} ${selectedView} inspection diagram`} draggable="false" />
+          <img
+            src={imageUrl}
+            alt={`${instrumentType} ${selectedView} inspection diagram`}
+            draggable="false"
+            onError={() => retryViewImage()}
+          />
+        ) : isViewImageResolving ? (
+          <span className="damage-canvas-empty" role="status">
+            <strong>Loading stored damage map image...</strong>
+          </span>
         ) : (
           <span className="damage-canvas-empty" role="status">
             <strong>Add or select a damage map image before marking damage.</strong>
@@ -439,12 +471,12 @@ export default function DamageMap({ canWrite = true, instrumentType = 'Electric'
                   }}
                 />
                 <button type="button" onClick={() => markerInputRefs.current[mark.id]?.click()} disabled={!canWrite}>
-                  {mark.photoUrl ? 'Replace Photo' : 'Import from Device'}
+                  {(mark.photoUrl || mark.storagePath) ? 'Replace Photo' : 'Import from Device'}
                 </button>
               </label>
-              {mark.photoUrl && (
+              {(mark.photoUrl || mark.storagePath) && (
                 <div className="marker-photo-link">
-                  <img src={mark.photoUrl} alt={mark.photoName || `Damage mark ${index + 1} photo`} />
+                  <DamageMarkerPhoto mark={mark} index={index} />
                   <span>{mark.photoName || 'View photo'}</span>
                   <button
                     type="button"
