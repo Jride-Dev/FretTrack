@@ -24,8 +24,6 @@ import { SHOP_EMAIL_CONTEXT_ERROR, buildDocumentEmailHtml, buildInvoiceEmailDraf
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
-import JobDetailHeader from './JobDetailHeader.jsx';
-import JobDetailDialogs from './JobDetailDialogs.jsx';
 import JobInspectionSections from './JobInspectionSections.jsx';
 import JobWorkSections from './JobWorkSections.jsx';
 import JobBillingSections from './JobBillingSections.jsx';
@@ -33,6 +31,7 @@ import buildJobAuxiliarySections from './JobAuxiliarySections.jsx';
 import JobIntakeSections from './JobIntakeSections.jsx';
 import JobPhotoSections from './JobPhotoSections.jsx';
 import buildJobPrintSections from './JobPrintSections.jsx';
+import JobDetailShell from './JobDetailShell.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import { buildMeasurementDisplay, getInstrumentSelectionPatch } from './jobDetailFormatting.js';
 import { PENDING_WORK_LOG_MESSAGE, appendWorkLogDraft, hasPendingWorkLogDraft } from './workLogDraft.js';
@@ -1425,53 +1424,44 @@ export default function JobDetail({
   });
 
   return (
-    <section className="panel detail job-detail">
-      <JobDetailDialogs
-        documentEmailDraft={documentEmailDraft}
-        subcontractorPickupJob={subcontractorPickupJob}
-        isSendingSubcontractorEmail={isSendingSubcontractorEmail}
-        photoEditorImage={photoEditorImage}
-        isSavingEditedPhoto={isSavingEditedPhoto}
-        canOverwritePhotos={canOverwritePhotos}
-        onCloseDocumentEmail={() => setDocumentEmailDraft(null)}
-        onSendDocumentEmail={handleSendDocumentEmail}
-        onCancelSubcontractorPickup={() => setSubcontractorPickupJob(null)}
-        onSendSubcontractorPickup={sendSubcontractorPickupEmail}
-        onClosePhotoEditor={() => setPhotoEditorImage(null)}
-        onSavePhotoCopy={saveEditedPhotoCopy}
-        onOverwritePhoto={overwriteEditedPhoto}
-      />
-      <JobDetailHeader
-        draftJob={draftJob}
-        canWrite={canWrite}
-        isDirty={hasUnsavedChanges}
-        saveStatus={displayedSaveStatus}
-        assignableMembers={assignableMembers}
-        assignableMembersLoading={assignableMembersLoading}
-        assignableMembersError={assignableMembersError}
-        membership={membership}
-        entitlementSnapshot={entitlementSnapshot}
-        betaApproved={betaApproved}
-        onStatusChange={updateField}
-        onAssignmentChanged={handleAssignmentChanged}
-        onNotice={onNotice}
-      />
-      <JobDetailTabs
-        activityTimeline={activityTimeline}
-        billingSections={billingSections}
-        canWrite={canWrite}
-        draftJob={draftJob}
-        imagesSection={imagesSection}
-        intakeSection={intakeSection}
-        inspectionSections={inspectionSections}
-        isDirty={hasUnsavedChanges}
-        messagesPanel={messagesPanel}
-        printActions={printActions}
-        printSections={printSections}
-        schedulingSection={schedulingSection}
-        updateField={updateField}
-        workSections={workSections}
-      />
-    </section>
+    <JobDetailShell
+      activityTimeline={activityTimeline}
+      assignableMembers={assignableMembers}
+      assignableMembersError={assignableMembersError}
+      assignableMembersLoading={assignableMembersLoading}
+      betaApproved={betaApproved}
+      billingSections={billingSections}
+      canOverwritePhotos={canOverwritePhotos}
+      canWrite={canWrite}
+      documentEmailDraft={documentEmailDraft}
+      draftJob={draftJob}
+      entitlementSnapshot={entitlementSnapshot}
+      imagesSection={imagesSection}
+      inspectionSections={inspectionSections}
+      intakeSection={intakeSection}
+      isDirty={hasUnsavedChanges}
+      isSavingEditedPhoto={isSavingEditedPhoto}
+      isSendingSubcontractorEmail={isSendingSubcontractorEmail}
+      membership={membership}
+      messagesPanel={messagesPanel}
+      onAssignmentChanged={handleAssignmentChanged}
+      onCancelSubcontractorPickup={() => setSubcontractorPickupJob(null)}
+      onCloseDocumentEmail={() => setDocumentEmailDraft(null)}
+      onClosePhotoEditor={() => setPhotoEditorImage(null)}
+      onNotice={onNotice}
+      onOverwritePhoto={overwriteEditedPhoto}
+      onSavePhotoCopy={saveEditedPhotoCopy}
+      onSendDocumentEmail={handleSendDocumentEmail}
+      onSendSubcontractorPickup={sendSubcontractorPickupEmail}
+      onStatusChange={updateField}
+      photoEditorImage={photoEditorImage}
+      printActions={printActions}
+      printSections={printSections}
+      saveStatus={displayedSaveStatus}
+      schedulingSection={schedulingSection}
+      subcontractorPickupJob={subcontractorPickupJob}
+      updateField={updateField}
+      workSections={workSections}
+    />
   );
 }

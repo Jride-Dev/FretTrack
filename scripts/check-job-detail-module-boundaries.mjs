@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 const root = process.cwd();
 const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
 const detail = read('src/modules/jobs/JobDetail.jsx');
+const shell = read('src/modules/jobs/JobDetailShell.jsx');
 const header = read('src/modules/jobs/JobDetailHeader.jsx');
 const dialogs = read('src/modules/jobs/JobDetailDialogs.jsx');
 const damageReportView = read('src/modules/jobs/JobDamageReportView.jsx');
@@ -20,8 +21,7 @@ const photoSections = read('src/modules/jobs/JobPhotoSections.jsx');
 const formattingPath = join(root, 'src/modules/jobs/jobDetailFormatting.js');
 const packageJson = read('package.json');
 
-assert.match(detail, /import JobDetailHeader from ['"]\.\/JobDetailHeader\.jsx['"]/, 'Job Detail must use the focused header boundary.');
-assert.match(detail, /import JobDetailDialogs from ['"]\.\/JobDetailDialogs\.jsx['"]/, 'Job Detail must use the focused dialogs boundary.');
+assert.match(detail, /import JobDetailShell from ['"]\.\/JobDetailShell\.jsx['"]/, 'Job Detail must use the focused shell boundary.');
 assert.match(detail, /from ['"]\.\/jobDetailFormatting\.js['"]/, 'Job Detail must use the pure formatting boundary.');
 assert.match(detail, /import buildJobPrintSections from ['"]\.\/JobPrintSections\.jsx['"]/, 'Job Detail must use the focused print composition boundary.');
 assert.match(detail, /import JobIntakeSections from ['"]\.\/JobIntakeSections\.jsx['"]/, 'Job Detail must use the focused intake boundary.');
@@ -30,20 +30,19 @@ assert.match(detail, /import JobWorkSections from ['"]\.\/JobWorkSections\.jsx['
 assert.match(detail, /import JobBillingSections from ['"]\.\/JobBillingSections\.jsx['"]/, 'Job Detail must use the focused billing boundary.');
 assert.match(detail, /import buildJobAuxiliarySections from ['"]\.\/JobAuxiliarySections\.jsx['"]/, 'Job Detail must use the focused auxiliary-section boundary.');
 assert.match(detail, /import JobPhotoSections from ['"]\.\/JobPhotoSections\.jsx['"]/, 'Job Detail must use the focused photo boundary.');
-assert.match(
-  detail,
-  /<JobDetailHeader[\s\S]*?onStatusChange=\{updateField\}[\s\S]*?onAssignmentChanged=\{handleAssignmentChanged\}/,
-  'Status and assignment changes must retain their established Job Detail handlers.'
-);
 assert.doesNotMatch(detail, /className="detail-header"/, 'Header presentation must not remain duplicated in JobDetail.');
 assert.doesNotMatch(detail, /function markerColorForReport|function getInstrumentSelectionPatch|function buildMeasurementDisplay|function formatMeasurementStageForExport/, 'Extracted pure helpers must not remain duplicated in JobDetail.');
-for (const source of [header, dialogs, damageReportView, printDocuments, printSections, intakeSections, inspectionSections, workSections, billingSections, auxiliarySections, photoSections]) {
+for (const source of [shell, header, dialogs, damageReportView, printDocuments, printSections, intakeSections, inspectionSections, workSections, billingSections, auxiliarySections, photoSections]) {
   assert.doesNotMatch(source, /jobService|supabase/i, 'Job Detail presentation boundaries must not load or mutate job data directly.');
 }
+assert.doesNotMatch(detail, /<JobDetailHeader|<JobDetailDialogs|<JobDetailTabs/, 'Shell, header, dialog, and tab composition must not remain duplicated in JobDetail.');
+assert.match(detail, /<JobDetailShell[\s\S]*?onAssignmentChanged=\{handleAssignmentChanged\}[\s\S]*?onCloseDocumentEmail=\{\(\) => setDocumentEmailDraft\(null\)\}[\s\S]*?onSendDocumentEmail=\{handleSendDocumentEmail\}[\s\S]*?onStatusChange=\{updateField\}[\s\S]*?saveStatus=\{displayedSaveStatus\}/, 'Job Detail shell must retain established dialog, header, assignment, status, and save-state handlers.');
+assert.match(shell, /<JobDetailDialogs[\s\S]*?onSendDocumentEmail=\{onSendDocumentEmail\}[\s\S]*?onSavePhotoCopy=\{onSavePhotoCopy\}[\s\S]*?onOverwritePhoto=\{onOverwritePhoto\}/, 'Shell must retain dialog action wiring.');
+assert.match(shell, /<JobDetailHeader[\s\S]*?onStatusChange=\{onStatusChange\}[\s\S]*?onAssignmentChanged=\{onAssignmentChanged\}[\s\S]*?onNotice=\{onNotice\}/, 'Shell must retain header status, assignment, and notice wiring.');
+assert.match(shell, /<JobDetailTabs[\s\S]*?activityTimeline=\{activityTimeline\}[\s\S]*?billingSections=\{billingSections\}[\s\S]*?imagesSection=\{imagesSection\}[\s\S]*?printSections=\{printSections\}[\s\S]*?workSections=\{workSections\}/, 'Shell must retain all Job Detail tab sections.');
 assert.match(header, /<JobStatusSelect canWrite=\{canWrite\}/, 'Job status editing must retain write permission enforcement.');
 assert.match(header, /<JobAssignmentControl[\s\S]*?onAssignmentChanged=\{onAssignmentChanged\}/, 'Team assignment must remain connected through the header boundary.');
 assert.match(header, /isDirty \|\| saveStatus === 'saving' \|\| saveStatus === 'error'/, 'Unsaved and failed save state must remain visible.');
-assert.match(detail, /<JobDetailDialogs[\s\S]*?onSendDocumentEmail=\{handleSendDocumentEmail\}[\s\S]*?onSavePhotoCopy=\{saveEditedPhotoCopy\}[\s\S]*?onOverwritePhoto=\{overwriteEditedPhoto\}/, 'Dialog actions must retain their established Job Detail handlers.');
 assert.match(dialogs, /onOverwrite=\{canOverwritePhotos \? onOverwritePhoto : null\}/, 'Photo overwrite must retain its permission gate.');
 assert.match(dialogs, /onSend=\{onSendDocumentEmail\}/, 'Document email sending must remain connected.');
 assert.match(dialogs, /onSend=\{onSendSubcontractorPickup\}/, 'Subcontractor email sending must remain connected.');

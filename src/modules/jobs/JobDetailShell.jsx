@@ -1,0 +1,94 @@
+import JobDetailDialogs from './JobDetailDialogs.jsx';
+import JobDetailHeader from './JobDetailHeader.jsx';
+import JobDetailTabs from './components/JobDetailTabs.jsx';
+
+export default function JobDetailShell({
+  activityTimeline,
+  assignableMembers,
+  assignableMembersError,
+  assignableMembersLoading,
+  betaApproved,
+  billingSections,
+  canOverwritePhotos,
+  canWrite,
+  documentEmailDraft,
+  draftJob,
+  entitlementSnapshot,
+  imagesSection,
+  inspectionSections,
+  intakeSection,
+  isDirty,
+  isSavingEditedPhoto,
+  isSendingSubcontractorEmail,
+  membership,
+  messagesPanel,
+  onAssignmentChanged,
+  onCancelSubcontractorPickup,
+  onCloseDocumentEmail,
+  onClosePhotoEditor,
+  onNotice,
+  onOverwritePhoto,
+  onSavePhotoCopy,
+  onSendDocumentEmail,
+  onSendSubcontractorPickup,
+  onStatusChange,
+  photoEditorImage,
+  printActions,
+  printSections,
+  saveStatus,
+  schedulingSection,
+  subcontractorPickupJob,
+  updateField,
+  workSections
+}) {
+  return (
+    <section className="panel detail job-detail">
+      <JobDetailDialogs
+        documentEmailDraft={documentEmailDraft}
+        subcontractorPickupJob={subcontractorPickupJob}
+        isSendingSubcontractorEmail={isSendingSubcontractorEmail}
+        photoEditorImage={photoEditorImage}
+        isSavingEditedPhoto={isSavingEditedPhoto}
+        canOverwritePhotos={canOverwritePhotos}
+        onCloseDocumentEmail={onCloseDocumentEmail}
+        onSendDocumentEmail={onSendDocumentEmail}
+        onCancelSubcontractorPickup={onCancelSubcontractorPickup}
+        onSendSubcontractorPickup={onSendSubcontractorPickup}
+        onClosePhotoEditor={onClosePhotoEditor}
+        onSavePhotoCopy={onSavePhotoCopy}
+        onOverwritePhoto={onOverwritePhoto}
+      />
+      <JobDetailHeader
+        draftJob={draftJob}
+        canWrite={canWrite}
+        isDirty={isDirty}
+        saveStatus={saveStatus}
+        assignableMembers={assignableMembers}
+        assignableMembersLoading={assignableMembersLoading}
+        assignableMembersError={assignableMembersError}
+        membership={membership}
+        entitlementSnapshot={entitlementSnapshot}
+        betaApproved={betaApproved}
+        onStatusChange={onStatusChange}
+        onAssignmentChanged={onAssignmentChanged}
+        onNotice={onNotice}
+      />
+      <JobDetailTabs
+        activityTimeline={activityTimeline}
+        billingSections={billingSections}
+        canWrite={canWrite}
+        draftJob={draftJob}
+        imagesSection={imagesSection}
+        intakeSection={intakeSection}
+        inspectionSections={inspectionSections}
+        isDirty={isDirty}
+        messagesPanel={messagesPanel}
+        printActions={printActions}
+        printSections={printSections}
+        schedulingSection={schedulingSection}
+        updateField={updateField}
+        workSections={workSections}
+      />
+    </section>
+  );
+}
