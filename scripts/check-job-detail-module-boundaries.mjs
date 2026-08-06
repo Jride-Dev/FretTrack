@@ -10,19 +10,26 @@ const header = read('src/modules/jobs/JobDetailHeader.jsx');
 const dialogs = read('src/modules/jobs/JobDetailDialogs.jsx');
 const damageReportView = read('src/modules/jobs/JobDamageReportView.jsx');
 const printDocuments = read('src/modules/jobs/JobPrintDocuments.jsx');
+const printSections = read('src/modules/jobs/JobPrintSections.jsx');
+const intakeSections = read('src/modules/jobs/JobIntakeSections.jsx');
 const inspectionSections = read('src/modules/jobs/JobInspectionSections.jsx');
 const workSections = read('src/modules/jobs/JobWorkSections.jsx');
 const billingSections = read('src/modules/jobs/JobBillingSections.jsx');
+const auxiliarySections = read('src/modules/jobs/JobAuxiliarySections.jsx');
+const photoSections = read('src/modules/jobs/JobPhotoSections.jsx');
 const formattingPath = join(root, 'src/modules/jobs/jobDetailFormatting.js');
 const packageJson = read('package.json');
 
 assert.match(detail, /import JobDetailHeader from ['"]\.\/JobDetailHeader\.jsx['"]/, 'Job Detail must use the focused header boundary.');
 assert.match(detail, /import JobDetailDialogs from ['"]\.\/JobDetailDialogs\.jsx['"]/, 'Job Detail must use the focused dialogs boundary.');
 assert.match(detail, /from ['"]\.\/jobDetailFormatting\.js['"]/, 'Job Detail must use the pure formatting boundary.');
-assert.match(detail, /import JobPrintDocuments from ['"]\.\/JobPrintDocuments\.jsx['"]/, 'Job Detail must use the focused print-document boundary.');
+assert.match(detail, /import buildJobPrintSections from ['"]\.\/JobPrintSections\.jsx['"]/, 'Job Detail must use the focused print composition boundary.');
+assert.match(detail, /import JobIntakeSections from ['"]\.\/JobIntakeSections\.jsx['"]/, 'Job Detail must use the focused intake boundary.');
 assert.match(detail, /import JobInspectionSections from ['"]\.\/JobInspectionSections\.jsx['"]/, 'Job Detail must use the focused inspection boundary.');
 assert.match(detail, /import JobWorkSections from ['"]\.\/JobWorkSections\.jsx['"]/, 'Job Detail must use the focused work boundary.');
 assert.match(detail, /import JobBillingSections from ['"]\.\/JobBillingSections\.jsx['"]/, 'Job Detail must use the focused billing boundary.');
+assert.match(detail, /import buildJobAuxiliarySections from ['"]\.\/JobAuxiliarySections\.jsx['"]/, 'Job Detail must use the focused auxiliary-section boundary.');
+assert.match(detail, /import JobPhotoSections from ['"]\.\/JobPhotoSections\.jsx['"]/, 'Job Detail must use the focused photo boundary.');
 assert.match(
   detail,
   /<JobDetailHeader[\s\S]*?onStatusChange=\{updateField\}[\s\S]*?onAssignmentChanged=\{handleAssignmentChanged\}/,
@@ -30,7 +37,7 @@ assert.match(
 );
 assert.doesNotMatch(detail, /className="detail-header"/, 'Header presentation must not remain duplicated in JobDetail.');
 assert.doesNotMatch(detail, /function markerColorForReport|function getInstrumentSelectionPatch|function buildMeasurementDisplay|function formatMeasurementStageForExport/, 'Extracted pure helpers must not remain duplicated in JobDetail.');
-for (const source of [header, dialogs, damageReportView, printDocuments, inspectionSections, workSections, billingSections]) {
+for (const source of [header, dialogs, damageReportView, printDocuments, printSections, intakeSections, inspectionSections, workSections, billingSections, auxiliarySections, photoSections]) {
   assert.doesNotMatch(source, /jobService|supabase/i, 'Job Detail presentation boundaries must not load or mutate job data directly.');
 }
 assert.match(header, /<JobStatusSelect canWrite=\{canWrite\}/, 'Job status editing must retain write permission enforcement.');
@@ -40,10 +47,15 @@ assert.match(detail, /<JobDetailDialogs[\s\S]*?onSendDocumentEmail=\{handleSendD
 assert.match(dialogs, /onOverwrite=\{canOverwritePhotos \? onOverwritePhoto : null\}/, 'Photo overwrite must retain its permission gate.');
 assert.match(dialogs, /onSend=\{onSendDocumentEmail\}/, 'Document email sending must remain connected.');
 assert.match(dialogs, /onSend=\{onSendSubcontractorPickup\}/, 'Subcontractor email sending must remain connected.');
-assert.match(detail, /<JobPrintDocuments[\s\S]*?lengthUnit=\{measurementOptions\.lengthUnit\}[\s\S]*?workOrderImages=\{workOrderImages\}/, 'Print documents must retain the active job, shop measurement unit, totals, and images.');
+assert.doesNotMatch(detail, /<PrintActions|<JobPrintDocuments/, 'Print actions and document composition must not remain duplicated in JobDetail.');
+assert.match(detail, /buildJobPrintSections\(\{[\s\S]*?lengthUnit: measurementOptions\.lengthUnit[\s\S]*?onCloseDetail: closeDetail[\s\S]*?onEmailWorkOrder: openWorkOrderEmail[\s\S]*?onFinishJob: finishJob[\s\S]*?onPrintCustomerReport: printCustomerReport[\s\S]*?onPrintJobSheet: printJobSheet[\s\S]*?workOrderImages/, 'Print composition must retain shop measurement units, document images, and established action handlers.');
+assert.match(printSections, /<PrintActions[\s\S]*?canSendEmail=\{canSendEmail\}[\s\S]*?canWrite=\{canWrite\}[\s\S]*?closeDetail=\{onCloseDetail\}[\s\S]*?emailWorkOrder=\{onEmailWorkOrder\}[\s\S]*?finishJob=\{onFinishJob\}/, 'Print action controls must retain permissions and established handlers.');
+assert.match(printSections, /<JobPrintDocuments[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?shopSettings=\{shopSettings\}[\s\S]*?totals=\{totals\}[\s\S]*?workOrderImages=\{workOrderImages\}/, 'Print documents must retain calculated totals, active shop settings, and selected measurement unit.');
 assert.match(printDocuments, /<JobPrintSheet[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?totals=\{totals\}/, 'Job Sheet rendering must retain calculated totals and the selected measurement unit.');
 assert.match(printDocuments, /<CustomerDamageReport[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?reportDamageView=\{renderDamageView\}/, 'Customer Report rendering must retain measurement formatting and damage-map composition.');
 assert.match(printDocuments, /<JobDamageReportView damageMap=\{draftJob\.techDetails\.damageMap \|\| \{\}\} viewName=\{viewName\} \/>/, 'Customer damage report rendering must retain the active job damage map.');
+assert.match(detail, /<JobIntakeSections[\s\S]*?normalizeInstrumentType=\{normalizeInstrumentType\}[\s\S]*?onContactPreferenceChange=\{updateContactPreference\}[\s\S]*?onFieldChange=\{updateField\}[\s\S]*?onInstrumentTypeChange=\{setInstrumentType\}[\s\S]*?onStringCountChange=\{updateStringCount\}[\s\S]*?onTechFieldChange=\{updateTechField\}/, 'Intake presentation must retain established contact, instrument, string-count, and field handlers.');
+assert.match(intakeSections, /<JobInfoSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?setInstrumentType=\{onInstrumentTypeChange\}[\s\S]*?updateStringCount=\{onStringCountChange\}[\s\S]*?updateContactPreference=\{onContactPreferenceChange\}[\s\S]*?updateField=\{onFieldChange\}[\s\S]*?updateTechField=\{onTechFieldChange\}/, 'Job info intake must retain write permissions and controlled update handlers.');
 assert.match(detail, /<JobInspectionSections[\s\S]*?lengthUnit=\{measurementOptions\.lengthUnit\}[\s\S]*?onDamageMapChange=\{updateDamageMap\}[\s\S]*?onNeckInspectionChange=\{updateNeckInspection\}[\s\S]*?onTechFieldChange=\{updateTechField\}/, 'Inspection presentation must retain shop measurement units and established Job Detail handlers.');
 assert.match(inspectionSections, /<TechDetailsSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?updateNeckInspection=\{onNeckInspectionChange\}[\s\S]*?updateTechField=\{onTechFieldChange\}/, 'Technical measurements must retain write permissions and controlled update handlers.');
 assert.match(inspectionSections, /<DamageMapSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?onChange=\{onDamageMapChange\}[\s\S]*?onViewImageUpload=\{onDamageViewImageUpload\}/, 'Damage Map must retain write permissions, persistence, and upload handlers.');
@@ -53,6 +65,12 @@ assert.match(workSections, /<ServicesList[\s\S]*?canWrite=\{canWrite\}[\s\S]*?on
 assert.match(detail, /<JobBillingSections[\s\S]*?onAddInventoryPart=\{addInventoryPart\}[\s\S]*?onAddPayment=\{addPayment\}[\s\S]*?onEmailInvoice=\{openInvoiceEmail\}[\s\S]*?shopTaxRate=\{getShopDefaultTaxRate\(shopSettings\)\}[\s\S]*?taxSettings=\{taxSettings\}/, 'Billing presentation must retain inventory, payment, invoice, and shop-tax behavior.');
 assert.match(billingSections, /<PartsList[\s\S]*?canWrite=\{canWrite\}[\s\S]*?onAddInventoryPart=\{onAddInventoryPart\}[\s\S]*?onUpdatePart=\{onUpdatePart\}/, 'Billing parts must retain write permissions and controlled inventory mutations.');
 assert.match(billingSections, /<TotalsSection[\s\S]*?canSendEmail=\{canSendEmail\}[\s\S]*?canWrite=\{canWrite\}[\s\S]*?emailInvoice=\{onEmailInvoice\}[\s\S]*?shopTaxRate=\{shopTaxRate\}[\s\S]*?useShopTaxRate=\{onUseShopTaxRate\}/, 'Totals and payments must retain email, permission, tax, and payment wiring.');
+assert.match(detail, /buildJobAuxiliarySections\(\{[\s\S]*?onContactPreferenceChange: updateContactPreference[\s\S]*?onMessageTemplateChange: updateMessageTemplate[\s\S]*?onSendCustomerMessage: handleSendCustomerMessage[\s\S]*?timelineEvents/, 'Auxiliary presentation must retain established message and timeline handlers.');
+assert.match(auxiliarySections, /<MessagesPanel[\s\S]*?canWrite=\{canWrite\}[\s\S]*?canSendEmailByPlan=\{canSendEmail\}[\s\S]*?canSendSmsByPlan=\{canSendSms\}[\s\S]*?onPreferenceChange=\{onContactPreferenceChange\}[\s\S]*?onSendMessage=\{onSendCustomerMessage\}/, 'Messages panel must retain permission, entitlement, preference, and send wiring.');
+assert.match(auxiliarySections, /<JobScheduleSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?job=\{draftJob\}[\s\S]*?onNotice=\{onNotice\}/, 'Scheduling section must retain write permission, active job, and notice wiring.');
+assert.match(auxiliarySections, /<ActivityTimeline events=\{timelineEvents\} \/>/, 'Activity timeline must retain the active timeline events.');
+assert.match(detail, /<JobPhotoSections[\s\S]*?canDeletePhotos=\{canDeletePhotos\}[\s\S]*?canEditPhotos=\{canEditPhotos\}[\s\S]*?canUploadPhotos=\{canUploadPhotos\}[\s\S]*?onImageChange=\{handleImageChange\}[\s\S]*?onImageDelete=\{handleImageDelete\}[\s\S]*?onImageEdit=\{handleImageEdit\}[\s\S]*?onWorkOrderImageToggle=\{updateWorkOrderImage\}/, 'Photo presentation must retain established upload, edit, delete, and customer-report handlers.');
+assert.match(photoSections, /<ImagesSection[\s\S]*?canUploadPhotos=\{canUploadPhotos\}[\s\S]*?canEditPhotos=\{canEditPhotos\}[\s\S]*?canDeletePhotos=\{canDeletePhotos\}[\s\S]*?handleImageChange=\{onImageChange\}[\s\S]*?handleImageDelete=\{onImageDelete\}[\s\S]*?handleImageEdit=\{onImageEdit\}[\s\S]*?updateWorkOrderImage=\{onWorkOrderImageToggle\}/, 'Images section must retain photo permissions and controlled handlers.');
 assert.match(damageReportView, /if \(!hasBaseImage && marks\.length === 0\)[\s\S]*?return null/, 'Completely empty damage maps must remain omitted from reports.');
 assert.match(damageReportView, /hasBaseImage && imageUrl && marks\.length > 0/, 'Marker tables must remain tied to a visible reference image.');
 

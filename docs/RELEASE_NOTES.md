@@ -16,7 +16,7 @@ Workspace refresh restoration now waits until the authenticated shop profile and
 
 The application shell now delegates its New Job sidebar composition and derived role/entitlement access map to focused modules. Existing feature permission helpers remain authoritative, while `App.jsx` no longer renders sidebar internals or calculates each page permission inline.
 
-Inventory now separates its History, Labels, Vendors, Parts list, Part editor, Purchase Order list, and Purchase Order editor into focused presentation modules. Job Detail likewise separates its shell/header, dialogs, formatting, Damage Report, print documents, Inspection, Work, and Parts & Billing presentation. Existing persistence services, transactional receiving, permissions, role restrictions, and dirty-state behavior remain authoritative.
+Inventory now separates its History, Labels, Vendors, Parts list, Part editor, Purchase Order list, and Purchase Order editor into focused presentation modules. Job Detail likewise separates its shell/header, dialogs, formatting, Damage Report, print actions/documents, Intake, Inspection, Work, Parts & Billing, Photos, Messages, Scheduling, and Timeline presentation. Existing persistence services, transactional receiving, photo actions, print and email actions, message sending, linked schedule-event behavior, permissions, role restrictions, and dirty-state behavior remain authoritative.
 
 Direct receiving, stock adjustments, and purchase-order receiving now synchronize the selected part editor with the authoritative saved quantity and cost. A later **Save Changes** action therefore preserves the received or adjusted stock instead of restoring stale form values. Purchase-unit conversion snapshots and individual-unit job usage remain unchanged.
 

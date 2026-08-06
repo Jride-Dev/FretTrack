@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import ImagesSection from '../images/ImagesSection';
-import JobInfoSection from './JobInfoSection';
-import PrintActions from './PrintActions';
 import { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
-import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
 import { getShopDefaultTaxRate, resolveJobTaxSettings, withResolvedJobTaxSettings } from '../billing/jobTaxSettings';
-import MessagesPanel from '../messaging/MessagesPanel';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { formatMeasurementChange } from '../../shared/utils/measurements';
 import { getShopDateOptions, getShopMeasurementOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
@@ -24,18 +19,20 @@ import {
 } from '../instruments/instrumentService';
 import { generateJobNumber } from './jobNumber';
 import { getJobEvents, logJobEventSafe } from './jobEventsService';
-import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
+import { sendCustomerMessage } from '../../data/messagesRepository';
 import { SHOP_EMAIL_CONTEXT_ERROR, buildDocumentEmailHtml, buildInvoiceEmailDraft, buildSelectedDocumentEmailContent, buildWorkOrderEmailDraft, resolveScopedShopEmailSettings } from './emailDocuments';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
-import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import JobDetailHeader from './JobDetailHeader.jsx';
 import JobDetailDialogs from './JobDetailDialogs.jsx';
-import JobPrintDocuments from './JobPrintDocuments.jsx';
 import JobInspectionSections from './JobInspectionSections.jsx';
 import JobWorkSections from './JobWorkSections.jsx';
 import JobBillingSections from './JobBillingSections.jsx';
+import buildJobAuxiliarySections from './JobAuxiliarySections.jsx';
+import JobIntakeSections from './JobIntakeSections.jsx';
+import JobPhotoSections from './JobPhotoSections.jsx';
+import buildJobPrintSections from './JobPrintSections.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import { buildMeasurementDisplay, getInstrumentSelectionPatch } from './jobDetailFormatting.js';
 import { PENDING_WORK_LOG_MESSAGE, appendWorkLogDraft, hasPendingWorkLogDraft } from './workLogDraft.js';
@@ -1282,46 +1279,39 @@ export default function JobDetail({
     });
   }
 
-  const printActions = (
-    <PrintActions
-      canSendEmail={canSendEmail}
-      canWrite={canWrite}
-      closeDetail={closeDetail}
-      emailWorkOrder={openWorkOrderEmail}
-      exportJobJson={exportJobJson}
-      finishJob={finishJob}
-      printCustomerReport={printCustomerReport}
-      printJobSheet={printJobSheet}
-    />
-  );
-
-  const printSections = (
-    <JobPrintDocuments
-      draftJob={draftJob}
-      formatInstrumentLabel={formatInstrumentLabel}
-      formatMeasurementDelta={formatMeasurementDelta}
-      lengthUnit={measurementOptions.lengthUnit}
-      normalizeInstrumentType={normalizeInstrumentType}
-      outerStringLabels={outerStringLabels}
-      parts={parts}
-      services={services}
-      shopSettings={shopSettings}
-      totals={totals}
-      workOrderImages={workOrderImages}
-    />
-  );
+  const { printActions, printSections } = buildJobPrintSections({
+    canSendEmail,
+    canWrite,
+    draftJob,
+    formatInstrumentLabel,
+    formatMeasurementDelta,
+    lengthUnit: measurementOptions.lengthUnit,
+    normalizeInstrumentType,
+    onCloseDetail: closeDetail,
+    onEmailWorkOrder: openWorkOrderEmail,
+    onExportJobJson: exportJobJson,
+    onFinishJob: finishJob,
+    onPrintCustomerReport: printCustomerReport,
+    onPrintJobSheet: printJobSheet,
+    outerStringLabels,
+    parts,
+    services,
+    shopSettings,
+    totals,
+    workOrderImages
+  });
 
   const intakeSection = (
-    <JobInfoSection
+    <JobIntakeSections
       canWrite={canWrite}
       draftJob={draftJob}
       intakeTypes={intakeTypes}
       normalizeInstrumentType={normalizeInstrumentType}
-      setInstrumentType={setInstrumentType}
-      updateStringCount={updateStringCount}
-      updateContactPreference={updateContactPreference}
-      updateField={updateField}
-      updateTechField={updateTechField}
+      onContactPreferenceChange={updateContactPreference}
+      onFieldChange={updateField}
+      onInstrumentTypeChange={setInstrumentType}
+      onStringCountChange={updateStringCount}
+      onTechFieldChange={updateTechField}
     />
   );
 
@@ -1402,47 +1392,37 @@ export default function JobDetail({
   );
 
   const imagesSection = (
-    <ImagesSection
-      canWrite={canWrite}
-      canUploadPhotos={canUploadPhotos}
-      canEditPhotos={canEditPhotos}
+    <JobPhotoSections
       canDeletePhotos={canDeletePhotos}
-      handleImageChange={handleImageChange}
-      handleImageDelete={handleImageDelete}
-      handleImageEdit={handleImageEdit}
+      canEditPhotos={canEditPhotos}
+      canUploadPhotos={canUploadPhotos}
+      canWrite={canWrite}
       imageImportErrors={imageImportErrors}
-      imageOptimizationNotices={imageOptimizationNotices}
       imageImportInputRef={imageImportInputRef}
+      imageOptimizationNotices={imageOptimizationNotices}
       images={images}
       isImportingImages={isImportingImages}
-      updateWorkOrderImage={updateWorkOrderImage}
+      onImageChange={handleImageChange}
+      onImageDelete={handleImageDelete}
+      onImageEdit={handleImageEdit}
+      onWorkOrderImageToggle={updateWorkOrderImage}
       workOrderImageIds={workOrderImageIds}
     />
   );
 
-  const messagesPanel = (
-    <MessagesPanel
-      canWrite={canWrite}
-      canSendEmailByPlan={canSendEmail}
-      canSendSmsByPlan={canSendSms}
-      entitlementMessage={entitlementMessage}
-      job={draftJob}
-      shopProfile={shopProfile}
-      onPreferenceChange={updateContactPreference}
-      onTemplateChange={updateMessageTemplate}
-      onSendMessage={handleSendCustomerMessage}
-      onGetSmsMode={getSmsMode}
-    />
-  );
-
-  const activityTimeline = <ActivityTimeline events={timelineEvents} />;
-  const schedulingSection = (
-    <JobScheduleSection
-      canWrite={canWrite}
-      job={draftJob}
-      onNotice={onNotice}
-    />
-  );
+  const { activityTimeline, messagesPanel, schedulingSection } = buildJobAuxiliarySections({
+    canSendEmail,
+    canSendSms,
+    canWrite,
+    draftJob,
+    entitlementMessage,
+    onContactPreferenceChange: updateContactPreference,
+    onMessageTemplateChange: updateMessageTemplate,
+    onNotice,
+    onSendCustomerMessage: handleSendCustomerMessage,
+    shopProfile,
+    timelineEvents
+  });
 
   return (
     <section className="panel detail job-detail">
