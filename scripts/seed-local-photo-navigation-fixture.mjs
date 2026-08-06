@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 const TEST_EMAIL = 'test1.owner@frettrack.local';
 const TEST_PASSWORD = 'FretTrackTest123!';
 const FIXTURE_CATEGORY = 'local-photo-navigation-fixture';
+const FIXTURE_CUSTOMER_NAME = 'LOCAL PHOTO TEST FIXTURE';
 const FIXTURE_IMAGE = readFileSync('public/frettrack-wordmark.jpg');
 
 const localEnv = parseEnv(readFileSync('.env.local', 'utf8'));
@@ -62,6 +63,18 @@ const previousFixtureJobs = jobs.filter((candidate) =>
 const job = previousFixtureJobs[0]
   || jobs.find((candidate) => !candidate.tech_details?.damageMap?.views?.front?.storagePath)
   || jobs[0];
+
+const { data: selectedJobImages, error: selectedJobImagesError } = await admin
+  .from('job_images')
+  .select('id, storage_path')
+  .eq('job_id', job.id);
+if (selectedJobImagesError) {
+  throw selectedJobImagesError;
+}
+if (selectedJobImages?.length) {
+  await admin.from('job_images').delete().in('id', selectedJobImages.map((row) => row.id));
+  await admin.storage.from('job-images').remove(selectedJobImages.map((row) => row.storage_path).filter(Boolean));
+}
 
 const { data: oldFixtureRows, error: oldFixtureError } = await admin
   .from('job_images')
@@ -141,19 +154,43 @@ if (insertError) {
 const techDetails = job.tech_details || {};
 const damageMap = techDetails.damageMap || {};
 const views = damageMap.views || {};
+const cleanViews = Object.fromEntries(
+  ['front', 'back', 'headstock', 'serial_number'].map((viewName) => {
+    const view = views[viewName] || {};
+    return [viewName, {
+      ...view,
+      imageId: '',
+      imageName: '',
+      imageUrl: '',
+      storagePath: '',
+      marks: (view.marks || []).map((mark) => ({
+        ...mark,
+        photoId: '',
+        photoName: '',
+        photoUrl: '',
+        storagePath: ''
+      }))
+    }];
+  })
+);
 const { error: updateError } = await admin
   .from('jobs')
   .update({
+    customer_name: FIXTURE_CUSTOMER_NAME,
+    customer_first_name: 'LOCAL PHOTO',
+    customer_last_name: 'TEST FIXTURE',
+    reason_for_visit: 'Dedicated local-only gallery and Damage Map persistence test.',
+    updated_at: now,
     tech_details: {
       ...techDetails,
       damageMap: {
         ...damageMap,
         selectedView: 'front',
         views: {
-          ...views,
+          ...cleanViews,
           front: {
+            ...cleanViews.front,
             marks: [],
-            ...(views.front || {}),
             imageId: photoId,
             imageName: 'local-photo-navigation-fixture.jpg',
             imageUrl: '',
@@ -179,6 +216,11 @@ const response = await fetch(signedData.signedUrl);
 if (!response.ok) {
   throw new Error(`Signed local fixture returned HTTP ${response.status}.`);
 }
+const signedContentType = response.headers.get('content-type') || '';
+const signedResponseBytes = (await response.arrayBuffer()).byteLength;
+if (!signedContentType.startsWith('image/') || signedResponseBytes === 0) {
+  throw new Error(`Signed local fixture did not return image bytes (${signedContentType || 'unknown type'}, ${signedResponseBytes} bytes).`);
+}
 
 console.log(JSON.stringify({
   testServer: 'http://127.0.0.1:5173',
@@ -186,9 +228,12 @@ console.log(JSON.stringify({
   jobId: job.id,
   jobNumber: job.job_number,
   customerName: job.customer_name,
+  fixtureCustomerName: FIXTURE_CUSTOMER_NAME,
   galleryPhotoId: photoId,
   damageMapView: 'front',
-  signedFetchStatus: response.status
+  signedFetchStatus: response.status,
+  signedContentType,
+  signedResponseBytes
 }, null, 2));
 await owner.auth.signOut();
 process.exit(0);
