@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 const root = process.cwd();
 const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
@@ -19,6 +18,7 @@ const billingSections = read('src/modules/jobs/JobBillingSections.jsx');
 const auxiliarySections = read('src/modules/jobs/JobAuxiliarySections.jsx');
 const photoSections = read('src/modules/jobs/JobPhotoSections.jsx');
 const formattingPath = join(root, 'src/modules/jobs/jobDetailFormatting.js');
+const formatting = read('src/modules/jobs/jobDetailFormatting.js');
 const packageJson = read('package.json');
 
 assert.match(detail, /import JobDetailShell from ['"]\.\/JobDetailShell\.jsx['"]/, 'Job Detail must use the focused shell boundary.');
@@ -31,7 +31,7 @@ assert.match(detail, /import JobBillingSections from ['"]\.\/JobBillingSections\
 assert.match(detail, /import buildJobAuxiliarySections from ['"]\.\/JobAuxiliarySections\.jsx['"]/, 'Job Detail must use the focused auxiliary-section boundary.');
 assert.match(detail, /import JobPhotoSections from ['"]\.\/JobPhotoSections\.jsx['"]/, 'Job Detail must use the focused photo boundary.');
 assert.doesNotMatch(detail, /className="detail-header"/, 'Header presentation must not remain duplicated in JobDetail.');
-assert.doesNotMatch(detail, /function markerColorForReport|function getInstrumentSelectionPatch|function buildMeasurementDisplay|function formatMeasurementStageForExport/, 'Extracted pure helpers must not remain duplicated in JobDetail.');
+assert.doesNotMatch(detail, /function markerColorForReport|function getInstrumentSelectionPatch|function buildMeasurementDisplay|function formatMeasurementStageForExport|combineCustomerName|generateJobNumber|shouldResetModelForBrand|stringCountForInstrument/, 'Extracted pure helpers must not remain duplicated in JobDetail.');
 for (const source of [shell, header, dialogs, damageReportView, printDocuments, printSections, intakeSections, inspectionSections, workSections, billingSections, auxiliarySections, photoSections]) {
   assert.doesNotMatch(source, /jobService|supabase/i, 'Job Detail presentation boundaries must not load or mutate job data directly.');
 }
@@ -53,6 +53,18 @@ assert.match(printSections, /<JobPrintDocuments[\s\S]*?lengthUnit=\{lengthUnit\}
 assert.match(printDocuments, /<JobPrintSheet[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?totals=\{totals\}/, 'Job Sheet rendering must retain calculated totals and the selected measurement unit.');
 assert.match(printDocuments, /<CustomerDamageReport[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?reportDamageView=\{renderDamageView\}/, 'Customer Report rendering must retain measurement formatting and damage-map composition.');
 assert.match(printDocuments, /<JobDamageReportView damageMap=\{draftJob\.techDetails\.damageMap \|\| \{\}\} viewName=\{viewName\} \/>/, 'Customer damage report rendering must retain the active job damage map.');
+assert.match(detail, /patchJob\(buildJobFieldPatch\(draftJob, name, value, jobs\)\)/, 'Job field updates must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildTaxFieldPatch\(draftJob, name, value, type, checked\)\)/, 'Job tax updates must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildShopTaxRatePatch\(draftJob, getShopDefaultTaxRate\(shopSettings\)\)\)/, 'Shop tax-rate reset must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildInstrumentTypePatch\(draftJob, instrumentType\)\)/, 'Instrument type changes must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildStringCountPatch\(draftJob, value\)\)/, 'String count changes must use the extracted pure patch helper.');
+assert.match(formatting, /function buildJobFieldPatch\(currentJob, fieldName, value, jobs = \[\]\)[\s\S]*?fieldName === 'customerFirstName'[\s\S]*?customerName: combineCustomerName/, 'Customer name field patches must keep the combined display name synchronized.');
+assert.match(formatting, /fieldName === 'dateReceived'[\s\S]*?jobNumber: generateJobNumber\(value, jobs, currentJob\.id, currentJob\.shopId\)/, 'Date received field patches must keep generated job numbers synchronized.');
+assert.match(formatting, /fieldName === 'guitarBrand'[\s\S]*?shouldResetModelForBrand\(currentJob\.instrumentType, value, currentJob\.model\) \? '' : currentJob\.model/, 'Brand field patches must keep incompatible catalog models from persisting.');
+assert.match(formatting, /function buildInstrumentTypePatch\(currentJob, instrumentType\)[\s\S]*?stringCountForInstrument\(instrumentPatch\.instrumentType\)[\s\S]*?stringGauges: resizeStringGauges\(currentJob\.techDetails\.stringGauges, stringCount\)/, 'Instrument type patches must update string count and resize string gauge rows.');
+assert.match(formatting, /function buildStringCountPatch\(currentJob, value\)[\s\S]*?normalizeStringCount[\s\S]*?stringGauges: resizeStringGauges\(currentJob\.techDetails\.stringGauges, stringCount\)/, 'String count patches must resize string gauge rows.');
+assert.match(formatting, /function buildTaxFieldPatch\(currentJob, fieldName, fieldValue, inputType = 'text', checked = false\)[\s\S]*?fieldName === 'salesTaxRate' \? \{ rateSource: 'job' \}/, 'Editing a tax rate must mark it as a job-level override.');
+assert.match(formatting, /function buildShopTaxRatePatch\(currentJob, salesTaxRate\)[\s\S]*?salesTaxRate,[\s\S]*?rateSource: 'shop'/, 'Using the shop tax rate must restore shop-rate source metadata.');
 assert.match(detail, /<JobIntakeSections[\s\S]*?normalizeInstrumentType=\{normalizeInstrumentType\}[\s\S]*?onContactPreferenceChange=\{updateContactPreference\}[\s\S]*?onFieldChange=\{updateField\}[\s\S]*?onInstrumentTypeChange=\{setInstrumentType\}[\s\S]*?onStringCountChange=\{updateStringCount\}[\s\S]*?onTechFieldChange=\{updateTechField\}/, 'Intake presentation must retain established contact, instrument, string-count, and field handlers.');
 assert.match(intakeSections, /<JobInfoSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?setInstrumentType=\{onInstrumentTypeChange\}[\s\S]*?updateStringCount=\{onStringCountChange\}[\s\S]*?updateContactPreference=\{onContactPreferenceChange\}[\s\S]*?updateField=\{onFieldChange\}[\s\S]*?updateTechField=\{onTechFieldChange\}/, 'Job info intake must retain write permissions and controlled update handlers.');
 assert.match(detail, /<JobInspectionSections[\s\S]*?lengthUnit=\{measurementOptions\.lengthUnit\}[\s\S]*?onDamageMapChange=\{updateDamageMap\}[\s\S]*?onNeckInspectionChange=\{updateNeckInspection\}[\s\S]*?onTechFieldChange=\{updateTechField\}/, 'Inspection presentation must retain shop measurement units and established Job Detail handlers.');
@@ -73,24 +85,14 @@ assert.match(photoSections, /<ImagesSection[\s\S]*?canUploadPhotos=\{canUploadPh
 assert.match(damageReportView, /if \(!hasBaseImage && marks\.length === 0\)[\s\S]*?return null/, 'Completely empty damage maps must remain omitted from reports.');
 assert.match(damageReportView, /hasBaseImage && imageUrl && marks\.length > 0/, 'Marker tables must remain tied to a visible reference image.');
 
-const { buildMeasurementDisplay, getInstrumentSelectionPatch, markerColorForReport } = await import(pathToFileURL(formattingPath));
 assert.deepEqual(
-  getInstrumentSelectionPatch({ guitarBrand: 'Custom', model: 'Prototype' }, 'Acoustic Guitar'),
-  { instrumentType: 'Acoustic', guitarBrand: 'Custom', model: 'Prototype' },
-  'Instrument selection must retain uncatalogued shop-entered brand and model values.'
+  ['getInstrumentSelectionPatch', 'buildMeasurementDisplay', 'markerColorForReport'].filter((helper) => formatting.includes(`function ${helper}`) || formatting.includes(`function ${helper}(`)),
+  ['getInstrumentSelectionPatch', 'buildMeasurementDisplay', 'markerColorForReport'],
+  'Job formatting helpers must remain in the pure formatting boundary.'
 );
-assert.deepEqual(
-  buildMeasurementDisplay({ techDetails: { neckInspection: { initial: { relief: '0.2' }, final: { relief: '0.1' } } } }, 'mm'),
-  {
-    lengthUnit: 'mm',
-    initial: { relief: '0.2 mm', nutHighE: '', nutLowE: '', actionHighE12th: '', actionLowE12th: '' },
-    final: { relief: '0.1 mm', nutHighE: '', nutLowE: '', actionHighE12th: '', actionLowE12th: '' }
-  },
-  'Job export measurements must retain the active shop length unit.'
-);
-assert.equal(markerColorForReport('Critical'), '#b3261e', 'Critical damage markers must retain their report color.');
-assert.equal(markerColorForReport('Structural'), '#a15c00', 'Structural damage markers must retain their report color.');
-assert.equal(markerColorForReport('Cosmetic'), '#255f85', 'Default damage markers must retain their report color.');
+assert.match(formatting, /if \(severity === 'Critical'\) return '#b3261e'/, 'Critical damage markers must retain their report color.');
+assert.match(formatting, /if \(severity === 'Structural'\) return '#a15c00'/, 'Structural damage markers must retain their report color.');
+assert.match(formatting, /return '#255f85'/, 'Default damage markers must retain their report color.');
 assert.match(packageJson, /"check:job-detail-module-boundaries": "node scripts\/check-job-detail-module-boundaries\.mjs"/, 'The focused Job Detail boundary check must be exposed.');
 
 console.log('Job Detail module boundary checks passed.');

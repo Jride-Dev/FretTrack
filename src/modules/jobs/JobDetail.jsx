@@ -6,18 +6,13 @@ import { getShopDefaultTaxRate, resolveJobTaxSettings, withResolvedJobTaxSetting
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { formatMeasurementChange } from '../../shared/utils/measurements';
 import { getShopDateOptions, getShopMeasurementOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
-import { combineCustomerName } from '../customers';
 import {
   formatInstrumentLabel,
   getInstrumentStringCount,
   getOuterStringLabels,
   normalizeInstrumentType,
-  normalizeStringCount,
-  resizeStringGauges,
-  shouldResetModelForBrand,
-  stringCountForInstrument
+  resizeStringGauges
 } from '../instruments/instrumentService';
-import { generateJobNumber } from './jobNumber';
 import { getJobEvents, logJobEventSafe } from './jobEventsService';
 import { sendCustomerMessage } from '../../data/messagesRepository';
 import { SHOP_EMAIL_CONTEXT_ERROR, buildDocumentEmailHtml, buildInvoiceEmailDraft, buildSelectedDocumentEmailContent, buildWorkOrderEmailDraft, resolveScopedShopEmailSettings } from './emailDocuments';
@@ -33,7 +28,14 @@ import JobPhotoSections from './JobPhotoSections.jsx';
 import buildJobPrintSections from './JobPrintSections.jsx';
 import JobDetailShell from './JobDetailShell.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
-import { buildMeasurementDisplay, getInstrumentSelectionPatch } from './jobDetailFormatting.js';
+import {
+  buildInstrumentTypePatch,
+  buildJobFieldPatch,
+  buildMeasurementDisplay,
+  buildShopTaxRatePatch,
+  buildStringCountPatch,
+  buildTaxFieldPatch
+} from './jobDetailFormatting.js';
 import { PENDING_WORK_LOG_MESSAGE, appendWorkLogDraft, hasPendingWorkLogDraft } from './workLogDraft.js';
 
 const intakeTypes = JOB_SOURCE_OPTIONS;
@@ -186,42 +188,7 @@ export default function JobDetail({
 
   function updateField(event) {
     const { name, value } = event.target;
-    if (name === 'customerFirstName' || name === 'customerLastName') {
-      patchJob({
-        [name]: value,
-        customerName: combineCustomerName(
-          name === 'customerFirstName' ? value : draftJob.customerFirstName,
-          name === 'customerLastName' ? value : draftJob.customerLastName
-        )
-      });
-      return;
-    }
-    if (name === 'dateReceived') {
-      patchJob({ dateReceived: value, jobNumber: generateJobNumber(value, jobs, draftJob.id, draftJob.shopId) });
-      return;
-    }
-    if (name === 'guitarBrand') {
-      patchJob({
-        guitarBrand: value,
-        model: shouldResetModelForBrand(draftJob.instrumentType, value, draftJob.model) ? '' : draftJob.model
-      });
-      return;
-    }
-    if (name === 'instrumentType') {
-      const instrumentPatch = getInstrumentSelectionPatch(draftJob, value);
-      const stringCount = stringCountForInstrument(instrumentPatch.instrumentType);
-      patchJob({
-        ...instrumentPatch,
-        techDetails: {
-          ...draftJob.techDetails,
-          instrumentType: instrumentPatch.instrumentType,
-          stringCount,
-          stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
-        }
-      });
-      return;
-    }
-    patchJob({ [name]: value });
+    patchJob(buildJobFieldPatch(draftJob, name, value, jobs));
   }
 
   function updateDiscountField(event) {
@@ -237,57 +204,19 @@ export default function JobDetail({
 
   function updateTaxField(event) {
     const { name, value, checked, type } = event.target;
-    patchJob({
-      techDetails: {
-        ...draftJob.techDetails,
-        tax: {
-          ...(draftJob.techDetails.tax || {}),
-          [name]: type === 'checkbox' ? checked : value,
-          ...(name === 'salesTaxRate' ? { rateSource: 'job' } : {})
-        }
-      }
-    });
+    patchJob(buildTaxFieldPatch(draftJob, name, value, type, checked));
   }
 
   function useShopTaxRate() {
-    patchJob({
-      techDetails: {
-        ...draftJob.techDetails,
-        tax: {
-          ...(draftJob.techDetails.tax || {}),
-          salesTaxRate: getShopDefaultTaxRate(shopSettings),
-          rateSource: 'shop'
-        }
-      }
-    });
+    patchJob(buildShopTaxRatePatch(draftJob, getShopDefaultTaxRate(shopSettings)));
   }
 
   function setInstrumentType(instrumentType) {
-    const instrumentPatch = getInstrumentSelectionPatch(draftJob, instrumentType);
-    const stringCount = stringCountForInstrument(instrumentPatch.instrumentType);
-    patchJob({
-      ...instrumentPatch,
-      techDetails: {
-        ...draftJob.techDetails,
-        instrumentType: instrumentPatch.instrumentType,
-        stringCount,
-        stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
-      }
-    });
+    patchJob(buildInstrumentTypePatch(draftJob, instrumentType));
   }
 
   function updateStringCount(value) {
-    const stringCount = value === 'custom'
-      ? normalizeStringCount(draftJob.techDetails.stringCount || draftJob.techDetails.stringGauges?.length, draftJob.instrumentType)
-      : normalizeStringCount(value, draftJob.instrumentType);
-    patchJob({
-      stringCount,
-      techDetails: {
-        ...draftJob.techDetails,
-        stringCount,
-        stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
-      }
-    });
+    patchJob(buildStringCountPatch(draftJob, value));
   }
 
   function updateTechField(event) {

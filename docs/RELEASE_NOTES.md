@@ -18,6 +18,8 @@ The application shell now delegates its New Job sidebar composition and derived 
 
 Inventory now separates its History, Labels, Vendors, Parts list, Part editor, Purchase Order list, and Purchase Order editor into focused presentation modules. Job Detail likewise separates its shell, header, dialogs, tabs, formatting, Damage Report, print actions/documents, Intake, Inspection, Work, Parts & Billing, Photos, Messages, Scheduling, and Timeline presentation. Existing persistence services, transactional receiving, photo actions, print and email actions, message sending, linked schedule-event behavior, permissions, role restrictions, and dirty-state behavior remain authoritative.
 
+Job Detail's pure patch builders for customer display names, received-date job numbers, instrument/string-count updates, and job/shop tax-rate edits now live in the existing helper boundary. The component still owns permissions, dirty-state, saving, and persistence.
+
 Direct receiving, stock adjustments, and purchase-order receiving now synchronize the selected part editor with the authoritative saved quantity and cost. A later **Save Changes** action therefore preserves the received or adjusted stock instead of restoring stale form values. Purchase-unit conversion snapshots and individual-unit job usage remain unchanged.
 
 Local development now refuses a hosted Supabase URL unless a developer deliberately enables the documented override. The fictional local-shop seeder also creates complete shop lifecycle, subscription, membership, and current GoTrue email-identity records. These protections affect development only and do not alter production authentication or shop data.
