@@ -16,7 +16,25 @@ Workspace refresh restoration now waits until the authenticated shop profile and
 
 The application shell now delegates its New Job sidebar composition and derived role/entitlement access map to focused modules. Existing feature permission helpers remain authoritative, while `App.jsx` no longer renders sidebar internals or calculates each page permission inline.
 
-Inventory now separates its History, Labels, Vendors, Parts list, Part editor, Purchase Order list, and Purchase Order editor into focused presentation modules. Job Detail likewise separates its shell/header, dialogs, formatting, Damage Report, print documents, Inspection, Work, and Parts & Billing presentation. Existing persistence services, transactional receiving, permissions, role restrictions, and dirty-state behavior remain authoritative.
+Inventory now separates its History, Labels, Vendors, Parts list, Part editor, Purchase Order list, and Purchase Order editor into focused presentation modules. Job Detail likewise separates its shell, header, dialogs, tabs, formatting, Damage Report, print actions/documents, Intake, Inspection, Work, Parts & Billing, Photos, Messages, Scheduling, and Timeline presentation. Existing persistence services, transactional receiving, photo actions, print and email actions, message sending, linked schedule-event behavior, permissions, role restrictions, and dirty-state behavior remain authoritative.
+
+Job Detail's pure patch builders for customer display names, received-date job numbers, instrument/string-count updates, and job/shop tax-rate edits now live in the existing helper boundary. The component still owns permissions, dirty-state, saving, and persistence.
+
+Payment add/update/remove transformations now use the same helper boundary, while Job Detail still owns autosave timing, dirty-state, and persistence.
+
+Neck-inspection and string-gauge transformations now also use that helper boundary, while Job Detail still owns write permissions, dirty-state, save timing, and the active shop measurement unit passed into the inspection UI.
+
+Manual part and service line-item transformations now use the helper boundary too. Inventory-backed stock calls, included-service part tracking, totals, permission checks, dirty-state, and persistence remain on their established paths.
+
+Discount, generic technical-field, work-order image selection, contact preference, and last-message-template transformations now use the same helper boundary while preserving the existing controlled UI, dirty-state, permission, document image, and messaging behavior.
+
+Work-log row edits/removals, Damage Map updates, message merges, and assignment-field merges now use pure helper boundaries. Job Detail still owns save timing, notices, permissions, timeline refreshes, and the service calls around those changes.
+
+Inventory-backed part result merges and local photo preview/remove transforms now use pure helper boundaries. The existing inventory service calls, photo persistence calls, permission gates, stock updates, and refresh behavior remain unchanged.
+
+Picked-up status patching and Damage Map uploaded-image selection now use pure helper boundaries while the finish flow, PVMH pickup prompt, upload handling, and permissions remain in Job Detail.
+
+The operations checklist now has a read-only Supabase data-integrity check for deleted-job orphans, ownerless shop profiles, broken shop-member auth links, and auth users without identities. It reports aggregate issue groups only and avoids dumping customer/job records.
 
 Direct receiving, stock adjustments, and purchase-order receiving now synchronize the selected part editor with the authoritative saved quantity and cost. A later **Save Changes** action therefore preserves the received or adjusted stock instead of restoring stale form values. Purchase-unit conversion snapshots and individual-unit job usage remain unchanged.
 

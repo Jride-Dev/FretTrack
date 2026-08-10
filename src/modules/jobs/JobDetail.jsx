@@ -1,44 +1,74 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import ImagesSection from '../images/ImagesSection';
-import JobInfoSection from './JobInfoSection';
-import PrintActions from './PrintActions';
 import { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
-import ActivityTimeline from './ActivityTimeline.jsx';
 import { calculateJobTotals } from '../billing/accounting';
 import { getShopDefaultTaxRate, resolveJobTaxSettings, withResolvedJobTaxSettings } from '../billing/jobTaxSettings';
-import MessagesPanel from '../messaging/MessagesPanel';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { formatMeasurementChange } from '../../shared/utils/measurements';
 import { getShopDateOptions, getShopMeasurementOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
-import { combineCustomerName } from '../customers';
 import {
   formatInstrumentLabel,
   getInstrumentStringCount,
   getOuterStringLabels,
-  normalizeInstrumentType,
-  normalizeStringCount,
-  resizeStringGauges,
-  shouldResetModelForBrand,
-  stringCountForInstrument
+  normalizeInstrumentType
 } from '../instruments/instrumentService';
-import { generateJobNumber } from './jobNumber';
 import { getJobEvents, logJobEventSafe } from './jobEventsService';
-import { getSmsMode, sendCustomerMessage } from '../../data/messagesRepository';
+import { sendCustomerMessage } from '../../data/messagesRepository';
 import { SHOP_EMAIL_CONTEXT_ERROR, buildDocumentEmailHtml, buildInvoiceEmailDraft, buildSelectedDocumentEmailContent, buildWorkOrderEmailDraft, resolveScopedShopEmailSettings } from './emailDocuments';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
-import JobScheduleSection from '../scheduling/JobScheduleSection.jsx';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
-import JobDetailHeader from './JobDetailHeader.jsx';
-import JobDetailDialogs from './JobDetailDialogs.jsx';
-import JobPrintDocuments from './JobPrintDocuments.jsx';
 import JobInspectionSections from './JobInspectionSections.jsx';
 import JobWorkSections from './JobWorkSections.jsx';
 import JobBillingSections from './JobBillingSections.jsx';
+import buildJobAuxiliarySections from './JobAuxiliarySections.jsx';
+import JobIntakeSections from './JobIntakeSections.jsx';
+import JobPhotoSections from './JobPhotoSections.jsx';
+import buildJobPrintSections from './JobPrintSections.jsx';
+import JobDetailShell from './JobDetailShell.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
-import { buildMeasurementDisplay, getInstrumentSelectionPatch } from './jobDetailFormatting.js';
-import { PENDING_WORK_LOG_MESSAGE, appendWorkLogDraft, hasPendingWorkLogDraft } from './workLogDraft.js';
+import {
+  buildAddPaymentJob,
+  buildAddInventoryPartJob,
+  buildAddManualPartPatch,
+  buildAddServicePatch,
+  buildAppendImagePreviewsJob,
+  buildAssignmentJob,
+  buildContactPreferencePatch,
+  buildDamageMapJob,
+  buildDiscountFieldPatch,
+  buildInstrumentTypePatch,
+  buildJobFieldPatch,
+  buildMeasurementDisplay,
+  buildMessageTemplatePatch,
+  buildMergeJobMessageJob,
+  buildNeckInspectionPatch,
+  buildPickedUpJob,
+  buildRemoveManualPartPatch,
+  buildRemoveImageJob,
+  buildRemoveInventoryPartJob,
+  buildRemovePaymentJob,
+  buildRemoveServicePatch,
+  buildShopTaxRatePatch,
+  buildStringCountPatch,
+  buildStringGaugePatch,
+  buildStringGaugesPatch,
+  buildTaxFieldPatch,
+  buildTechFieldPatch,
+  buildUpdateInventoryPartQuantityJob,
+  buildUpdateManualPartPatch,
+  buildUpdatePaymentJob,
+  buildUpdateServicePatch,
+  buildWorkOrderImageIdsPatch,
+  findNewDamageViewImage
+} from './jobDetailFormatting.js';
+import {
+  PENDING_WORK_LOG_MESSAGE,
+  appendWorkLogDraft,
+  buildRemoveWorkLogEntryJob,
+  buildUpdateWorkLogEntryPatch,
+  hasPendingWorkLogDraft
+} from './workLogDraft.js';
 
 const intakeTypes = JOB_SOURCE_OPTIONS;
 export default function JobDetail({
@@ -190,108 +220,29 @@ export default function JobDetail({
 
   function updateField(event) {
     const { name, value } = event.target;
-    if (name === 'customerFirstName' || name === 'customerLastName') {
-      patchJob({
-        [name]: value,
-        customerName: combineCustomerName(
-          name === 'customerFirstName' ? value : draftJob.customerFirstName,
-          name === 'customerLastName' ? value : draftJob.customerLastName
-        )
-      });
-      return;
-    }
-    if (name === 'dateReceived') {
-      patchJob({ dateReceived: value, jobNumber: generateJobNumber(value, jobs, draftJob.id, draftJob.shopId) });
-      return;
-    }
-    if (name === 'guitarBrand') {
-      patchJob({
-        guitarBrand: value,
-        model: shouldResetModelForBrand(draftJob.instrumentType, value, draftJob.model) ? '' : draftJob.model
-      });
-      return;
-    }
-    if (name === 'instrumentType') {
-      const instrumentPatch = getInstrumentSelectionPatch(draftJob, value);
-      const stringCount = stringCountForInstrument(instrumentPatch.instrumentType);
-      patchJob({
-        ...instrumentPatch,
-        techDetails: {
-          ...draftJob.techDetails,
-          instrumentType: instrumentPatch.instrumentType,
-          stringCount,
-          stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
-        }
-      });
-      return;
-    }
-    patchJob({ [name]: value });
+    patchJob(buildJobFieldPatch(draftJob, name, value, jobs));
   }
 
   function updateDiscountField(event) {
     const { name, value } = event.target;
-    patchJob({
-      [name]: value,
-      techDetails: {
-        ...draftJob.techDetails,
-        [name]: value
-      }
-    });
+    patchJob(buildDiscountFieldPatch(draftJob, name, value));
   }
 
   function updateTaxField(event) {
     const { name, value, checked, type } = event.target;
-    patchJob({
-      techDetails: {
-        ...draftJob.techDetails,
-        tax: {
-          ...(draftJob.techDetails.tax || {}),
-          [name]: type === 'checkbox' ? checked : value,
-          ...(name === 'salesTaxRate' ? { rateSource: 'job' } : {})
-        }
-      }
-    });
+    patchJob(buildTaxFieldPatch(draftJob, name, value, type, checked));
   }
 
   function useShopTaxRate() {
-    patchJob({
-      techDetails: {
-        ...draftJob.techDetails,
-        tax: {
-          ...(draftJob.techDetails.tax || {}),
-          salesTaxRate: getShopDefaultTaxRate(shopSettings),
-          rateSource: 'shop'
-        }
-      }
-    });
+    patchJob(buildShopTaxRatePatch(draftJob, getShopDefaultTaxRate(shopSettings)));
   }
 
   function setInstrumentType(instrumentType) {
-    const instrumentPatch = getInstrumentSelectionPatch(draftJob, instrumentType);
-    const stringCount = stringCountForInstrument(instrumentPatch.instrumentType);
-    patchJob({
-      ...instrumentPatch,
-      techDetails: {
-        ...draftJob.techDetails,
-        instrumentType: instrumentPatch.instrumentType,
-        stringCount,
-        stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
-      }
-    });
+    patchJob(buildInstrumentTypePatch(draftJob, instrumentType));
   }
 
   function updateStringCount(value) {
-    const stringCount = value === 'custom'
-      ? normalizeStringCount(draftJob.techDetails.stringCount || draftJob.techDetails.stringGauges?.length, draftJob.instrumentType)
-      : normalizeStringCount(value, draftJob.instrumentType);
-    patchJob({
-      stringCount,
-      techDetails: {
-        ...draftJob.techDetails,
-        stringCount,
-        stringGauges: resizeStringGauges(draftJob.techDetails.stringGauges, stringCount)
-      }
-    });
+    patchJob(buildStringCountPatch(draftJob, value));
   }
 
   function updateTechField(event) {
@@ -300,21 +251,11 @@ export default function JobDetail({
     }
     const { name, value } = event.target;
     setIsDirty(true);
-    setDraftJob((current) => ({
-      ...current,
-      techDetails: {
-        ...current.techDetails,
-        [name]: value
-      }
-    }));
+    setDraftJob((current) => buildTechFieldPatch(current, name, value));
   }
 
   function updateWorkLogEntry(entryId, text) {
-    patchJob({
-      workLog: draftJob.workLog.map((entry) => (
-        entry.id === entryId ? { ...entry, text, entry: text } : entry
-      ))
-    });
+    patchJob(buildUpdateWorkLogEntryPatch(draftJob.workLog, entryId, text));
   }
 
   async function saveWorkLogChanges() {
@@ -337,10 +278,7 @@ export default function JobDetail({
       return;
     }
 
-    const nextJob = {
-      ...draftJob,
-      workLog: draftJob.workLog.filter((entry) => entry.id !== entryId)
-    };
+    const nextJob = buildRemoveWorkLogEntryJob(draftJob, entryId);
 
     setDraftJob(nextJob);
     await saveDraftNow(nextJob).catch(() => {});
@@ -368,24 +306,8 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    const fieldPatch = typeof fieldOrPatch === 'object'
-      ? fieldOrPatch
-      : { [fieldOrPatch]: value };
-
-    setDraftJob((current) => ({
-      ...current,
-      techDetails: {
-        ...current.techDetails,
-        neckInspection: {
-          ...(current.techDetails.neckInspection || {}),
-          [stage]: {
-            ...(current.techDetails.neckInspection?.[stage] || {}),
-            ...fieldPatch
-          }
-        }
-      }
-    }));
     setIsDirty(true);
+    setDraftJob((current) => buildNeckInspectionPatch(current, stage, fieldOrPatch, value));
   }
 
   async function savePaymentChange(nextJob, { immediate = false } = {}) {
@@ -415,19 +337,7 @@ export default function JobDetail({
       return;
     }
 
-    const nextJob = {
-      ...draftJob,
-      techDetails: {
-        ...draftJob.techDetails,
-        payments: [
-          ...(draftJob.techDetails.payments || []),
-          {
-            id: crypto.randomUUID(),
-            ...payment
-          }
-        ]
-      }
-    };
+    const nextJob = buildAddPaymentJob(draftJob, payment, crypto.randomUUID());
 
     savePaymentChange(nextJob, { immediate: true });
     setPayment({ amount: '', method: 'Cash', note: '', date: toIsoDateInputValue() });
@@ -437,15 +347,7 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    const nextJob = {
-      ...draftJob,
-      techDetails: {
-        ...draftJob.techDetails,
-        payments: (draftJob.techDetails.payments || []).map((row) => (
-          row.id === paymentId ? { ...row, [field]: value } : row
-        ))
-      }
-    };
+    const nextJob = buildUpdatePaymentJob(draftJob, paymentId, field, value);
 
     savePaymentChange(nextJob);
   }
@@ -454,13 +356,7 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    const nextJob = {
-      ...draftJob,
-      techDetails: {
-        ...draftJob.techDetails,
-        payments: (draftJob.techDetails.payments || []).filter((row) => row.id !== paymentId)
-      }
-    };
+    const nextJob = buildRemovePaymentJob(draftJob, paymentId);
 
     savePaymentChange(nextJob, { immediate: true });
   }
@@ -488,15 +384,7 @@ export default function JobDetail({
       return;
     }
     setIsDirty(true);
-    setDraftJob((current) => {
-      return {
-        ...current,
-        techDetails: {
-          ...current.techDetails,
-          damageMap
-        }
-      };
-    });
+    setDraftJob((current) => buildDamageMapJob(current, damageMap));
   }
 
   function updateStringGauge(index, value) {
@@ -504,17 +392,7 @@ export default function JobDetail({
       return;
     }
     setIsDirty(true);
-    setDraftJob((current) => {
-      const stringGauges = [...current.techDetails.stringGauges];
-      stringGauges[index] = value;
-      return {
-        ...current,
-        techDetails: {
-          ...current.techDetails,
-          stringGauges
-        }
-      };
-    });
+    setDraftJob((current) => buildStringGaugePatch(current, index, value));
   }
 
   function updateStringGauges(gauges) {
@@ -522,13 +400,7 @@ export default function JobDetail({
       return;
     }
     setIsDirty(true);
-    setDraftJob((current) => ({
-      ...current,
-      techDetails: {
-        ...current.techDetails,
-        stringGauges: resizeStringGauges(gauges, getInstrumentStringCount(current))
-      }
-    }));
+    setDraftJob((current) => buildStringGaugesPatch(current, gauges));
   }
 
   function handleSaveRequest(event) {
@@ -603,10 +475,7 @@ export default function JobDetail({
     if (!part.name.trim()) {
       return;
     }
-    const nextJob = {
-      parts: [...parts, { id: crypto.randomUUID(), shopId: draftJob.shopId, jobId: draftJob.id, partId: '', sku: '', name: part.name, quantity: part.quantity || '1', cost: part.cost, retail: part.retail }]
-    };
-    patchJob(nextJob);
+    patchJob(buildAddManualPartPatch(draftJob, parts, part, crypto.randomUUID()));
     setPart({ name: '', quantity: '1', cost: '', retail: '' });
   }
 
@@ -651,10 +520,7 @@ export default function JobDetail({
 
     try {
       const jobPart = await addPartToJob(jobForInventory.id, inventoryPart.id, requestedQuantity);
-      const nextJob = {
-        ...jobForInventory,
-        parts: [...(jobForInventory.parts || []), jobPart]
-      };
+      const nextJob = buildAddInventoryPartJob(jobForInventory, jobPart);
       setDraftJob(nextJob);
       setIsDirty(false);
       refreshTimelineEvents();
@@ -701,11 +567,7 @@ export default function JobDetail({
 
       try {
         const updatedJobPart = await updateInventoryJobPartQuantity(partId, requestedQuantity);
-        const nextParts = parts.map((row) => (row.id === partId ? { ...row, ...updatedJobPart } : row));
-        setDraftJob((current) => ({
-          ...current,
-          parts: nextParts
-        }));
+        setDraftJob((current) => buildUpdateInventoryPartQuantityJob(current, parts, partId, updatedJobPart));
         setIsDirty(false);
         setInventoryParts((current) => current.map((row) => (
           row.id === editedPart.partId
@@ -723,14 +585,7 @@ export default function JobDetail({
       return;
     }
 
-    const nextParts = parts.map((row) => (row.id === partId ? { ...row, [field]: value } : row));
-    patchJob({
-      parts: nextParts,
-      techDetails: {
-        ...draftJob.techDetails,
-        includedPartIds: nextParts.filter((row) => row.includedInService).map((row) => row.id)
-      }
-    });
+    patchJob(buildUpdateManualPartPatch(draftJob, parts, partId, field, value));
   }
 
   async function removePart(partId) {
@@ -753,10 +608,7 @@ export default function JobDetail({
       }
       try {
         await removeJobPart(partId);
-        const nextJob = {
-          ...draftJob,
-          parts: parts.filter((row) => row.id !== partId)
-        };
+        const nextJob = buildRemoveInventoryPartJob(draftJob, parts, partId);
         setDraftJob(nextJob);
         setIsDirty(false);
         refreshTimelineEvents();
@@ -770,14 +622,7 @@ export default function JobDetail({
       return;
     }
 
-    const nextParts = parts.filter((row) => row.id !== partId);
-    patchJob({
-      parts: nextParts,
-      techDetails: {
-        ...draftJob.techDetails,
-        includedPartIds: nextParts.filter((row) => row.includedInService).map((row) => row.id)
-      }
-    });
+    patchJob(buildRemoveManualPartPatch(draftJob, parts, partId));
   }
 
   function addService(event) {
@@ -788,9 +633,7 @@ export default function JobDetail({
     if (!service.description.trim()) {
       return;
     }
-    patchJob({
-      services: [...services, { id: crypto.randomUUID(), jobId: draftJob.id, description: service.description, quantity: service.quantity || '1', cost: service.cost, retail: service.retail }]
-    });
+    patchJob(buildAddServicePatch(draftJob, services, service, crypto.randomUUID()));
     setService({ description: '', quantity: '1', cost: '', retail: '' });
   }
 
@@ -798,18 +641,14 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    patchJob({
-      services: services.map((row) => (row.id === serviceId ? { ...row, [field]: value } : row))
-    });
+    patchJob(buildUpdateServicePatch(services, serviceId, field, value));
   }
 
   function removeService(serviceId) {
     if (!canWrite) {
       return;
     }
-    patchJob({
-      services: services.filter((row) => row.id !== serviceId)
-    });
+    patchJob(buildRemoveServicePatch(services, serviceId));
   }
 
   async function handleImageChange(event) {
@@ -841,10 +680,7 @@ export default function JobDetail({
 
     if (previews.length) {
       setIsDirty(true);
-      setDraftJob((current) => ({
-        ...current,
-        images: [...(current.images || []), ...previews]
-      }));
+      setDraftJob((current) => buildAppendImagePreviewsJob(current, previews));
     }
 
     setImageImportErrors([]);
@@ -878,9 +714,7 @@ export default function JobDetail({
       setDraftJob(result.job);
       setIsDirty(false);
       const uploadedImages = result.job.images || [];
-      return uploadedImages.find((image) => !existingImageIds.has(image.id) && image.category === category && image.originalFileName === file.name)
-        || uploadedImages.find((image) => !existingImageIds.has(image.id) && image.category === category)
-        || null;
+      return findNewDamageViewImage(uploadedImages, existingImageIds, category, file.name);
     }
     return null;
   }
@@ -896,10 +730,7 @@ export default function JobDetail({
       return;
     }
 
-    setDraftJob((current) => ({
-      ...current,
-      images: (current.images || []).filter((item) => item.id !== image.id)
-    }));
+    setDraftJob((current) => buildRemoveImageJob(current, image.id));
     setIsDirty(true);
     onImageDelete(draftJob, image);
   }
@@ -969,16 +800,7 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    const nextImageIds = checked
-      ? [...new Set([...workOrderImageIds, imageId])]
-      : workOrderImageIds.filter((id) => id !== imageId);
-
-    patchJob({
-      techDetails: {
-        ...draftJob.techDetails,
-        workOrderImageIds: nextImageIds
-      }
-    });
+    patchJob(buildWorkOrderImageIdsPatch(draftJob, workOrderImageIds, imageId, checked));
   }
 
   function closeDetail() {
@@ -1069,11 +891,7 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    const nextJob = {
-      ...draftJob,
-      status: 'Picked Up',
-      pickedUpAt: new Date().toISOString()
-    };
+    const nextJob = buildPickedUpJob(draftJob, new Date().toISOString());
 
     setDraftJob(nextJob);
     setIsDirty(true);
@@ -1114,13 +932,7 @@ export default function JobDetail({
     setSubcontractorPickupJob(null);
     setIsSendingSubcontractorEmail(false);
     if (result.message) {
-      setDraftJob((current) => ({
-        ...current,
-        messages: [
-          result.message,
-          ...(current.messages || []).filter((item) => item.id !== result.message.id)
-        ]
-      }));
+      setDraftJob((current) => buildMergeJobMessageJob(current, result.message));
     }
     if (onRefresh) {
       await onRefresh();
@@ -1128,16 +940,11 @@ export default function JobDetail({
   }
 
   function updateContactPreference(field, value) {
-    patchJob({ [field]: value });
+    patchJob(buildContactPreferencePatch(field, value));
   }
 
   function updateMessageTemplate(templateKey) {
-    patchJob({
-      techDetails: {
-        ...draftJob.techDetails,
-        lastMessageTemplate: templateKey
-      }
-    });
+    patchJob(buildMessageTemplatePatch(draftJob, templateKey));
   }
 
   async function handleSendCustomerMessage(message) {
@@ -1153,14 +960,8 @@ export default function JobDetail({
 
     const result = await sendCustomerMessage(draftJob, message);
     if (result.message) {
-      setDraftJob((current) => ({
-        ...current,
-        messages: [
-          result.message,
-          ...(current.messages || []).filter((item) => item.id !== result.message.id)
-        ]
-        }));
-      }
+      setDraftJob((current) => buildMergeJobMessageJob(current, result.message));
+    }
     if (result.ok && onRefresh) {
       await onRefresh();
     }
@@ -1221,13 +1022,7 @@ export default function JobDetail({
     });
 
     if (result.message) {
-      setDraftJob((current) => ({
-        ...current,
-        messages: [
-          result.message,
-          ...(current.messages || []).filter((item) => item.id !== result.message.id)
-        ]
-      }));
+      setDraftJob((current) => buildMergeJobMessageJob(current, result.message));
     }
 
     if (!result.ok) {
@@ -1270,58 +1065,46 @@ export default function JobDetail({
   }
 
   function handleAssignmentChanged(assignment) {
-    setDraftJob((current) => ({
-      ...current,
-      assignedMemberId: assignment.assignedMemberId || '',
-      assignedMemberDisplayName: assignment.assignedMemberDisplayName || '',
-      assignmentUpdatedAt: assignment.assignmentUpdatedAt || null
-    }));
+    setDraftJob((current) => buildAssignmentJob(current, assignment));
     onAssignmentChanged?.(draftJob.id, assignment);
     refreshTimelineEvents().catch((error) => {
       console.warn('Assignment timeline refresh failed.', error);
     });
   }
 
-  const printActions = (
-    <PrintActions
-      canSendEmail={canSendEmail}
-      canWrite={canWrite}
-      closeDetail={closeDetail}
-      emailWorkOrder={openWorkOrderEmail}
-      exportJobJson={exportJobJson}
-      finishJob={finishJob}
-      printCustomerReport={printCustomerReport}
-      printJobSheet={printJobSheet}
-    />
-  );
-
-  const printSections = (
-    <JobPrintDocuments
-      draftJob={draftJob}
-      formatInstrumentLabel={formatInstrumentLabel}
-      formatMeasurementDelta={formatMeasurementDelta}
-      lengthUnit={measurementOptions.lengthUnit}
-      normalizeInstrumentType={normalizeInstrumentType}
-      outerStringLabels={outerStringLabels}
-      parts={parts}
-      services={services}
-      shopSettings={shopSettings}
-      totals={totals}
-      workOrderImages={workOrderImages}
-    />
-  );
+  const { printActions, printSections } = buildJobPrintSections({
+    canSendEmail,
+    canWrite,
+    draftJob,
+    formatInstrumentLabel,
+    formatMeasurementDelta,
+    lengthUnit: measurementOptions.lengthUnit,
+    normalizeInstrumentType,
+    onCloseDetail: closeDetail,
+    onEmailWorkOrder: openWorkOrderEmail,
+    onExportJobJson: exportJobJson,
+    onFinishJob: finishJob,
+    onPrintCustomerReport: printCustomerReport,
+    onPrintJobSheet: printJobSheet,
+    outerStringLabels,
+    parts,
+    services,
+    shopSettings,
+    totals,
+    workOrderImages
+  });
 
   const intakeSection = (
-    <JobInfoSection
+    <JobIntakeSections
       canWrite={canWrite}
       draftJob={draftJob}
       intakeTypes={intakeTypes}
       normalizeInstrumentType={normalizeInstrumentType}
-      setInstrumentType={setInstrumentType}
-      updateStringCount={updateStringCount}
-      updateContactPreference={updateContactPreference}
-      updateField={updateField}
-      updateTechField={updateTechField}
+      onContactPreferenceChange={updateContactPreference}
+      onFieldChange={updateField}
+      onInstrumentTypeChange={setInstrumentType}
+      onStringCountChange={updateStringCount}
+      onTechFieldChange={updateTechField}
     />
   );
 
@@ -1402,96 +1185,77 @@ export default function JobDetail({
   );
 
   const imagesSection = (
-    <ImagesSection
-      canWrite={canWrite}
-      canUploadPhotos={canUploadPhotos}
-      canEditPhotos={canEditPhotos}
+    <JobPhotoSections
       canDeletePhotos={canDeletePhotos}
-      handleImageChange={handleImageChange}
-      handleImageDelete={handleImageDelete}
-      handleImageEdit={handleImageEdit}
+      canEditPhotos={canEditPhotos}
+      canUploadPhotos={canUploadPhotos}
+      canWrite={canWrite}
       imageImportErrors={imageImportErrors}
-      imageOptimizationNotices={imageOptimizationNotices}
       imageImportInputRef={imageImportInputRef}
+      imageOptimizationNotices={imageOptimizationNotices}
       images={images}
       isImportingImages={isImportingImages}
-      updateWorkOrderImage={updateWorkOrderImage}
+      onImageChange={handleImageChange}
+      onImageDelete={handleImageDelete}
+      onImageEdit={handleImageEdit}
+      onWorkOrderImageToggle={updateWorkOrderImage}
       workOrderImageIds={workOrderImageIds}
     />
   );
 
-  const messagesPanel = (
-    <MessagesPanel
-      canWrite={canWrite}
-      canSendEmailByPlan={canSendEmail}
-      canSendSmsByPlan={canSendSms}
-      entitlementMessage={entitlementMessage}
-      job={draftJob}
-      shopProfile={shopProfile}
-      onPreferenceChange={updateContactPreference}
-      onTemplateChange={updateMessageTemplate}
-      onSendMessage={handleSendCustomerMessage}
-      onGetSmsMode={getSmsMode}
-    />
-  );
-
-  const activityTimeline = <ActivityTimeline events={timelineEvents} />;
-  const schedulingSection = (
-    <JobScheduleSection
-      canWrite={canWrite}
-      job={draftJob}
-      onNotice={onNotice}
-    />
-  );
+  const { activityTimeline, messagesPanel, schedulingSection } = buildJobAuxiliarySections({
+    canSendEmail,
+    canSendSms,
+    canWrite,
+    draftJob,
+    entitlementMessage,
+    onContactPreferenceChange: updateContactPreference,
+    onMessageTemplateChange: updateMessageTemplate,
+    onNotice,
+    onSendCustomerMessage: handleSendCustomerMessage,
+    shopProfile,
+    timelineEvents
+  });
 
   return (
-    <section className="panel detail job-detail">
-      <JobDetailDialogs
-        documentEmailDraft={documentEmailDraft}
-        subcontractorPickupJob={subcontractorPickupJob}
-        isSendingSubcontractorEmail={isSendingSubcontractorEmail}
-        photoEditorImage={photoEditorImage}
-        isSavingEditedPhoto={isSavingEditedPhoto}
-        canOverwritePhotos={canOverwritePhotos}
-        onCloseDocumentEmail={() => setDocumentEmailDraft(null)}
-        onSendDocumentEmail={handleSendDocumentEmail}
-        onCancelSubcontractorPickup={() => setSubcontractorPickupJob(null)}
-        onSendSubcontractorPickup={sendSubcontractorPickupEmail}
-        onClosePhotoEditor={() => setPhotoEditorImage(null)}
-        onSavePhotoCopy={saveEditedPhotoCopy}
-        onOverwritePhoto={overwriteEditedPhoto}
-      />
-      <JobDetailHeader
-        draftJob={draftJob}
-        canWrite={canWrite}
-        isDirty={hasUnsavedChanges}
-        saveStatus={displayedSaveStatus}
-        assignableMembers={assignableMembers}
-        assignableMembersLoading={assignableMembersLoading}
-        assignableMembersError={assignableMembersError}
-        membership={membership}
-        entitlementSnapshot={entitlementSnapshot}
-        betaApproved={betaApproved}
-        onStatusChange={updateField}
-        onAssignmentChanged={handleAssignmentChanged}
-        onNotice={onNotice}
-      />
-      <JobDetailTabs
-        activityTimeline={activityTimeline}
-        billingSections={billingSections}
-        canWrite={canWrite}
-        draftJob={draftJob}
-        imagesSection={imagesSection}
-        intakeSection={intakeSection}
-        inspectionSections={inspectionSections}
-        isDirty={hasUnsavedChanges}
-        messagesPanel={messagesPanel}
-        printActions={printActions}
-        printSections={printSections}
-        schedulingSection={schedulingSection}
-        updateField={updateField}
-        workSections={workSections}
-      />
-    </section>
+    <JobDetailShell
+      activityTimeline={activityTimeline}
+      assignableMembers={assignableMembers}
+      assignableMembersError={assignableMembersError}
+      assignableMembersLoading={assignableMembersLoading}
+      betaApproved={betaApproved}
+      billingSections={billingSections}
+      canOverwritePhotos={canOverwritePhotos}
+      canWrite={canWrite}
+      documentEmailDraft={documentEmailDraft}
+      draftJob={draftJob}
+      entitlementSnapshot={entitlementSnapshot}
+      imagesSection={imagesSection}
+      inspectionSections={inspectionSections}
+      intakeSection={intakeSection}
+      isDirty={hasUnsavedChanges}
+      isSavingEditedPhoto={isSavingEditedPhoto}
+      isSendingSubcontractorEmail={isSendingSubcontractorEmail}
+      membership={membership}
+      messagesPanel={messagesPanel}
+      onAssignmentChanged={handleAssignmentChanged}
+      onCancelSubcontractorPickup={() => setSubcontractorPickupJob(null)}
+      onCloseDocumentEmail={() => setDocumentEmailDraft(null)}
+      onClosePhotoEditor={() => setPhotoEditorImage(null)}
+      onNotice={onNotice}
+      onOverwritePhoto={overwriteEditedPhoto}
+      onSavePhotoCopy={saveEditedPhotoCopy}
+      onSendDocumentEmail={handleSendDocumentEmail}
+      onSendSubcontractorPickup={sendSubcontractorPickupEmail}
+      onStatusChange={updateField}
+      photoEditorImage={photoEditorImage}
+      printActions={printActions}
+      printSections={printSections}
+      saveStatus={displayedSaveStatus}
+      schedulingSection={schedulingSection}
+      subcontractorPickupJob={subcontractorPickupJob}
+      updateField={updateField}
+      workSections={workSections}
+    />
   );
 }
