@@ -43,6 +43,8 @@ const scannedFiles = [];
 const violations = [];
 let hasExpectedSupabaseUrl = false;
 let hasPublishableKey = false;
+let hasFunctionKey = false;
+let hasBlankFunctionKey = false;
 
 function walk(dir) {
   for (const entry of readdirSync(dir)) {
@@ -64,6 +66,12 @@ function walk(dir) {
     if (content.includes('sb_publishable_')) {
       hasPublishableKey = true;
     }
+    if (/VITE_FRETTRACK_FUNCTION_KEY:`[^`]+`|VITE_FRETTRACK_FUNCTION_KEY:"[^"]+"/.test(content)) {
+      hasFunctionKey = true;
+    }
+    if (/VITE_FRETTRACK_FUNCTION_KEY:``|VITE_FRETTRACK_FUNCTION_KEY:""/.test(content)) {
+      hasBlankFunctionKey = true;
+    }
     for (const forbidden of forbiddenPatterns) {
       if (forbidden.pattern.test(content)) {
         violations.push(`${forbidden.label} found in ${path.relative(repoRoot, fullPath)}`);
@@ -83,6 +91,15 @@ assert.ok(
 assert.ok(
   hasPublishableKey,
   'Production build must contain a Supabase publishable key, not a local demo anon key.'
+);
+assert.equal(
+  hasBlankFunctionKey,
+  false,
+  'Production build must not contain a blank FretTrack Edge Function key.'
+);
+assert.ok(
+  hasFunctionKey,
+  'Production build must contain the FretTrack Edge Function key so customer email/SMS calls are authorized.'
 );
 
 console.log('Production build config checks passed.');

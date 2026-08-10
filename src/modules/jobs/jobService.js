@@ -369,19 +369,21 @@ export async function sendCustomerMessage(job, message) {
     }
   });
 
+  const functionErrorData = error ? await resolveFunctionErrorData(error) : null;
   if (error || data?.success === false || data?.error) {
-    const errorMessage = data?.error || error?.message || 'Provider send failed.';
-    console.error('Customer message send failed.', { error, data });
+    const errorData = data || functionErrorData || {};
+    const errorMessage = errorData?.error || errorData?.msg || error?.message || 'Provider send failed.';
+    console.error('Customer message send failed.', { error, data: errorData });
     return {
       ok: false,
-      message: data?.message ? normalizeCustomerMessage(fromDbCustomerMessage(data.message)) : null,
-      mode: data?.mode || '',
-      code: data?.code || '',
-      usage: data?.limit ? {
-        limit: data.limit,
-        used: data.used,
-        remaining: data.remaining,
-        resetDate: data.resetDate
+      message: errorData?.message ? normalizeCustomerMessage(fromDbCustomerMessage(errorData.message)) : null,
+      mode: errorData?.mode || '',
+      code: errorData?.code || '',
+      usage: errorData?.limit ? {
+        limit: errorData.limit,
+        used: errorData.used,
+        remaining: errorData.remaining,
+        resetDate: errorData.resetDate
       } : null,
       error: errorMessage
     };
@@ -393,6 +395,23 @@ export async function sendCustomerMessage(job, message) {
     mode: data?.mode || '',
     providerMessageId: data?.id || data?.messageId || ''
   };
+}
+
+async function resolveFunctionErrorData(error) {
+  const context = error?.context;
+  if (!context || typeof context.json !== 'function') {
+    return null;
+  }
+
+  try {
+    return await context.clone().json();
+  } catch {
+    try {
+      return await context.json();
+    } catch {
+      return null;
+    }
+  }
 }
 
 export async function getSmsMode() {
