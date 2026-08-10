@@ -101,6 +101,8 @@ The first implementation slice is on `refactor/workspace-router-foundation`:
 
 Authenticated local smoke testing now covers navigation restoration, read-only restrictions, Job Detail tabs, Inventory edits, direct receiving, stock adjustments, and partial/full purchase-order receiving. Deeper component and data-ownership extraction should continue behind the same checkpoint discipline.
 
+Live-data integrity checks now include a read-only Supabase audit for deleted-job orphans, ownerless shop profiles, broken shop-member auth links, and auth users without identities. This should be run during deployment/smoke windows when access issues could be caused by live data drift rather than frontend code.
+
 The first local smoke test confirmed permission restrictions and Job Detail return behavior. It also exposed a startup hydration race: the initial New Job mode was persisted before asynchronous shop data could restore the saved page. The navigation hook now uses a per-shop hydration barrier, and the focused check executes restoration cases for ordinary pages, valid Job Detail selections, and stale job selections.
 
 Later smoke testing exposed stale Inventory editor stock after a successful receive or adjustment. The controller now refreshes authoritative quantity and cost fields after all three stock mutation paths while preserving unrelated unsaved form edits. Local testing also revealed that an ordinary Vite session could inherit the hosted Supabase URL; beta.4 adds a development startup guard and complete fictional local auth/shop seed records so this cannot happen silently again.

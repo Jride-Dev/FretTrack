@@ -26,6 +26,8 @@ Neck-inspection and string-gauge transformations now also use that helper bounda
 
 Manual part and service line-item transformations now use the helper boundary too. Inventory-backed stock calls, included-service part tracking, totals, permission checks, dirty-state, and persistence remain on their established paths.
 
+The operations checklist now has a read-only Supabase data-integrity check for deleted-job orphans, ownerless shop profiles, broken shop-member auth links, and auth users without identities. It reports aggregate issue groups only and avoids dumping customer/job records.
+
 Direct receiving, stock adjustments, and purchase-order receiving now synchronize the selected part editor with the authoritative saved quantity and cost. A later **Save Changes** action therefore preserves the received or adjusted stock instead of restoring stale form values. Purchase-unit conversion snapshots and individual-unit job usage remain unchanged.
 
 Local development now refuses a hosted Supabase URL unless a developer deliberately enables the documented override. The fictional local-shop seeder also creates complete shop lifecycle, subscription, membership, and current GoTrue email-identity records. These protections affect development only and do not alter production authentication or shop data.
