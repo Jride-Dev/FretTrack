@@ -160,6 +160,38 @@ export function buildMessageTemplatePatch(currentJob, templateKey) {
   };
 }
 
+export function buildDamageMapJob(currentJob, damageMap) {
+  return {
+    ...currentJob,
+    techDetails: {
+      ...currentJob.techDetails,
+      damageMap
+    }
+  };
+}
+
+export function buildMergeJobMessageJob(currentJob, message) {
+  if (!message) {
+    return currentJob;
+  }
+  return {
+    ...currentJob,
+    messages: [
+      message,
+      ...(currentJob.messages || []).filter((item) => item.id !== message.id)
+    ]
+  };
+}
+
+export function buildAssignmentJob(currentJob, assignment) {
+  return {
+    ...currentJob,
+    assignedMemberId: assignment.assignedMemberId || '',
+    assignedMemberDisplayName: assignment.assignedMemberDisplayName || '',
+    assignmentUpdatedAt: assignment.assignmentUpdatedAt || null
+  };
+}
+
 export function buildAddPaymentJob(currentJob, payment, paymentId) {
   return {
     ...currentJob,

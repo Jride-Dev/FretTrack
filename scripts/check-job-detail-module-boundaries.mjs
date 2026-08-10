@@ -19,6 +19,7 @@ const auxiliarySections = read('src/modules/jobs/JobAuxiliarySections.jsx');
 const photoSections = read('src/modules/jobs/JobPhotoSections.jsx');
 const formattingPath = join(root, 'src/modules/jobs/jobDetailFormatting.js');
 const formatting = read('src/modules/jobs/jobDetailFormatting.js');
+const workLogDraft = read('src/modules/jobs/workLogDraft.js');
 const packageJson = read('package.json');
 
 assert.match(detail, /import JobDetailShell from ['"]\.\/JobDetailShell\.jsx['"]/, 'Job Detail must use the focused shell boundary.');
@@ -66,6 +67,11 @@ assert.match(detail, /setDraftJob\(\(current\) => buildStringGaugesPatch\(curren
 assert.match(detail, /patchJob\(buildWorkOrderImageIdsPatch\(draftJob, workOrderImageIds, imageId, checked\)\)/, 'Work-order image selection must use the extracted pure patch helper.');
 assert.match(detail, /patchJob\(buildContactPreferencePatch\(field, value\)\)/, 'Contact preference updates must use the extracted pure patch helper.');
 assert.match(detail, /patchJob\(buildMessageTemplatePatch\(draftJob, templateKey\)\)/, 'Last message template updates must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildUpdateWorkLogEntryPatch\(draftJob\.workLog, entryId, text\)\)/, 'Work-log entry edits must use the extracted pure draft helper.');
+assert.match(detail, /buildRemoveWorkLogEntryJob\(draftJob, entryId\)/, 'Work-log entry removals must use the extracted pure draft helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildDamageMapJob\(current, damageMap\)\)/, 'Damage Map edits must use the extracted pure patch helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildMergeJobMessageJob\(current, result\.message\)\)/, 'Message merges must use the extracted pure patch helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildAssignmentJob\(current, assignment\)\)/, 'Assignment merges must use the extracted pure patch helper.');
 assert.doesNotMatch(detail, /resizeStringGauges/, 'Job Detail must not resize string-gauge rows inline.');
 assert.match(formatting, /function buildJobFieldPatch\(currentJob, fieldName, value, jobs = \[\]\)[\s\S]*?fieldName === 'customerFirstName'[\s\S]*?customerName: combineCustomerName/, 'Customer name field patches must keep the combined display name synchronized.');
 assert.match(formatting, /fieldName === 'dateReceived'[\s\S]*?jobNumber: generateJobNumber\(value, jobs, currentJob\.id, currentJob\.shopId\)/, 'Date received field patches must keep generated job numbers synchronized.');
@@ -79,6 +85,11 @@ assert.match(formatting, /function buildTechFieldPatch\(currentJob, fieldName, v
 assert.match(formatting, /function buildWorkOrderImageIdsPatch\(currentJob, workOrderImageIds, imageId, checked\)[\s\S]*?new Set\(\[\.\.\.workOrderImageIds, imageId\]\)[\s\S]*?workOrderImageIds\.filter\(\(id\) => id !== imageId\)/, 'Work-order image helper must preserve dedupe-on-add and filter-on-remove behavior.');
 assert.match(formatting, /function buildContactPreferencePatch\(fieldName, value\)[\s\S]*?return \{ \[fieldName\]: value \}/, 'Contact preference helper must patch the selected top-level preference field.');
 assert.match(formatting, /function buildMessageTemplatePatch\(currentJob, templateKey\)[\s\S]*?lastMessageTemplate: templateKey/, 'Message template helper must preserve the last selected template in techDetails.');
+assert.match(workLogDraft, /function buildUpdateWorkLogEntryPatch\(workLog = \[\], entryId, text\)[\s\S]*?entry\.id === entryId \? \{ \.\.\.entry, text, entry: text \} : entry/, 'Work-log update helper must preserve the legacy text and entry mirror fields.');
+assert.match(workLogDraft, /function buildRemoveWorkLogEntryJob\(job, entryId\)[\s\S]*?workLog: \(job\.workLog \|\| \[\]\)\.filter\(\(entry\) => entry\.id !== entryId\)/, 'Work-log remove helper must remove only the selected entry.');
+assert.match(formatting, /function buildDamageMapJob\(currentJob, damageMap\)[\s\S]*?techDetails:[\s\S]*?damageMap/, 'Damage Map helper must update the techDetails damageMap field.');
+assert.match(formatting, /function buildMergeJobMessageJob\(currentJob, message\)[\s\S]*?messages: \[[\s\S]*?message,[\s\S]*?\(currentJob\.messages \|\| \[\]\)\.filter\(\(item\) => item\.id !== message\.id\)/, 'Message merge helper must prepend the new message while de-duplicating by id.');
+assert.match(formatting, /function buildAssignmentJob\(currentJob, assignment\)[\s\S]*?assignedMemberId: assignment\.assignedMemberId \|\| ''[\s\S]*?assignmentUpdatedAt: assignment\.assignmentUpdatedAt \|\| null/, 'Assignment helper must preserve existing assignment fallback behavior.');
 assert.match(detail, /buildAddPaymentJob\(draftJob, payment, crypto\.randomUUID\(\)\)/, 'Adding payments must use the extracted pure payment helper.');
 assert.match(detail, /buildUpdatePaymentJob\(draftJob, paymentId, field, value\)/, 'Updating payments must use the extracted pure payment helper.');
 assert.match(detail, /buildRemovePaymentJob\(draftJob, paymentId\)/, 'Removing payments must use the extracted pure payment helper.');

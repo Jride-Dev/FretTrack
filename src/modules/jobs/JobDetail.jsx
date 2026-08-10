@@ -31,12 +31,15 @@ import {
   buildAddPaymentJob,
   buildAddManualPartPatch,
   buildAddServicePatch,
+  buildAssignmentJob,
   buildContactPreferencePatch,
+  buildDamageMapJob,
   buildDiscountFieldPatch,
   buildInstrumentTypePatch,
   buildJobFieldPatch,
   buildMeasurementDisplay,
   buildMessageTemplatePatch,
+  buildMergeJobMessageJob,
   buildNeckInspectionPatch,
   buildRemoveManualPartPatch,
   buildRemovePaymentJob,
@@ -52,7 +55,13 @@ import {
   buildUpdateServicePatch,
   buildWorkOrderImageIdsPatch
 } from './jobDetailFormatting.js';
-import { PENDING_WORK_LOG_MESSAGE, appendWorkLogDraft, hasPendingWorkLogDraft } from './workLogDraft.js';
+import {
+  PENDING_WORK_LOG_MESSAGE,
+  appendWorkLogDraft,
+  buildRemoveWorkLogEntryJob,
+  buildUpdateWorkLogEntryPatch,
+  hasPendingWorkLogDraft
+} from './workLogDraft.js';
 
 const intakeTypes = JOB_SOURCE_OPTIONS;
 export default function JobDetail({
@@ -239,11 +248,7 @@ export default function JobDetail({
   }
 
   function updateWorkLogEntry(entryId, text) {
-    patchJob({
-      workLog: draftJob.workLog.map((entry) => (
-        entry.id === entryId ? { ...entry, text, entry: text } : entry
-      ))
-    });
+    patchJob(buildUpdateWorkLogEntryPatch(draftJob.workLog, entryId, text));
   }
 
   async function saveWorkLogChanges() {
@@ -266,10 +271,7 @@ export default function JobDetail({
       return;
     }
 
-    const nextJob = {
-      ...draftJob,
-      workLog: draftJob.workLog.filter((entry) => entry.id !== entryId)
-    };
+    const nextJob = buildRemoveWorkLogEntryJob(draftJob, entryId);
 
     setDraftJob(nextJob);
     await saveDraftNow(nextJob).catch(() => {});
@@ -375,15 +377,7 @@ export default function JobDetail({
       return;
     }
     setIsDirty(true);
-    setDraftJob((current) => {
-      return {
-        ...current,
-        techDetails: {
-          ...current.techDetails,
-          damageMap
-        }
-      };
-    });
+    setDraftJob((current) => buildDamageMapJob(current, damageMap));
   }
 
   function updateStringGauge(index, value) {
@@ -953,13 +947,7 @@ export default function JobDetail({
     setSubcontractorPickupJob(null);
     setIsSendingSubcontractorEmail(false);
     if (result.message) {
-      setDraftJob((current) => ({
-        ...current,
-        messages: [
-          result.message,
-          ...(current.messages || []).filter((item) => item.id !== result.message.id)
-        ]
-      }));
+      setDraftJob((current) => buildMergeJobMessageJob(current, result.message));
     }
     if (onRefresh) {
       await onRefresh();
@@ -987,14 +975,8 @@ export default function JobDetail({
 
     const result = await sendCustomerMessage(draftJob, message);
     if (result.message) {
-      setDraftJob((current) => ({
-        ...current,
-        messages: [
-          result.message,
-          ...(current.messages || []).filter((item) => item.id !== result.message.id)
-        ]
-        }));
-      }
+      setDraftJob((current) => buildMergeJobMessageJob(current, result.message));
+    }
     if (result.ok && onRefresh) {
       await onRefresh();
     }
@@ -1055,13 +1037,7 @@ export default function JobDetail({
     });
 
     if (result.message) {
-      setDraftJob((current) => ({
-        ...current,
-        messages: [
-          result.message,
-          ...(current.messages || []).filter((item) => item.id !== result.message.id)
-        ]
-      }));
+      setDraftJob((current) => buildMergeJobMessageJob(current, result.message));
     }
 
     if (!result.ok) {
@@ -1104,12 +1080,7 @@ export default function JobDetail({
   }
 
   function handleAssignmentChanged(assignment) {
-    setDraftJob((current) => ({
-      ...current,
-      assignedMemberId: assignment.assignedMemberId || '',
-      assignedMemberDisplayName: assignment.assignedMemberDisplayName || '',
-      assignmentUpdatedAt: assignment.assignmentUpdatedAt || null
-    }));
+    setDraftJob((current) => buildAssignmentJob(current, assignment));
     onAssignmentChanged?.(draftJob.id, assignment);
     refreshTimelineEvents().catch((error) => {
       console.warn('Assignment timeline refresh failed.', error);
