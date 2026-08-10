@@ -21,6 +21,7 @@
     "check:version-consistency": "node scripts/check-version-consistency.mjs",
     "check:workspace-router-foundation": "node scripts/check-workspace-router-foundation.mjs",
     "check:local-development-isolation": "node scripts/check-local-development-isolation.mjs",
+    "check:production-build-config": "node scripts/check-production-build-config.mjs",
     "check:supabase-data-integrity": "node scripts/check-supabase-data-integrity.mjs",
     "check:scheduling-week-event-layout": "node scripts/check-scheduling-week-event-layout.mjs",
     "check:job-dates-scheduling-sync": "node scripts/check-job-dates-scheduling-sync.mjs",
