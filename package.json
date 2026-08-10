@@ -60,6 +60,8 @@
     "db:local:refresh-from-backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/refresh-local-db-from-hosted-backup.ps1",
     "db:local:apply": "node scripts/apply-local-migrations.mjs",
     "seed:local-test-shops": "node scripts/seed-local-test-shops.mjs --reset",
+    "deploy:app:production": "node scripts/deploy-app-production.mjs",
+    "deploy:app:production:check": "node scripts/deploy-app-production.mjs --no-deploy",
     "preview": "vite preview"
   },
   "dependencies": {
