@@ -43,6 +43,7 @@ import {
   buildMessageTemplatePatch,
   buildMergeJobMessageJob,
   buildNeckInspectionPatch,
+  buildPickedUpJob,
   buildRemoveManualPartPatch,
   buildRemoveImageJob,
   buildRemoveInventoryPartJob,
@@ -58,7 +59,8 @@ import {
   buildUpdateManualPartPatch,
   buildUpdatePaymentJob,
   buildUpdateServicePatch,
-  buildWorkOrderImageIdsPatch
+  buildWorkOrderImageIdsPatch,
+  findNewDamageViewImage
 } from './jobDetailFormatting.js';
 import {
   PENDING_WORK_LOG_MESSAGE,
@@ -712,9 +714,7 @@ export default function JobDetail({
       setDraftJob(result.job);
       setIsDirty(false);
       const uploadedImages = result.job.images || [];
-      return uploadedImages.find((image) => !existingImageIds.has(image.id) && image.category === category && image.originalFileName === file.name)
-        || uploadedImages.find((image) => !existingImageIds.has(image.id) && image.category === category)
-        || null;
+      return findNewDamageViewImage(uploadedImages, existingImageIds, category, file.name);
     }
     return null;
   }
@@ -891,11 +891,7 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    const nextJob = {
-      ...draftJob,
-      status: 'Picked Up',
-      pickedUpAt: new Date().toISOString()
-    };
+    const nextJob = buildPickedUpJob(draftJob, new Date().toISOString());
 
     setDraftJob(nextJob);
     setIsDirty(true);

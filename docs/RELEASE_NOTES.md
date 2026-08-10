@@ -32,6 +32,8 @@ Work-log row edits/removals, Damage Map updates, message merges, and assignment-
 
 Inventory-backed part result merges and local photo preview/remove transforms now use pure helper boundaries. The existing inventory service calls, photo persistence calls, permission gates, stock updates, and refresh behavior remain unchanged.
 
+Picked-up status patching and Damage Map uploaded-image selection now use pure helper boundaries while the finish flow, PVMH pickup prompt, upload handling, and permissions remain in Job Detail.
+
 The operations checklist now has a read-only Supabase data-integrity check for deleted-job orphans, ownerless shop profiles, broken shop-member auth links, and auth users without identities. It reports aggregate issue groups only and avoids dumping customer/job records.
 
 Direct receiving, stock adjustments, and purchase-order receiving now synchronize the selected part editor with the authoritative saved quantity and cost. A later **Save Changes** action therefore preserves the received or adjusted stock instead of restoring stale form values. Purchase-unit conversion snapshots and individual-unit job usage remain unchanged.

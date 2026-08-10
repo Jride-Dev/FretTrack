@@ -18,6 +18,7 @@ const app = read('src/app/App.jsx');
 const workspaceNavigation = read('src/app/useWorkspaceNavigation.js');
 const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
+const jobDetailFormatting = read('src/modules/jobs/jobDetailFormatting.js');
 const printActions = read('src/modules/jobs/PrintActions.js');
 const packageJson = read('package.json');
 
@@ -39,7 +40,8 @@ assert.match(app, /onCloseJobDetail: closeJobDetail/, 'App must pass the correct
 assert.match(workspaceRouter, /onClose=\{actions\.onCloseJobDetail\}/, 'Job Detail must receive the corrected parent close callback.');
 assert.doesNotMatch(app, /onClose=\{\(\) => showNewJob\(null, \{ skipDirtyGuard: true \}\)\}/, 'The broken forced New Job callback must be removed.');
 
-assert.match(finishHandler, /status: 'Picked Up'/, 'Job completion must remain isolated in the Finish / Picked Up handler.');
+assert.match(finishHandler, /buildPickedUpJob\(draftJob, new Date\(\)\.toISOString\(\)\)/, 'Job completion must remain isolated in the Finish / Picked Up handler.');
+assert.match(jobDetailFormatting, /function buildPickedUpJob\(currentJob, timestamp\)[\s\S]*?status: 'Picked Up'[\s\S]*?pickedUpAt: timestamp/, 'The picked-up helper must preserve the established job completion fields.');
 assert.doesNotMatch(detailCloseHandler, /finishJob|Picked Up|status:/, 'The detail close handler must not complete the job.');
 assert.match(packageJson, /"check:close-detail-behavior": "node scripts\/check-close-detail-behavior\.mjs"/, 'The focused close-detail check must be exposed.');
 

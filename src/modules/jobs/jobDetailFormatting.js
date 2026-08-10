@@ -192,6 +192,20 @@ export function buildAssignmentJob(currentJob, assignment) {
   };
 }
 
+export function buildPickedUpJob(currentJob, timestamp) {
+  return {
+    ...currentJob,
+    status: 'Picked Up',
+    pickedUpAt: timestamp
+  };
+}
+
+export function findNewDamageViewImage(uploadedImages = [], existingImageIds = new Set(), category = '', fileName = '') {
+  return uploadedImages.find((image) => !existingImageIds.has(image.id) && image.category === category && image.originalFileName === fileName)
+    || uploadedImages.find((image) => !existingImageIds.has(image.id) && image.category === category)
+    || null;
+}
+
 export function buildAddPaymentJob(currentJob, payment, paymentId) {
   return {
     ...currentJob,

@@ -72,6 +72,8 @@ assert.match(detail, /buildRemoveWorkLogEntryJob\(draftJob, entryId\)/, 'Work-lo
 assert.match(detail, /setDraftJob\(\(current\) => buildDamageMapJob\(current, damageMap\)\)/, 'Damage Map edits must use the extracted pure patch helper.');
 assert.match(detail, /setDraftJob\(\(current\) => buildMergeJobMessageJob\(current, result\.message\)\)/, 'Message merges must use the extracted pure patch helper.');
 assert.match(detail, /setDraftJob\(\(current\) => buildAssignmentJob\(current, assignment\)\)/, 'Assignment merges must use the extracted pure patch helper.');
+assert.match(detail, /const nextJob = buildPickedUpJob\(draftJob, new Date\(\)\.toISOString\(\)\)/, 'Finish Job must use the extracted pure picked-up patch helper.');
+assert.match(detail, /return findNewDamageViewImage\(uploadedImages, existingImageIds, category, file\.name\)/, 'Damage Map upload selection must use the extracted pure image selection helper.');
 assert.doesNotMatch(detail, /resizeStringGauges/, 'Job Detail must not resize string-gauge rows inline.');
 assert.match(formatting, /function buildJobFieldPatch\(currentJob, fieldName, value, jobs = \[\]\)[\s\S]*?fieldName === 'customerFirstName'[\s\S]*?customerName: combineCustomerName/, 'Customer name field patches must keep the combined display name synchronized.');
 assert.match(formatting, /fieldName === 'dateReceived'[\s\S]*?jobNumber: generateJobNumber\(value, jobs, currentJob\.id, currentJob\.shopId\)/, 'Date received field patches must keep generated job numbers synchronized.');
@@ -90,6 +92,8 @@ assert.match(workLogDraft, /function buildRemoveWorkLogEntryJob\(job, entryId\)[
 assert.match(formatting, /function buildDamageMapJob\(currentJob, damageMap\)[\s\S]*?techDetails:[\s\S]*?damageMap/, 'Damage Map helper must update the techDetails damageMap field.');
 assert.match(formatting, /function buildMergeJobMessageJob\(currentJob, message\)[\s\S]*?messages: \[[\s\S]*?message,[\s\S]*?\(currentJob\.messages \|\| \[\]\)\.filter\(\(item\) => item\.id !== message\.id\)/, 'Message merge helper must prepend the new message while de-duplicating by id.');
 assert.match(formatting, /function buildAssignmentJob\(currentJob, assignment\)[\s\S]*?assignedMemberId: assignment\.assignedMemberId \|\| ''[\s\S]*?assignmentUpdatedAt: assignment\.assignmentUpdatedAt \|\| null/, 'Assignment helper must preserve existing assignment fallback behavior.');
+assert.match(formatting, /function buildPickedUpJob\(currentJob, timestamp\)[\s\S]*?status: 'Picked Up'[\s\S]*?pickedUpAt: timestamp/, 'Picked-up helper must preserve the established finished-job status and timestamp fields.');
+assert.match(formatting, /function findNewDamageViewImage\(uploadedImages = \[\], existingImageIds = new Set\(\), category = '', fileName = ''\)[\s\S]*?originalFileName === fileName[\s\S]*?image\.category === category[\s\S]*?\|\| null/, 'Damage Map upload selection helper must prefer exact filename matches and fall back to category matches.');
 assert.match(detail, /buildAddPaymentJob\(draftJob, payment, crypto\.randomUUID\(\)\)/, 'Adding payments must use the extracted pure payment helper.');
 assert.match(detail, /buildUpdatePaymentJob\(draftJob, paymentId, field, value\)/, 'Updating payments must use the extracted pure payment helper.');
 assert.match(detail, /buildRemovePaymentJob\(draftJob, paymentId\)/, 'Removing payments must use the extracted pure payment helper.');
