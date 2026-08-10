@@ -29,12 +29,15 @@ import buildJobPrintSections from './JobPrintSections.jsx';
 import JobDetailShell from './JobDetailShell.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import {
+  buildAddPaymentJob,
   buildInstrumentTypePatch,
   buildJobFieldPatch,
   buildMeasurementDisplay,
+  buildRemovePaymentJob,
   buildShopTaxRatePatch,
   buildStringCountPatch,
-  buildTaxFieldPatch
+  buildTaxFieldPatch,
+  buildUpdatePaymentJob
 } from './jobDetailFormatting.js';
 import { PENDING_WORK_LOG_MESSAGE, appendWorkLogDraft, hasPendingWorkLogDraft } from './workLogDraft.js';
 
@@ -340,19 +343,7 @@ export default function JobDetail({
       return;
     }
 
-    const nextJob = {
-      ...draftJob,
-      techDetails: {
-        ...draftJob.techDetails,
-        payments: [
-          ...(draftJob.techDetails.payments || []),
-          {
-            id: crypto.randomUUID(),
-            ...payment
-          }
-        ]
-      }
-    };
+    const nextJob = buildAddPaymentJob(draftJob, payment, crypto.randomUUID());
 
     savePaymentChange(nextJob, { immediate: true });
     setPayment({ amount: '', method: 'Cash', note: '', date: toIsoDateInputValue() });
@@ -362,15 +353,7 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    const nextJob = {
-      ...draftJob,
-      techDetails: {
-        ...draftJob.techDetails,
-        payments: (draftJob.techDetails.payments || []).map((row) => (
-          row.id === paymentId ? { ...row, [field]: value } : row
-        ))
-      }
-    };
+    const nextJob = buildUpdatePaymentJob(draftJob, paymentId, field, value);
 
     savePaymentChange(nextJob);
   }
@@ -379,13 +362,7 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    const nextJob = {
-      ...draftJob,
-      techDetails: {
-        ...draftJob.techDetails,
-        payments: (draftJob.techDetails.payments || []).filter((row) => row.id !== paymentId)
-      }
-    };
+    const nextJob = buildRemovePaymentJob(draftJob, paymentId);
 
     savePaymentChange(nextJob, { immediate: true });
   }

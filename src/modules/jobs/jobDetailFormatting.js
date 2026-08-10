@@ -113,6 +113,44 @@ export function buildShopTaxRatePatch(currentJob, salesTaxRate) {
   };
 }
 
+export function buildAddPaymentJob(currentJob, payment, paymentId) {
+  return {
+    ...currentJob,
+    techDetails: {
+      ...currentJob.techDetails,
+      payments: [
+        ...(currentJob.techDetails.payments || []),
+        {
+          id: paymentId,
+          ...payment
+        }
+      ]
+    }
+  };
+}
+
+export function buildUpdatePaymentJob(currentJob, paymentId, fieldName, value) {
+  return {
+    ...currentJob,
+    techDetails: {
+      ...currentJob.techDetails,
+      payments: (currentJob.techDetails.payments || []).map((row) => (
+        row.id === paymentId ? { ...row, [fieldName]: value } : row
+      ))
+    }
+  };
+}
+
+export function buildRemovePaymentJob(currentJob, paymentId) {
+  return {
+    ...currentJob,
+    techDetails: {
+      ...currentJob.techDetails,
+      payments: (currentJob.techDetails.payments || []).filter((row) => row.id !== paymentId)
+    }
+  };
+}
+
 export function buildMeasurementDisplay(job, lengthUnit) {
   const neckInspection = job.techDetails?.neckInspection || {};
   return {
