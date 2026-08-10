@@ -194,6 +194,75 @@ export function buildStringGaugesPatch(currentJob, gauges) {
   };
 }
 
+export function buildAddManualPartPatch(currentJob, parts, part, partId) {
+  return {
+    parts: [
+      ...parts,
+      {
+        id: partId,
+        shopId: currentJob.shopId,
+        jobId: currentJob.id,
+        partId: '',
+        sku: '',
+        name: part.name,
+        quantity: part.quantity || '1',
+        cost: part.cost,
+        retail: part.retail
+      }
+    ]
+  };
+}
+
+export function buildUpdateManualPartPatch(currentJob, parts, partId, fieldName, value) {
+  const nextParts = parts.map((row) => (row.id === partId ? { ...row, [fieldName]: value } : row));
+  return {
+    parts: nextParts,
+    techDetails: {
+      ...currentJob.techDetails,
+      includedPartIds: nextParts.filter((row) => row.includedInService).map((row) => row.id)
+    }
+  };
+}
+
+export function buildRemoveManualPartPatch(currentJob, parts, partId) {
+  const nextParts = parts.filter((row) => row.id !== partId);
+  return {
+    parts: nextParts,
+    techDetails: {
+      ...currentJob.techDetails,
+      includedPartIds: nextParts.filter((row) => row.includedInService).map((row) => row.id)
+    }
+  };
+}
+
+export function buildAddServicePatch(currentJob, services, service, serviceId) {
+  return {
+    services: [
+      ...services,
+      {
+        id: serviceId,
+        jobId: currentJob.id,
+        description: service.description,
+        quantity: service.quantity || '1',
+        cost: service.cost,
+        retail: service.retail
+      }
+    ]
+  };
+}
+
+export function buildUpdateServicePatch(services, serviceId, fieldName, value) {
+  return {
+    services: services.map((row) => (row.id === serviceId ? { ...row, [fieldName]: value } : row))
+  };
+}
+
+export function buildRemoveServicePatch(services, serviceId) {
+  return {
+    services: services.filter((row) => row.id !== serviceId)
+  };
+}
+
 export function buildMeasurementDisplay(job, lengthUnit) {
   const neckInspection = job.techDetails?.neckInspection || {};
   return {

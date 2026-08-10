@@ -29,17 +29,23 @@ import JobDetailShell from './JobDetailShell.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import {
   buildAddPaymentJob,
+  buildAddManualPartPatch,
+  buildAddServicePatch,
   buildInstrumentTypePatch,
   buildJobFieldPatch,
   buildMeasurementDisplay,
   buildNeckInspectionPatch,
+  buildRemoveManualPartPatch,
   buildRemovePaymentJob,
+  buildRemoveServicePatch,
   buildShopTaxRatePatch,
   buildStringCountPatch,
   buildStringGaugePatch,
   buildStringGaugesPatch,
   buildTaxFieldPatch,
-  buildUpdatePaymentJob
+  buildUpdateManualPartPatch,
+  buildUpdatePaymentJob,
+  buildUpdateServicePatch
 } from './jobDetailFormatting.js';
 import { PENDING_WORK_LOG_MESSAGE, appendWorkLogDraft, hasPendingWorkLogDraft } from './workLogDraft.js';
 
@@ -475,10 +481,7 @@ export default function JobDetail({
     if (!part.name.trim()) {
       return;
     }
-    const nextJob = {
-      parts: [...parts, { id: crypto.randomUUID(), shopId: draftJob.shopId, jobId: draftJob.id, partId: '', sku: '', name: part.name, quantity: part.quantity || '1', cost: part.cost, retail: part.retail }]
-    };
-    patchJob(nextJob);
+    patchJob(buildAddManualPartPatch(draftJob, parts, part, crypto.randomUUID()));
     setPart({ name: '', quantity: '1', cost: '', retail: '' });
   }
 
@@ -595,14 +598,7 @@ export default function JobDetail({
       return;
     }
 
-    const nextParts = parts.map((row) => (row.id === partId ? { ...row, [field]: value } : row));
-    patchJob({
-      parts: nextParts,
-      techDetails: {
-        ...draftJob.techDetails,
-        includedPartIds: nextParts.filter((row) => row.includedInService).map((row) => row.id)
-      }
-    });
+    patchJob(buildUpdateManualPartPatch(draftJob, parts, partId, field, value));
   }
 
   async function removePart(partId) {
@@ -642,14 +638,7 @@ export default function JobDetail({
       return;
     }
 
-    const nextParts = parts.filter((row) => row.id !== partId);
-    patchJob({
-      parts: nextParts,
-      techDetails: {
-        ...draftJob.techDetails,
-        includedPartIds: nextParts.filter((row) => row.includedInService).map((row) => row.id)
-      }
-    });
+    patchJob(buildRemoveManualPartPatch(draftJob, parts, partId));
   }
 
   function addService(event) {
@@ -660,9 +649,7 @@ export default function JobDetail({
     if (!service.description.trim()) {
       return;
     }
-    patchJob({
-      services: [...services, { id: crypto.randomUUID(), jobId: draftJob.id, description: service.description, quantity: service.quantity || '1', cost: service.cost, retail: service.retail }]
-    });
+    patchJob(buildAddServicePatch(draftJob, services, service, crypto.randomUUID()));
     setService({ description: '', quantity: '1', cost: '', retail: '' });
   }
 
@@ -670,18 +657,14 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    patchJob({
-      services: services.map((row) => (row.id === serviceId ? { ...row, [field]: value } : row))
-    });
+    patchJob(buildUpdateServicePatch(services, serviceId, field, value));
   }
 
   function removeService(serviceId) {
     if (!canWrite) {
       return;
     }
-    patchJob({
-      services: services.filter((row) => row.id !== serviceId)
-    });
+    patchJob(buildRemoveServicePatch(services, serviceId));
   }
 
   async function handleImageChange(event) {
