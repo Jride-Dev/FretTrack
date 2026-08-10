@@ -56,11 +56,16 @@ assert.match(printDocuments, /<JobDamageReportView damageMap=\{draftJob\.techDet
 assert.match(detail, /patchJob\(buildJobFieldPatch\(draftJob, name, value, jobs\)\)/, 'Job field updates must use the extracted pure patch helper.');
 assert.match(detail, /patchJob\(buildTaxFieldPatch\(draftJob, name, value, type, checked\)\)/, 'Job tax updates must use the extracted pure patch helper.');
 assert.match(detail, /patchJob\(buildShopTaxRatePatch\(draftJob, getShopDefaultTaxRate\(shopSettings\)\)\)/, 'Shop tax-rate reset must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildDiscountFieldPatch\(draftJob, name, value\)\)/, 'Discount field updates must use the extracted pure patch helper.');
 assert.match(detail, /patchJob\(buildInstrumentTypePatch\(draftJob, instrumentType\)\)/, 'Instrument type changes must use the extracted pure patch helper.');
 assert.match(detail, /patchJob\(buildStringCountPatch\(draftJob, value\)\)/, 'String count changes must use the extracted pure patch helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildTechFieldPatch\(current, name, value\)\)/, 'Technical field updates must use the extracted pure patch helper.');
 assert.match(detail, /setDraftJob\(\(current\) => buildNeckInspectionPatch\(current, stage, fieldOrPatch, value\)\)/, 'Neck inspection edits must use the extracted pure patch helper.');
 assert.match(detail, /setDraftJob\(\(current\) => buildStringGaugePatch\(current, index, value\)\)/, 'Single string-gauge edits must use the extracted pure patch helper.');
 assert.match(detail, /setDraftJob\(\(current\) => buildStringGaugesPatch\(current, gauges\)\)/, 'Bulk string-gauge edits must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildWorkOrderImageIdsPatch\(draftJob, workOrderImageIds, imageId, checked\)\)/, 'Work-order image selection must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildContactPreferencePatch\(field, value\)\)/, 'Contact preference updates must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildMessageTemplatePatch\(draftJob, templateKey\)\)/, 'Last message template updates must use the extracted pure patch helper.');
 assert.doesNotMatch(detail, /resizeStringGauges/, 'Job Detail must not resize string-gauge rows inline.');
 assert.match(formatting, /function buildJobFieldPatch\(currentJob, fieldName, value, jobs = \[\]\)[\s\S]*?fieldName === 'customerFirstName'[\s\S]*?customerName: combineCustomerName/, 'Customer name field patches must keep the combined display name synchronized.');
 assert.match(formatting, /fieldName === 'dateReceived'[\s\S]*?jobNumber: generateJobNumber\(value, jobs, currentJob\.id, currentJob\.shopId\)/, 'Date received field patches must keep generated job numbers synchronized.');
@@ -69,6 +74,11 @@ assert.match(formatting, /function buildInstrumentTypePatch\(currentJob, instrum
 assert.match(formatting, /function buildStringCountPatch\(currentJob, value\)[\s\S]*?normalizeStringCount[\s\S]*?stringGauges: resizeStringGauges\(currentJob\.techDetails\.stringGauges, stringCount\)/, 'String count patches must resize string gauge rows.');
 assert.match(formatting, /function buildTaxFieldPatch\(currentJob, fieldName, fieldValue, inputType = 'text', checked = false\)[\s\S]*?fieldName === 'salesTaxRate' \? \{ rateSource: 'job' \}/, 'Editing a tax rate must mark it as a job-level override.');
 assert.match(formatting, /function buildShopTaxRatePatch\(currentJob, salesTaxRate\)[\s\S]*?salesTaxRate,[\s\S]*?rateSource: 'shop'/, 'Using the shop tax rate must restore shop-rate source metadata.');
+assert.match(formatting, /function buildDiscountFieldPatch\(currentJob, fieldName, value\)[\s\S]*?\[fieldName\]: value,[\s\S]*?techDetails:[\s\S]*?\[fieldName\]: value/, 'Discount field helper must preserve legacy top-level and techDetails mirroring.');
+assert.match(formatting, /function buildTechFieldPatch\(currentJob, fieldName, value\)[\s\S]*?techDetails:[\s\S]*?\[fieldName\]: value/, 'Tech field helper must update only the selected techDetails field.');
+assert.match(formatting, /function buildWorkOrderImageIdsPatch\(currentJob, workOrderImageIds, imageId, checked\)[\s\S]*?new Set\(\[\.\.\.workOrderImageIds, imageId\]\)[\s\S]*?workOrderImageIds\.filter\(\(id\) => id !== imageId\)/, 'Work-order image helper must preserve dedupe-on-add and filter-on-remove behavior.');
+assert.match(formatting, /function buildContactPreferencePatch\(fieldName, value\)[\s\S]*?return \{ \[fieldName\]: value \}/, 'Contact preference helper must patch the selected top-level preference field.');
+assert.match(formatting, /function buildMessageTemplatePatch\(currentJob, templateKey\)[\s\S]*?lastMessageTemplate: templateKey/, 'Message template helper must preserve the last selected template in techDetails.');
 assert.match(detail, /buildAddPaymentJob\(draftJob, payment, crypto\.randomUUID\(\)\)/, 'Adding payments must use the extracted pure payment helper.');
 assert.match(detail, /buildUpdatePaymentJob\(draftJob, paymentId, field, value\)/, 'Updating payments must use the extracted pure payment helper.');
 assert.match(detail, /buildRemovePaymentJob\(draftJob, paymentId\)/, 'Removing payments must use the extracted pure payment helper.');

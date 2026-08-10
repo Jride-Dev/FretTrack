@@ -114,6 +114,52 @@ export function buildShopTaxRatePatch(currentJob, salesTaxRate) {
   };
 }
 
+export function buildDiscountFieldPatch(currentJob, fieldName, value) {
+  return {
+    [fieldName]: value,
+    techDetails: {
+      ...currentJob.techDetails,
+      [fieldName]: value
+    }
+  };
+}
+
+export function buildTechFieldPatch(currentJob, fieldName, value) {
+  return {
+    ...currentJob,
+    techDetails: {
+      ...currentJob.techDetails,
+      [fieldName]: value
+    }
+  };
+}
+
+export function buildWorkOrderImageIdsPatch(currentJob, workOrderImageIds, imageId, checked) {
+  const nextImageIds = checked
+    ? [...new Set([...workOrderImageIds, imageId])]
+    : workOrderImageIds.filter((id) => id !== imageId);
+
+  return {
+    techDetails: {
+      ...currentJob.techDetails,
+      workOrderImageIds: nextImageIds
+    }
+  };
+}
+
+export function buildContactPreferencePatch(fieldName, value) {
+  return { [fieldName]: value };
+}
+
+export function buildMessageTemplatePatch(currentJob, templateKey) {
+  return {
+    techDetails: {
+      ...currentJob.techDetails,
+      lastMessageTemplate: templateKey
+    }
+  };
+}
+
 export function buildAddPaymentJob(currentJob, payment, paymentId) {
   return {
     ...currentJob,

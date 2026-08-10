@@ -31,9 +31,12 @@ import {
   buildAddPaymentJob,
   buildAddManualPartPatch,
   buildAddServicePatch,
+  buildContactPreferencePatch,
+  buildDiscountFieldPatch,
   buildInstrumentTypePatch,
   buildJobFieldPatch,
   buildMeasurementDisplay,
+  buildMessageTemplatePatch,
   buildNeckInspectionPatch,
   buildRemoveManualPartPatch,
   buildRemovePaymentJob,
@@ -43,9 +46,11 @@ import {
   buildStringGaugePatch,
   buildStringGaugesPatch,
   buildTaxFieldPatch,
+  buildTechFieldPatch,
   buildUpdateManualPartPatch,
   buildUpdatePaymentJob,
-  buildUpdateServicePatch
+  buildUpdateServicePatch,
+  buildWorkOrderImageIdsPatch
 } from './jobDetailFormatting.js';
 import { PENDING_WORK_LOG_MESSAGE, appendWorkLogDraft, hasPendingWorkLogDraft } from './workLogDraft.js';
 
@@ -204,13 +209,7 @@ export default function JobDetail({
 
   function updateDiscountField(event) {
     const { name, value } = event.target;
-    patchJob({
-      [name]: value,
-      techDetails: {
-        ...draftJob.techDetails,
-        [name]: value
-      }
-    });
+    patchJob(buildDiscountFieldPatch(draftJob, name, value));
   }
 
   function updateTaxField(event) {
@@ -236,13 +235,7 @@ export default function JobDetail({
     }
     const { name, value } = event.target;
     setIsDirty(true);
-    setDraftJob((current) => ({
-      ...current,
-      techDetails: {
-        ...current.techDetails,
-        [name]: value
-      }
-    }));
+    setDraftJob((current) => buildTechFieldPatch(current, name, value));
   }
 
   function updateWorkLogEntry(entryId, text) {
@@ -824,16 +817,7 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    const nextImageIds = checked
-      ? [...new Set([...workOrderImageIds, imageId])]
-      : workOrderImageIds.filter((id) => id !== imageId);
-
-    patchJob({
-      techDetails: {
-        ...draftJob.techDetails,
-        workOrderImageIds: nextImageIds
-      }
-    });
+    patchJob(buildWorkOrderImageIdsPatch(draftJob, workOrderImageIds, imageId, checked));
   }
 
   function closeDetail() {
@@ -983,16 +967,11 @@ export default function JobDetail({
   }
 
   function updateContactPreference(field, value) {
-    patchJob({ [field]: value });
+    patchJob(buildContactPreferencePatch(field, value));
   }
 
   function updateMessageTemplate(templateKey) {
-    patchJob({
-      techDetails: {
-        ...draftJob.techDetails,
-        lastMessageTemplate: templateKey
-      }
-    });
+    patchJob(buildMessageTemplatePatch(draftJob, templateKey));
   }
 
   async function handleSendCustomerMessage(message) {
