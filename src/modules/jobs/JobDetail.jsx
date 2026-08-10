@@ -10,8 +10,7 @@ import {
   formatInstrumentLabel,
   getInstrumentStringCount,
   getOuterStringLabels,
-  normalizeInstrumentType,
-  resizeStringGauges
+  normalizeInstrumentType
 } from '../instruments/instrumentService';
 import { getJobEvents, logJobEventSafe } from './jobEventsService';
 import { sendCustomerMessage } from '../../data/messagesRepository';
@@ -33,9 +32,12 @@ import {
   buildInstrumentTypePatch,
   buildJobFieldPatch,
   buildMeasurementDisplay,
+  buildNeckInspectionPatch,
   buildRemovePaymentJob,
   buildShopTaxRatePatch,
   buildStringCountPatch,
+  buildStringGaugePatch,
+  buildStringGaugesPatch,
   buildTaxFieldPatch,
   buildUpdatePaymentJob
 } from './jobDetailFormatting.js';
@@ -296,24 +298,8 @@ export default function JobDetail({
     if (!canWrite) {
       return;
     }
-    const fieldPatch = typeof fieldOrPatch === 'object'
-      ? fieldOrPatch
-      : { [fieldOrPatch]: value };
-
-    setDraftJob((current) => ({
-      ...current,
-      techDetails: {
-        ...current.techDetails,
-        neckInspection: {
-          ...(current.techDetails.neckInspection || {}),
-          [stage]: {
-            ...(current.techDetails.neckInspection?.[stage] || {}),
-            ...fieldPatch
-          }
-        }
-      }
-    }));
     setIsDirty(true);
+    setDraftJob((current) => buildNeckInspectionPatch(current, stage, fieldOrPatch, value));
   }
 
   async function savePaymentChange(nextJob, { immediate = false } = {}) {
@@ -406,17 +392,7 @@ export default function JobDetail({
       return;
     }
     setIsDirty(true);
-    setDraftJob((current) => {
-      const stringGauges = [...current.techDetails.stringGauges];
-      stringGauges[index] = value;
-      return {
-        ...current,
-        techDetails: {
-          ...current.techDetails,
-          stringGauges
-        }
-      };
-    });
+    setDraftJob((current) => buildStringGaugePatch(current, index, value));
   }
 
   function updateStringGauges(gauges) {
@@ -424,13 +400,7 @@ export default function JobDetail({
       return;
     }
     setIsDirty(true);
-    setDraftJob((current) => ({
-      ...current,
-      techDetails: {
-        ...current.techDetails,
-        stringGauges: resizeStringGauges(gauges, getInstrumentStringCount(current))
-      }
-    }));
+    setDraftJob((current) => buildStringGaugesPatch(current, gauges));
   }
 
   function handleSaveRequest(event) {

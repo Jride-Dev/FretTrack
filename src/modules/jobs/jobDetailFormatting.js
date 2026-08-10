@@ -1,6 +1,7 @@
 import { formatLength } from '../../shared/utils/measurements.js';
 import { combineCustomerName } from '../customers/index.js';
 import {
+  getInstrumentStringCount,
   normalizeInstrumentType,
   normalizeStringCount,
   resizeStringGauges,
@@ -147,6 +148,48 @@ export function buildRemovePaymentJob(currentJob, paymentId) {
     techDetails: {
       ...currentJob.techDetails,
       payments: (currentJob.techDetails.payments || []).filter((row) => row.id !== paymentId)
+    }
+  };
+}
+
+export function buildNeckInspectionPatch(currentJob, stage, fieldOrPatch, value) {
+  const fieldPatch = typeof fieldOrPatch === 'object'
+    ? fieldOrPatch
+    : { [fieldOrPatch]: value };
+
+  return {
+    ...currentJob,
+    techDetails: {
+      ...currentJob.techDetails,
+      neckInspection: {
+        ...(currentJob.techDetails.neckInspection || {}),
+        [stage]: {
+          ...(currentJob.techDetails.neckInspection?.[stage] || {}),
+          ...fieldPatch
+        }
+      }
+    }
+  };
+}
+
+export function buildStringGaugePatch(currentJob, index, value) {
+  const stringGauges = [...(currentJob.techDetails.stringGauges || [])];
+  stringGauges[index] = value;
+  return {
+    ...currentJob,
+    techDetails: {
+      ...currentJob.techDetails,
+      stringGauges
+    }
+  };
+}
+
+export function buildStringGaugesPatch(currentJob, gauges) {
+  return {
+    ...currentJob,
+    techDetails: {
+      ...currentJob.techDetails,
+      stringGauges: resizeStringGauges(gauges, getInstrumentStringCount(currentJob))
     }
   };
 }
