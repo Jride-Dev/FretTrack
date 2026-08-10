@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
-const expectedVersion = '0.2.9-beta.4';
+const expectedVersion = '0.2.9-beta.5';
 const source = (path) => readFileSync(join(root, path), 'utf8');
 const packageJson = JSON.parse(source('package.json'));
 const packageLock = JSON.parse(source('package-lock.json'));
