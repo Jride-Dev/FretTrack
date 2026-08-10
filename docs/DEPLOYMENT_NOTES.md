@@ -91,7 +91,7 @@ For App Pages deploys, prefer the guarded wrapper:
 npm run deploy:app:production
 ```
 
-The wrapper forces the production Supabase URL, clears local test-shop defaults for the build, runs `npm run check:production-build-config`, and only then deploys `dist` to Cloudflare Pages. Use `npm run deploy:app:production:check` for the same build/config preflight without uploading.
+The wrapper forces the production Supabase URL, forces the production FretTrack Edge Function key from `.env` when the shell does not provide one, clears local test-shop defaults for the build, runs `npm run check:production-build-config`, and only then deploys `dist` to Cloudflare Pages. Use `npm run deploy:app:production:check` for the same build/config preflight without uploading.
 
 ## Backup Automation
 

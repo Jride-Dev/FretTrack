@@ -36,6 +36,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Fixed direct receiving, stock adjustments, and purchase-order receiving so the selected Inventory editor refreshes its authoritative quantity and cost; a later Save Changes action can no longer overwrite received or adjusted stock with stale form values.
 - Added a production build configuration guard so App Pages deploys fail before upload if the compiled bundle contains local Supabase URLs, demo auth keys, or local test-shop defaults.
 - Added a guarded App Pages production deploy wrapper that forces the production Supabase build config, runs the production-build guard, and only deploys after the compiled assets pass.
+- Extended the production deploy guard to require the FretTrack Edge Function key so customer Work Order emails cannot be deployed with an unauthorized blank function header.
 - Added a repository architecture health audit covering validation status, module boundaries, growing source hotspots, test-suite brittleness, local test-environment policy, and the unattended backup reliability blocker.
 - Prevented local development from silently using a hosted Supabase project, repaired local test-shop lifecycle/authentication records for the current local Supabase stack, and added a focused isolation check.
 
