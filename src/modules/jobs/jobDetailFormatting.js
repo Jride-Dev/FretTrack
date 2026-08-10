@@ -341,6 +341,41 @@ export function buildRemoveServicePatch(services, serviceId) {
   };
 }
 
+export function buildAddInventoryPartJob(currentJob, jobPart) {
+  return {
+    ...currentJob,
+    parts: [...(currentJob.parts || []), jobPart]
+  };
+}
+
+export function buildUpdateInventoryPartQuantityJob(currentJob, parts, partId, updatedJobPart) {
+  return {
+    ...currentJob,
+    parts: parts.map((row) => (row.id === partId ? { ...row, ...updatedJobPart } : row))
+  };
+}
+
+export function buildRemoveInventoryPartJob(currentJob, parts, partId) {
+  return {
+    ...currentJob,
+    parts: parts.filter((row) => row.id !== partId)
+  };
+}
+
+export function buildAppendImagePreviewsJob(currentJob, previews) {
+  return {
+    ...currentJob,
+    images: [...(currentJob.images || []), ...previews]
+  };
+}
+
+export function buildRemoveImageJob(currentJob, imageId) {
+  return {
+    ...currentJob,
+    images: (currentJob.images || []).filter((item) => item.id !== imageId)
+  };
+}
+
 export function buildMeasurementDisplay(job, lengthUnit) {
   const neckInspection = job.techDetails?.neckInspection || {};
   return {

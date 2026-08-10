@@ -29,8 +29,10 @@ import JobDetailShell from './JobDetailShell.jsx';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import {
   buildAddPaymentJob,
+  buildAddInventoryPartJob,
   buildAddManualPartPatch,
   buildAddServicePatch,
+  buildAppendImagePreviewsJob,
   buildAssignmentJob,
   buildContactPreferencePatch,
   buildDamageMapJob,
@@ -42,6 +44,8 @@ import {
   buildMergeJobMessageJob,
   buildNeckInspectionPatch,
   buildRemoveManualPartPatch,
+  buildRemoveImageJob,
+  buildRemoveInventoryPartJob,
   buildRemovePaymentJob,
   buildRemoveServicePatch,
   buildShopTaxRatePatch,
@@ -50,6 +54,7 @@ import {
   buildStringGaugesPatch,
   buildTaxFieldPatch,
   buildTechFieldPatch,
+  buildUpdateInventoryPartQuantityJob,
   buildUpdateManualPartPatch,
   buildUpdatePaymentJob,
   buildUpdateServicePatch,
@@ -513,10 +518,7 @@ export default function JobDetail({
 
     try {
       const jobPart = await addPartToJob(jobForInventory.id, inventoryPart.id, requestedQuantity);
-      const nextJob = {
-        ...jobForInventory,
-        parts: [...(jobForInventory.parts || []), jobPart]
-      };
+      const nextJob = buildAddInventoryPartJob(jobForInventory, jobPart);
       setDraftJob(nextJob);
       setIsDirty(false);
       refreshTimelineEvents();
@@ -563,11 +565,7 @@ export default function JobDetail({
 
       try {
         const updatedJobPart = await updateInventoryJobPartQuantity(partId, requestedQuantity);
-        const nextParts = parts.map((row) => (row.id === partId ? { ...row, ...updatedJobPart } : row));
-        setDraftJob((current) => ({
-          ...current,
-          parts: nextParts
-        }));
+        setDraftJob((current) => buildUpdateInventoryPartQuantityJob(current, parts, partId, updatedJobPart));
         setIsDirty(false);
         setInventoryParts((current) => current.map((row) => (
           row.id === editedPart.partId
@@ -608,10 +606,7 @@ export default function JobDetail({
       }
       try {
         await removeJobPart(partId);
-        const nextJob = {
-          ...draftJob,
-          parts: parts.filter((row) => row.id !== partId)
-        };
+        const nextJob = buildRemoveInventoryPartJob(draftJob, parts, partId);
         setDraftJob(nextJob);
         setIsDirty(false);
         refreshTimelineEvents();
@@ -683,10 +678,7 @@ export default function JobDetail({
 
     if (previews.length) {
       setIsDirty(true);
-      setDraftJob((current) => ({
-        ...current,
-        images: [...(current.images || []), ...previews]
-      }));
+      setDraftJob((current) => buildAppendImagePreviewsJob(current, previews));
     }
 
     setImageImportErrors([]);
@@ -738,10 +730,7 @@ export default function JobDetail({
       return;
     }
 
-    setDraftJob((current) => ({
-      ...current,
-      images: (current.images || []).filter((item) => item.id !== image.id)
-    }));
+    setDraftJob((current) => buildRemoveImageJob(current, image.id));
     setIsDirty(true);
     onImageDelete(draftJob, image);
   }

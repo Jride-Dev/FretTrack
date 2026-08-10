@@ -30,6 +30,8 @@ Discount, generic technical-field, work-order image selection, contact preferenc
 
 Work-log row edits/removals, Damage Map updates, message merges, and assignment-field merges now use pure helper boundaries. Job Detail still owns save timing, notices, permissions, timeline refreshes, and the service calls around those changes.
 
+Inventory-backed part result merges and local photo preview/remove transforms now use pure helper boundaries. The existing inventory service calls, photo persistence calls, permission gates, stock updates, and refresh behavior remain unchanged.
+
 The operations checklist now has a read-only Supabase data-integrity check for deleted-job orphans, ownerless shop profiles, broken shop-member auth links, and auth users without identities. It reports aggregate issue groups only and avoids dumping customer/job records.
 
 Direct receiving, stock adjustments, and purchase-order receiving now synchronize the selected part editor with the authoritative saved quantity and cost. A later **Save Changes** action therefore preserves the received or adjusted stock instead of restoring stale form values. Purchase-unit conversion snapshots and individual-unit job usage remain unchanged.
