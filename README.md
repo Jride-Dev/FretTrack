@@ -8,7 +8,7 @@
 
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
-Current version: `0.2.9-beta.4`
+Current version: `0.2.9-beta.5`
 
 FretTrack is a guitar and bass repair shop check-in and work order system for real bench workflow: customer intake, instrument details, inspection notes, damage photos, parts and services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
@@ -22,7 +22,7 @@ Public tester/customer docs are available at [frettrack-app.com/docs](https://fr
 
 ## Current Status
 
-Current release candidate: `v0.2.9-beta.4`
+Current release candidate: `v0.2.9-beta.5`
 
 This includes:
 

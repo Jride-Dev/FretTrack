@@ -1,10 +1,10 @@
 # Changelog
 
-Current version: `0.2.9-beta.4`
+Current version: `0.2.9-beta.5`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.9-beta.4 - Current Beta Candidate
+## v0.2.9-beta.5 - Current Beta Candidate
 
 - Added the active shop's business address to printable invoice-style Job Sheets and attached Job Sheet email content, while preserving the existing shop-scoped address in generated invoice emails.
 - Protected new Work Notes from silent loss: pending text is visibly unsaved, participates in refresh/navigation protection, saves through Save Job, blocks customer printing/email until resolved, supports explicit draft discard, and reports failed Work Note saves.

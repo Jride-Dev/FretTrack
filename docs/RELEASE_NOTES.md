@@ -1,8 +1,8 @@
 # Release Notes
 
-## GitHub Release Summary: v0.2.9-beta.4
+## GitHub Release Summary: v0.2.9-beta.5
 
-FretTrack `0.2.9-beta.4` is an architecture and workflow-reliability release candidate. It preserves the existing repair-shop experience while separating workspace navigation, Inventory, and Job Detail presentation into smaller feature boundaries that are safer to maintain and test.
+FretTrack `0.2.9-beta.5` is an architecture and workflow-reliability release candidate. It preserves the existing repair-shop experience while separating workspace navigation, Inventory, and Job Detail presentation into smaller feature boundaries that are safer to maintain and test.
 
 ## Architecture and inventory reliability
 
