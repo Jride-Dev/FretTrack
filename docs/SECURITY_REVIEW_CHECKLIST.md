@@ -43,3 +43,5 @@ Use this checklist during the next beta-to-paid hardening pass.
 
 - perform a focused RLS review before paid launch
 - re-check billing, entitlement, messaging, and public-link surfaces before self-serve rollout
+- require signature-verified Stripe webhooks as the only paid-plan mutation boundary; opening or abandoning Checkout must not change entitlements
+- verify failed webhook deliveries remain retryable and opaque Stripe Price IDs are matched only against configured secrets

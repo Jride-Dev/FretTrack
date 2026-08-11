@@ -99,7 +99,9 @@ backups/logs/
 
 and look for `FAILED.txt` in the incomplete snapshot folder.
 
-Latest manual scheduled-task verification: `2026-06-26 02:58`, result `0`, snapshot `backups/hosted-supabase-20260626-025825`, Docker archive `backups/docker-volume-20260626-025825/supabase_db_FretTrack.tar.gz`.
+Latest successful full scheduled backup observed during the paid-launch readiness pass: `2026-08-10 02:55`, snapshot `backups/hosted-supabase-20260810-025502`, Docker archive `backups/docker-volume-20260810-025502/supabase_db_FretTrack.tar.gz`.
+
+Current scheduled-backup reliability blocker: the `2026-08-11 02:55` scheduled run returned result `1` because Docker Desktop was not available to the scheduled task through `dockerDesktopLinuxEngine`. Before paid launch, either record three consecutive successful scheduled runs on this PC or move the daily backup automation to a reliable always-on environment that does not depend on an interactive desktop Docker session.
 
 ## Restore Notes
 
