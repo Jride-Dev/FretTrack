@@ -10,6 +10,8 @@ FretTrack now has source-controlled owner/admin-only Stripe Checkout and Billing
 
 Stripe Price IDs are compared exactly with configured Supabase secrets instead of being interpreted as readable names. Monthly/yearly interval is stored explicitly from Stripe, and failed webhook deliveries remain retryable rather than being incorrectly accepted as completed duplicates. Migration `20260811200225_stripe_self_serve_billing_readiness.sql` and the three billing Edge Functions require reviewed production rollout and end-to-end Stripe smoke testing before paid launch.
 
+The hosted Supabase backup workflow now generates SHA-256 manifests through the platform-independent .NET cryptography API. This removes a Windows PowerShell command-resolution failure found during the production readiness backup while retaining full database, Storage, comparison-manifest, and local Docker-volume coverage.
+
 ## Architecture and inventory reliability
 
 Invoice address correction: customer invoice emails, attached Job Sheet email content, and printable invoice-style Job Sheets now consistently use the business address from the active shop's Shop Settings. No database migration or stored document rewrite is required.

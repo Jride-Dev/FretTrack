@@ -117,6 +117,23 @@ function Get-PgDumpCopyCounts {
   return $counts
 }
 
+function Get-Sha256Hex {
+  param([string]$Path)
+
+  $stream = [System.IO.File]::OpenRead($Path)
+  try {
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+      $hashBytes = $sha256.ComputeHash($stream)
+      return ([System.BitConverter]::ToString($hashBytes)).Replace('-', '').ToLowerInvariant()
+    } finally {
+      $sha256.Dispose()
+    }
+  } finally {
+    $stream.Dispose()
+  }
+}
+
 function Write-Manifest {
   param(
     [string]$SnapshotDir,
@@ -128,11 +145,10 @@ function Write-Manifest {
     Sort-Object FullName
 
   $hashes = foreach ($file in $files) {
-    $hash = Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256
     [pscustomobject]@{
       path = Get-RelativePathSafe -BasePath $SnapshotDir -TargetPath $file.FullName
       bytes = $file.Length
-      sha256 = $hash.Hash.ToLowerInvariant()
+      sha256 = Get-Sha256Hex -Path $file.FullName
     }
   }
 

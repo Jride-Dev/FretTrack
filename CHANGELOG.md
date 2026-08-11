@@ -7,6 +7,7 @@ This file tracks what changed in each release, including fixes that were added b
 ## v0.2.9-beta.5 - Current Beta Candidate
 
 - Added a paid-launch readiness pass with a 30-day launch checklist, restore-drill runbook, backup automation blocker, Stripe self-serve billing source control, Checkout/Portal/Webhook launch docs, and `npm run check:paid-launch-readiness` validation.
+- Hardened hosted-backup checksum generation to use the platform-independent .NET SHA-256 implementation after the Windows PowerShell hash command failed during a pre-launch backup; the full database, Storage, manifest, and Docker-volume backup now completes end to end.
 - Hardened Stripe Checkout so merely opening or abandoning payment cannot change a beta shop's plan, entitlements, or connected customer state; subscription writes now remain behind signature-verified Stripe webhook confirmation with regression coverage and documented smoke testing.
 - Corrected Stripe plan/interval synchronization to use exact configured Price IDs and an explicit billing-interval snapshot, kept failed webhook events retryable, and tightened webhook-audit table grants before production rollout.
 - Added the active shop's business address to printable invoice-style Job Sheets and attached Job Sheet email content, while preserving the existing shop-scoped address in generated invoice emails.
