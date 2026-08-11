@@ -2908,7 +2908,8 @@ th.internal-only {
 }
 
 .billing-feature-list,
-.billing-placeholder {
+.billing-placeholder,
+.billing-self-serve {
   border-top: 1px solid var(--border-soft);
   display: grid;
   gap: 10px;
@@ -2929,6 +2930,16 @@ th.internal-only {
   font-size: 12px;
   font-weight: 800;
   padding: 6px 10px;
+}
+
+.billing-plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.billing-plan-actions button {
+  min-width: 10rem;
 }
 
 .subscription-settings {

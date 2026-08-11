@@ -4,6 +4,12 @@
 
 FretTrack `0.2.9-beta.5` is an architecture and workflow-reliability release candidate. It preserves the existing repair-shop experience while separating workspace navigation, Inventory, and Job Detail presentation into smaller feature boundaries that are safer to maintain and test.
 
+## Stripe paid-launch readiness
+
+FretTrack now has source-controlled owner/admin-only Stripe Checkout and Billing Portal actions plus a signature-verified, replay-aware webhook that synchronizes Shop and Pro subscriptions. Merely opening, canceling, abandoning, or failing Checkout cannot change a beta shop's plan or entitlements; paid state changes remain behind the verified webhook boundary.
+
+Stripe Price IDs are compared exactly with configured Supabase secrets instead of being interpreted as readable names. Monthly/yearly interval is stored explicitly from Stripe, and failed webhook deliveries remain retryable rather than being incorrectly accepted as completed duplicates. Migration `20260811200225_stripe_self_serve_billing_readiness.sql` and the three billing Edge Functions require reviewed production rollout and end-to-end Stripe smoke testing before paid launch.
+
 ## Architecture and inventory reliability
 
 Invoice address correction: customer invoice emails, attached Job Sheet email content, and printable invoice-style Job Sheets now consistently use the business address from the active shop's Shop Settings. No database migration or stored document rewrite is required.

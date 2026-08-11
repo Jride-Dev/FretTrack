@@ -1,8 +1,10 @@
 # Subscription Foundation
 
-Date: 2026-05-25
+Originally documented: 2026-05-25
 
-This sprint added paid-readiness infrastructure only. Stripe, Checkout, webhooks, real payments, and billing portal actions are intentionally not implemented yet.
+Paid-launch readiness update: 2026-08-11
+
+This document began with FretTrack's paid-readiness infrastructure. The 2026-08-11 paid-launch readiness update adds source-controlled Stripe Checkout, Billing Portal, and signature-verified Stripe webhook handling for review and production rollout. Production payment behavior is not considered launch-verified until the migration/functions are deployed and the documented test-mode and live-mode smoke matrix passes.
 
 ## Current Premium Trial Rule
 
@@ -17,7 +19,7 @@ Beta access approval and premium trial entitlement are separate systems.
 - Shop Tier Foundation Phase 1 makes `photo_editor`, `advanced_reporting`, and `team_members` explicit entitlements across internal compatibility, Shop, and Pro.
 - Current product behavior keeps Shop on the paid core workflow. Pro unlocks Photo Editor, Team Members, and Advanced Reporting.
 - Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration. Existing `free + active` beta shops are preserved for now.
-- Stripe, billing webhooks, and payment collection are still not connected.
+- Stripe self-serve billing is implemented in source for Shop and Pro monthly/yearly plans. Opening or abandoning Checkout does not change access; only a signature-verified Stripe webhook persists customer, subscription, plan, interval, and lifecycle state.
 - `0.2.9-beta.3` adds server-enforced email-recipient, source-photo upload, and current repair-photo storage limits. Shop/Shop trial uses 1,000 recipients, 2,000 uploads, and 5 GiB; Pro/Pro trial uses 5,000, 10,000, and 25 GiB. No paid overages are available.
 
 See [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md) for UTC reset, reservation, deletion, downgrade, and operator-override semantics.
