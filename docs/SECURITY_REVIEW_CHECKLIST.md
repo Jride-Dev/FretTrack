@@ -45,3 +45,12 @@ Use this checklist during the next beta-to-paid hardening pass.
 - re-check billing, entitlement, messaging, and public-link surfaces before self-serve rollout
 - require signature-verified Stripe webhooks as the only paid-plan mutation boundary; opening or abandoning Checkout must not change entitlements
 - verify failed webhook deliveries remain retryable and opaque Stripe Price IDs are matched only against configured secrets
+
+## 2026-08-11 Launch Audit Evidence
+
+- `npm run check:permissions`, `npm run check:role-permissions`, and `npm run check:stripe-edge-functions` passed.
+- `npm run check:production-build-config` passed, and a focused source/build scan found no service-role JWT, Stripe secret, webhook secret, private key, or Resend secret in `src/` or `dist/`.
+- `get_public_system_status` is intentionally anonymous and returns only the public operational-status fields.
+- `submit_beta_access_request` is intentionally anonymous for the public beta form; its inputs are bounded and normalized, it cannot approve access, and this accepted boundary remains documented in `docs/SUPABASE_RPC_SECURITY_AUDIT.md`.
+- The remaining Supabase Auth launch setting is leaked-password protection, which Supabase documents as a Pro-plan feature. Enable it before paid launch if the production project is upgraded to Pro; otherwise record the accepted risk and enforce the strongest available password settings before re-testing sign-in and password reset.
+- Migration `20260812025459_harden_set_updated_at_search_path.sql` pins the shared `set_updated_at` trigger helper to an empty search path, schema-qualifies `pg_catalog.now()`, and removes direct public/client execution. The local trigger test passed and Supabase Security Advisor returned no warnings after the migration.

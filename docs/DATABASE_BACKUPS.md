@@ -38,9 +38,12 @@ This calls `scripts/refresh-local-db-from-hosted-backup.ps1`.
 The refresh script:
 
 - Creates a pre-refresh archive of the current `supabase_db_FretTrack` Docker volume.
+- Creates a pre-refresh archive of the current `supabase_storage_FretTrack` volume when it exists.
 - Runs `supabase db reset --yes` against the existing local Supabase stack.
 - Restores the latest hosted `data.sql` into the local database.
 - Preserves Supabase internal migration tables while restoring `public`, `auth`, and `storage` data.
+- Uploads the snapshot's `storage-buckets/` binaries into the restored local Storage API so photo/logo recovery is exercised, not merely Storage metadata.
+- Temporarily relaxes only local bucket upload limits while restoring grandfathered historical objects, then restores the original bucket limits and portable object metadata while retaining the local backend object version required for downloads.
 - Prints migration versions and key table row counts after restore.
 
 Do not run the refresh script during active local development unless local database changes are disposable or already backed up.
@@ -65,7 +68,7 @@ Default schedule:
 Daily at 02:00 local time
 ```
 
-The task runs under the current Windows user account and uses that user's Supabase CLI login/profile plus local Docker access. The PC must be awake with the user signed in or locked, network access available, and Docker Desktop available for the local volume archive.
+The task runs under the current Windows user account and uses that user's Supabase CLI login/profile. The PC must be awake with the user signed in or locked and network access available. Supabase CLI database dumps use Docker internally, so the backup script starts Docker Desktop when necessary and waits for the engine before dumping. By default the scheduled task passes `-SkipDockerVolumeBackup`, which avoids adding the optional local-volume archive to every unattended run. Manual `npm run backup:supabase` runs still include that archive.
 
 Register or repair the task with:
 
@@ -99,9 +102,9 @@ backups/logs/
 
 and look for `FAILED.txt` in the incomplete snapshot folder.
 
-Latest successful full scheduled backup observed during the paid-launch readiness pass: `2026-08-10 02:55`, snapshot `backups/hosted-supabase-20260810-025502`, Docker archive `backups/docker-volume-20260810-025502/supabase_db_FretTrack.tar.gz`.
+The scheduled task previously failed when Docker Desktop was unavailable through `dockerDesktopLinuxEngine`. The script now starts Docker Desktop and waits for the engine because current Supabase CLI database dumps require it. A manual invocation of the exact registered task completed with result `0` on `2026-08-11`, producing `backups/hosted-supabase-20260811-182456`; all 4,873 manifest checksums independently matched. Launch readiness still requires three consecutive successful unattended runs. Local Docker archives remain available through manual full backups and are created automatically before a local restore drill.
 
-Current scheduled-backup reliability blocker: the `2026-08-11 02:55` scheduled run returned result `1` because Docker Desktop was not available to the scheduled task through `dockerDesktopLinuxEngine`. Before paid launch, either record three consecutive successful scheduled runs on this PC or move the daily backup automation to a reliable always-on environment that does not depend on an interactive desktop Docker session.
+The first complete local restore drill passed on `2026-08-11`. Local Auth and Storage service versions were refreshed from the linked project before the drill. All 73 recorded table counts matched, all 194 Storage objects downloaded locally with matching SHA-256 hashes, and the restored data-integrity check passed. See `docs/test-reports/paid-launch-restore-drill-2026-08-11.md`.
 
 ## Restore Notes
 
