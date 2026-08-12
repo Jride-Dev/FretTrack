@@ -32,6 +32,9 @@ const landingWorker = read('cloudflare/frettrack-coming-soon/src/index.js');
 const sendEmailFunction = read('supabase/functions/send-email/index.ts');
 const sendSmsFunction = read('supabase/functions/send-sms/index.ts');
 const usageCapsMigration = read('supabase/migrations/20260727231401_email_photo_usage_caps_foundation.sql');
+const bootstrapMigration = read('supabase/migrations/20260629132442_shop_bootstrap_reliability_phase_1.sql');
+const systemStatusMigration = read('supabase/migrations/20260730080400_system_notices_and_uptime.sql');
+const purchaseUnitMigration = read('supabase/migrations/20260730145549_purchase_unit_conversion.sql');
 
 const flaggedFunctions = [
   ['submit_beta_access_request', 'text, text, text, text', ['anon', 'authenticated']],
@@ -69,6 +72,35 @@ for (const [signature, grants] of [
   assertIncludes(usageCapsMigration, `grant execute on function public.${signature} to ${grants};`, `${signature} must grant only intended roles.`);
 }
 assertMatches(usageCapsMigration, /security definer[\s\S]*set search_path = ''/, 'Usage SECURITY DEFINER functions must lock search_path.');
+
+assertMatches(bootstrapMigration, /security definer\s+set search_path = public, auth/i, 'Shop bootstrap must use a pinned search path.');
+assertIncludes(bootstrapMigration, 'if current_user_id is null then', 'Shop bootstrap must require authentication.');
+assertIncludes(bootstrapMigration, 'if current_email_confirmed_at is null then', 'Shop bootstrap must require a confirmed email.');
+assertIncludes(bootstrapMigration, 'and not exists (', 'Shop bootstrap must require approved beta access for non-operators.');
+assertIncludes(bootstrapMigration, 'from public.beta_access_requests', 'Shop bootstrap must check the authoritative beta request table.');
+assertIncludes(bootstrapMigration, 'revoke all on function public.bootstrap_current_user_as_owner(text, text) from public;', 'Shop bootstrap must revoke PUBLIC execution.');
+assertIncludes(bootstrapMigration, 'revoke all on function public.bootstrap_current_user_as_owner(text, text) from anon;', 'Shop bootstrap must reject anonymous execution.');
+assertIncludes(bootstrapMigration, 'grant execute on function public.bootstrap_current_user_as_owner(text, text) to authenticated;', 'Shop bootstrap must be callable only by signed-in users after internal checks.');
+
+assertMatches(systemStatusMigration, /security definer\s+set search_path = public, pg_catalog/i, 'Public system status must use a pinned search path.');
+for (const field of ['status', 'publicNoticeTitle', 'publicNoticeMessage', 'noticeType', 'statusChangedAt', 'lastUpdatedAt', 'incidentState']) {
+  assertIncludes(systemStatusMigration, `'${field}'`, `Public system status must keep the explicit ${field} response field.`);
+}
+assertIncludes(systemStatusMigration, 'grant execute on function public.get_public_system_status() to anon, authenticated;', 'Only the fixed public status projection may remain anonymously callable.');
+assertIncludes(systemStatusMigration, 'if not private.is_operator() then', 'System status updates must enforce the operator guard internally.');
+assertIncludes(systemStatusMigration, 'revoke all on function public.update_system_status(text, text, text, text) from public, anon, authenticated;', 'System status updates must revoke default execution before granting access.');
+assertIncludes(systemStatusMigration, 'grant execute on function public.update_system_status(text, text, text, text) to authenticated;', 'System status updates must require a signed-in caller before the operator guard.');
+
+for (const signature of [
+  'receive_inventory_part(uuid, integer, numeric, text)',
+  'receive_purchase_order_items(uuid, jsonb, text)'
+]) {
+  assertIncludes(purchaseUnitMigration, `revoke all on function public.${signature} from public;`, `${signature} must revoke PUBLIC execution.`);
+  assertIncludes(purchaseUnitMigration, `revoke all on function public.${signature} from anon;`, `${signature} must reject anonymous execution.`);
+  assertIncludes(purchaseUnitMigration, `grant execute on function public.${signature} to authenticated;`, `${signature} must be limited to signed-in callers after internal checks.`);
+}
+assertMatches(purchaseUnitMigration, /create or replace function public\.receive_inventory_part[\s\S]*?if auth\.uid\(\) is null then[\s\S]*?not private\.can_write_shop\(target_part\.shop_id\)/i, 'Direct inventory receiving must enforce authentication and shop write permission.');
+assertMatches(purchaseUnitMigration, /create or replace function public\.receive_purchase_order_items[\s\S]*?if auth\.uid\(\) is null then[\s\S]*?not private\.can_write_shop\(target_order\.shop_id\)/i, 'Purchase-order receiving must enforce authentication and shop write permission.');
 
 for (const name of [
   'get_beta_access_requests',

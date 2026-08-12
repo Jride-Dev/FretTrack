@@ -6,15 +6,17 @@ Date: 2026-08-11
 
 FretTrack's paid launch target is Stripe-powered self-serve billing, not a controlled manual paid beta.
 
-The core repair workflow, guarded production deploy path, migration drift checks, and data-integrity checks are in place. The remaining paid-launch risks are operational: backup automation reliability, a documented restore drill, Stripe environment configuration, and end-to-end Stripe event validation.
+The core repair workflow, guarded production deploy path, migration drift checks, data-integrity checks, Stripe self-service foundation, and a full local database-and-Storage restore drill are in place. The remaining paid-launch risks are operational: completing backup reliability evidence, handling the remaining Auth/security settings, and validating real Stripe lifecycle events end to end.
 
 ## Verified on 2026-08-11
 
 - `npm run check:migrations` passed against the linked Supabase project.
 - `npm run check:supabase-data-integrity` passed against the linked Supabase project.
-- Remote migration history is aligned through `20260730165555`.
+- Remote migration history is aligned through `20260811200225`.
 - Production deploy protection exists through `npm run deploy:app:production` and `npm run check:production-build-config`.
-- Active hosted Supabase Edge Functions were `send-email`, `send-sms`, `notify-beta-access-request`, `notify-beta-approval`, and a remote `stripe-webhook`; this pass adds source-controlled Stripe billing functions that must replace the remote-only webhook before launch.
+- Stripe Checkout opened successfully from the production owner Billing page without changing the shop subscription merely by opening the flow.
+- `create-checkout-session`, `create-billing-portal-session`, and the source-controlled `stripe-webhook` are deployed; Checkout/Portal require JWTs and the webhook uses Stripe signature verification.
+- The focused `set_updated_at` search-path hardening migration passed locally; the local Supabase Security Advisor returned no warnings afterward. It remains pending remote application until the launch-readiness branch is reviewed and approved.
 
 ## Backup and Restore Readiness
 
@@ -26,18 +28,18 @@ npm run backup:supabase
 
 The backup script captures hosted database SQL dumps, migration history, current migration/function source folders, checksums, row counts, compare reports, and Supabase Storage bucket files. Storage object binaries are intentionally copied separately because database dumps only include Storage metadata.
 
-Current launch blocker:
+Scheduled-backup status:
 
 - Windows Scheduled Task `FretTrack Daily Supabase Backup` exists and is enabled.
-- Its latest observed run on `2026-08-11 02:55` returned result `1`.
-- The failure was Docker Desktop access: the scheduled task could not inspect the local Supabase Postgres Docker image through `dockerDesktopLinuxEngine`.
-- Latest observed successful full snapshot: `backups/hosted-supabase-20260810-025502`.
-- Latest observed successful local Docker archive: `backups/docker-volume-20260810-025502/supabase_db_FretTrack.tar.gz`.
+- A manual invocation of the exact scheduled task completed successfully on `2026-08-11` with Task Scheduler result `0` and snapshot `backups/hosted-supabase-20260811-182456`.
+- That snapshot independently passed SHA-256 validation for all 4,873 manifest entries and contains the current migration history plus 194 Storage object binaries.
+- The backup script now starts Docker Desktop and waits for its engine because current Supabase CLI database dumps require Docker. The scheduled task skips only the optional local-volume archive; manual full backups and pre-restore safety archives still capture it.
+- A complete local restore drill from that snapshot passed on `2026-08-11`: 73 backed-up table counts matched, local data-integrity checks passed, all 58 migrations aligned, and all 194 restored Storage downloads matched the snapshot SHA-256 hashes.
 
 Paid-launch requirement:
 
-- Either record three consecutive successful daily scheduled backup runs, or move daily production backups to a reliable always-on machine/runner that does not depend on an interactive desktop Docker session.
-- Verify at least one local restore drill from a hosted snapshot before taking paid shops.
+- Record three consecutive successful daily scheduled backup runs, or move daily production backups to a reliable always-on machine/runner.
+- Repeat the local restore drill after material schema/Auth/Storage version changes; the `2026-08-11` baseline drill is recorded in `docs/test-reports/paid-launch-restore-drill-2026-08-11.md`.
 
 ## Restore Drill
 
@@ -108,13 +110,14 @@ Stripe-ready implementation now in this branch:
 - `stripe-webhook` verifies Stripe signatures from the raw request body, records processed event IDs, and updates FretTrack subscription state from Stripe subscription and invoice events.
 - Opening, canceling, abandoning, or failing Checkout does not mutate the shop's current plan or entitlements; subscription writes occur only after a signature-verified Stripe webhook.
 - Webhook synchronization maps opaque Price IDs by exact configured-secret comparison, stores the Stripe recurring interval explicitly, and retries previously failed event IDs.
+- Invoice payment events resolve their subscription through Stripe's current `parent.subscription_details.subscription` payload, with a legacy fallback; `invoice.paid` recovery and `invoice.payment_succeeded` remain supported.
+- Executable Deno lifecycle tests cover current and legacy invoice payloads plus active, trialing, past-due, incomplete, canceled, and paused/read-only mappings.
 - The Billing page now exposes Stripe Checkout and Billing Portal actions to shop owners/admins.
 - Stripe webhook events are source-controlled through `stripe_webhook_events` for idempotency and operational review.
 
 Launch gaps still requiring real Stripe account data and live validation:
 
-- Supabase secrets must be set for the production project.
-- Stripe webhook endpoint must be pointed at the deployed `stripe-webhook` Edge Function.
+- Confirm the configured production Stripe prices and webhook endpoint again immediately before paid launch.
 - Automated subscription creation, renewal, cancellation, past-due, failed-payment, payment recovery, and trial-ended handling must be verified end to end from Stripe events.
 - The current function-key gate for document email is browser-facing build configuration and should be treated as a weak gate, not a paid-launch security boundary. Server-side authenticated membership checks should remain the real authority.
 
@@ -172,6 +175,8 @@ Do not paste real Stripe secrets into committed files or screenshots. The functi
 - Confirm no service role key or provider secret exists in frontend bundles.
 - Confirm browser-facing keys are not treated as security authorities.
 - Confirm public docs explain privacy, backups, uptime, and support boundaries plainly.
+- If the production Supabase project is on Pro, enable its leaked-password protection; otherwise record that accepted risk and use the strongest available password settings. Then verify normal owner/admin/tech/viewer sign-in and password-reset flows.
+- The linked organization was confirmed on the Free plan on `2026-08-11`; leaked-password protection is therefore recorded as unavailable for now. Email confirmation is required and anonymous/phone sign-in are disabled, but the dashboard password-strength setting still needs a final manual check before launch.
 
 ### Days 21-25: Production Smoke Matrix
 

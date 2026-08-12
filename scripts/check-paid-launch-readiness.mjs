@@ -22,8 +22,8 @@ for (const required of [
   'Exact 30-Day Launch Checklist',
   'Go / No-Go Gates',
   'FretTrack Daily Supabase Backup',
-  'backups/hosted-supabase-20260810-025502',
-  'Docker Desktop access',
+  'backups/hosted-supabase-20260811-182456',
+  'Task Scheduler result `0`',
   'Storage object binaries are intentionally copied separately',
   'Stripe-powered self-serve billing',
   'create-checkout-session',
@@ -33,6 +33,7 @@ for (const required of [
   'STRIPE_WEBHOOK_SIGNING_SECRET',
   'STRIPE_PRICE_SHOP_MONTHLY',
   'Stripe secrets or live price IDs are missing',
+  'leaked-password protection',
 ]) {
   assert.ok(
     readiness.includes(required),
@@ -88,6 +89,7 @@ assert.ok(webhookFunction.includes('stripe_webhook_events'), 'Stripe webhook mus
 assert.ok(webhookFunction.includes('checkout.session.completed'), 'Stripe webhook must process completed Checkout sessions.');
 assert.ok(webhookFunction.includes('customer.subscription.updated'), 'Stripe webhook must process subscription updates.');
 assert.ok(webhookFunction.includes('invoice.payment_failed'), 'Stripe webhook must process failed payments.');
+assert.ok(webhookFunction.includes('invoice.paid'), 'Stripe webhook must process successful invoice payment recovery.');
 assert.ok(webhookFunction.includes('shop_subscriptions'), 'Stripe webhook must update shop subscription state.');
 assert.ok(webhookFunction.includes('getConfiguredPriceId'), 'Webhook plan mapping must compare exact configured Stripe price IDs.');
 assert.ok(!webhookFunction.includes("value.includes('pro')"), 'Webhook must not infer a plan from opaque Stripe price ID text.');
@@ -98,6 +100,21 @@ assert.ok(
   /from\(['"]shop_subscriptions['"]\)\.upsert/s.test(webhookFunction),
   'The signed Stripe webhook must remain the subscription-state write boundary.',
 );
+
+const webhookLifecycle = read('supabase/functions/stripe-webhook/lifecycle.ts');
+assert.ok(
+  webhookLifecycle.includes('parent?.subscription_details?.subscription'),
+  'Invoice events must resolve subscriptions from the current Stripe parent schema.',
+);
+assert.ok(
+  /\|\|\s*getStripeId\(value\.subscription\)/.test(webhookLifecycle),
+  'Invoice events must retain compatibility with legacy Stripe subscription references.',
+);
+const webhookLifecycleTest = read('supabase/functions/stripe-webhook/lifecycle.test.ts');
+assert.ok(/subscription:\s*["']sub_current["']/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover the current invoice parent schema.');
+assert.ok(/subscription:\s*["']sub_legacy["']/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover the legacy invoice schema.');
+assert.ok(/\[\s*["']past_due["'],\s*["']past_due["']\s*\]/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover failed-payment access state.');
+assert.ok(/\[\s*["']canceled["'],\s*["']canceled["']\s*\]/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover cancellation state.');
 
 const billingPage = read('src/modules/billing/BillingPage.jsx');
 assert.ok(billingPage.includes('Start Shop Monthly'), 'Billing page must expose Shop Checkout.');
@@ -124,6 +141,19 @@ assert.ok(migration.includes('from public, anon, authenticated'), 'Webhook event
 assert.ok(migration.includes('if trial_expired then\n    effective_entitlements := entitlement_values;'), 'Expired trials must continue ignoring entitlement overrides.');
 assert.ok(migration.includes("'profileStatus', coalesce(profile_row.subscription_status, 'active')"), 'Existing entitlement snapshot compatibility fields must remain present.');
 
+const triggerHardeningMigration = read('supabase/migrations/20260812025459_harden_set_updated_at_search_path.sql');
+assert.ok(
+  triggerHardeningMigration.includes("set search_path = ''") &&
+    triggerHardeningMigration.includes('pg_catalog.now()'),
+  'The shared updated_at trigger must use an empty search path and a schema-qualified timestamp function.',
+);
+assert.ok(
+  triggerHardeningMigration.includes(
+    'revoke all on function public.set_updated_at() from public, anon, authenticated, service_role;',
+  ),
+  'The shared trigger-only function must not retain direct client execution grants.',
+);
+
 const functionEnvExample = read('supabase/functions/.env.example');
 for (const required of [
   'STRIPE_SECRET_KEY=',
@@ -146,8 +176,24 @@ assert.ok(
   'Database backup docs must distinguish Storage object backup from database metadata.',
 );
 assert.ok(
-  databaseBackups.includes('2026-08-11') && databaseBackups.includes('Docker Desktop'),
-  'Database backup docs must record the current scheduled-backup reliability blocker.',
+  databaseBackups.includes('-SkipDockerVolumeBackup') &&
+    databaseBackups.includes('three consecutive successful unattended runs'),
+  'Database backup docs must explain the scheduled backup mode and the remaining reliability evidence gate.',
+);
+const localRestore = read('scripts/refresh-local-db-from-hosted-backup.ps1');
+assert.ok(
+  localRestore.includes('Restore-StorageBuckets') &&
+    localRestore.includes("'x-upsert' = 'true'") &&
+    localRestore.includes('_frettrack_storage_restore_snapshot') &&
+    localRestore.includes('_frettrack_storage_buckets_restore_snapshot') &&
+    localRestore.includes('file_size_limit = null') &&
+    localRestore.includes('supabase_storage_FretTrack') &&
+    localRestore.includes('SERVICE_ROLE_KEY'),
+  'Local restore drill must restore hosted Storage binaries and preserve the local Storage volume first.',
+);
+assert.ok(
+  !localRestore.includes('version = source.version'),
+  'Local Storage restore must retain the environment-specific object version created by the local Storage API.',
 );
 
 const deploymentNotes = read('docs/DEPLOYMENT_NOTES.md');

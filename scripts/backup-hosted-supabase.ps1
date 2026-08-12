@@ -23,6 +23,48 @@ function Require-Command {
   }
 }
 
+function Test-DockerEngine {
+  try {
+    & docker info --format '{{.ServerVersion}}' *> $null
+    return $LASTEXITCODE -eq 0
+  } catch {
+    return $false
+  }
+}
+
+function Ensure-DockerEngine {
+  param([int]$TimeoutSeconds = 180)
+
+  Require-Command docker
+  if (Test-DockerEngine) {
+    return
+  }
+
+  $dockerDesktopCandidates = @(
+    (Join-Path $env:ProgramFiles 'Docker\Docker\Docker Desktop.exe'),
+    (Join-Path $env:LOCALAPPDATA 'Docker\Docker Desktop.exe')
+  ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
+
+  $dockerDesktop = $dockerDesktopCandidates | Select-Object -First 1
+  if (-not $dockerDesktop) {
+    throw 'Docker Desktop is not running and its executable could not be found.'
+  }
+
+  Write-Step 'Starting Docker Desktop for Supabase CLI backup commands'
+  Start-Process -FilePath $dockerDesktop -WindowStyle Hidden
+
+  $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+  while ((Get-Date) -lt $deadline) {
+    Start-Sleep -Seconds 5
+    if (Test-DockerEngine) {
+      Write-Step 'Docker engine is ready'
+      return
+    }
+  }
+
+  throw "Docker Desktop did not become ready within $TimeoutSeconds seconds."
+}
+
 function Invoke-Checked {
   param(
     [string]$FilePath,
@@ -499,6 +541,7 @@ try {
   Write-Step "Transcript started at $transcriptPath"
 
   Require-Command supabase
+  Ensure-DockerEngine
 
   New-Item -ItemType Directory -Path $snapshotDir -Force | Out-Null
   $repoSnapshotDir = Join-Path $snapshotDir 'supabase'

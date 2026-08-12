@@ -10,7 +10,8 @@ const result = spawnSync(denoCommand, [
   'check',
   'create-checkout-session/index.ts',
   'create-billing-portal-session/index.ts',
-  'stripe-webhook/index.ts'
+  'stripe-webhook/index.ts',
+  'stripe-webhook/lifecycle.test.ts'
 ], {
   cwd: functionsDir,
   shell: process.platform === 'win32',
@@ -22,7 +23,25 @@ if (result.error) {
   process.exit(1);
 }
 
-process.exit(result.status ?? 1);
+if ((result.status ?? 1) !== 0) {
+  process.exit(result.status ?? 1);
+}
+
+const testResult = spawnSync(denoCommand, [
+  'test',
+  'stripe-webhook/lifecycle.test.ts'
+], {
+  cwd: functionsDir,
+  shell: process.platform === 'win32',
+  stdio: 'inherit'
+});
+
+if (testResult.error) {
+  console.error(testResult.error.message);
+  process.exit(1);
+}
+
+process.exit(testResult.status ?? 1);
 
 function resolveDenoCommand() {
   const configured = process.env.DENO_BIN || '';

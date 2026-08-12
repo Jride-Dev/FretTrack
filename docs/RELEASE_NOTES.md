@@ -12,6 +12,16 @@ Stripe Price IDs are compared exactly with configured Supabase secrets instead o
 
 The hosted Supabase backup workflow now generates SHA-256 manifests through the platform-independent .NET cryptography API. This removes a Windows PowerShell command-resolution failure found during the production readiness backup while retaining full database, Storage, comparison-manifest, and local Docker-volume coverage.
 
+Daily scheduled hosted backups now start and wait for Docker Desktop before invoking Supabase CLI database dumps. The unattended task captures the hosted database, migration history, functions, and Storage objects without adding an optional local-volume archive on every run; manual full backups and pre-restore safeguards continue to create that archive.
+
+Paid-launch documentation now matches the deployed Stripe Checkout, Billing Portal, and signature-verified webhook foundation. It also records the current backup evidence, frontend secret scan, restore-drill requirement, and remaining Supabase Auth/security settings without claiming the full paid-launch gate is complete.
+
+The hosted recovery workflow has now completed a full local drill. It restores Auth and application data from SQL, restores Storage binaries through the local Storage API without losing historical portable metadata, accommodates grandfathered files during recovery without permanently relaxing bucket limits, and verifies all restored object bytes against the snapshot.
+
+Database security hardening now pins the shared `updated_at` trigger helper to an empty search path, explicitly uses the PostgreSQL timestamp function, and removes unnecessary direct client execution. This is a trigger-only implementation change and does not alter application permissions or user data.
+
+Stripe invoice lifecycle processing now resolves subscription IDs from Stripe's current invoice parent details and the legacy top-level field. Successful invoice recovery events are handled alongside payment failures, with executable tests covering the supported lifecycle and compatibility mappings.
+
 ## Architecture and inventory reliability
 
 Invoice address correction: customer invoice emails, attached Job Sheet email content, and printable invoice-style Job Sheets now consistently use the business address from the active shop's Shop Settings. No database migration or stored document rewrite is required.
