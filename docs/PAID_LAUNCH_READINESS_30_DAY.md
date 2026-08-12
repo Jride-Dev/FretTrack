@@ -176,6 +176,7 @@ Do not paste real Stripe secrets into committed files or screenshots. The functi
 - Confirm browser-facing keys are not treated as security authorities.
 - Confirm public docs explain privacy, backups, uptime, and support boundaries plainly.
 - If the production Supabase project is on Pro, enable its leaked-password protection; otherwise record that accepted risk and use the strongest available password settings. Then verify normal owner/admin/tech/viewer sign-in and password-reset flows.
+- The linked organization was confirmed on the Free plan on `2026-08-11`; leaked-password protection is therefore recorded as unavailable for now. Email confirmation is required and anonymous/phone sign-in are disabled, but the dashboard password-strength setting still needs a final manual check before launch.
 
 ### Days 21-25: Production Smoke Matrix
 
