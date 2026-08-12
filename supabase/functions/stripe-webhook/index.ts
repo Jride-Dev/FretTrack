@@ -1,5 +1,11 @@
 import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import {
+  getInvoiceSubscriptionId,
+  normalizeBillingInterval,
+  normalizePlan,
+  normalizeStripeStatus
+} from './lifecycle.ts';
 
 const stripe = new Stripe(getStripeSecretKey());
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
@@ -56,6 +62,7 @@ async function handleStripeEvent(supabase: SupabaseAnyClient, event: Stripe.Even
       return syncSubscription(supabase, event.data.object as Stripe.Subscription);
     case 'invoice.payment_failed':
     case 'invoice.payment_succeeded':
+    case 'invoice.paid':
       return syncInvoicePaymentState(supabase, event.data.object as Stripe.Invoice);
     default:
       return { status: 'ignored', shopId: '', customerId: '', subscriptionId: '' };
@@ -72,10 +79,7 @@ async function syncCheckoutSession(supabase: SupabaseAnyClient, session: Stripe.
 }
 
 async function syncInvoicePaymentState(supabase: SupabaseAnyClient, invoice: Stripe.Invoice) {
-  const invoiceWithSubscription = invoice as Stripe.Invoice & { subscription?: string | Stripe.Subscription | null };
-  const subscriptionId = typeof invoiceWithSubscription.subscription === 'string'
-    ? invoiceWithSubscription.subscription
-    : invoiceWithSubscription.subscription?.id || '';
+  const subscriptionId = getInvoiceSubscriptionId(invoice);
   if (!subscriptionId) return { status: 'ignored', shopId: '', customerId: getCustomerId(invoice.customer), subscriptionId: '' };
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   return syncSubscription(supabase, subscription);
@@ -170,22 +174,6 @@ async function recordEvent(supabase: SupabaseAnyClient, event: Stripe.Event, res
   if (error) throw error;
 }
 
-function normalizeStripeStatus(status: string) {
-  const value = String(status || '').toLowerCase();
-  if (value === 'active') return 'active';
-  if (value === 'trialing') return 'trialing';
-  if (value === 'past_due' || value === 'unpaid') return 'past_due';
-  if (value === 'incomplete' || value === 'incomplete_expired') return 'incomplete';
-  if (value === 'canceled' || value === 'cancelled') return 'canceled';
-  if (value === 'paused') return 'read_only';
-  return 'read_only';
-}
-
-function normalizePlan(plan: string) {
-  const value = String(plan || '').toLowerCase();
-  return value === 'shop' || value === 'pro' ? value : '';
-}
-
 function planFromPriceId(priceId: string) {
   const value = String(priceId || '').trim();
   if (!value) return '';
@@ -198,13 +186,6 @@ function getConfiguredPriceId(plan: string, interval: string) {
   const key = `STRIPE_PRICE_${plan.toUpperCase()}_${interval.toUpperCase()}`;
   const legacyKey = `STRIPE_${plan.toUpperCase()}_${interval.toUpperCase()}_PRICE_ID`;
   return Deno.env.get(key) || Deno.env.get(legacyKey) || '';
-}
-
-function normalizeBillingInterval(interval: unknown) {
-  const value = String(interval || '').toLowerCase();
-  if (value === 'month' || value === 'monthly') return 'monthly';
-  if (value === 'year' || value === 'yearly') return 'yearly';
-  return '';
 }
 
 function getCustomerId(customer: string | Stripe.Customer | Stripe.DeletedCustomer | null) {

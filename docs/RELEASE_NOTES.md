@@ -20,6 +20,8 @@ The hosted recovery workflow has now completed a full local drill. It restores A
 
 Database security hardening now pins the shared `updated_at` trigger helper to an empty search path, explicitly uses the PostgreSQL timestamp function, and removes unnecessary direct client execution. This is a trigger-only implementation change and does not alter application permissions or user data.
 
+Stripe invoice lifecycle processing now resolves subscription IDs from Stripe's current invoice parent details and the legacy top-level field. Successful invoice recovery events are handled alongside payment failures, with executable tests covering the supported lifecycle and compatibility mappings.
+
 ## Architecture and inventory reliability
 
 Invoice address correction: customer invoice emails, attached Job Sheet email content, and printable invoice-style Job Sheets now consistently use the business address from the active shop's Shop Settings. No database migration or stored document rewrite is required.

@@ -89,6 +89,7 @@ assert.ok(webhookFunction.includes('stripe_webhook_events'), 'Stripe webhook mus
 assert.ok(webhookFunction.includes('checkout.session.completed'), 'Stripe webhook must process completed Checkout sessions.');
 assert.ok(webhookFunction.includes('customer.subscription.updated'), 'Stripe webhook must process subscription updates.');
 assert.ok(webhookFunction.includes('invoice.payment_failed'), 'Stripe webhook must process failed payments.');
+assert.ok(webhookFunction.includes('invoice.paid'), 'Stripe webhook must process successful invoice payment recovery.');
 assert.ok(webhookFunction.includes('shop_subscriptions'), 'Stripe webhook must update shop subscription state.');
 assert.ok(webhookFunction.includes('getConfiguredPriceId'), 'Webhook plan mapping must compare exact configured Stripe price IDs.');
 assert.ok(!webhookFunction.includes("value.includes('pro')"), 'Webhook must not infer a plan from opaque Stripe price ID text.');
@@ -99,6 +100,21 @@ assert.ok(
   /from\(['"]shop_subscriptions['"]\)\.upsert/s.test(webhookFunction),
   'The signed Stripe webhook must remain the subscription-state write boundary.',
 );
+
+const webhookLifecycle = read('supabase/functions/stripe-webhook/lifecycle.ts');
+assert.ok(
+  webhookLifecycle.includes('parent?.subscription_details?.subscription'),
+  'Invoice events must resolve subscriptions from the current Stripe parent schema.',
+);
+assert.ok(
+  /\|\|\s*getStripeId\(value\.subscription\)/.test(webhookLifecycle),
+  'Invoice events must retain compatibility with legacy Stripe subscription references.',
+);
+const webhookLifecycleTest = read('supabase/functions/stripe-webhook/lifecycle.test.ts');
+assert.ok(/subscription:\s*["']sub_current["']/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover the current invoice parent schema.');
+assert.ok(/subscription:\s*["']sub_legacy["']/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover the legacy invoice schema.');
+assert.ok(/\[\s*["']past_due["'],\s*["']past_due["']\s*\]/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover failed-payment access state.');
+assert.ok(/\[\s*["']canceled["'],\s*["']canceled["']\s*\]/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover cancellation state.');
 
 const billingPage = read('src/modules/billing/BillingPage.jsx');
 assert.ok(billingPage.includes('Start Shop Monthly'), 'Billing page must expose Shop Checkout.');

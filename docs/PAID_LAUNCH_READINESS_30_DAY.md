@@ -110,6 +110,8 @@ Stripe-ready implementation now in this branch:
 - `stripe-webhook` verifies Stripe signatures from the raw request body, records processed event IDs, and updates FretTrack subscription state from Stripe subscription and invoice events.
 - Opening, canceling, abandoning, or failing Checkout does not mutate the shop's current plan or entitlements; subscription writes occur only after a signature-verified Stripe webhook.
 - Webhook synchronization maps opaque Price IDs by exact configured-secret comparison, stores the Stripe recurring interval explicitly, and retries previously failed event IDs.
+- Invoice payment events resolve their subscription through Stripe's current `parent.subscription_details.subscription` payload, with a legacy fallback; `invoice.paid` recovery and `invoice.payment_succeeded` remain supported.
+- Executable Deno lifecycle tests cover current and legacy invoice payloads plus active, trialing, past-due, incomplete, canceled, and paused/read-only mappings.
 - The Billing page now exposes Stripe Checkout and Billing Portal actions to shop owners/admins.
 - Stripe webhook events are source-controlled through `stripe_webhook_events` for idempotency and operational review.
 
