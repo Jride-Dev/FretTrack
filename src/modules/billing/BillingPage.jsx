@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { formatShopDate } from '../../shared/utils/dateFormat';
 import {
   formatStorage,
@@ -6,8 +7,12 @@ import {
   getEntitlement
 } from './entitlementService';
 import { getPlanStatus } from './planStatus';
+import { createBillingPortalSession, createCheckoutSession } from './stripeBillingService';
 
 export default function BillingPage({ canManageShop = false, entitlementSnapshot, shopProfile = null }) {
+  const [billingAction, setBillingAction] = useState('');
+  const [billingError, setBillingError] = useState('');
+
   if (!canManageShop) {
     return (
       <section className="panel billing-page">
@@ -25,6 +30,32 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
   const storageLimit = Number(getEntitlement(snapshot, 'max_storage_bytes', 0)) || 0;
   const userLimit = Number(getEntitlement(snapshot, 'max_users', 0)) || 0;
   const planStatus = getPlanStatus(snapshot);
+  const shopId = snapshot.shopId || shopProfile?.shop_id || shopProfile?.shopId || '';
+  const hasStripeCustomer = Boolean(subscription.stripeCustomerId || subscription.stripe_customer_id);
+
+  async function redirectToCheckout(plan, interval = 'monthly') {
+    setBillingError('');
+    setBillingAction(`${plan}-${interval}`);
+    try {
+      const url = await createCheckoutSession({ shopId, plan, interval });
+      window.location.assign(url);
+    } catch (error) {
+      setBillingError(getErrorMessage(error));
+      setBillingAction('');
+    }
+  }
+
+  async function redirectToPortal() {
+    setBillingError('');
+    setBillingAction('portal');
+    try {
+      const url = await createBillingPortalSession({ shopId });
+      window.location.assign(url);
+    } catch (error) {
+      setBillingError(getErrorMessage(error));
+      setBillingAction('');
+    }
+  }
 
   return (
     <section className="panel billing-page">
@@ -61,9 +92,30 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
         )}
       </section>
 
-      <section className="billing-placeholder">
-        <h3>Upgrade / Contact Support</h3>
-        <p>Plan changes are handled by FretTrack support during beta.</p>
+      <section className="billing-self-serve">
+        <h3>Manage Plan</h3>
+        <p>Choose a Stripe-powered FretTrack plan or open the secure billing portal for payment, renewal, cancellation, and invoice settings.</p>
+        {billingError && <p className="error-text" role="alert">{billingError}</p>}
+        <div className="billing-plan-actions">
+          <button type="button" className="primary" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('shop', 'monthly')}>
+            {billingAction === 'shop-monthly' ? 'Opening…' : 'Start Shop Monthly'}
+          </button>
+          <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('pro', 'monthly')}>
+            {billingAction === 'pro-monthly' ? 'Opening…' : 'Start Pro Monthly'}
+          </button>
+          <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('shop', 'yearly')}>
+            {billingAction === 'shop-yearly' ? 'Opening…' : 'Start Shop Yearly'}
+          </button>
+          <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('pro', 'yearly')}>
+            {billingAction === 'pro-yearly' ? 'Opening…' : 'Start Pro Yearly'}
+          </button>
+          <button type="button" disabled={!hasStripeCustomer || Boolean(billingAction)} onClick={redirectToPortal}>
+            {billingAction === 'portal' ? 'Opening…' : 'Manage Billing Portal'}
+          </button>
+        </div>
+        {!hasStripeCustomer && (
+          <p className="muted-text">The Billing Portal appears after the shop has a connected Stripe customer.</p>
+        )}
         <a href="mailto:support@frettrack-app.com">Contact support@frettrack-app.com</a>
       </section>
     </section>
@@ -94,4 +146,8 @@ function formatInterval(value) {
     yearly: 'Yearly'
   };
   return labels[value] || '-';
+}
+
+function getErrorMessage(error) {
+  return error instanceof Error ? error.message : 'Unable to open Stripe billing.';
 }

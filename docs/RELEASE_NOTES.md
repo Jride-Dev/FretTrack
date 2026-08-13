@@ -1,8 +1,26 @@
 # Release Notes
 
-## GitHub Release Summary: v0.2.9-beta.4
+## GitHub Release Summary: v0.2.9-beta.5
 
-FretTrack `0.2.9-beta.4` is an architecture and workflow-reliability release candidate. It preserves the existing repair-shop experience while separating workspace navigation, Inventory, and Job Detail presentation into smaller feature boundaries that are safer to maintain and test.
+FretTrack `0.2.9-beta.5` is an architecture and workflow-reliability release candidate. It preserves the existing repair-shop experience while separating workspace navigation, Inventory, and Job Detail presentation into smaller feature boundaries that are safer to maintain and test.
+
+## Stripe paid-launch readiness
+
+FretTrack now has source-controlled owner/admin-only Stripe Checkout and Billing Portal actions plus a signature-verified, replay-aware webhook that synchronizes Shop and Pro subscriptions. Merely opening, canceling, abandoning, or failing Checkout cannot change a beta shop's plan or entitlements; paid state changes remain behind the verified webhook boundary.
+
+Stripe Price IDs are compared exactly with configured Supabase secrets instead of being interpreted as readable names. Monthly/yearly interval is stored explicitly from Stripe, and failed webhook deliveries remain retryable rather than being incorrectly accepted as completed duplicates. Migration `20260811200225_stripe_self_serve_billing_readiness.sql` and the three billing Edge Functions require reviewed production rollout and end-to-end Stripe smoke testing before paid launch.
+
+The hosted Supabase backup workflow now generates SHA-256 manifests through the platform-independent .NET cryptography API. This removes a Windows PowerShell command-resolution failure found during the production readiness backup while retaining full database, Storage, comparison-manifest, and local Docker-volume coverage.
+
+Daily scheduled hosted backups now start and wait for Docker Desktop before invoking Supabase CLI database dumps. The unattended task captures the hosted database, migration history, functions, and Storage objects without adding an optional local-volume archive on every run; manual full backups and pre-restore safeguards continue to create that archive.
+
+Paid-launch documentation now matches the deployed Stripe Checkout, Billing Portal, and signature-verified webhook foundation. It also records the current backup evidence, frontend secret scan, restore-drill requirement, and remaining Supabase Auth/security settings without claiming the full paid-launch gate is complete.
+
+The hosted recovery workflow has now completed a full local drill. It restores Auth and application data from SQL, restores Storage binaries through the local Storage API without losing historical portable metadata, accommodates grandfathered files during recovery without permanently relaxing bucket limits, and verifies all restored object bytes against the snapshot.
+
+Database security hardening now pins the shared `updated_at` trigger helper to an empty search path, explicitly uses the PostgreSQL timestamp function, and removes unnecessary direct client execution. This is a trigger-only implementation change and does not alter application permissions or user data.
+
+Stripe invoice lifecycle processing now resolves subscription IDs from Stripe's current invoice parent details and the legacy top-level field. Successful invoice recovery events are handled alongside payment failures, with executable tests covering the supported lifecycle and compatibility mappings.
 
 ## Architecture and inventory reliability
 
@@ -16,7 +34,25 @@ Workspace refresh restoration now waits until the authenticated shop profile and
 
 The application shell now delegates its New Job sidebar composition and derived role/entitlement access map to focused modules. Existing feature permission helpers remain authoritative, while `App.jsx` no longer renders sidebar internals or calculates each page permission inline.
 
-Inventory now separates its History, Labels, Vendors, Parts list, Part editor, Purchase Order list, and Purchase Order editor into focused presentation modules. Job Detail likewise separates its shell/header, dialogs, formatting, Damage Report, print documents, Inspection, Work, and Parts & Billing presentation. Existing persistence services, transactional receiving, permissions, role restrictions, and dirty-state behavior remain authoritative.
+Inventory now separates its History, Labels, Vendors, Parts list, Part editor, Purchase Order list, and Purchase Order editor into focused presentation modules. Job Detail likewise separates its shell, header, dialogs, tabs, formatting, Damage Report, print actions/documents, Intake, Inspection, Work, Parts & Billing, Photos, Messages, Scheduling, and Timeline presentation. Existing persistence services, transactional receiving, photo actions, print and email actions, message sending, linked schedule-event behavior, permissions, role restrictions, and dirty-state behavior remain authoritative.
+
+Job Detail's pure patch builders for customer display names, received-date job numbers, instrument/string-count updates, and job/shop tax-rate edits now live in the existing helper boundary. The component still owns permissions, dirty-state, saving, and persistence.
+
+Payment add/update/remove transformations now use the same helper boundary, while Job Detail still owns autosave timing, dirty-state, and persistence.
+
+Neck-inspection and string-gauge transformations now also use that helper boundary, while Job Detail still owns write permissions, dirty-state, save timing, and the active shop measurement unit passed into the inspection UI.
+
+Manual part and service line-item transformations now use the helper boundary too. Inventory-backed stock calls, included-service part tracking, totals, permission checks, dirty-state, and persistence remain on their established paths.
+
+Discount, generic technical-field, work-order image selection, contact preference, and last-message-template transformations now use the same helper boundary while preserving the existing controlled UI, dirty-state, permission, document image, and messaging behavior.
+
+Work-log row edits/removals, Damage Map updates, message merges, and assignment-field merges now use pure helper boundaries. Job Detail still owns save timing, notices, permissions, timeline refreshes, and the service calls around those changes.
+
+Inventory-backed part result merges and local photo preview/remove transforms now use pure helper boundaries. The existing inventory service calls, photo persistence calls, permission gates, stock updates, and refresh behavior remain unchanged.
+
+Picked-up status patching and Damage Map uploaded-image selection now use pure helper boundaries while the finish flow, PVMH pickup prompt, upload handling, and permissions remain in Job Detail.
+
+The operations checklist now has a read-only Supabase data-integrity check for deleted-job orphans, ownerless shop profiles, broken shop-member auth links, and auth users without identities. It reports aggregate issue groups only and avoids dumping customer/job records.
 
 Direct receiving, stock adjustments, and purchase-order receiving now synchronize the selected part editor with the authoritative saved quantity and cost. A later **Save Changes** action therefore preserves the received or adjusted stock instead of restoring stale form values. Purchase-unit conversion snapshots and individual-unit job usage remain unchanged.
 

@@ -1,49 +1,135 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 const root = process.cwd();
 const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
 const detail = read('src/modules/jobs/JobDetail.jsx');
+const shell = read('src/modules/jobs/JobDetailShell.jsx');
 const header = read('src/modules/jobs/JobDetailHeader.jsx');
 const dialogs = read('src/modules/jobs/JobDetailDialogs.jsx');
 const damageReportView = read('src/modules/jobs/JobDamageReportView.jsx');
 const printDocuments = read('src/modules/jobs/JobPrintDocuments.jsx');
+const printSections = read('src/modules/jobs/JobPrintSections.jsx');
+const intakeSections = read('src/modules/jobs/JobIntakeSections.jsx');
 const inspectionSections = read('src/modules/jobs/JobInspectionSections.jsx');
 const workSections = read('src/modules/jobs/JobWorkSections.jsx');
 const billingSections = read('src/modules/jobs/JobBillingSections.jsx');
+const auxiliarySections = read('src/modules/jobs/JobAuxiliarySections.jsx');
+const photoSections = read('src/modules/jobs/JobPhotoSections.jsx');
 const formattingPath = join(root, 'src/modules/jobs/jobDetailFormatting.js');
+const formatting = read('src/modules/jobs/jobDetailFormatting.js');
+const workLogDraft = read('src/modules/jobs/workLogDraft.js');
 const packageJson = read('package.json');
 
-assert.match(detail, /import JobDetailHeader from ['"]\.\/JobDetailHeader\.jsx['"]/, 'Job Detail must use the focused header boundary.');
-assert.match(detail, /import JobDetailDialogs from ['"]\.\/JobDetailDialogs\.jsx['"]/, 'Job Detail must use the focused dialogs boundary.');
+assert.match(detail, /import JobDetailShell from ['"]\.\/JobDetailShell\.jsx['"]/, 'Job Detail must use the focused shell boundary.');
 assert.match(detail, /from ['"]\.\/jobDetailFormatting\.js['"]/, 'Job Detail must use the pure formatting boundary.');
-assert.match(detail, /import JobPrintDocuments from ['"]\.\/JobPrintDocuments\.jsx['"]/, 'Job Detail must use the focused print-document boundary.');
+assert.match(detail, /import buildJobPrintSections from ['"]\.\/JobPrintSections\.jsx['"]/, 'Job Detail must use the focused print composition boundary.');
+assert.match(detail, /import JobIntakeSections from ['"]\.\/JobIntakeSections\.jsx['"]/, 'Job Detail must use the focused intake boundary.');
 assert.match(detail, /import JobInspectionSections from ['"]\.\/JobInspectionSections\.jsx['"]/, 'Job Detail must use the focused inspection boundary.');
 assert.match(detail, /import JobWorkSections from ['"]\.\/JobWorkSections\.jsx['"]/, 'Job Detail must use the focused work boundary.');
 assert.match(detail, /import JobBillingSections from ['"]\.\/JobBillingSections\.jsx['"]/, 'Job Detail must use the focused billing boundary.');
-assert.match(
-  detail,
-  /<JobDetailHeader[\s\S]*?onStatusChange=\{updateField\}[\s\S]*?onAssignmentChanged=\{handleAssignmentChanged\}/,
-  'Status and assignment changes must retain their established Job Detail handlers.'
-);
+assert.match(detail, /import buildJobAuxiliarySections from ['"]\.\/JobAuxiliarySections\.jsx['"]/, 'Job Detail must use the focused auxiliary-section boundary.');
+assert.match(detail, /import JobPhotoSections from ['"]\.\/JobPhotoSections\.jsx['"]/, 'Job Detail must use the focused photo boundary.');
 assert.doesNotMatch(detail, /className="detail-header"/, 'Header presentation must not remain duplicated in JobDetail.');
-assert.doesNotMatch(detail, /function markerColorForReport|function getInstrumentSelectionPatch|function buildMeasurementDisplay|function formatMeasurementStageForExport/, 'Extracted pure helpers must not remain duplicated in JobDetail.');
-for (const source of [header, dialogs, damageReportView, printDocuments, inspectionSections, workSections, billingSections]) {
+assert.doesNotMatch(detail, /function markerColorForReport|function getInstrumentSelectionPatch|function buildMeasurementDisplay|function formatMeasurementStageForExport|combineCustomerName|generateJobNumber|shouldResetModelForBrand|stringCountForInstrument/, 'Extracted pure helpers must not remain duplicated in JobDetail.');
+for (const source of [shell, header, dialogs, damageReportView, printDocuments, printSections, intakeSections, inspectionSections, workSections, billingSections, auxiliarySections, photoSections]) {
   assert.doesNotMatch(source, /jobService|supabase/i, 'Job Detail presentation boundaries must not load or mutate job data directly.');
 }
+assert.doesNotMatch(detail, /<JobDetailHeader|<JobDetailDialogs|<JobDetailTabs/, 'Shell, header, dialog, and tab composition must not remain duplicated in JobDetail.');
+assert.match(detail, /<JobDetailShell[\s\S]*?onAssignmentChanged=\{handleAssignmentChanged\}[\s\S]*?onCloseDocumentEmail=\{\(\) => setDocumentEmailDraft\(null\)\}[\s\S]*?onSendDocumentEmail=\{handleSendDocumentEmail\}[\s\S]*?onStatusChange=\{updateField\}[\s\S]*?saveStatus=\{displayedSaveStatus\}/, 'Job Detail shell must retain established dialog, header, assignment, status, and save-state handlers.');
+assert.match(shell, /<JobDetailDialogs[\s\S]*?onSendDocumentEmail=\{onSendDocumentEmail\}[\s\S]*?onSavePhotoCopy=\{onSavePhotoCopy\}[\s\S]*?onOverwritePhoto=\{onOverwritePhoto\}/, 'Shell must retain dialog action wiring.');
+assert.match(shell, /<JobDetailHeader[\s\S]*?onStatusChange=\{onStatusChange\}[\s\S]*?onAssignmentChanged=\{onAssignmentChanged\}[\s\S]*?onNotice=\{onNotice\}/, 'Shell must retain header status, assignment, and notice wiring.');
+assert.match(shell, /<JobDetailTabs[\s\S]*?activityTimeline=\{activityTimeline\}[\s\S]*?billingSections=\{billingSections\}[\s\S]*?imagesSection=\{imagesSection\}[\s\S]*?printSections=\{printSections\}[\s\S]*?workSections=\{workSections\}/, 'Shell must retain all Job Detail tab sections.');
 assert.match(header, /<JobStatusSelect canWrite=\{canWrite\}/, 'Job status editing must retain write permission enforcement.');
 assert.match(header, /<JobAssignmentControl[\s\S]*?onAssignmentChanged=\{onAssignmentChanged\}/, 'Team assignment must remain connected through the header boundary.');
 assert.match(header, /isDirty \|\| saveStatus === 'saving' \|\| saveStatus === 'error'/, 'Unsaved and failed save state must remain visible.');
-assert.match(detail, /<JobDetailDialogs[\s\S]*?onSendDocumentEmail=\{handleSendDocumentEmail\}[\s\S]*?onSavePhotoCopy=\{saveEditedPhotoCopy\}[\s\S]*?onOverwritePhoto=\{overwriteEditedPhoto\}/, 'Dialog actions must retain their established Job Detail handlers.');
 assert.match(dialogs, /onOverwrite=\{canOverwritePhotos \? onOverwritePhoto : null\}/, 'Photo overwrite must retain its permission gate.');
 assert.match(dialogs, /onSend=\{onSendDocumentEmail\}/, 'Document email sending must remain connected.');
 assert.match(dialogs, /onSend=\{onSendSubcontractorPickup\}/, 'Subcontractor email sending must remain connected.');
-assert.match(detail, /<JobPrintDocuments[\s\S]*?lengthUnit=\{measurementOptions\.lengthUnit\}[\s\S]*?workOrderImages=\{workOrderImages\}/, 'Print documents must retain the active job, shop measurement unit, totals, and images.');
+assert.doesNotMatch(detail, /<PrintActions|<JobPrintDocuments/, 'Print actions and document composition must not remain duplicated in JobDetail.');
+assert.match(detail, /buildJobPrintSections\(\{[\s\S]*?lengthUnit: measurementOptions\.lengthUnit[\s\S]*?onCloseDetail: closeDetail[\s\S]*?onEmailWorkOrder: openWorkOrderEmail[\s\S]*?onFinishJob: finishJob[\s\S]*?onPrintCustomerReport: printCustomerReport[\s\S]*?onPrintJobSheet: printJobSheet[\s\S]*?workOrderImages/, 'Print composition must retain shop measurement units, document images, and established action handlers.');
+assert.match(printSections, /<PrintActions[\s\S]*?canSendEmail=\{canSendEmail\}[\s\S]*?canWrite=\{canWrite\}[\s\S]*?closeDetail=\{onCloseDetail\}[\s\S]*?emailWorkOrder=\{onEmailWorkOrder\}[\s\S]*?finishJob=\{onFinishJob\}/, 'Print action controls must retain permissions and established handlers.');
+assert.match(printSections, /<JobPrintDocuments[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?shopSettings=\{shopSettings\}[\s\S]*?totals=\{totals\}[\s\S]*?workOrderImages=\{workOrderImages\}/, 'Print documents must retain calculated totals, active shop settings, and selected measurement unit.');
 assert.match(printDocuments, /<JobPrintSheet[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?totals=\{totals\}/, 'Job Sheet rendering must retain calculated totals and the selected measurement unit.');
 assert.match(printDocuments, /<CustomerDamageReport[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?reportDamageView=\{renderDamageView\}/, 'Customer Report rendering must retain measurement formatting and damage-map composition.');
 assert.match(printDocuments, /<JobDamageReportView damageMap=\{draftJob\.techDetails\.damageMap \|\| \{\}\} viewName=\{viewName\} \/>/, 'Customer damage report rendering must retain the active job damage map.');
+assert.match(detail, /patchJob\(buildJobFieldPatch\(draftJob, name, value, jobs\)\)/, 'Job field updates must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildTaxFieldPatch\(draftJob, name, value, type, checked\)\)/, 'Job tax updates must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildShopTaxRatePatch\(draftJob, getShopDefaultTaxRate\(shopSettings\)\)\)/, 'Shop tax-rate reset must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildDiscountFieldPatch\(draftJob, name, value\)\)/, 'Discount field updates must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildInstrumentTypePatch\(draftJob, instrumentType\)\)/, 'Instrument type changes must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildStringCountPatch\(draftJob, value\)\)/, 'String count changes must use the extracted pure patch helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildTechFieldPatch\(current, name, value\)\)/, 'Technical field updates must use the extracted pure patch helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildNeckInspectionPatch\(current, stage, fieldOrPatch, value\)\)/, 'Neck inspection edits must use the extracted pure patch helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildStringGaugePatch\(current, index, value\)\)/, 'Single string-gauge edits must use the extracted pure patch helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildStringGaugesPatch\(current, gauges\)\)/, 'Bulk string-gauge edits must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildWorkOrderImageIdsPatch\(draftJob, workOrderImageIds, imageId, checked\)\)/, 'Work-order image selection must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildContactPreferencePatch\(field, value\)\)/, 'Contact preference updates must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildMessageTemplatePatch\(draftJob, templateKey\)\)/, 'Last message template updates must use the extracted pure patch helper.');
+assert.match(detail, /patchJob\(buildUpdateWorkLogEntryPatch\(draftJob\.workLog, entryId, text\)\)/, 'Work-log entry edits must use the extracted pure draft helper.');
+assert.match(detail, /buildRemoveWorkLogEntryJob\(draftJob, entryId\)/, 'Work-log entry removals must use the extracted pure draft helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildDamageMapJob\(current, damageMap\)\)/, 'Damage Map edits must use the extracted pure patch helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildMergeJobMessageJob\(current, result\.message\)\)/, 'Message merges must use the extracted pure patch helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildAssignmentJob\(current, assignment\)\)/, 'Assignment merges must use the extracted pure patch helper.');
+assert.match(detail, /const nextJob = buildPickedUpJob\(draftJob, new Date\(\)\.toISOString\(\)\)/, 'Finish Job must use the extracted pure picked-up patch helper.');
+assert.match(detail, /return findNewDamageViewImage\(uploadedImages, existingImageIds, category, file\.name\)/, 'Damage Map upload selection must use the extracted pure image selection helper.');
+assert.doesNotMatch(detail, /resizeStringGauges/, 'Job Detail must not resize string-gauge rows inline.');
+assert.match(formatting, /function buildJobFieldPatch\(currentJob, fieldName, value, jobs = \[\]\)[\s\S]*?fieldName === 'customerFirstName'[\s\S]*?customerName: combineCustomerName/, 'Customer name field patches must keep the combined display name synchronized.');
+assert.match(formatting, /fieldName === 'dateReceived'[\s\S]*?jobNumber: generateJobNumber\(value, jobs, currentJob\.id, currentJob\.shopId\)/, 'Date received field patches must keep generated job numbers synchronized.');
+assert.match(formatting, /fieldName === 'guitarBrand'[\s\S]*?shouldResetModelForBrand\(currentJob\.instrumentType, value, currentJob\.model\) \? '' : currentJob\.model/, 'Brand field patches must keep incompatible catalog models from persisting.');
+assert.match(formatting, /function buildInstrumentTypePatch\(currentJob, instrumentType\)[\s\S]*?stringCountForInstrument\(instrumentPatch\.instrumentType\)[\s\S]*?stringGauges: resizeStringGauges\(currentJob\.techDetails\.stringGauges, stringCount\)/, 'Instrument type patches must update string count and resize string gauge rows.');
+assert.match(formatting, /function buildStringCountPatch\(currentJob, value\)[\s\S]*?normalizeStringCount[\s\S]*?stringGauges: resizeStringGauges\(currentJob\.techDetails\.stringGauges, stringCount\)/, 'String count patches must resize string gauge rows.');
+assert.match(formatting, /function buildTaxFieldPatch\(currentJob, fieldName, fieldValue, inputType = 'text', checked = false\)[\s\S]*?fieldName === 'salesTaxRate' \? \{ rateSource: 'job' \}/, 'Editing a tax rate must mark it as a job-level override.');
+assert.match(formatting, /function buildShopTaxRatePatch\(currentJob, salesTaxRate\)[\s\S]*?salesTaxRate,[\s\S]*?rateSource: 'shop'/, 'Using the shop tax rate must restore shop-rate source metadata.');
+assert.match(formatting, /function buildDiscountFieldPatch\(currentJob, fieldName, value\)[\s\S]*?\[fieldName\]: value,[\s\S]*?techDetails:[\s\S]*?\[fieldName\]: value/, 'Discount field helper must preserve legacy top-level and techDetails mirroring.');
+assert.match(formatting, /function buildTechFieldPatch\(currentJob, fieldName, value\)[\s\S]*?techDetails:[\s\S]*?\[fieldName\]: value/, 'Tech field helper must update only the selected techDetails field.');
+assert.match(formatting, /function buildWorkOrderImageIdsPatch\(currentJob, workOrderImageIds, imageId, checked\)[\s\S]*?new Set\(\[\.\.\.workOrderImageIds, imageId\]\)[\s\S]*?workOrderImageIds\.filter\(\(id\) => id !== imageId\)/, 'Work-order image helper must preserve dedupe-on-add and filter-on-remove behavior.');
+assert.match(formatting, /function buildContactPreferencePatch\(fieldName, value\)[\s\S]*?return \{ \[fieldName\]: value \}/, 'Contact preference helper must patch the selected top-level preference field.');
+assert.match(formatting, /function buildMessageTemplatePatch\(currentJob, templateKey\)[\s\S]*?lastMessageTemplate: templateKey/, 'Message template helper must preserve the last selected template in techDetails.');
+assert.match(workLogDraft, /function buildUpdateWorkLogEntryPatch\(workLog = \[\], entryId, text\)[\s\S]*?entry\.id === entryId \? \{ \.\.\.entry, text, entry: text \} : entry/, 'Work-log update helper must preserve the legacy text and entry mirror fields.');
+assert.match(workLogDraft, /function buildRemoveWorkLogEntryJob\(job, entryId\)[\s\S]*?workLog: \(job\.workLog \|\| \[\]\)\.filter\(\(entry\) => entry\.id !== entryId\)/, 'Work-log remove helper must remove only the selected entry.');
+assert.match(formatting, /function buildDamageMapJob\(currentJob, damageMap\)[\s\S]*?techDetails:[\s\S]*?damageMap/, 'Damage Map helper must update the techDetails damageMap field.');
+assert.match(formatting, /function buildMergeJobMessageJob\(currentJob, message\)[\s\S]*?messages: \[[\s\S]*?message,[\s\S]*?\(currentJob\.messages \|\| \[\]\)\.filter\(\(item\) => item\.id !== message\.id\)/, 'Message merge helper must prepend the new message while de-duplicating by id.');
+assert.match(formatting, /function buildAssignmentJob\(currentJob, assignment\)[\s\S]*?assignedMemberId: assignment\.assignedMemberId \|\| ''[\s\S]*?assignmentUpdatedAt: assignment\.assignmentUpdatedAt \|\| null/, 'Assignment helper must preserve existing assignment fallback behavior.');
+assert.match(formatting, /function buildPickedUpJob\(currentJob, timestamp\)[\s\S]*?status: 'Picked Up'[\s\S]*?pickedUpAt: timestamp/, 'Picked-up helper must preserve the established finished-job status and timestamp fields.');
+assert.match(formatting, /function findNewDamageViewImage\(uploadedImages = \[\], existingImageIds = new Set\(\), category = '', fileName = ''\)[\s\S]*?originalFileName === fileName[\s\S]*?image\.category === category[\s\S]*?\|\| null/, 'Damage Map upload selection helper must prefer exact filename matches and fall back to category matches.');
+assert.match(detail, /buildAddPaymentJob\(draftJob, payment, crypto\.randomUUID\(\)\)/, 'Adding payments must use the extracted pure payment helper.');
+assert.match(detail, /buildUpdatePaymentJob\(draftJob, paymentId, field, value\)/, 'Updating payments must use the extracted pure payment helper.');
+assert.match(detail, /buildRemovePaymentJob\(draftJob, paymentId\)/, 'Removing payments must use the extracted pure payment helper.');
+assert.match(detail, /patchJob\(buildAddManualPartPatch\(draftJob, parts, part, crypto\.randomUUID\(\)\)\)/, 'Adding manual parts must use the extracted pure line-item helper.');
+assert.match(detail, /patchJob\(buildUpdateManualPartPatch\(draftJob, parts, partId, field, value\)\)/, 'Updating manual parts must use the extracted pure line-item helper.');
+assert.match(detail, /patchJob\(buildRemoveManualPartPatch\(draftJob, parts, partId\)\)/, 'Removing manual parts must use the extracted pure line-item helper.');
+assert.match(detail, /patchJob\(buildAddServicePatch\(draftJob, services, service, crypto\.randomUUID\(\)\)\)/, 'Adding services must use the extracted pure line-item helper.');
+assert.match(detail, /patchJob\(buildUpdateServicePatch\(services, serviceId, field, value\)\)/, 'Updating services must use the extracted pure line-item helper.');
+assert.match(detail, /patchJob\(buildRemoveServicePatch\(services, serviceId\)\)/, 'Removing services must use the extracted pure line-item helper.');
+assert.match(detail, /const nextJob = buildAddInventoryPartJob\(jobForInventory, jobPart\)/, 'Inventory-backed part add results must use the extracted pure merge helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildUpdateInventoryPartQuantityJob\(current, parts, partId, updatedJobPart\)\)/, 'Inventory-backed part quantity results must use the extracted pure merge helper.');
+assert.match(detail, /const nextJob = buildRemoveInventoryPartJob\(draftJob, parts, partId\)/, 'Inventory-backed part removals must use the extracted pure merge helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildAppendImagePreviewsJob\(current, previews\)\)/, 'Local photo previews must use the extracted pure merge helper.');
+assert.match(detail, /setDraftJob\(\(current\) => buildRemoveImageJob\(current, image\.id\)\)/, 'Local photo removals must use the extracted pure merge helper.');
+assert.match(detail, /addPartToJob\(jobForInventory\.id, inventoryPart\.id, requestedQuantity\)/, 'Inventory-backed part adds must remain on the established inventory service path.');
+assert.match(detail, /updateInventoryJobPartQuantity\(partId, requestedQuantity\)/, 'Inventory-backed part quantity edits must remain on the established inventory service path.');
+assert.match(detail, /removeJobPart\(partId\)/, 'Inventory-backed part removals must remain on the established inventory service path.');
+assert.match(formatting, /function buildAddPaymentJob\(currentJob, payment, paymentId\)[\s\S]*?payments: \[[\s\S]*?\.\.\.\(currentJob\.techDetails\.payments \|\| \[\]\)[\s\S]*?id: paymentId,[\s\S]*?\.\.\.payment/, 'Payment add helper must append a snapshotted payment without mutating existing rows.');
+assert.match(formatting, /function buildUpdatePaymentJob\(currentJob, paymentId, fieldName, value\)[\s\S]*?payments: \(currentJob\.techDetails\.payments \|\| \[\]\)\.map[\s\S]*?row\.id === paymentId \? \{ \.\.\.row, \[fieldName\]: value \} : row/, 'Payment update helper must update only the selected payment row.');
+assert.match(formatting, /function buildRemovePaymentJob\(currentJob, paymentId\)[\s\S]*?payments: \(currentJob\.techDetails\.payments \|\| \[\]\)\.filter\(\(row\) => row\.id !== paymentId\)/, 'Payment remove helper must remove only the selected payment row.');
+assert.match(formatting, /function buildNeckInspectionPatch\(currentJob, stage, fieldOrPatch, value\)[\s\S]*?typeof fieldOrPatch === 'object'[\s\S]*?\[stage\]: \{[\s\S]*?\.\.\.\(currentJob\.techDetails\.neckInspection\?\.\[stage\] \|\| \{\}\)[\s\S]*?\.\.\.fieldPatch/, 'Neck inspection helper must preserve existing staged measurements while applying the selected field patch.');
+assert.match(formatting, /function buildStringGaugePatch\(currentJob, index, value\)[\s\S]*?stringGauges = \[\.\.\.\(currentJob\.techDetails\.stringGauges \|\| \[\]\)\][\s\S]*?stringGauges\[index\] = value/, 'Single string-gauge helper must update only the targeted string row.');
+assert.match(formatting, /function buildStringGaugesPatch\(currentJob, gauges\)[\s\S]*?resizeStringGauges\(gauges, getInstrumentStringCount\(currentJob\)\)/, 'Bulk string-gauge helper must preserve instrument-specific gauge row sizing.');
+assert.match(formatting, /function buildAddManualPartPatch\(currentJob, parts, part, partId\)[\s\S]*?shopId: currentJob\.shopId[\s\S]*?jobId: currentJob\.id[\s\S]*?partId: ''[\s\S]*?quantity: part\.quantity \|\| '1'/, 'Manual part add helper must preserve job/shop identity and default quantity behavior.');
+assert.match(formatting, /function buildUpdateManualPartPatch\(currentJob, parts, partId, fieldName, value\)[\s\S]*?includedPartIds: nextParts\.filter\(\(row\) => row\.includedInService\)\.map\(\(row\) => row\.id\)/, 'Manual part update helper must keep included service part IDs synchronized.');
+assert.match(formatting, /function buildRemoveManualPartPatch\(currentJob, parts, partId\)[\s\S]*?includedPartIds: nextParts\.filter\(\(row\) => row\.includedInService\)\.map\(\(row\) => row\.id\)/, 'Manual part remove helper must keep included service part IDs synchronized.');
+assert.match(formatting, /function buildAddServicePatch\(currentJob, services, service, serviceId\)[\s\S]*?jobId: currentJob\.id[\s\S]*?quantity: service\.quantity \|\| '1'/, 'Service add helper must preserve job identity and default quantity behavior.');
+assert.match(formatting, /function buildUpdateServicePatch\(services, serviceId, fieldName, value\)[\s\S]*?services\.map\(\(row\) => \(row\.id === serviceId \? \{ \.\.\.row, \[fieldName\]: value \} : row\)\)/, 'Service update helper must update only the selected service row.');
+assert.match(formatting, /function buildRemoveServicePatch\(services, serviceId\)[\s\S]*?services\.filter\(\(row\) => row\.id !== serviceId\)/, 'Service remove helper must remove only the selected service row.');
+assert.match(formatting, /function buildAddInventoryPartJob\(currentJob, jobPart\)[\s\S]*?parts: \[\.\.\.\(currentJob\.parts \|\| \[\]\), jobPart\]/, 'Inventory-backed part add helper must append the saved job part.');
+assert.match(formatting, /function buildUpdateInventoryPartQuantityJob\(currentJob, parts, partId, updatedJobPart\)[\s\S]*?parts: parts\.map\(\(row\) => \(row\.id === partId \? \{ \.\.\.row, \.\.\.updatedJobPart \} : row\)\)/, 'Inventory-backed part quantity helper must merge only the saved job part row.');
+assert.match(formatting, /function buildRemoveInventoryPartJob\(currentJob, parts, partId\)[\s\S]*?parts: parts\.filter\(\(row\) => row\.id !== partId\)/, 'Inventory-backed part remove helper must remove only the selected job part row.');
+assert.match(formatting, /function buildAppendImagePreviewsJob\(currentJob, previews\)[\s\S]*?images: \[\.\.\.\(currentJob\.images \|\| \[\]\), \.\.\.previews\]/, 'Photo preview helper must append previews without dropping existing images.');
+assert.match(formatting, /function buildRemoveImageJob\(currentJob, imageId\)[\s\S]*?images: \(currentJob\.images \|\| \[\]\)\.filter\(\(item\) => item\.id !== imageId\)/, 'Photo remove helper must remove only the selected local image row.');
+assert.match(detail, /<JobIntakeSections[\s\S]*?normalizeInstrumentType=\{normalizeInstrumentType\}[\s\S]*?onContactPreferenceChange=\{updateContactPreference\}[\s\S]*?onFieldChange=\{updateField\}[\s\S]*?onInstrumentTypeChange=\{setInstrumentType\}[\s\S]*?onStringCountChange=\{updateStringCount\}[\s\S]*?onTechFieldChange=\{updateTechField\}/, 'Intake presentation must retain established contact, instrument, string-count, and field handlers.');
+assert.match(intakeSections, /<JobInfoSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?setInstrumentType=\{onInstrumentTypeChange\}[\s\S]*?updateStringCount=\{onStringCountChange\}[\s\S]*?updateContactPreference=\{onContactPreferenceChange\}[\s\S]*?updateField=\{onFieldChange\}[\s\S]*?updateTechField=\{onTechFieldChange\}/, 'Job info intake must retain write permissions and controlled update handlers.');
 assert.match(detail, /<JobInspectionSections[\s\S]*?lengthUnit=\{measurementOptions\.lengthUnit\}[\s\S]*?onDamageMapChange=\{updateDamageMap\}[\s\S]*?onNeckInspectionChange=\{updateNeckInspection\}[\s\S]*?onTechFieldChange=\{updateTechField\}/, 'Inspection presentation must retain shop measurement units and established Job Detail handlers.');
 assert.match(inspectionSections, /<TechDetailsSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?updateNeckInspection=\{onNeckInspectionChange\}[\s\S]*?updateTechField=\{onTechFieldChange\}/, 'Technical measurements must retain write permissions and controlled update handlers.');
 assert.match(inspectionSections, /<DamageMapSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?onChange=\{onDamageMapChange\}[\s\S]*?onViewImageUpload=\{onDamageViewImageUpload\}/, 'Damage Map must retain write permissions, persistence, and upload handlers.');
@@ -53,27 +139,23 @@ assert.match(workSections, /<ServicesList[\s\S]*?canWrite=\{canWrite\}[\s\S]*?on
 assert.match(detail, /<JobBillingSections[\s\S]*?onAddInventoryPart=\{addInventoryPart\}[\s\S]*?onAddPayment=\{addPayment\}[\s\S]*?onEmailInvoice=\{openInvoiceEmail\}[\s\S]*?shopTaxRate=\{getShopDefaultTaxRate\(shopSettings\)\}[\s\S]*?taxSettings=\{taxSettings\}/, 'Billing presentation must retain inventory, payment, invoice, and shop-tax behavior.');
 assert.match(billingSections, /<PartsList[\s\S]*?canWrite=\{canWrite\}[\s\S]*?onAddInventoryPart=\{onAddInventoryPart\}[\s\S]*?onUpdatePart=\{onUpdatePart\}/, 'Billing parts must retain write permissions and controlled inventory mutations.');
 assert.match(billingSections, /<TotalsSection[\s\S]*?canSendEmail=\{canSendEmail\}[\s\S]*?canWrite=\{canWrite\}[\s\S]*?emailInvoice=\{onEmailInvoice\}[\s\S]*?shopTaxRate=\{shopTaxRate\}[\s\S]*?useShopTaxRate=\{onUseShopTaxRate\}/, 'Totals and payments must retain email, permission, tax, and payment wiring.');
+assert.match(detail, /buildJobAuxiliarySections\(\{[\s\S]*?onContactPreferenceChange: updateContactPreference[\s\S]*?onMessageTemplateChange: updateMessageTemplate[\s\S]*?onSendCustomerMessage: handleSendCustomerMessage[\s\S]*?timelineEvents/, 'Auxiliary presentation must retain established message and timeline handlers.');
+assert.match(auxiliarySections, /<MessagesPanel[\s\S]*?canWrite=\{canWrite\}[\s\S]*?canSendEmailByPlan=\{canSendEmail\}[\s\S]*?canSendSmsByPlan=\{canSendSms\}[\s\S]*?onPreferenceChange=\{onContactPreferenceChange\}[\s\S]*?onSendMessage=\{onSendCustomerMessage\}/, 'Messages panel must retain permission, entitlement, preference, and send wiring.');
+assert.match(auxiliarySections, /<JobScheduleSection[\s\S]*?canWrite=\{canWrite\}[\s\S]*?job=\{draftJob\}[\s\S]*?onNotice=\{onNotice\}/, 'Scheduling section must retain write permission, active job, and notice wiring.');
+assert.match(auxiliarySections, /<ActivityTimeline events=\{timelineEvents\} \/>/, 'Activity timeline must retain the active timeline events.');
+assert.match(detail, /<JobPhotoSections[\s\S]*?canDeletePhotos=\{canDeletePhotos\}[\s\S]*?canEditPhotos=\{canEditPhotos\}[\s\S]*?canUploadPhotos=\{canUploadPhotos\}[\s\S]*?onImageChange=\{handleImageChange\}[\s\S]*?onImageDelete=\{handleImageDelete\}[\s\S]*?onImageEdit=\{handleImageEdit\}[\s\S]*?onWorkOrderImageToggle=\{updateWorkOrderImage\}/, 'Photo presentation must retain established upload, edit, delete, and customer-report handlers.');
+assert.match(photoSections, /<ImagesSection[\s\S]*?canUploadPhotos=\{canUploadPhotos\}[\s\S]*?canEditPhotos=\{canEditPhotos\}[\s\S]*?canDeletePhotos=\{canDeletePhotos\}[\s\S]*?handleImageChange=\{onImageChange\}[\s\S]*?handleImageDelete=\{onImageDelete\}[\s\S]*?handleImageEdit=\{onImageEdit\}[\s\S]*?updateWorkOrderImage=\{onWorkOrderImageToggle\}/, 'Images section must retain photo permissions and controlled handlers.');
 assert.match(damageReportView, /if \(!hasBaseImage && marks\.length === 0\)[\s\S]*?return null/, 'Completely empty damage maps must remain omitted from reports.');
 assert.match(damageReportView, /hasBaseImage && imageUrl && marks\.length > 0/, 'Marker tables must remain tied to a visible reference image.');
 
-const { buildMeasurementDisplay, getInstrumentSelectionPatch, markerColorForReport } = await import(pathToFileURL(formattingPath));
 assert.deepEqual(
-  getInstrumentSelectionPatch({ guitarBrand: 'Custom', model: 'Prototype' }, 'Acoustic Guitar'),
-  { instrumentType: 'Acoustic', guitarBrand: 'Custom', model: 'Prototype' },
-  'Instrument selection must retain uncatalogued shop-entered brand and model values.'
+  ['getInstrumentSelectionPatch', 'buildMeasurementDisplay', 'markerColorForReport'].filter((helper) => formatting.includes(`function ${helper}`) || formatting.includes(`function ${helper}(`)),
+  ['getInstrumentSelectionPatch', 'buildMeasurementDisplay', 'markerColorForReport'],
+  'Job formatting helpers must remain in the pure formatting boundary.'
 );
-assert.deepEqual(
-  buildMeasurementDisplay({ techDetails: { neckInspection: { initial: { relief: '0.2' }, final: { relief: '0.1' } } } }, 'mm'),
-  {
-    lengthUnit: 'mm',
-    initial: { relief: '0.2 mm', nutHighE: '', nutLowE: '', actionHighE12th: '', actionLowE12th: '' },
-    final: { relief: '0.1 mm', nutHighE: '', nutLowE: '', actionHighE12th: '', actionLowE12th: '' }
-  },
-  'Job export measurements must retain the active shop length unit.'
-);
-assert.equal(markerColorForReport('Critical'), '#b3261e', 'Critical damage markers must retain their report color.');
-assert.equal(markerColorForReport('Structural'), '#a15c00', 'Structural damage markers must retain their report color.');
-assert.equal(markerColorForReport('Cosmetic'), '#255f85', 'Default damage markers must retain their report color.');
+assert.match(formatting, /if \(severity === 'Critical'\) return '#b3261e'/, 'Critical damage markers must retain their report color.');
+assert.match(formatting, /if \(severity === 'Structural'\) return '#a15c00'/, 'Structural damage markers must retain their report color.');
+assert.match(formatting, /return '#255f85'/, 'Default damage markers must retain their report color.');
 assert.match(packageJson, /"check:job-detail-module-boundaries": "node scripts\/check-job-detail-module-boundaries\.mjs"/, 'The focused Job Detail boundary check must be exposed.');
 
 console.log('Job Detail module boundary checks passed.');

@@ -4,13 +4,13 @@ FretTrack is moving from the old `v0.2.6-beta.14` live baseline into product mil
 
 ## Current Product State
 
-The current release candidate is `v0.2.9-beta.4`. It builds toward the `v0.3.0` Operational Shop Release with the existing inventory, scheduling, reporting, trial, photo, and shop foundations plus a completed first pass at safer workspace, Inventory, and Job Detail module boundaries.
+The current release candidate is `v0.2.9-beta.5`. It builds toward the `v0.3.0` Operational Shop Release with the existing inventory, scheduling, reporting, trial, photo, shop, and Stripe self-service foundations plus safer workspace, Inventory, and Job Detail module boundaries.
 
 Shipped or current-branch foundations:
 
 - beta access approval gate
 - operator dashboard
-- billing and subscription foundation without Stripe
+- Stripe self-service billing foundation with authenticated Checkout and Portal sessions, signature-verified webhook synchronization, and webhook idempotency records
 - customer and subcontractor management
 - customer and subcontractor balance/history foundation
 - work-order and invoice email flow
@@ -47,9 +47,9 @@ Known weak spots:
 - public invoice and work-order links are planned but not implemented
 - jobs cannot yet be voided or excluded from accounting reports; cancelling or archiving a test job does not currently remove it from accounting job counts
 - deeper inventory operations such as vendor import/export, supplier integrations, vendor returns, forecasting, outbound/customer shipping, carrier labels, and tracking numbers are still future work
-- commerce, licensing, billing automation, production backups, and monitoring are later release tracks
+- Stripe lifecycle validation, production recovery evidence, and monitoring hardening remain paid-launch work
 - Photo Editor Phase 1 is practical canvas editing, not a full Photoshop-style editor or AI cutout tool
-- Final pricing, Stripe, paid overages, and self-service billing are still not implemented; Shop/Pro email and repair-photo caps are now enforced as infrastructure safeguards
+- Final public pricing and paid overages are not implemented; Shop/Pro email and repair-photo caps are enforced, while Shop/Pro self-service subscription plumbing is deployed and awaiting full live lifecycle validation
 
 ## Milestone Version Ladder
 
@@ -110,7 +110,7 @@ This series turns the operational workflow into a more complete shop commerce fl
 - transaction numbering
 - sales history
 - entitlement checks for premium commerce/reporting boundaries
-- no Stripe or billing automation until the entitlement boundaries are stable
+- keep commerce entitlements server-authoritative as Stripe lifecycle handling is validated
 
 ## v0.4.x: Operations
 
@@ -131,15 +131,13 @@ This series deepens back-office and repeat-workflow tools after the core operati
 
 ## v0.5.x: Commercial Release Preparation
 
-This series prepares FretTrack for paid production use.
+This series extends and hardens the paid-production foundation introduced before `v0.3.0`.
 
 - subscription licensing
-- Stripe integration
-- billing automation around trial management
-- multi-tenant billing
-- production deployment
-- backups
-- monitoring
+- advanced Stripe lifecycle operations and billing support tooling
+- multi-tenant billing administration
+- recurring restore drills and off-device backup automation
+- deeper monitoring, incident response, and billing reconciliation
 
 ## Explicitly Shipped / Not Future Work
 

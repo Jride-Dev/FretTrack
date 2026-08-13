@@ -2,7 +2,8 @@ param(
   [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [string]$TaskName = 'FretTrack Daily Supabase Backup',
   [datetime]$At = (Get-Date '02:00'),
-  [string]$UserId = "$env:USERDOMAIN\$env:USERNAME"
+  [string]$UserId = "$env:USERDOMAIN\$env:USERNAME",
+  [switch]$IncludeDockerVolumeBackup
 )
 
 $ErrorActionPreference = 'Stop'
@@ -14,9 +15,13 @@ if (-not (Test-Path -LiteralPath $backupScript)) {
 }
 
 $powershellPath = Join-Path $PSHOME 'powershell.exe'
+$backupArguments = "-NoProfile -ExecutionPolicy Bypass -File `"$backupScript`""
+if (-not $IncludeDockerVolumeBackup) {
+  $backupArguments += ' -SkipDockerVolumeBackup'
+}
 $action = New-ScheduledTaskAction `
   -Execute $powershellPath `
-  -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$backupScript`"" `
+  -Argument $backupArguments `
   -WorkingDirectory $ProjectRoot
 
 $trigger = New-ScheduledTaskTrigger -Daily -At $At
@@ -29,7 +34,11 @@ $settings = New-ScheduledTaskSettingsSet `
   -ExecutionTimeLimit (New-TimeSpan -Hours 2) `
   -WakeToRun
 
-$description = 'Daily FretTrack hosted Supabase database, storage, migration, function, and local Docker volume backup.'
+$description = if ($IncludeDockerVolumeBackup) {
+  'Daily FretTrack hosted Supabase database, storage, migration, function, and local Docker volume backup.'
+} else {
+  'Daily FretTrack hosted Supabase database, storage, migration, and function backup. Local Docker volume archives remain a manual safety step.'
+}
 $principal = New-ScheduledTaskPrincipal `
   -UserId $UserId `
   -LogonType Interactive `

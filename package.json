@@ -1,6 +1,6 @@
 {
   "name": "frettrack",
-  "version": "0.2.9-beta.4",
+  "version": "0.2.9-beta.5",
   "private": true,
   "type": "module",
   "engines": {
@@ -24,6 +24,11 @@
     "check:workspace-router-foundation": "node scripts/check-workspace-router-foundation.mjs",
     "check:local-development-isolation": "node scripts/check-local-development-isolation.mjs",
     "check:local-auth-offline-message": "node scripts/check-local-auth-offline-message.mjs",
+    "check:production-build-config": "node scripts/check-production-build-config.mjs",
+    "check:paid-launch-readiness": "node scripts/check-paid-launch-readiness.mjs",
+    "check:stripe-self-serve-billing": "node scripts/check-paid-launch-readiness.mjs",
+    "check:stripe-edge-functions": "node scripts/check-stripe-edge-functions.mjs",
+    "check:supabase-data-integrity": "node scripts/check-supabase-data-integrity.mjs",
     "check:scheduling-week-event-layout": "node scripts/check-scheduling-week-event-layout.mjs",
     "check:job-dates-scheduling-sync": "node scripts/check-job-dates-scheduling-sync.mjs",
     "check:job-status-default": "node scripts/check-job-status-default.mjs",
@@ -62,10 +67,12 @@
     "db:local:apply": "node scripts/apply-local-migrations.mjs",
     "seed:local-test-shops": "node scripts/seed-local-test-shops.mjs --reset",
     "seed:local-photo-navigation-fixture": "node scripts/seed-local-photo-navigation-fixture.mjs",
+    "deploy:app:production": "node scripts/deploy-app-production.mjs",
+    "deploy:app:production:check": "node scripts/deploy-app-production.mjs --no-deploy",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.111.0",
+    "@supabase/supabase-js": "^2.112.2",
     "heic2any": "^0.0.4",
     "jsbarcode": "^3.12.3",
     "papaparse": "^5.5.4",
@@ -74,8 +81,8 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@vitejs/plugin-legacy": "^8.2.2",
-    "@vitejs/plugin-react": "^6.0.4",
-    "vite": "^8.1.5"
+    "@vitejs/plugin-legacy": "^8.2.3",
+    "@vitejs/plugin-react": "^6.0.5",
+    "vite": "^8.2.1"
   }
 }

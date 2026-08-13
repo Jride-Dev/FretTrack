@@ -77,10 +77,21 @@ npm run check:landing-worker
 npm run check:permissions
 npm run check:tiers
 npm run build
+npm run check:production-build-config
 git diff --check
 curl.exe -I https://app.frettrack-app.com/
 curl.exe -I https://frettrack-app.com/
 ```
+
+`npm run check:production-build-config` is a hard safety gate for app deploys. It must pass after `npm run build` and before `npx wrangler pages deploy dist --project-name=frettrack --branch=main`; it fails if the compiled `dist` bundle contains local Supabase URLs, demo auth keys, or local test-shop defaults.
+
+For App Pages deploys, prefer the guarded wrapper:
+
+```powershell
+npm run deploy:app:production
+```
+
+The wrapper forces the production Supabase URL, forces the production FretTrack Edge Function key from `.env` when the shell does not provide one, clears local test-shop defaults for the build, runs `npm run check:production-build-config`, and only then deploys `dist` to Cloudflare Pages. Use `npm run deploy:app:production:check` for the same build/config preflight without uploading.
 
 ## Backup Automation
 

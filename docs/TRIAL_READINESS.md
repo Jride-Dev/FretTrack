@@ -1,4 +1,4 @@
-# FretTrack v0.2.9-beta.4 Trial Readiness Checklist
+# FretTrack v0.2.9-beta.5 Trial Readiness Checklist
 
 Use this checklist before handing a build to a real trial shop.
 
@@ -21,6 +21,13 @@ Supabase Edge Function secrets:
 FRETTRACK_FUNCTION_KEY=
 RESEND_API_KEY=
 SHOP_EMAIL_FROM=
+STRIPE_API_KEY=
+STRIPE_WEBHOOK_SIGNING_SECRET=
+STRIPE_PRICE_SHOP_MONTHLY=
+STRIPE_PRICE_SHOP_YEARLY=
+STRIPE_PRICE_PRO_MONTHLY=
+STRIPE_PRICE_PRO_YEARLY=
+FRETTRACK_APP_URL=https://app.frettrack-app.com
 ```
 
 ## Supabase Setup
@@ -97,7 +104,7 @@ Beta access approval is separate from paid access trial state. A user may be app
 11. Confirm existing non-owner staff memberships are preserved but cannot access the shop while access is expired.
 12. Restore a Shop or Pro trial and confirm preserved staff memberships regain access without recreating them.
 13. Confirm viewer users remain read-only.
-14. Confirm Stripe, billing webhooks, and payment collection are not shown as connected.
+14. Confirm owners/admins can open Stripe Checkout, while tech/viewer accounts cannot manage billing; abandoning Checkout must not change the stored plan or entitlements.
 15. Run `npm run check:plan-branding` and confirm the normalized plan display checks pass.
 16. Confirm the header, version area, Shop Settings, Billing, and Reports display the expected plan label and countdown:
    - `Trial: Shop` with the standard emblem and trial countdown.
@@ -112,7 +119,7 @@ Beta access approval is separate from paid access trial state. A user may be app
 18. Confirm the original FretTrack emblem appears for Shop, Trial Shop, internal Free compatibility, and expired states.
 19. Confirm the Pro emblem appears only for Pro subscriptions or Pro trials.
 20. Open Shop Settings and confirm the Plan / Subscription panel shows current plan, billing interval, subscription status, trial end, current period end, countdown, Advanced Reporting availability, and locked premium feature count.
-21. Confirm Manage billing and Upgrade plan controls are disabled/placeholders until Stripe Checkout, Customer Portal, and webhooks are implemented.
+21. Confirm Upgrade opens authenticated Stripe Checkout and Manage billing opens the Stripe Portal only when the shop already has a synchronized Stripe customer.
 22. Confirm approved beta users in a writable beta shop can exercise Team Assignment under the current beta lifecycle without Stripe.
 23. Confirm an expired/read-only shop can still read historical assignees but cannot assign, reassign, clear, or self-claim jobs.
 24. Confirm Shop/non-Pro behavior leaves existing Team Members behavior unchanged and hides only the advanced assignment/workload controls.
@@ -175,5 +182,5 @@ For single-job debugging, use `Export Job JSON` from Job Detail.
 - Shop profile onboarding now persists remote shop settings and logo storage.
 - Monetary controls are not permission-gated yet.
 - Negative parts/services prices are blocked unless explicitly allowed in job data.
-- Supabase migrations must be applied manually in the current workspace because the CLI/database credentials are not available here.
-- Shop Tier Foundation Phase 1 does not enforce pricing, storage caps, SMS limits, or Stripe billing.
+- Stripe Checkout/Portal and webhook synchronization are implemented, but a real paid subscription lifecycle—including renewal, cancellation, past-due, recovery, and trial-ended events—must pass the paid-launch matrix before general availability.
+- Supabase Auth leaked-password protection is a Supabase Pro-plan feature. Enable it before paid launch if available; otherwise record the accepted risk, use the strongest available password settings, and recheck login/password-reset behavior.

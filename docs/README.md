@@ -11,7 +11,7 @@ FretTrack's historical pre-milestone baseline was `v0.2.6-beta.14`. Current bran
 - `v0.2.63 beta`: Scheduling complete
 - `v0.3.0 beta`: Operational Shop Release
 
-Current release candidate: `v0.2.9-beta.4`. This candidate completes the first architecture-hardening pass around workspace navigation, Inventory presentation, and Job Detail presentation; fixes stale Inventory editor quantities after receiving/adjustments; and prevents ordinary local development from silently targeting hosted Supabase.
+Current release candidate: `v0.2.9-beta.5`. This candidate completes the first architecture-hardening pass around workspace navigation, Inventory presentation, and Job Detail presentation; fixes stale Inventory editor quantities after receiving/adjustments; adds read-only Supabase data-integrity checks; and prevents ordinary local development from silently targeting hosted Supabase.
 
 Start here for the current product path:
 
@@ -28,6 +28,8 @@ Start here for the current product path:
 - [Photo editor](PHOTO_EDITOR.md)
 - [Architecture review beta 14](ARCHITECTURE_REVIEW_BETA14.md)
 - [Architecture health audit for 0.3.0](ARCHITECTURE_HEALTH_AUDIT_0.3.0.md)
+- [Paid launch readiness: 30-day plan](PAID_LAUNCH_READINESS_30_DAY.md)
+- [Stripe self-serve billing](STRIPE_SELF_SERVE_BILLING.md)
 - [Print renderer rebuild plan](PRINT_RENDERER_REBUILD_PLAN.md)
 - [Security review checklist](SECURITY_REVIEW_CHECKLIST.md)
 - [Supabase RPC security audit](SUPABASE_RPC_SECURITY_AUDIT.md)

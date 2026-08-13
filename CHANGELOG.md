@@ -1,11 +1,21 @@
 # Changelog
 
-Current version: `0.2.9-beta.4`
+Current version: `0.2.9-beta.5`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.9-beta.4 - Current Beta Candidate
+## v0.2.9-beta.5 - Current Beta Candidate
 
+- Added a paid-launch readiness pass with a 30-day launch checklist, restore-drill runbook, backup automation blocker, Stripe self-serve billing source control, Checkout/Portal/Webhook launch docs, and `npm run check:paid-launch-readiness` validation.
+- Hardened hosted-backup checksum generation to use the platform-independent .NET SHA-256 implementation after the Windows PowerShell hash command failed during a pre-launch backup; the full database, Storage, manifest, and Docker-volume backup now completes end to end.
+- Hardened unattended hosted Supabase backups to start and wait for Docker Desktop, which current Supabase CLI dump commands require, while skipping the optional local-volume archive during scheduled runs; manual backups and restore drills retain local-volume safety archives.
+- Updated paid-launch, trial, roadmap, and security guidance to reflect the deployed Stripe self-service foundation, current recovery evidence, frontend secret scan, and remaining Supabase Auth/security gates.
+- Completed the first full hosted-to-local recovery drill, including linked Auth/Storage version alignment, database row-count and relationship validation, grandfathered Storage-object handling, and byte-for-byte verification of all 194 restored objects.
+- Added migration `20260812025459_harden_set_updated_at_search_path.sql` to pin the shared trigger helper to an empty search path and revoke unnecessary direct client execution; timestamp triggers and the local Supabase Security Advisor pass.
+- Corrected Stripe invoice lifecycle handling for the current `parent.subscription_details.subscription` payload while retaining legacy invoice compatibility, and added executable coverage for payment recovery, failed-payment, cancellation, trial, and read-only status mapping.
+- Expanded paid-launch RPC security coverage for shop bootstrap, public/operator system status, and inventory/PO receiving, and documented the reviewed Supabase Free-plan Auth constraint and intentional Security Advisor exceptions.
+- Hardened Stripe Checkout so merely opening or abandoning payment cannot change a beta shop's plan, entitlements, or connected customer state; subscription writes now remain behind signature-verified Stripe webhook confirmation with regression coverage and documented smoke testing.
+- Corrected Stripe plan/interval synchronization to use exact configured Price IDs and an explicit billing-interval snapshot, kept failed webhook events retryable, and tightened webhook-audit table grants before production rollout.
 - Added the active shop's business address to printable invoice-style Job Sheets and attached Job Sheet email content, while preserving the existing shop-scoped address in generated invoice emails.
 - Protected new Work Notes from silent loss: pending text is visibly unsaved, participates in refresh/navigation protection, saves through Save Job, blocks customer printing/email until resolved, supports explicit draft discard, and reports failed Work Note saves.
 - Began the 0.3.0 modular architecture foundation by extracting top-level workspace page rendering and navigation state from `App.jsx`, lazy-loading feature pages behind a shared workspace boundary, and separating the current-job status rule from page UI; page restoration, permissions, Close Detail, and dirty-state handlers remain unchanged.
@@ -23,7 +33,20 @@ This file tracks what changed in each release, including fixes that were added b
 - Extracted the Job Detail Inspection tab composition into a controlled module while retaining measurement units, technical-field updates, Damage Map persistence/uploads, and write permissions in their established paths.
 - Extracted the Job Detail Work tab composition into a controlled module while retaining Work Log append/edit/blur-save behavior, service-line mutations, and write permissions through the existing Job Detail handlers.
 - Extracted the Job Detail Parts & Billing tab composition into a controlled module while retaining inventory-backed/manual parts, services, payments, discounts, tax/VAT defaults, invoice email, totals, and permission behavior through established handlers.
+- Continued the Job Detail decomposition by moving shell, header/dialog/tab assembly, Intake, Photos, Print actions/documents, Messages, Scheduling, and Timeline composition behind focused presentation boundaries while keeping contact updates, instrument selection, photo upload/edit/delete controls, print/email/finish actions, document data, message sending, linked schedule events, timeline data, permissions, and notices on their existing handlers.
+- Moved Job Detail's pure field-patch builders for customer names, received dates, instrument changes, string counts, and job/shop tax-rate edits into the existing formatting helper boundary while preserving dirty-state, permission, save, VAT override, and job-number behavior.
+- Moved Job Detail's pure payment add/update/remove builders into the same helper boundary while preserving payment autosave, permissions, invoice totals, and dirty-state behavior.
+- Moved Job Detail's neck-inspection and string-gauge patch builders into the same helper boundary while preserving shop measurement units, dirty-state handling, permissions, and instrument-specific string-count sizing.
+- Moved Job Detail's manual part and service line-item patch builders into the same helper boundary while preserving inventory-backed stock service calls, included-service part tracking, totals, permissions, and dirty-state behavior.
+- Moved Job Detail's discount, generic tech-field, work-order image selection, contact preference, and last-message-template patch builders into the same helper boundary while preserving dirty-state, permissions, document image selection, and messaging behavior.
+- Moved Job Detail's work-log row edits/removals, Damage Map update, message merge, and assignment merge builders into pure helper boundaries while preserving save timing, notices, permissions, and timeline refresh behavior.
+- Moved Job Detail's inventory-backed part result merges and local photo preview/remove transforms into pure helper boundaries while preserving the existing inventory service calls, photo persistence calls, permissions, stock updates, and refresh behavior.
+- Moved Job Detail's picked-up status patch and Damage Map uploaded-image selection logic into pure helper boundaries while preserving the existing finish flow, PVMH pickup prompt, upload handling, and permissions.
+- Added a read-only Supabase data-integrity check for deleted-job orphans, ownerless shops, broken shop-member auth links, and auth users without identities so live data can be verified before/after deployments without dumping customer records.
 - Fixed direct receiving, stock adjustments, and purchase-order receiving so the selected Inventory editor refreshes its authoritative quantity and cost; a later Save Changes action can no longer overwrite received or adjusted stock with stale form values.
+- Added a production build configuration guard so App Pages deploys fail before upload if the compiled bundle contains local Supabase URLs, demo auth keys, or local test-shop defaults.
+- Added a guarded App Pages production deploy wrapper that forces the production Supabase build config, runs the production-build guard, and only deploys after the compiled assets pass.
+- Extended the production deploy guard to require the FretTrack Edge Function key so customer Work Order emails cannot be deployed with an unauthorized blank function header.
 - Added a repository architecture health audit covering validation status, module boundaries, growing source hotspots, test-suite brittleness, local test-environment policy, and the unattended backup reliability blocker.
 - Prevented local development from silently using a hosted Supabase project, repaired local test-shop lifecycle/authentication records for the current local Supabase stack, and added a focused isolation check.
 

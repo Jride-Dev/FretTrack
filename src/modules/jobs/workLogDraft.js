@@ -29,3 +29,18 @@ export function appendWorkLogDraft(job, value, { id, timestamp }) {
     ]
   };
 }
+
+export function buildUpdateWorkLogEntryPatch(workLog = [], entryId, text) {
+  return {
+    workLog: workLog.map((entry) => (
+      entry.id === entryId ? { ...entry, text, entry: text } : entry
+    ))
+  };
+}
+
+export function buildRemoveWorkLogEntryJob(job, entryId) {
+  return {
+    ...job,
+    workLog: (job.workLog || []).filter((entry) => entry.id !== entryId)
+  };
+}
