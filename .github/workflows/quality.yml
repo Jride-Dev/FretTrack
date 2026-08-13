@@ -1,0 +1,48 @@
+name: Quality Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression-and-build:
+    name: Regression and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run regression checks
+        run: |
+          npm run check:photo-navigation-persistence
+          npm run check:job-photo-persistence
+          npm run check:legacy-damage-map-photos
+          npm run check:damage-map-image-required
+          npm run check:job-detail-module-boundaries
+          npm run check:work-log-draft-safety
+          npm run check:inventory-module-boundaries
+          npm run check:permissions
+
+      - name: Build production bundle
+        run: npm run build
