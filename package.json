@@ -8,8 +8,10 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:test": "node scripts/check-local-test-backend.mjs && vite",
     "build": "vite build",
     "check:job-photo-persistence": "node scripts/check-job-photo-persistence.mjs",
+    "check:photo-navigation-persistence": "node scripts/check-photo-navigation-persistence.mjs",
     "check:job-photo-upload-controls": "node scripts/check-job-photo-upload-controls.mjs",
     "check:legacy-damage-map-photos": "node scripts/check-legacy-damage-map-photo-hydration.mjs",
     "check:damage-map-image-required": "node scripts/check-damage-map-image-required.mjs",
@@ -21,6 +23,7 @@
     "check:version-consistency": "node scripts/check-version-consistency.mjs",
     "check:workspace-router-foundation": "node scripts/check-workspace-router-foundation.mjs",
     "check:local-development-isolation": "node scripts/check-local-development-isolation.mjs",
+    "check:local-auth-offline-message": "node scripts/check-local-auth-offline-message.mjs",
     "check:production-build-config": "node scripts/check-production-build-config.mjs",
     "check:paid-launch-readiness": "node scripts/check-paid-launch-readiness.mjs",
     "check:stripe-self-serve-billing": "node scripts/check-paid-launch-readiness.mjs",
@@ -63,6 +66,7 @@
     "db:local:refresh-from-backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/refresh-local-db-from-hosted-backup.ps1",
     "db:local:apply": "node scripts/apply-local-migrations.mjs",
     "seed:local-test-shops": "node scripts/seed-local-test-shops.mjs --reset",
+    "seed:local-photo-navigation-fixture": "node scripts/seed-local-photo-navigation-fixture.mjs",
     "deploy:app:production": "node scripts/deploy-app-production.mjs",
     "deploy:app:production:check": "node scripts/deploy-app-production.mjs --no-deploy",
     "preview": "vite preview"

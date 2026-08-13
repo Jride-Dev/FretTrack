@@ -17,6 +17,8 @@ Check before beta:
 
 Important: Supabase database backups cover Postgres data. They do not back up Storage objects. FretTrack job photos and shop logos live in Supabase Storage, so they need a separate export or retention plan if the tester starts uploading important real images.
 
+For local workflow testing, use `npm run dev:test`. It verifies that Docker-backed local Supabase Auth is reachable before Vite starts. If Docker Desktop is stopped after the page loads, local sign-in now reports that the test backend is offline instead of presenting the generic browser `Failed to fetch` error.
+
 Beta rule: for one tester, treat Storage images as useful working copies, not the only archival source. Ask the tester to keep original repair photos on their device during beta.
 
 ## Export Path For Jobs And Customers

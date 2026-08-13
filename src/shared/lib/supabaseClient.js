@@ -7,6 +7,7 @@ let createdSupabaseClient = null;
 let supabaseClientError = null;
 
 export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseKey);
+export const isLocalSupabaseConfig = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::|\/|$)/i.test(supabaseUrl || '');
 
 if (hasSupabaseConfig) {
   try {

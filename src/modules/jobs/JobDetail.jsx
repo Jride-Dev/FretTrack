@@ -17,6 +17,7 @@ import { sendCustomerMessage } from '../../data/messagesRepository';
 import { SHOP_EMAIL_CONTEXT_ERROR, buildDocumentEmailHtml, buildInvoiceEmailDraft, buildSelectedDocumentEmailContent, buildWorkOrderEmailDraft, resolveScopedShopEmailSettings } from './emailDocuments';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
+import { mergeUploadedJobImages } from '../photos/photoState.js';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import JobInspectionSections from './JobInspectionSections.jsx';
 import JobWorkSections from './JobWorkSections.jsx';
@@ -711,9 +712,8 @@ export default function JobDetail({
       throw uploadError;
     }
     if (result?.job) {
-      setDraftJob(result.job);
-      setIsDirty(false);
       const uploadedImages = result.job.images || [];
+      setDraftJob((current) => mergeUploadedJobImages(current, result.job));
       return findNewDamageViewImage(uploadedImages, existingImageIds, category, file.name);
     }
     return null;
