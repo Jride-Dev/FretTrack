@@ -26,6 +26,7 @@
     "check:local-auth-offline-message": "node scripts/check-local-auth-offline-message.mjs",
     "check:production-build-config": "node scripts/check-production-build-config.mjs",
     "check:paid-launch-readiness": "node scripts/check-paid-launch-readiness.mjs",
+    "check:backup-restore-snapshot-safety": "node scripts/check-backup-restore-snapshot-safety.mjs",
     "check:stripe-self-serve-billing": "node scripts/check-paid-launch-readiness.mjs",
     "check:stripe-edge-functions": "node scripts/check-stripe-edge-functions.mjs",
     "check:supabase-data-integrity": "node scripts/check-supabase-data-integrity.mjs",

@@ -35,6 +35,8 @@ npm run db:local:refresh-from-backup
 
 This calls `scripts/refresh-local-db-from-hosted-backup.ps1`.
 
+Before it touches Docker volumes or resets the local database, the restore script rejects snapshots marked with `FAILED.txt`, requires the standard completion artifacts, verifies every manifest byte count and SHA-256 hash, and confirms that each bucket/object inventory entry has a matching backed-up file. Automatic selection skips incomplete snapshots; explicitly selected snapshots must pass the same preflight.
+
 The refresh script:
 
 - Creates a pre-refresh archive of the current `supabase_db_FretTrack` Docker volume.

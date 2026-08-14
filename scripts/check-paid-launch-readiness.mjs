@@ -192,6 +192,14 @@ assert.ok(
   'Local restore drill must restore hosted Storage binaries and preserve the local Storage volume first.',
 );
 assert.ok(
+  localRestore.includes('Assert-CompleteSnapshot') &&
+    localRestore.includes("'FAILED.txt'") &&
+    localRestore.includes("'manifest.json'") &&
+    localRestore.includes('Get-Sha256Hex') &&
+    localRestore.includes('storage-buckets/bucket-list.txt'),
+  'Local restore must reject failed or incomplete snapshots and verify the manifest before destructive work.',
+);
+assert.ok(
   !localRestore.includes('version = source.version'),
   'Local Storage restore must retain the environment-specific object version created by the local Storage API.',
 );
