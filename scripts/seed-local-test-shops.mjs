@@ -251,7 +251,7 @@ async function seedShopAsOwner(ownerId, shop) {
       result.customers += 1;
 
       const jobPayload = buildJobPayload(shop, savedCustomer, customerNumber);
-      const [savedJob] = await tx`select * from create_job_with_number(${tx.json(jobPayload)}::jsonb)`;
+      const savedJob = await ensureSeedJob(tx, jobPayload);
       result.jobs += 1;
 
       const childCounts = await seedJobChildren(tx, shop, savedJob, customerNumber);
@@ -264,6 +264,26 @@ async function seedShopAsOwner(ownerId, shop) {
   });
 
   return result;
+}
+
+async function ensureSeedJob(tx, jobPayload) {
+  const [existingJob] = await tx`
+    select *
+    from jobs
+    where id = ${jobPayload.id}::uuid
+      and shop_id = ${jobPayload.shop_id}
+    limit 1
+  `;
+
+  if (existingJob) {
+    if (String(existingJob.customer_id) !== String(jobPayload.customer_id)) {
+      throw new Error(`Existing local seed job ${jobPayload.id} belongs to an unexpected customer.`);
+    }
+    return existingJob;
+  }
+
+  const [createdJob] = await tx`select * from create_job_with_number(${tx.json(jobPayload)}::jsonb)`;
+  return createdJob;
 }
 
 async function setOwnerSession(tx, ownerId) {

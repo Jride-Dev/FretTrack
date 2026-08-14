@@ -1,5 +1,7 @@
 # Release Notes
 
+Local test-shop fixture setup can now be retried after a partial shop failure without colliding with jobs already committed for earlier shops. CI seeds the same fixtures a second time without resetting them so this recovery path remains executable.
+
 Rapid repeated Work Note submissions now coalesce onto one in-flight save. The Save and Discard controls remain unavailable until persistence finishes, preventing concurrent stale snapshots from deleting the note that another request just created.
 
 ## GitHub Release Summary: v0.2.9-beta.5
