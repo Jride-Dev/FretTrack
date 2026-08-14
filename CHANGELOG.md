@@ -1,5 +1,6 @@
 # Changelog
 
+- Recorded the completed Stripe concurrency migration/webhook rollout and fresh pre-migration backup evidence while keeping real Stripe lifecycle smoke tests as a paid-launch gate.
 - Made local Playwright shop seeding safely retryable by reusing deterministic jobs before requesting a new job number, with a second no-reset CI seed pass.
 - Serialized rapid Work Note submissions so repeated Save clicks share one persistence request and cannot delete each other during stale-row cleanup.
 - Expanded the local Playwright matrix with saved Work Note coverage and an isolated UK shop proving millimetres, GBP, and VAT remain consistent across Job Detail, totals, and printable Job Sheets.
