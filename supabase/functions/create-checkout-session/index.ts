@@ -3,6 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import {
   getCheckoutIdempotencyKey,
   hasBlockingStripeSubscription,
+  hasOpenShopSubscriptionAcrossPages,
   isStripeIdempotencyConflict,
   isTerminalStripeSubscriptionStatus,
 } from '../_shared/stripeSubscriptionState.ts';
@@ -141,10 +142,14 @@ function getStripeSecretKey() {
 }
 
 async function customerHasOpenShopSubscription(customerId: string, shopId: string) {
-  const subscriptions = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 100 });
-  return subscriptions.data.some((subscription) =>
-    normalizeText(subscription.metadata?.shop_id) === shopId &&
-    !isTerminalStripeSubscriptionStatus(subscription.status)
+  return hasOpenShopSubscriptionAcrossPages(
+    shopId,
+    (startingAfter) => stripe.subscriptions.list({
+      customer: customerId,
+      status: 'all',
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {})
+    })
   );
 }
 

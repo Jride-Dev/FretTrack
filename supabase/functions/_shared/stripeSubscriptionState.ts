@@ -4,6 +4,17 @@ type StoredSubscriptionState = {
   status?: unknown;
 };
 
+type StripeSubscriptionPageItem = {
+  id?: unknown;
+  metadata?: { shop_id?: unknown } | null;
+  status?: unknown;
+};
+
+type StripeSubscriptionPage = {
+  data?: StripeSubscriptionPageItem[];
+  has_more?: boolean;
+};
+
 export function isTerminalStripeSubscriptionStatus(status: unknown) {
   const value = String(status || "").trim().toLowerCase();
   return value === "canceled" || value === "cancelled" || value === "incomplete_expired";
@@ -13,6 +24,33 @@ export function hasBlockingStripeSubscription(subscription: StoredSubscriptionSt
   const subscriptionId = String(subscription?.stripeSubscriptionId || "").trim();
   if (!subscriptionId) return false;
   return !isTerminalStripeSubscriptionStatus(subscription?.providerStatus || subscription?.status);
+}
+
+export async function hasOpenShopSubscriptionAcrossPages(
+  shopId: unknown,
+  loadPage: (startingAfter?: string) => Promise<StripeSubscriptionPage>,
+) {
+  const expectedShopId = String(shopId || "").trim();
+  let startingAfter: string | undefined;
+
+  while (true) {
+    const page = await loadPage(startingAfter);
+    const subscriptions = Array.isArray(page?.data) ? page.data : [];
+    if (subscriptions.some((subscription) =>
+      String(subscription.metadata?.shop_id || "").trim() === expectedShopId &&
+      !isTerminalStripeSubscriptionStatus(subscription.status)
+    )) {
+      return true;
+    }
+
+    if (!page?.has_more) return false;
+
+    const nextStartingAfter = String(subscriptions[subscriptions.length - 1]?.id || "").trim();
+    if (!nextStartingAfter || nextStartingAfter === startingAfter) {
+      throw new Error("Stripe subscription pagination did not advance.");
+    }
+    startingAfter = nextStartingAfter;
+  }
 }
 
 export async function getCheckoutIdempotencyKey(

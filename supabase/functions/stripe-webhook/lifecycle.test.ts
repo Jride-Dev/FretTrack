@@ -1,4 +1,4 @@
-import { strictEqual } from "node:assert";
+import { deepStrictEqual, strictEqual } from "node:assert";
 import {
   getInvoiceSubscriptionId,
   normalizeBillingInterval,
@@ -9,6 +9,7 @@ import {
 import {
   getCheckoutIdempotencyKey,
   hasBlockingStripeSubscription,
+  hasOpenShopSubscriptionAcrossPages,
   isStripeIdempotencyConflict,
   shouldApplyStripeSubscriptionEvent,
 } from "../_shared/stripeSubscriptionState.ts";
@@ -101,6 +102,41 @@ Deno.test("an existing non-terminal Stripe subscription blocks another Checkout"
     stripeSubscriptionId: "",
     status: "trialing",
   }), false);
+});
+
+Deno.test("existing Stripe subscription lookup checks later pages before allowing Checkout", async () => {
+  const requestedCursors: Array<string | undefined> = [];
+  const pages = [
+    {
+      data: Array.from({ length: 100 }, (_, index) => ({
+        id: `sub_other_${index}`,
+        metadata: { shop_id: "another-shop" },
+        status: "active",
+      })),
+      has_more: true,
+    },
+    {
+      data: [{
+        id: "sub_target",
+        metadata: { shop_id: "shop-one" },
+        status: "trialing",
+      }],
+      has_more: false,
+    },
+  ];
+
+  const hasOpenSubscription = await hasOpenShopSubscriptionAcrossPages(
+    "shop-one",
+    async (startingAfter) => {
+      requestedCursors.push(startingAfter);
+      const page = pages.shift();
+      if (!page) throw new Error("Unexpected extra Stripe page request.");
+      return page;
+    },
+  );
+
+  strictEqual(hasOpenSubscription, true);
+  deepStrictEqual(requestedCursors, [undefined, "sub_other_99"]);
 });
 
 Deno.test("concurrent Checkout requests share one shop-generation idempotency key", async () => {
