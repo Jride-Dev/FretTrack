@@ -1,5 +1,6 @@
 # Changelog
 
+- Expanded the local Playwright matrix with saved Work Note coverage and an isolated UK shop proving millimetres, GBP, and VAT remain consistent across Job Detail, totals, and printable Job Sheets.
 - Paginated the existing Stripe subscription lookup so an open shop subscription beyond the first 100 provider records still blocks duplicate Checkout.
 - Closed the remaining Stripe billing-integrity races: simultaneous Checkout tabs now share one shop-generation idempotency key, while service-role-only synchronized webhook writes reload current Stripe state and prevent older or late-finishing events from overwriting newer plan/access state.
 - Hardened Stripe self-serve billing against duplicate subscriptions and superseded events, made Portal prices authoritative over stale Checkout metadata, and kept failed-payment grace states compatible with the legacy shop-profile mirror.
