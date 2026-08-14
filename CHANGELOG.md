@@ -1,5 +1,6 @@
 # Changelog
 
+- Made local Playwright shop seeding safely retryable by reusing deterministic jobs before requesting a new job number, with a second no-reset CI seed pass.
 - Serialized rapid Work Note submissions so repeated Save clicks share one persistence request and cannot delete each other during stale-row cleanup.
 - Expanded the local Playwright matrix with saved Work Note coverage and an isolated UK shop proving millimetres, GBP, and VAT remain consistent across Job Detail, totals, and printable Job Sheets.
 - Paginated the existing Stripe subscription lookup so an open shop subscription beyond the first 100 provider records still blocks duplicate Checkout.

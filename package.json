@@ -27,6 +27,7 @@
     "check:version-consistency": "node scripts/check-version-consistency.mjs",
     "check:workspace-router-foundation": "node scripts/check-workspace-router-foundation.mjs",
     "check:local-development-isolation": "node scripts/check-local-development-isolation.mjs",
+    "check:local-seed-retry-safety": "node scripts/check-local-seed-retry-safety.mjs",
     "check:local-auth-offline-message": "node scripts/check-local-auth-offline-message.mjs",
     "check:production-build-config": "node scripts/check-production-build-config.mjs",
     "check:paid-launch-readiness": "node scripts/check-paid-launch-readiness.mjs",

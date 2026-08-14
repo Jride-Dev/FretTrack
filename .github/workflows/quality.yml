@@ -88,7 +88,9 @@ jobs:
         run: npm run test:db
 
       - name: Seed isolated browser fixtures
-        run: npm run test:e2e:seed
+        run: |
+          npm run test:e2e:seed
+          node scripts/seed-local-test-shops.mjs --no-report
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
