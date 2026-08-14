@@ -4,7 +4,12 @@ import {
   normalizeBillingInterval,
   normalizePlan,
   normalizeStripeStatus,
+  toProfileSubscriptionStatus,
 } from "./lifecycle.ts";
+import {
+  hasBlockingStripeSubscription,
+  shouldApplyStripeSubscriptionEvent,
+} from "../_shared/stripeSubscriptionState.ts";
 
 Deno.test("invoice subscription lookup supports the current Stripe parent schema", () => {
   strictEqual(
@@ -70,4 +75,49 @@ Deno.test("plan and billing interval normalization remains strict", () => {
   strictEqual(normalizeBillingInterval("year"), "yearly");
   strictEqual(normalizeBillingInterval("yearly"), "yearly");
   strictEqual(normalizeBillingInterval("week"), "");
+});
+
+Deno.test("detailed billing states map safely to the legacy shop profile status", () => {
+  strictEqual(toProfileSubscriptionStatus("active"), "active");
+  strictEqual(toProfileSubscriptionStatus("past_due"), "active");
+  strictEqual(toProfileSubscriptionStatus("trialing"), "trialing");
+  strictEqual(toProfileSubscriptionStatus("canceled"), "canceled");
+  strictEqual(toProfileSubscriptionStatus("incomplete"), "expired");
+  strictEqual(toProfileSubscriptionStatus("read_only"), "expired");
+});
+
+Deno.test("an existing non-terminal Stripe subscription blocks another Checkout", () => {
+  strictEqual(hasBlockingStripeSubscription({
+    stripeSubscriptionId: "sub_active",
+    providerStatus: "active",
+  }), true);
+  strictEqual(hasBlockingStripeSubscription({
+    stripeSubscriptionId: "sub_canceled",
+    providerStatus: "canceled",
+  }), false);
+  strictEqual(hasBlockingStripeSubscription({
+    stripeSubscriptionId: "",
+    status: "trialing",
+  }), false);
+});
+
+Deno.test("superseded subscription events cannot overwrite the current subscription", () => {
+  strictEqual(shouldApplyStripeSubscriptionEvent({
+    storedSubscriptionId: "sub_current",
+    storedProviderStatus: "active",
+    incomingSubscriptionId: "sub_old",
+    incomingProviderStatus: "canceled",
+  }), false);
+  strictEqual(shouldApplyStripeSubscriptionEvent({
+    storedSubscriptionId: "sub_current",
+    storedProviderStatus: "active",
+    incomingSubscriptionId: "sub_current",
+    incomingProviderStatus: "canceled",
+  }), true);
+  strictEqual(shouldApplyStripeSubscriptionEvent({
+    storedSubscriptionId: "sub_canceled",
+    storedProviderStatus: "canceled",
+    incomingSubscriptionId: "sub_replacement",
+    incomingProviderStatus: "active",
+  }), true);
 });

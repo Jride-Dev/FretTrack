@@ -4,12 +4,21 @@ import {
   getInvoiceSubscriptionId,
   normalizeBillingInterval,
   normalizePlan,
-  normalizeStripeStatus
+  normalizeStripeStatus,
+  toProfileSubscriptionStatus
 } from './lifecycle.ts';
+import { shouldApplyStripeSubscriptionEvent } from '../_shared/stripeSubscriptionState.ts';
 
 const stripe = new Stripe(getStripeSecretKey());
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 type SupabaseAnyClient = ReturnType<typeof createClient<any, 'public', any>>;
+type StripeEventResult = {
+  status: string;
+  shopId?: string;
+  customerId?: string;
+  subscriptionId?: string;
+  errorMessage?: string;
+};
 
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
@@ -96,12 +105,34 @@ async function syncSubscription(
 
   const item = subscription.items.data[0];
   const priceId = item?.price?.id || '';
-  const planId = normalizePlan(subscription.metadata?.plan_id) || planFromPriceId(priceId);
+  const planId = planFromPriceId(priceId) || normalizePlan(subscription.metadata?.plan_id);
   if (!planId) throw new Error(`Stripe subscription ${subscription.id} uses an unrecognized FretTrack price.`);
-  const billingInterval = normalizeBillingInterval(subscription.metadata?.billing_interval || item?.price?.recurring?.interval);
+  const billingInterval = normalizeBillingInterval(item?.price?.recurring?.interval) ||
+    normalizeBillingInterval(subscription.metadata?.billing_interval);
   if (!billingInterval) throw new Error(`Stripe subscription ${subscription.id} is missing a supported billing interval.`);
   const status = normalizeStripeStatus(subscription.status);
   const billingEmail = await getCustomerEmail(customerId);
+  const { data: storedSubscription, error: storedSubscriptionError } = await supabase
+    .from('shop_subscriptions')
+    .select('stripe_subscription_id, provider_status, status')
+    .eq('shop_id', shopId)
+    .maybeSingle();
+  if (storedSubscriptionError) throw storedSubscriptionError;
+  if (!shouldApplyStripeSubscriptionEvent({
+    storedSubscriptionId: storedSubscription?.stripe_subscription_id,
+    storedProviderStatus: storedSubscription?.provider_status,
+    storedStatus: storedSubscription?.status,
+    incomingSubscriptionId: subscription.id,
+    incomingProviderStatus: subscription.status
+  })) {
+    return {
+      status: 'ignored',
+      shopId,
+      customerId,
+      subscriptionId: subscription.id,
+      errorMessage: 'Superseded subscription event ignored.'
+    };
+  }
 
   const subscriptionWithPeriod = subscription as Stripe.Subscription & {
     current_period_start?: number | null;
@@ -133,7 +164,7 @@ async function syncSubscription(
     .from('shop_profiles')
     .update({
       subscription_tier: planId,
-      subscription_status: status,
+      subscription_status: toProfileSubscriptionStatus(status),
       trial_ends_at: updates.trial_ends_at,
       updated_at: new Date().toISOString()
     })
@@ -160,7 +191,7 @@ async function getCustomerEmail(customerId: string) {
   return customer.email || '';
 }
 
-async function recordEvent(supabase: SupabaseAnyClient, event: Stripe.Event, result: Record<string, string>) {
+async function recordEvent(supabase: SupabaseAnyClient, event: Stripe.Event, result: StripeEventResult) {
   const { error } = await supabase.from('stripe_webhook_events').upsert({
     stripe_event_id: event.id,
     event_type: event.type,

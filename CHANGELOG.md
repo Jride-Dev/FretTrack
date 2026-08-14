@@ -1,5 +1,7 @@
 # Changelog
 
+- Hardened Stripe self-serve billing against duplicate subscriptions and superseded events, made Portal prices authoritative over stale Checkout metadata, and kept failed-payment grace states compatible with the legacy shop-profile mirror.
+
 Current version: `0.2.9-beta.5`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.

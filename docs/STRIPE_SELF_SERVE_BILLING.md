@@ -44,6 +44,21 @@ Compatibility aliases:
 - `STRIPE_WEBHOOK_SECRET` may be used instead of `STRIPE_WEBHOOK_SIGNING_SECRET`.
 - `STRIPE_SHOP_MONTHLY_PRICE_ID`, `STRIPE_SHOP_YEARLY_PRICE_ID`, `STRIPE_PRO_MONTHLY_PRICE_ID`, and `STRIPE_PRO_YEARLY_PRICE_ID` may be used instead of the `STRIPE_PRICE_*` names.
 
+## Local Sandbox Workflow
+
+Use two Stripe sandbox products—FretTrack Shop and FretTrack Pro—with monthly and yearly recurring prices under each product. This produces the four distinct sandbox Price IDs expected by FretTrack.
+
+Keep sandbox values in ignored `supabase/functions/.env.stripe-sandbox`; never replace hosted Supabase secrets for local testing. Start the local stack and listener in separate terminals:
+
+```powershell
+supabase start
+supabase functions serve --env-file .\supabase\functions\.env.stripe-sandbox --no-verify-jwt
+stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook
+npm run dev -- --host 127.0.0.1
+```
+
+The listener prints its own `whsec_...` secret. Save that exact value as `STRIPE_WEBHOOK_SIGNING_SECRET` before starting Functions. If the environment file changes, restart `supabase functions serve`; the running Edge Runtime does not reload secret values from the file. A healthy signed delivery returns HTTP `200`. Repeated `400` responses on every event indicate signature verification failed before subscription processing.
+
 ## Edge Function Deployment
 
 Checkout and Portal must retain Supabase JWT verification. Stripe cannot provide a Supabase JWT when delivering a webhook, so only the webhook is deployed with gateway JWT verification disabled; its Stripe signature verification is the authentication boundary.
@@ -85,6 +100,12 @@ Stripe events update `public.shop_subscriptions`:
 - `cancel_at_period_end`
 - `canceled_at`
 - `provider_status`
+
+Checkout refuses to create another subscription while the shop already has a non-terminal Stripe subscription. Existing subscribers use the Billing Portal for plan changes, payment details, and cancellation. Webhook events from a different, superseded subscription ID are recorded as ignored and cannot overwrite the shop's current subscription state.
+
+For Portal plan changes, the exact configured Stripe Price ID and its recurring interval are authoritative. Checkout metadata remains a compatibility fallback only, because Stripe does not rewrite custom subscription metadata when a customer switches prices in the Portal.
+
+Detailed provider states remain authoritative in `shop_subscriptions`. The older `shop_profiles.subscription_status` mirror uses its compatible coarse states: failed-payment grace access mirrors as active, while incomplete or read-only access mirrors as expired.
 
 The existing entitlement snapshot remains the app authority. Stripe updates the subscription row; FretTrack's existing permission and entitlement layer decides what the shop can do.
 

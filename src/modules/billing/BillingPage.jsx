@@ -32,6 +32,9 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
   const planStatus = getPlanStatus(snapshot);
   const shopId = snapshot.shopId || shopProfile?.shop_id || shopProfile?.shopId || '';
   const hasStripeCustomer = Boolean(subscription.stripeCustomerId || subscription.stripe_customer_id);
+  const stripeSubscriptionId = subscription.stripeSubscriptionId || subscription.stripe_subscription_id || '';
+  const providerStatus = String(subscription.providerStatus || subscription.provider_status || subscription.status || '').toLowerCase();
+  const hasManagedStripeSubscription = Boolean(stripeSubscriptionId) && !['canceled', 'cancelled', 'incomplete_expired'].includes(providerStatus);
 
   async function redirectToCheckout(plan, interval = 'monthly') {
     setBillingError('');
@@ -96,19 +99,24 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
         <h3>Manage Plan</h3>
         <p>Choose a Stripe-powered FretTrack plan or open the secure billing portal for payment, renewal, cancellation, and invoice settings.</p>
         {billingError && <p className="error-text" role="alert">{billingError}</p>}
+        {hasManagedStripeSubscription && (
+          <p className="muted-text">This shop already has a Stripe subscription. Use the Billing Portal to change plans, update payment details, or cancel.</p>
+        )}
         <div className="billing-plan-actions">
-          <button type="button" className="primary" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('shop', 'monthly')}>
-            {billingAction === 'shop-monthly' ? 'Opening…' : 'Start Shop Monthly'}
-          </button>
-          <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('pro', 'monthly')}>
-            {billingAction === 'pro-monthly' ? 'Opening…' : 'Start Pro Monthly'}
-          </button>
-          <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('shop', 'yearly')}>
-            {billingAction === 'shop-yearly' ? 'Opening…' : 'Start Shop Yearly'}
-          </button>
-          <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('pro', 'yearly')}>
-            {billingAction === 'pro-yearly' ? 'Opening…' : 'Start Pro Yearly'}
-          </button>
+          {!hasManagedStripeSubscription && <>
+            <button type="button" className="primary" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('shop', 'monthly')}>
+              {billingAction === 'shop-monthly' ? 'Opening…' : 'Start Shop Monthly'}
+            </button>
+            <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('pro', 'monthly')}>
+              {billingAction === 'pro-monthly' ? 'Opening…' : 'Start Pro Monthly'}
+            </button>
+            <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('shop', 'yearly')}>
+              {billingAction === 'shop-yearly' ? 'Opening…' : 'Start Shop Yearly'}
+            </button>
+            <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('pro', 'yearly')}>
+              {billingAction === 'pro-yearly' ? 'Opening…' : 'Start Pro Yearly'}
+            </button>
+          </>}
           <button type="button" disabled={!hasStripeCustomer || Boolean(billingAction)} onClick={redirectToPortal}>
             {billingAction === 'portal' ? 'Opening…' : 'Manage Billing Portal'}
           </button>

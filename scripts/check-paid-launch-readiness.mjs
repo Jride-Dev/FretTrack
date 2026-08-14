@@ -53,6 +53,8 @@ for (const required of [
   'shop_subscriptions',
   'stripe_webhook_events',
   'Checkout Security Boundary',
+  'Local Sandbox Workflow',
+  'restart `supabase functions serve`',
   'signature-verified Stripe webhook',
   'stripe-webhook --no-verify-jwt',
   'Do not use `--no-verify-jwt` for the Checkout or Portal functions.',
@@ -70,6 +72,9 @@ assert.ok(checkoutFunction.includes('Deno.env.get(key)'), 'Checkout function mus
 assert.ok(checkoutFunction.includes('STRIPE_API_KEY'), 'Checkout function must support the existing Stripe API key secret name.');
 assert.ok(checkoutFunction.includes('client_reference_id: shopId'), 'Checkout function must bind Checkout sessions to a shop id.');
 assert.ok(checkoutFunction.includes('customer_email'), 'Checkout must let Stripe create a customer only as part of confirmed subscription Checkout.');
+assert.ok(checkoutFunction.includes('hasBlockingStripeSubscription'), 'Checkout must block duplicate subscriptions for a shop with a non-terminal Stripe subscription.');
+assert.ok(checkoutFunction.includes('customerHasOpenShopSubscription'), 'Checkout must check Stripe for an existing open shop subscription before creating another session.');
+assert.ok(checkoutFunction.includes('Use Manage Billing Portal'), 'Duplicate Checkout attempts must direct existing subscribers to the Billing Portal.');
 assert.ok(!checkoutFunction.includes('stripe.customers.create'), 'Checkout creation must not create a detached Stripe customer before payment confirmation.');
 assert.ok(
   !/from\(['"]shop_subscriptions['"]\)\s*\.upsert/s.test(checkoutFunction),
@@ -93,7 +98,15 @@ assert.ok(webhookFunction.includes('invoice.paid'), 'Stripe webhook must process
 assert.ok(webhookFunction.includes('shop_subscriptions'), 'Stripe webhook must update shop subscription state.');
 assert.ok(webhookFunction.includes('getConfiguredPriceId'), 'Webhook plan mapping must compare exact configured Stripe price IDs.');
 assert.ok(!webhookFunction.includes("value.includes('pro')"), 'Webhook must not infer a plan from opaque Stripe price ID text.');
+assert.ok(webhookFunction.includes('planFromPriceId(priceId) || normalizePlan'), 'Webhook must prefer the current Stripe price over stale subscription metadata when resolving a plan.');
 assert.ok(webhookFunction.includes('normalizeBillingInterval'), 'Webhook must persist the Stripe subscription billing interval.');
+assert.ok(webhookFunction.includes('toProfileSubscriptionStatus(status)'), 'Webhook must map detailed billing states into the legacy shop profile status constraint.');
+assert.ok(
+  /normalizeBillingInterval\(item\?\.price\?\.recurring\?\.interval\)\s*\|\|\s*\n\s*normalizeBillingInterval\(subscription\.metadata\?\.billing_interval\)/.test(webhookFunction),
+  'Webhook must prefer the current Stripe price interval over stale subscription metadata.',
+);
+assert.ok(webhookFunction.includes('shouldApplyStripeSubscriptionEvent'), 'Webhook must prevent superseded subscription events from overwriting the current subscription.');
+assert.ok(webhookFunction.includes('Superseded subscription event ignored.'), 'Webhook must record why a superseded subscription event was ignored.');
 assert.ok(webhookFunction.includes("existing.data.status !== 'failed'"), 'Failed webhook events must remain retryable.');
 assert.ok(webhookFunction.includes("onConflict: 'stripe_event_id'"), 'Webhook event retries must update the existing idempotency record.');
 assert.ok(
@@ -115,12 +128,15 @@ assert.ok(/subscription:\s*["']sub_current["']/.test(webhookLifecycleTest), 'Str
 assert.ok(/subscription:\s*["']sub_legacy["']/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover the legacy invoice schema.');
 assert.ok(/\[\s*["']past_due["'],\s*["']past_due["']\s*\]/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover failed-payment access state.');
 assert.ok(/\[\s*["']canceled["'],\s*["']canceled["']\s*\]/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover cancellation state.');
+assert.ok(webhookLifecycleTest.includes('toProfileSubscriptionStatus("past_due"), "active"'), 'Stripe lifecycle tests must cover the coarse profile mirror for failed-payment grace access.');
 
 const billingPage = read('src/modules/billing/BillingPage.jsx');
 assert.ok(billingPage.includes('Start Shop Monthly'), 'Billing page must expose Shop Checkout.');
 assert.ok(billingPage.includes('Start Pro Monthly'), 'Billing page must expose Pro Checkout.');
 assert.ok(billingPage.includes('Manage Billing Portal'), 'Billing page must expose the Stripe Billing Portal.');
 assert.ok(!billingPage.includes('Plan changes are handled by FretTrack support during beta.'), 'Billing page must not keep the manual beta billing placeholder.');
+assert.ok(billingPage.includes('hasManagedStripeSubscription'), 'Billing page must suppress new Checkout actions for an existing managed subscription.');
+assert.ok(billingPage.includes('Use the Billing Portal to change plans'), 'Existing subscribers must be directed to the Billing Portal.');
 
 const migration = read('supabase/migrations/20260811200225_stripe_self_serve_billing_readiness.sql');
 for (const required of [
