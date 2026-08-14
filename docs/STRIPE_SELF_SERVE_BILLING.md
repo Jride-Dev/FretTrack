@@ -22,6 +22,8 @@ An abandoned, canceled, expired, or failed Checkout Session therefore leaves the
 
 Checkout creation also uses one deterministic idempotency key per shop and subscription generation. Simultaneous tabs requesting the same Checkout either replay the single Stripe Session or receive a safe in-progress conflict; a different plan request is rejected instead of opening a second subscription path. A terminal subscription ID starts a new generation so a genuinely canceled subscriber can later purchase again.
 
+For an existing Stripe customer, FretTrack checks every page of that customer's subscriptions before creating Checkout. An open subscription linked to the shop therefore blocks another Checkout even when it appears beyond Stripe's first 100 records.
+
 ## Required Supabase Secrets
 
 Set these in the production Supabase project:
