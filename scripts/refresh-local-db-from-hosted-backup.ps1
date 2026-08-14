@@ -5,7 +5,8 @@ param(
   [string]$DockerVolumeName = 'supabase_db_FretTrack',
   [string]$StorageVolumeName = 'supabase_storage_FretTrack',
   [string]$DbContainerName = 'supabase_db_FretTrack',
-  [switch]$SkipPreRefreshVolumeBackup
+  [switch]$SkipPreRefreshVolumeBackup,
+  [switch]$ValidateSnapshotOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,16 +42,146 @@ function Invoke-Checked {
   }
 }
 
+function Get-Sha256Hex {
+  param([string]$Path)
+
+  $stream = [System.IO.File]::OpenRead($Path)
+  try {
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+      $hashBytes = $sha256.ComputeHash($stream)
+      return ([System.BitConverter]::ToString($hashBytes)).Replace('-', '').ToLowerInvariant()
+    } finally {
+      $sha256.Dispose()
+    }
+  } finally {
+    $stream.Dispose()
+  }
+}
+
+function Get-NormalizedSnapshotPath {
+  param([string]$Path)
+  return ([string]$Path).Replace('\', '/').TrimStart('/')
+}
+
+function Assert-CompleteSnapshot {
+  param([string]$SnapshotDir)
+
+  $snapshotRoot = [System.IO.Path]::GetFullPath($SnapshotDir)
+  $snapshotPrefix = $snapshotRoot.TrimEnd([char[]]@('\', '/')) + [System.IO.Path]::DirectorySeparatorChar
+  $failedPath = Join-Path $snapshotRoot 'FAILED.txt'
+  if (Test-Path -LiteralPath $failedPath) {
+    throw "Snapshot is marked failed by FAILED.txt: $snapshotRoot"
+  }
+
+  foreach ($requiredPath in @('manifest.json', 'checksums.sha256', 'compare-report.md', 'data.sql', 'storage-buckets/bucket-list.txt')) {
+    if (-not (Test-Path -LiteralPath (Join-Path $snapshotRoot $requiredPath) -PathType Leaf)) {
+      throw "Snapshot is incomplete; required file is missing: $requiredPath"
+    }
+  }
+
+  $manifestPath = Join-Path $snapshotRoot 'manifest.json'
+  try {
+    $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+  } catch {
+    throw "Snapshot manifest is invalid JSON: $manifestPath"
+  }
+
+  $manifestFiles = @($manifest.files)
+  if (-not $manifestFiles.Count) {
+    throw "Snapshot manifest has no file inventory: $manifestPath"
+  }
+
+  $manifestPaths = @{}
+  foreach ($entry in $manifestFiles) {
+    $relativePath = Get-NormalizedSnapshotPath -Path $entry.path
+    if (-not $relativePath -or [System.IO.Path]::IsPathRooted([string]$entry.path)) {
+      throw "Snapshot manifest contains an invalid path: $($entry.path)"
+    }
+
+    $candidatePath = [System.IO.Path]::GetFullPath((Join-Path $snapshotRoot $relativePath))
+    if (-not $candidatePath.StartsWith($snapshotPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+      throw "Snapshot manifest path escapes the snapshot directory: $relativePath"
+    }
+    if (-not (Test-Path -LiteralPath $candidatePath -PathType Leaf)) {
+      throw "Snapshot manifest file is missing: $relativePath"
+    }
+
+    $expectedHash = ([string]$entry.sha256).ToLowerInvariant()
+    if ($expectedHash -notmatch '^[a-f0-9]{64}$') {
+      throw "Snapshot manifest has an invalid SHA-256 value for: $relativePath"
+    }
+    if ([int64]$entry.bytes -ne (Get-Item -LiteralPath $candidatePath).Length) {
+      throw "Snapshot manifest byte count does not match: $relativePath"
+    }
+    if ((Get-Sha256Hex -Path $candidatePath) -ne $expectedHash) {
+      throw "Snapshot manifest checksum does not match: $relativePath"
+    }
+
+    $manifestPaths[$relativePath] = $true
+  }
+
+  foreach ($requiredManifestPath in @('data.sql', 'storage-buckets/bucket-list.txt')) {
+    if (-not $manifestPaths.ContainsKey($requiredManifestPath)) {
+      throw "Snapshot manifest is missing required inventory entry: $requiredManifestPath"
+    }
+  }
+
+  $storageBackupDir = Join-Path $snapshotRoot 'storage-buckets'
+  $bucketListPath = Join-Path $storageBackupDir 'bucket-list.txt'
+  $bucketNames = @(Get-Content -LiteralPath $bucketListPath | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ })
+  foreach ($bucketName in $bucketNames) {
+    if ($bucketName -match '[\\/]' -or $bucketName -in @('.', '..')) {
+      throw "Snapshot bucket list contains an invalid bucket name: $bucketName"
+    }
+
+    $objectListPath = Join-Path (Join-Path $storageBackupDir $bucketName) '_object-list.txt'
+    if (-not (Test-Path -LiteralPath $objectListPath -PathType Leaf)) {
+      throw "Snapshot is missing Storage object inventory for bucket: $bucketName"
+    }
+    $objectListRelativePath = "storage-buckets/$bucketName/_object-list.txt"
+    if (-not $manifestPaths.ContainsKey($objectListRelativePath)) {
+      throw "Snapshot manifest is missing Storage object inventory: $objectListRelativePath"
+    }
+
+    $objectPaths = @(Get-Content -LiteralPath $objectListPath | ForEach-Object { Get-NormalizedSnapshotPath -Path $_ } | Where-Object { $_ })
+    foreach ($objectPath in $objectPaths) {
+      if (-not $objectPath.StartsWith("$bucketName/", [System.StringComparison]::Ordinal)) {
+        throw "Snapshot Storage object is outside its bucket inventory: $objectPath"
+      }
+      $storageRelativePath = "storage-buckets/$objectPath"
+      if (-not $manifestPaths.ContainsKey($storageRelativePath)) {
+        throw "Snapshot manifest is missing Storage object: $storageRelativePath"
+      }
+    }
+  }
+
+  return $true
+}
+
+function Test-CompleteSnapshot {
+  param([string]$SnapshotDir)
+
+  try {
+    return Assert-CompleteSnapshot -SnapshotDir $SnapshotDir
+  } catch {
+    Write-Warning "Ignoring incomplete snapshot $SnapshotDir`: $($_.Exception.Message)"
+    return $false
+  }
+}
+
 function Get-LatestSnapshotDir {
   param([string]$Root)
 
-  return Get-ChildItem -LiteralPath $Root -Directory -Filter 'hosted-supabase-*' |
-    Where-Object {
-      Test-Path -LiteralPath (Join-Path $_.FullName 'data.sql')
-    } |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1 |
-    ForEach-Object { $_.FullName }
+  $candidates = Get-ChildItem -LiteralPath $Root -Directory -Filter 'hosted-supabase-*' |
+    Sort-Object LastWriteTime -Descending
+  foreach ($candidate in $candidates) {
+    if (Test-CompleteSnapshot -SnapshotDir $candidate.FullName) {
+      return $candidate.FullName
+    }
+  }
+
+  return $null
 }
 
 function Backup-DockerVolume {
@@ -193,9 +324,6 @@ function Invoke-Psql {
   Invoke-Checked -FilePath docker -Arguments (@('exec', $DbContainerName, 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1') + $Arguments)
 }
 
-Require-Command supabase
-Require-Command docker
-
 $ProjectRoot = (Resolve-Path $ProjectRoot).Path
 $BackupRoot = (Resolve-Path $BackupRoot).Path
 
@@ -208,10 +336,17 @@ if (-not $SnapshotDir) {
 }
 
 $SnapshotDir = (Resolve-Path $SnapshotDir).Path
-$dataFile = Join-Path $SnapshotDir 'data.sql'
-if (-not (Test-Path -LiteralPath $dataFile)) {
-  throw "Snapshot is missing data.sql: $SnapshotDir"
+Assert-CompleteSnapshot -SnapshotDir $SnapshotDir | Out-Null
+if ($ValidateSnapshotOnly) {
+  Write-Step 'Snapshot validation complete'
+  Write-Host "Snapshot: $SnapshotDir"
+  return
 }
+
+Require-Command supabase
+Require-Command docker
+
+$dataFile = Join-Path $SnapshotDir 'data.sql'
 
 $dockerVolumes = @(& docker volume ls --format '{{.Name}}')
 if ($DockerVolumeName -notin $dockerVolumes) {
