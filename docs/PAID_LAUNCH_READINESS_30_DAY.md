@@ -1,6 +1,7 @@
 # Paid Launch Readiness: 30-Day Plan
 
 Date: 2026-08-11
+Last updated: 2026-08-14
 
 ## Current Verdict
 
@@ -12,11 +13,12 @@ The core repair workflow, guarded production deploy path, migration drift checks
 
 - `npm run check:migrations` passed against the linked Supabase project.
 - `npm run check:supabase-data-integrity` passed against the linked Supabase project.
-- Remote migration history is aligned through `20260811200225`.
+- Remote migration history is aligned through `20260814041144`.
 - Production deploy protection exists through `npm run deploy:app:production` and `npm run check:production-build-config`.
 - Stripe Checkout opened successfully from the production owner Billing page without changing the shop subscription merely by opening the flow.
 - `create-checkout-session`, `create-billing-portal-session`, and the source-controlled `stripe-webhook` are deployed; Checkout/Portal require JWTs and the webhook uses Stripe signature verification.
-- The focused `set_updated_at` search-path hardening migration passed locally; the local Supabase Security Advisor returned no warnings afterward. It remains pending remote application until the launch-readiness branch is reviewed and approved.
+- The focused `set_updated_at` search-path hardening migration is applied remotely; its local Supabase Security Advisor validation returned no warnings.
+- Stripe billing concurrency migration `20260814041144` is applied remotely. The matching `stripe-webhook` version 12 is active, anonymous access to its synchronization table/RPCs returns HTTP 401, and a webhook request without a Stripe signature fails closed with HTTP 400.
 
 ## Backup and Restore Readiness
 
@@ -35,6 +37,7 @@ Scheduled-backup status:
 - That snapshot independently passed SHA-256 validation for all 4,873 manifest entries and contains the current migration history plus 194 Storage object binaries.
 - The backup script now starts Docker Desktop and waits for its engine because current Supabase CLI database dumps require Docker. The scheduled task skips only the optional local-volume archive; manual full backups and pre-restore safety archives still capture it.
 - A complete local restore drill from that snapshot passed on `2026-08-11`: 73 backed-up table counts matched, local data-integrity checks passed, all 58 migrations aligned, and all 194 restored Storage downloads matched the snapshot SHA-256 hashes.
+- A fresh pre-migration full backup completed on `2026-08-14` at `backups/hosted-supabase-20260814-113801`. It contains 4,883 hashed manifest files, 73 backed-up table counts, all 59 then-remote migrations, and 198 Storage object binaries; its compare report found no schema or migration-history change from the preceding snapshot.
 
 Paid-launch requirement:
 
@@ -103,7 +106,7 @@ Implemented foundation:
 - Write access is gated by active paid/trial/read-only state.
 - Usage caps exist for email recipients and photos.
 
-Stripe-ready implementation now in this branch:
+Stripe-ready implementation now deployed:
 
 - `create-checkout-session` creates authenticated Stripe Checkout subscription sessions for Shop and Pro monthly/yearly prices.
 - `create-billing-portal-session` opens the Stripe Billing Portal for an existing shop Stripe customer.
@@ -114,6 +117,7 @@ Stripe-ready implementation now in this branch:
 - Executable Deno lifecycle tests cover current and legacy invoice payloads plus active, trialing, past-due, incomplete, canceled, and paused/read-only mappings.
 - The Billing page now exposes Stripe Checkout and Billing Portal actions to shop owners/admins.
 - Stripe webhook events are source-controlled through `stripe_webhook_events` for idempotency and operational review.
+- Shop-scoped synchronization generations and atomic service-role-only subscription/profile writes prevent older or late-finishing webhook handlers from overwriting newer billing state.
 
 Launch gaps still requiring real Stripe account data and live validation:
 

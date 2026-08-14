@@ -75,6 +75,17 @@ supabase functions deploy stripe-webhook --no-verify-jwt
 
 Do not use `--no-verify-jwt` for the Checkout or Portal functions.
 
+## Production Rollout Evidence
+
+As of 2026-08-14:
+
+- migration `20260814041144_stripe_billing_concurrency_guards.sql` is recorded in the linked production migration history;
+- `stripe-webhook` version 12 is active with gateway JWT verification disabled only for Stripe delivery;
+- an authenticated-anon probe receives HTTP 401 from both the synchronization cursor table and `begin_stripe_subscription_sync`;
+- a webhook request without `stripe-signature` reaches the function and fails closed with HTTP 400;
+- `npm run check:stripe-edge-functions` passes all 9 executable lifecycle/concurrency tests; and
+- full subscription creation, renewal, cancellation, failed-payment, recovery, and trial-ended flows still require real Stripe end-to-end smoke evidence before paid launch.
+
 ## Webhook Events to Enable
 
 At minimum:
