@@ -103,6 +103,7 @@ export default function JobDetail({
   const { isDirty, setDirty, confirmIfDirty } = useUnsavedChanges();
   const [saveStatus, setSaveStatus] = useState('saved');
   const [workLogText, setWorkLogText] = useState('');
+  const [isSavingWorkLog, setIsSavingWorkLog] = useState(false);
   const [part, setPart] = useState({ name: '', quantity: '1', cost: '', retail: '' });
   const [service, setService] = useState({ description: '', quantity: '1', cost: '', retail: '' });
   const [payment, setPayment] = useState({ amount: '', method: 'Cash', note: '', date: toIsoDateInputValue() });
@@ -120,8 +121,10 @@ export default function JobDetail({
   const [isInventoryLoading, setIsInventoryLoading] = useState(false);
   const imageImportInputRef = useRef(null);
   const paymentAutosaveTimeoutRef = useRef(null);
+  const workLogSavePromiseRef = useRef(null);
   const hasPendingWorkLog = hasPendingWorkLogDraft(workLogText);
-  const hasUnsavedChanges = isDirty || hasPendingWorkLog;
+  const hasUnsettledWorkLog = hasPendingWorkLog || isSavingWorkLog;
+  const hasUnsavedChanges = isDirty || hasUnsettledWorkLog;
   const displayedSaveStatus = hasPendingWorkLog && saveStatus === 'saved' ? 'unsaved' : saveStatus;
 
   const setIsDirty = useCallback((value) => {
@@ -133,7 +136,9 @@ export default function JobDetail({
     setDraftJob(job);
     setTimelineEvents(job.events || []);
     setDocumentEmailDraft(null);
-    setWorkLogText('');
+    if (!workLogSavePromiseRef.current) {
+      setWorkLogText('');
+    }
     setIsDirty(false);
   }, [job, setIsDirty]);
 
@@ -147,7 +152,7 @@ export default function JobDetail({
   }, [hasUnsavedChanges, onDirtyChange]);
 
   useEffect(() => {
-    if (!hasPendingWorkLog) {
+    if (!hasUnsettledWorkLog) {
       return undefined;
     }
 
@@ -159,7 +164,7 @@ export default function JobDetail({
 
     window.addEventListener('beforeunload', handlePendingWorkLogBeforeUnload);
     return () => window.removeEventListener('beforeunload', handlePendingWorkLogBeforeUnload);
-  }, [hasPendingWorkLog]);
+  }, [hasUnsettledWorkLog]);
 
   useEffect(() => {
     refreshTimelineEvents();
@@ -431,23 +436,38 @@ export default function JobDetail({
     if (!canWrite) {
       throw new Error('Your shop role is read-only.');
     }
+    if (workLogSavePromiseRef.current) {
+      return workLogSavePromiseRef.current;
+    }
     if (!hasPendingWorkLog) {
       return saveDraftNow();
     }
     const timestamp = new Date().toISOString();
-    const nextJob = appendWorkLogDraft(draftJob, workLogText, {
+    const submittedWorkLogText = workLogText;
+    const nextJob = appendWorkLogDraft(draftJob, submittedWorkLogText, {
       id: crypto.randomUUID(),
       timestamp
     });
 
-    try {
-      const savedJob = await saveDraftNow(nextJob);
-      setWorkLogText('');
-      return savedJob;
-    } catch (error) {
-      onNotice?.({ type: 'error', message: error?.message || 'Work Note could not be saved.' });
-      throw error;
-    }
+    const savePromise = saveDraftNow(nextJob)
+      .then((savedJob) => {
+        setWorkLogText((current) => current === submittedWorkLogText ? '' : current);
+        return savedJob;
+      })
+      .catch((error) => {
+        onNotice?.({ type: 'error', message: error?.message || 'Work Note could not be saved.' });
+        throw error;
+      })
+      .finally(() => {
+        if (workLogSavePromiseRef.current === savePromise) {
+          workLogSavePromiseRef.current = null;
+          setIsSavingWorkLog(false);
+        }
+      });
+
+    workLogSavePromiseRef.current = savePromise;
+    setIsSavingWorkLog(true);
+    return savePromise;
   }
 
   function discardWorkLogDraft() {
@@ -1129,6 +1149,7 @@ export default function JobDetail({
       canWrite={canWrite}
       draftJob={draftJob}
       hasPendingWorkLog={hasPendingWorkLog}
+      isSavingWorkLog={isSavingWorkLog}
       onAddService={addService}
       onAppendWorkLog={appendWorkLog}
       onDiscardWorkLogDraft={discardWorkLogDraft}

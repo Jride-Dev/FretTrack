@@ -7,6 +7,7 @@ export default function WorkLogSection({
   discardWorkLogDraft,
   draftJob,
   hasPendingWorkLog = false,
+  isSavingWorkLog = false,
   removeWorkLogEntry,
   saveWorkLogChanges,
   setWorkLogText,
@@ -25,12 +26,14 @@ export default function WorkLogSection({
           onChange={(event) => setWorkLogText(event.target.value)}
           placeholder="Type the work performed, then choose Save Work Note."
           rows="3"
-          disabled={!canWrite}
+          disabled={!canWrite || isSavingWorkLog}
         />
         <div className="work-log-draft-actions">
-          <button type="submit" disabled={!canWrite || !hasPendingWorkLog}>Save Work Note</button>
+          <button type="submit" disabled={!canWrite || !hasPendingWorkLog || isSavingWorkLog}>
+            {isSavingWorkLog ? 'Saving Work Note…' : 'Save Work Note'}
+          </button>
           {hasPendingWorkLog && (
-            <button type="button" className="button-tertiary" onClick={discardWorkLogDraft}>Discard Draft</button>
+            <button type="button" className="button-tertiary" onClick={discardWorkLogDraft} disabled={isSavingWorkLog}>Discard Draft</button>
           )}
         </div>
       </form>
