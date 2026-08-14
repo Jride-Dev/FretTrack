@@ -5,6 +5,7 @@ export default function JobWorkSections({
   canWrite,
   draftJob,
   hasPendingWorkLog,
+  isSavingWorkLog,
   onAddService,
   onAppendWorkLog,
   onDiscardWorkLogDraft,
@@ -26,6 +27,7 @@ export default function JobWorkSections({
         appendWorkLog={onAppendWorkLog}
         draftJob={draftJob}
         hasPendingWorkLog={hasPendingWorkLog}
+        isSavingWorkLog={isSavingWorkLog}
         discardWorkLogDraft={onDiscardWorkLogDraft}
         removeWorkLogEntry={onRemoveWorkLogEntry}
         saveWorkLogChanges={onSaveWorkLogChanges}

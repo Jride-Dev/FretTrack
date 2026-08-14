@@ -37,9 +37,15 @@ assert.deepEqual(appendedJob.workLog[1], {
 assert.match(workLogSection, /Save Work Note/, 'The Work Log draft action must be explicitly labeled as a save.');
 assert.match(workLogSection, /Unsaved Work Note/, 'Pending Work Notes must have a visible unsaved-state warning.');
 assert.match(workLogSection, /Discard Draft/, 'Users must be able to deliberately discard a pending Work Note.');
-assert.match(detail, /hasUnsavedChanges = isDirty \|\| hasPendingWorkLog/, 'Pending Work Notes must participate in page dirty-state protection.');
+assert.match(detail, /hasUnsavedChanges = isDirty \|\| hasUnsettledWorkLog/, 'Pending and in-flight Work Notes must participate in page dirty-state protection.');
 assert.match(detail, /beforeunload/, 'Pending Work Notes must participate in browser close/refresh protection.');
 assert.match(detail, /const saveRequest = hasPendingWorkLog \? savePendingWorkLog : saveDraftNow/, 'The global Save Job action must save a pending Work Note.');
+assert.match(detail, /const workLogSavePromiseRef = useRef\(null\)/, 'Work Note persistence must keep a synchronous in-flight save guard.');
+assert.match(detail, /const hasUnsettledWorkLog = hasPendingWorkLog \|\| isSavingWorkLog/, 'An in-flight Work Note save must remain protected as unsettled work.');
+assert.match(detail, /if \(!workLogSavePromiseRef\.current\) \{\s*setWorkLogText\(''\);/, 'Optimistic parent updates must not clear a Work Note while its remote save is still running.');
+assert.match(detail, /if \(workLogSavePromiseRef\.current\) \{\s*return workLogSavePromiseRef\.current;/, 'Repeated Work Note submissions must coalesce onto the active save.');
+assert.match(detail, /workLogSavePromiseRef\.current = savePromise/, 'The active Work Note save promise must be recorded before another submission can start.');
+assert.match(workLogSection, /!hasPendingWorkLog \|\| isSavingWorkLog/, 'The Work Note save control must remain disabled while persistence is in flight.');
 for (const actionName of ['printJobSheet', 'printCustomerReport', 'openWorkOrderEmail']) {
   const actionSource = detail.match(new RegExp(`function ${actionName}\\(\\) \\{([\\s\\S]*?)\\n  \\}`))?.[1] || '';
   assert.match(actionSource, /guardPendingWorkLogDocumentAction\(\)/, `${actionName} must use the pending Work Note guard.`);
