@@ -1,5 +1,6 @@
 # Changelog
 
+- Expanded the local Playwright matrix with saved Work Note coverage and an isolated UK shop proving millimetres, GBP, and VAT remain consistent across Job Detail, totals, and printable Job Sheets.
 - Closed the remaining Stripe billing-integrity races: simultaneous Checkout tabs now share one shop-generation idempotency key, while service-role-only synchronized webhook writes reload current Stripe state and prevent older or late-finishing events from overwriting newer plan/access state.
 - Hardened Stripe self-serve billing against duplicate subscriptions and superseded events, made Portal prices authoritative over stale Checkout metadata, and kept failed-payment grace states compatible with the legacy shop-profile mirror.
 - Added a local Playwright and Supabase pgTAP testing foundation with authenticated shop fixtures, transactional cross-shop RLS coverage, and isolated pull-request CI reporting.

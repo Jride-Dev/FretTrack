@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const localBaseUrl = 'http://127.0.0.1:5173';
 const ownerStorageState = 'playwright/.auth/test1-owner.json';
+const ukOwnerStorageState = 'playwright/.auth/test2-owner.json';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -26,16 +27,25 @@ export default defineConfig({
     },
     {
       name: 'public-chromium',
-      testMatch: /public\/.*\.spec\.js/,
+      testMatch: '**/public/**/*.spec.js',
       use: { ...devices['Desktop Chrome'] }
     },
     {
       name: 'owner-chromium',
-      testMatch: /authenticated\/.*\.spec\.js/,
+      testMatch: '**/authenticated/**/*.spec.js',
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
         storageState: ownerStorageState
+      }
+    },
+    {
+      name: 'uk-owner-chromium',
+      testMatch: '**/uk-authenticated/**/*.spec.js',
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: ukOwnerStorageState
       }
     }
   ],

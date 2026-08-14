@@ -47,6 +47,8 @@ Use `npm run test:e2e:ui` for Playwright's interactive test runner. The fixture 
 
 The seeded browser owner is `test1.owner@frettrack.local`. Its password is a local fixture value defined by the seed script, not a production credential. Playwright stores the authenticated browser state under ignored `playwright/.auth/` and never commits it.
 
+The browser matrix also seeds `test2.owner@frettrack.local` as a UK shop using GBP, 20% VAT, metric measurements, and millimetres. Focused job tests verify that saved Work Notes persist and that Job Detail, billing totals, and the printable Job Sheet all use the authoritative shop localization settings.
+
 Failure screenshots, traces, videos, and HTML reports are stored in ignored Playwright output directories.
 
 ## Browserbase secrets

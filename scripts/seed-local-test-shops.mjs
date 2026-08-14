@@ -336,11 +336,7 @@ function buildJobPayload(shop, customer, customerNumber) {
       intakeNotes: `Seeded ${instrument.type.toLowerCase()} ticket for local database testing.`,
       damageMap,
       measurements,
-      neckInspection: {
-        initialRelief: measurements.neckRelief,
-        finalRelief: customerNumber % 4 === 0 ? 'pending' : measurements.targetRelief,
-        notes: `Randomized local test inspection ${customerNumber}.`
-      },
+      neckInspection: buildNeckInspection(shop, customerNumber),
       authorizationNotes: 'Fictitious local seed authorization only.',
       discountType: customerNumber % 5 === 0 ? 'percent' : 'none',
       discountValue: customerNumber % 5 === 0 ? '10' : ''
@@ -404,11 +400,23 @@ function buildParts(shop, job, customerNumber) {
 }
 
 async function ensureShopProfile(ownerId, shop) {
+  const localization = getShopLocalizationFixture(shop);
   await sql`
     insert into shop_profiles (
       shop_id,
       shop_name,
       email,
+      address,
+      country_code,
+      currency_code,
+      locale,
+      tax_label,
+      tax_registration_number,
+      sales_tax_rate,
+      taxable_parts_default,
+      taxable_services_default,
+      measurement_system,
+      length_unit,
       onboarded_at,
       created_by,
       subscription_tier,
@@ -420,6 +428,17 @@ async function ensureShopProfile(ownerId, shop) {
       ${shop.id},
       ${shop.name},
       ${shop.ownerEmail},
+      ${localization.address},
+      ${localization.countryCode},
+      ${localization.currencyCode},
+      ${localization.locale},
+      ${localization.taxLabel},
+      ${localization.taxRegistrationNumber},
+      ${localization.salesTaxRate},
+      ${localization.taxablePartsDefault},
+      ${localization.taxableServicesDefault},
+      ${localization.measurementSystem},
+      ${localization.lengthUnit},
       now(),
       ${ownerId}::uuid,
       'pro',
@@ -430,6 +449,17 @@ async function ensureShopProfile(ownerId, shop) {
     on conflict (shop_id) do update
     set shop_name = excluded.shop_name,
         email = excluded.email,
+        address = excluded.address,
+        country_code = excluded.country_code,
+        currency_code = excluded.currency_code,
+        locale = excluded.locale,
+        tax_label = excluded.tax_label,
+        tax_registration_number = excluded.tax_registration_number,
+        sales_tax_rate = excluded.sales_tax_rate,
+        taxable_parts_default = excluded.taxable_parts_default,
+        taxable_services_default = excluded.taxable_services_default,
+        measurement_system = excluded.measurement_system,
+        length_unit = excluded.length_unit,
         onboarded_at = excluded.onboarded_at,
         created_by = excluded.created_by,
         subscription_tier = 'pro',
@@ -456,6 +486,38 @@ async function ensureShopProfile(ownerId, shop) {
         billing_email = excluded.billing_email,
         updated_at = now()
   `;
+}
+
+function getShopLocalizationFixture(shop) {
+  if (shop.index === 2) {
+    return {
+      address: '2 Test Workshop Road, Bristol BS1 4ST, United Kingdom',
+      countryCode: 'GB',
+      currencyCode: 'GBP',
+      locale: 'en-GB',
+      taxLabel: 'VAT',
+      taxRegistrationNumber: 'GB-TEST-0002',
+      salesTaxRate: 20,
+      taxablePartsDefault: true,
+      taxableServicesDefault: true,
+      measurementSystem: 'metric',
+      lengthUnit: 'mm',
+    };
+  }
+
+  return {
+    address: `${shop.index} Test Workshop Road, Faketown, CA 90210`,
+    countryCode: 'US',
+    currencyCode: 'USD',
+    locale: 'en-US',
+    taxLabel: 'Sales Tax',
+    taxRegistrationNumber: '',
+    salesTaxRate: 8.25,
+    taxablePartsDefault: true,
+    taxableServicesDefault: false,
+    measurementSystem: 'imperial',
+    lengthUnit: 'in',
+  };
 }
 
 function buildServices(shop, job, customerNumber) {
@@ -729,6 +791,52 @@ function buildMeasurements(customerNumber, instrumentType) {
     actionHigh: `${(5 / 64 + (customerNumber % 4) / 64).toFixed(3)} in`,
     pickupHeightBass: `${(5 / 64 + (customerNumber % 2) / 64).toFixed(3)} in`,
     pickupHeightTreble: `${(4 / 64 + (customerNumber % 2) / 64).toFixed(3)} in`
+  };
+}
+
+function buildNeckInspection(shop, customerNumber) {
+  const metric = shop.index === 2;
+  const lengthUnit = metric ? 'mm' : 'in';
+  const initial = metric
+    ? { relief: '0.20', nutHighE: '0.45', nutLowE: '0.55', actionHighE12th: '1.60', actionLowE12th: '2.00' }
+    : { relief: '0.008', nutHighE: '0.018', nutLowE: '0.022', actionHighE12th: '0.063', actionLowE12th: '0.078' };
+  const final = metric
+    ? { relief: '0.15', nutHighE: '0.40', nutLowE: '0.50', actionHighE12th: '1.50', actionLowE12th: '1.90' }
+    : { relief: '0.006', nutHighE: '0.016', nutLowE: '0.020', actionHighE12th: '0.059', actionLowE12th: '0.074' };
+
+  return {
+    initial: {
+      ...initial,
+      reliefUnit: lengthUnit,
+      lengthUnit,
+      reliefMethod: 'Capo 1st + fret last, measure at 7th/8th',
+      nutStatus: 'OK',
+      fretCondition: 'Minor wear',
+      fretNotes: `Seeded initial fret inspection ${customerNumber}.`,
+      neckCondition: customerNumber % 4 === 0 ? 'Hump / rise at body joint' : 'Straight',
+      twist: false,
+      trussRodStatus: 'Working',
+      buzzPresent: customerNumber % 3 === 0,
+      deadSpots: false,
+      highFrets: false,
+      notes: `Seeded initial neck inspection ${customerNumber}.`,
+    },
+    final: {
+      ...final,
+      reliefUnit: lengthUnit,
+      lengthUnit,
+      reliefMethod: 'Capo 1st + fret last, measure at 7th/8th',
+      nutStatus: 'OK',
+      fretCondition: 'Good',
+      fretNotes: `Seeded final fret inspection ${customerNumber}.`,
+      neckCondition: 'Straight',
+      twist: false,
+      trussRodStatus: 'Working',
+      buzzPresent: false,
+      deadSpots: false,
+      highFrets: false,
+      notes: `Seeded final neck inspection ${customerNumber}.`,
+    },
   };
 }
 
