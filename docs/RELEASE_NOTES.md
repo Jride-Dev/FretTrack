@@ -22,6 +22,10 @@ Database security hardening now pins the shared `updated_at` trigger helper to a
 
 Stripe invoice lifecycle processing now resolves subscription IDs from Stripe's current invoice parent details and the legacy top-level field. Successful invoice recovery events are handled alongside payment failures, with executable tests covering the supported lifecycle and compatibility mappings.
 
+Stripe lifecycle hardening now blocks duplicate Checkout subscriptions, ignores events from superseded subscription IDs, treats the current configured Price ID as authoritative after Billing Portal plan changes, and safely mirrors detailed failed-payment states into the legacy shop-profile status. The local sandbox runbook now records the required Functions restart after changing webhook secrets.
+
+Billing concurrency hardening now gives simultaneous Checkout requests one shop-generation Stripe idempotency key, so two tabs produce at most one Checkout Session while an in-flight or conflicting request fails safely. Webhook synchronization now reloads the current subscription after claiming a shop-scoped generation and atomically updates subscription plus mirrored profile state only when that generation is still current. This prevents delayed older events and late-finishing handlers from undoing newer plan or access state. Migration `20260814041144_stripe_billing_concurrency_guards.sql` adds the restricted synchronization boundary.
+
 ## Architecture and inventory reliability
 
 Invoice address correction: customer invoice emails, attached Job Sheet email content, and printable invoice-style Job Sheets now consistently use the business address from the active shop's Shop Settings. No database migration or stored document rewrite is required.

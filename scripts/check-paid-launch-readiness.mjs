@@ -53,6 +53,8 @@ for (const required of [
   'shop_subscriptions',
   'stripe_webhook_events',
   'Checkout Security Boundary',
+  'Local Sandbox Workflow',
+  'restart `supabase functions serve`',
   'signature-verified Stripe webhook',
   'stripe-webhook --no-verify-jwt',
   'Do not use `--no-verify-jwt` for the Checkout or Portal functions.',
@@ -70,6 +72,15 @@ assert.ok(checkoutFunction.includes('Deno.env.get(key)'), 'Checkout function mus
 assert.ok(checkoutFunction.includes('STRIPE_API_KEY'), 'Checkout function must support the existing Stripe API key secret name.');
 assert.ok(checkoutFunction.includes('client_reference_id: shopId'), 'Checkout function must bind Checkout sessions to a shop id.');
 assert.ok(checkoutFunction.includes('customer_email'), 'Checkout must let Stripe create a customer only as part of confirmed subscription Checkout.');
+assert.ok(checkoutFunction.includes('hasBlockingStripeSubscription'), 'Checkout must block duplicate subscriptions for a shop with a non-terminal Stripe subscription.');
+assert.ok(checkoutFunction.includes('customerHasOpenShopSubscription'), 'Checkout must check Stripe for an existing open shop subscription before creating another session.');
+assert.ok(checkoutFunction.includes('Use Manage Billing Portal'), 'Duplicate Checkout attempts must direct existing subscribers to the Billing Portal.');
+assert.ok(checkoutFunction.includes('getCheckoutIdempotencyKey'), 'Checkout must derive a stable shop-generation idempotency key.');
+assert.ok(
+  /stripe\.checkout\.sessions\.create\(checkoutParameters,\s*\{\s*idempotencyKey\s*\}\)/.test(checkoutFunction),
+  'Checkout creation must send its shop-generation idempotency key to Stripe.',
+);
+assert.ok(checkoutFunction.includes('Another checkout is already in progress for this shop.'), 'Concurrent conflicting Checkout requests must receive a safe user-facing conflict.');
 assert.ok(!checkoutFunction.includes('stripe.customers.create'), 'Checkout creation must not create a detached Stripe customer before payment confirmation.');
 assert.ok(
   !/from\(['"]shop_subscriptions['"]\)\s*\.upsert/s.test(checkoutFunction),
@@ -93,12 +104,27 @@ assert.ok(webhookFunction.includes('invoice.paid'), 'Stripe webhook must process
 assert.ok(webhookFunction.includes('shop_subscriptions'), 'Stripe webhook must update shop subscription state.');
 assert.ok(webhookFunction.includes('getConfiguredPriceId'), 'Webhook plan mapping must compare exact configured Stripe price IDs.');
 assert.ok(!webhookFunction.includes("value.includes('pro')"), 'Webhook must not infer a plan from opaque Stripe price ID text.');
+assert.ok(webhookFunction.includes('planFromPriceId(priceId) || normalizePlan'), 'Webhook must prefer the current Stripe price over stale subscription metadata when resolving a plan.');
 assert.ok(webhookFunction.includes('normalizeBillingInterval'), 'Webhook must persist the Stripe subscription billing interval.');
+assert.ok(webhookFunction.includes('toProfileSubscriptionStatus(status)'), 'Webhook must map detailed billing states into the legacy shop profile status constraint.');
+assert.ok(
+  /normalizeBillingInterval\(item\?\.price\?\.recurring\?\.interval\)\s*\|\|\s*\n\s*normalizeBillingInterval\(subscription\.metadata\?\.billing_interval\)/.test(webhookFunction),
+  'Webhook must prefer the current Stripe price interval over stale subscription metadata.',
+);
+assert.ok(webhookFunction.includes("rpc('begin_stripe_subscription_sync'"), 'Webhook must serialize subscription synchronization with a database generation.');
+assert.ok(webhookFunction.includes("rpc('apply_stripe_subscription_state'"), 'Webhook must atomically apply subscription and profile state through the guarded database boundary.');
+assert.ok(webhookFunction.includes('shouldApplyStripeSubscriptionEvent'), 'Superseded subscription IDs must be rejected before they can invalidate the current sync generation.');
+assert.ok(webhookFunction.includes('Superseded subscription event ignored before synchronization.'), 'Webhook must record why a superseded subscription ID was ignored before synchronization.');
+assert.ok(webhookFunction.includes('Stale or superseded subscription event ignored.'), 'Webhook must record why stale or superseded subscription state was ignored.');
+assert.ok(
+  /const generation = await beginSubscriptionSync\([\s\S]*?const currentSubscription = await stripe\.subscriptions\.retrieve\(subscriptionId\)/.test(webhookFunction),
+  'Webhook must claim a sync generation before reloading current subscription state from Stripe.',
+);
 assert.ok(webhookFunction.includes("existing.data.status !== 'failed'"), 'Failed webhook events must remain retryable.');
 assert.ok(webhookFunction.includes("onConflict: 'stripe_event_id'"), 'Webhook event retries must update the existing idempotency record.');
 assert.ok(
-  /from\(['"]shop_subscriptions['"]\)\.upsert/s.test(webhookFunction),
-  'The signed Stripe webhook must remain the subscription-state write boundary.',
+  !/from\(['"]shop_subscriptions['"]\)\.(?:upsert|update|insert)/s.test(webhookFunction),
+  'The webhook must not bypass the atomic subscription-state RPC with direct table writes.',
 );
 
 const webhookLifecycle = read('supabase/functions/stripe-webhook/lifecycle.ts');
@@ -115,12 +141,16 @@ assert.ok(/subscription:\s*["']sub_current["']/.test(webhookLifecycleTest), 'Str
 assert.ok(/subscription:\s*["']sub_legacy["']/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover the legacy invoice schema.');
 assert.ok(/\[\s*["']past_due["'],\s*["']past_due["']\s*\]/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover failed-payment access state.');
 assert.ok(/\[\s*["']canceled["'],\s*["']canceled["']\s*\]/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover cancellation state.');
+assert.ok(webhookLifecycleTest.includes('toProfileSubscriptionStatus("past_due"), "active"'), 'Stripe lifecycle tests must cover the coarse profile mirror for failed-payment grace access.');
+assert.ok(webhookLifecycleTest.includes('concurrent Checkout requests share one shop-generation idempotency key'), 'Stripe lifecycle tests must cover concurrent Checkout idempotency.');
 
 const billingPage = read('src/modules/billing/BillingPage.jsx');
 assert.ok(billingPage.includes('Start Shop Monthly'), 'Billing page must expose Shop Checkout.');
 assert.ok(billingPage.includes('Start Pro Monthly'), 'Billing page must expose Pro Checkout.');
 assert.ok(billingPage.includes('Manage Billing Portal'), 'Billing page must expose the Stripe Billing Portal.');
 assert.ok(!billingPage.includes('Plan changes are handled by FretTrack support during beta.'), 'Billing page must not keep the manual beta billing placeholder.');
+assert.ok(billingPage.includes('hasManagedStripeSubscription'), 'Billing page must suppress new Checkout actions for an existing managed subscription.');
+assert.ok(billingPage.includes('Use the Billing Portal to change plans'), 'Existing subscribers must be directed to the Billing Portal.');
 
 const migration = read('supabase/migrations/20260811200225_stripe_self_serve_billing_readiness.sql');
 for (const required of [
@@ -140,6 +170,33 @@ assert.ok(!migration.includes("and status = 'active';"), 'Entitlement usage coun
 assert.ok(migration.includes('from public, anon, authenticated'), 'Webhook event table must revoke default authenticated mutations before granting operator read access.');
 assert.ok(migration.includes('if trial_expired then\n    effective_entitlements := entitlement_values;'), 'Expired trials must continue ignoring entitlement overrides.');
 assert.ok(migration.includes("'profileStatus', coalesce(profile_row.subscription_status, 'active')"), 'Existing entitlement snapshot compatibility fields must remain present.');
+
+const concurrencyMigration = read('supabase/migrations/20260814041144_stripe_billing_concurrency_guards.sql');
+for (const required of [
+  'stripe_subscription_sync_cursors',
+  'begin_stripe_subscription_sync',
+  'apply_stripe_subscription_state',
+  'for update',
+  'p_sync_generation',
+  'last_started_event_id',
+  'stripe_event_created_at',
+  'to service_role',
+]) {
+  assert.ok(concurrencyMigration.includes(required), `Stripe concurrency migration must include "${required}".`);
+}
+assert.ok(
+  concurrencyMigration.includes("coalesce(auth.role(), '') <> 'service_role'"),
+  'Stripe synchronization RPCs must defensively require the service role.',
+);
+assert.ok(
+  concurrencyMigration.includes('cursor_row.generation <> p_sync_generation'),
+  'A late-finishing older webhook sync must be rejected atomically.',
+);
+assert.ok(
+  concurrencyMigration.includes('update public.shop_profiles') &&
+    concurrencyMigration.includes('insert into public.shop_subscriptions'),
+  'Subscription and mirrored profile access state must be applied in one database transaction.',
+);
 
 const triggerHardeningMigration = read('supabase/migrations/20260812025459_harden_set_updated_at_search_path.sql');
 assert.ok(

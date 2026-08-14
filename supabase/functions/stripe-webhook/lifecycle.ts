@@ -28,6 +28,14 @@ export function normalizeStripeStatus(status: string) {
   return "read_only";
 }
 
+export function toProfileSubscriptionStatus(status: string) {
+  const value = String(status || "").toLowerCase();
+  if (value === "trialing") return "trialing";
+  if (value === "canceled" || value === "cancelled") return "canceled";
+  if (value === "active" || value === "past_due" || value === "grace") return "active";
+  return "expired";
+}
+
 export function normalizePlan(plan: string) {
   const value = String(plan || "").toLowerCase();
   return value === "shop" || value === "pro" ? value : "";

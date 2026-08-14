@@ -1,5 +1,11 @@
 import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import {
+  getCheckoutIdempotencyKey,
+  hasBlockingStripeSubscription,
+  isStripeIdempotencyConflict,
+  isTerminalStripeSubscriptionStatus,
+} from '../_shared/stripeSubscriptionState.ts';
 
 type SupabaseAnyClient = ReturnType<typeof createClient<any, 'public', any>>;
 
@@ -36,12 +42,27 @@ Deno.serve(async (request) => {
 
     const [{ data: profile }, { data: subscription }] = await Promise.all([
       adminClient.from('shop_profiles').select('shop_id, email').eq('shop_id', shopId).maybeSingle(),
-      adminClient.from('shop_subscriptions').select('billing_email, stripe_customer_id').eq('shop_id', shopId).maybeSingle()
+      adminClient
+        .from('shop_subscriptions')
+        .select('billing_email, status, provider_status, stripe_customer_id, stripe_subscription_id')
+        .eq('shop_id', shopId)
+        .maybeSingle()
     ]);
     if (!profile) return json({ success: false, error: 'Shop not found.' }, 404);
 
+    if (hasBlockingStripeSubscription({
+      stripeSubscriptionId: subscription?.stripe_subscription_id,
+      providerStatus: subscription?.provider_status,
+      status: subscription?.status
+    })) {
+      return existingSubscriptionResponse();
+    }
+
     const billingEmail = normalizeText(payload.billingEmail || payload.billing_email || subscription?.billing_email || profile.email || userResult.user.email);
     const customerId = normalizeText(subscription?.stripe_customer_id);
+    if (customerId && await customerHasOpenShopSubscription(customerId, shopId)) {
+      return existingSubscriptionResponse();
+    }
 
     const appUrl = getAppUrl();
     const checkoutParameters: Stripe.Checkout.SessionCreateParams = {
@@ -63,11 +84,23 @@ Deno.serve(async (request) => {
       checkoutParameters.customer_email = billingEmail;
     }
 
-    const session = await stripe.checkout.sessions.create(checkoutParameters);
+    const idempotencyKey = await getCheckoutIdempotencyKey(
+      shopId,
+      isTerminalStripeSubscriptionStatus(subscription?.provider_status || subscription?.status)
+        ? subscription?.stripe_subscription_id
+        : '',
+    );
+    const session = await stripe.checkout.sessions.create(checkoutParameters, { idempotencyKey });
 
     return json({ success: true, url: session.url });
   } catch (error) {
     console.error('create-checkout-session failed', error);
+    if (isStripeIdempotencyConflict(error)) {
+      return json({
+        success: false,
+        error: 'Another checkout is already in progress for this shop. Finish or reopen that checkout before choosing a different plan.'
+      }, 409);
+    }
     return json({ success: false, error: getErrorMessage(error) }, 500);
   }
 });
@@ -105,6 +138,21 @@ function getPriceId(plan: string, interval: string) {
 
 function getStripeSecretKey() {
   return Deno.env.get('STRIPE_SECRET_KEY') || Deno.env.get('STRIPE_API_KEY') || '';
+}
+
+async function customerHasOpenShopSubscription(customerId: string, shopId: string) {
+  const subscriptions = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 100 });
+  return subscriptions.data.some((subscription) =>
+    normalizeText(subscription.metadata?.shop_id) === shopId &&
+    !isTerminalStripeSubscriptionStatus(subscription.status)
+  );
+}
+
+function existingSubscriptionResponse() {
+  return json({
+    success: false,
+    error: 'This shop already has a Stripe subscription. Use Manage Billing Portal to change or cancel it.'
+  }, 409);
 }
 
 function getAppUrl() {
