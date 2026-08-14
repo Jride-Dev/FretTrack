@@ -9,10 +9,30 @@ type InvoiceSubscriptionShape = {
   } | null;
 };
 
+type SubscriptionPeriodShape = {
+  current_period_start?: number | null;
+  current_period_end?: number | null;
+  items?: {
+    data?: Array<{
+      current_period_start?: number | null;
+      current_period_end?: number | null;
+    }>;
+  };
+};
+
 export function getInvoiceSubscriptionId(invoice: unknown) {
   const value = (invoice || {}) as InvoiceSubscriptionShape;
   return getStripeId(value.parent?.subscription_details?.subscription) ||
     getStripeId(value.subscription);
+}
+
+export function getSubscriptionPeriod(subscription: unknown) {
+  const value = (subscription || {}) as SubscriptionPeriodShape;
+  const item = value.items?.data?.[0];
+  return {
+    currentPeriodStart: item?.current_period_start ?? value.current_period_start ?? null,
+    currentPeriodEnd: item?.current_period_end ?? value.current_period_end ?? null,
+  };
 }
 
 export function normalizeStripeStatus(status: string) {

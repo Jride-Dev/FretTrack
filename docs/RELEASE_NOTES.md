@@ -1,5 +1,7 @@
 # Release Notes
 
+Stripe subscription synchronization now snapshots current period start/end from Stripe's current subscription-item fields, with a legacy top-level fallback. This restores renewal dates in Billing without changing subscription access behavior or requiring a migration.
+
 Local test-shop fixture setup can now be retried after a partial shop failure without colliding with jobs already committed for earlier shops. CI seeds the same fixtures a second time without resetting them so this recovery path remains executable.
 
 Rapid repeated Work Note submissions now coalesce onto one in-flight save. The Save and Discard controls remain unavailable until persistence finishes, preventing concurrent stale snapshots from deleting the note that another request just created.
