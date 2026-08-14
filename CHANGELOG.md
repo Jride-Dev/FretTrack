@@ -1,5 +1,6 @@
 # Changelog
 
+- Closed the remaining Stripe billing-integrity races: simultaneous Checkout tabs now share one shop-generation idempotency key, while service-role-only synchronized webhook writes reload current Stripe state and prevent older or late-finishing events from overwriting newer plan/access state.
 - Hardened Stripe self-serve billing against duplicate subscriptions and superseded events, made Portal prices authoritative over stale Checkout metadata, and kept failed-payment grace states compatible with the legacy shop-profile mirror.
 
 Current version: `0.2.9-beta.5`

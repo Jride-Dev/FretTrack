@@ -12,13 +12,15 @@ FretTrack's paid launch uses Stripe Checkout, Stripe Billing Portal, and a signe
 
 Checkout and Portal functions require a signed-in Supabase user and verify that user's exact owner/admin membership for the requested shop before creating a Stripe session.
 
-The webhook uses Stripe signature verification against the raw request body and records processed event IDs in `public.stripe_webhook_events` before returning success for duplicate deliveries.
+The webhook uses Stripe signature verification against the raw request body and records processed event IDs in `public.stripe_webhook_events` before returning success for duplicate deliveries. Because Stripe does not guarantee event delivery order, each state-changing delivery claims a shop-scoped synchronization generation, reloads the current subscription from Stripe, and applies subscription plus mirrored profile access state in one guarded database transaction. A late-finishing older handler cannot overwrite the newest in-flight sync.
 
 ## Checkout Security Boundary
 
 Creating or opening a Checkout Session does not change the shop's FretTrack plan, subscription status, entitlements, or connected Stripe customer ID. Existing Stripe customers are reused when already connected. For a shop without a connected customer, Stripe creates the customer as part of confirming subscription Checkout.
 
 An abandoned, canceled, expired, or failed Checkout Session therefore leaves the existing beta or paid access state unchanged. FretTrack persists Stripe customer/subscription identifiers and changes plan access only after a signature-verified Stripe webhook reports the subscription state. The success-page redirect is not treated as proof of payment.
+
+Checkout creation also uses one deterministic idempotency key per shop and subscription generation. Simultaneous tabs requesting the same Checkout either replay the single Stripe Session or receive a safe in-progress conflict; a different plan request is rejected instead of opening a second subscription path. A terminal subscription ID starts a new generation so a genuinely canceled subscriber can later purchase again.
 
 ## Required Supabase Secrets
 
@@ -101,7 +103,7 @@ Stripe events update `public.shop_subscriptions`:
 - `canceled_at`
 - `provider_status`
 
-Checkout refuses to create another subscription while the shop already has a non-terminal Stripe subscription. Existing subscribers use the Billing Portal for plan changes, payment details, and cancellation. Webhook events from a different, superseded subscription ID are recorded as ignored and cannot overwrite the shop's current subscription state.
+Checkout refuses to create another subscription while the shop already has a non-terminal Stripe subscription. Existing subscribers use the Billing Portal for plan changes, payment details, and cancellation. Webhook events from a different, superseded subscription ID are recorded as ignored and cannot overwrite the shop's current subscription state. Migration `20260814041144_stripe_billing_concurrency_guards.sql` adds the service-role-only sync cursor and atomic subscription/profile application functions; clients receive no access to those write boundaries.
 
 For Portal plan changes, the exact configured Stripe Price ID and its recurring interval are authoritative. Checkout metadata remains a compatibility fallback only, because Stripe does not rewrite custom subscription metadata when a customer switches prices in the Portal.
 
@@ -121,12 +123,14 @@ Use Stripe test mode first, then live mode with a real low-risk purchase.
 2. Tech/viewer cannot manage billing.
 3. Owner/admin starts Shop Monthly Checkout.
 4. Cancel or abandon Checkout and verify the existing plan, status, entitlements, and Stripe identifiers remain unchanged.
-5. Start Checkout again, complete it, and return to FretTrack.
-6. `checkout.session.completed` and `customer.subscription.created` are recorded in `stripe_webhook_events`.
-7. `shop_subscriptions` shows `plan_id = shop`, Stripe customer/subscription IDs, period dates, and active/trialing status.
-8. Billing Portal opens for the connected shop.
-9. Upgrade to Pro and verify Pro entitlements only after webhook delivery.
-10. Cancel at period end and verify `cancel_at_period_end`.
-11. Simulate failed payment and verify `past_due`.
-12. Simulate payment recovery and verify `active`.
-13. Cancel/delete subscription and verify FretTrack becomes read-only or canceled according to current policy.
+5. Start Checkout simultaneously in two tabs and verify only one Stripe Session exists; the other request may replay it or return a safe conflict, but must not create another Session.
+6. Start Checkout again, complete it, and return to FretTrack.
+7. `checkout.session.completed` and `customer.subscription.created` are recorded in `stripe_webhook_events`.
+8. `shop_subscriptions` shows `plan_id = shop`, Stripe customer/subscription IDs, period dates, and active/trialing status.
+9. Billing Portal opens for the connected shop.
+10. Upgrade to Pro and verify Pro entitlements only after webhook delivery.
+11. Replay an older subscription event and verify it reloads current Stripe state or is superseded, never downgrading the newer plan/access state.
+12. Cancel at period end and verify `cancel_at_period_end`.
+13. Simulate failed payment and verify `past_due`.
+14. Simulate payment recovery and verify `active`.
+15. Cancel/delete subscription and verify FretTrack becomes read-only or canceled according to current policy.

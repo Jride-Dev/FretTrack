@@ -7,7 +7,9 @@ import {
   toProfileSubscriptionStatus,
 } from "./lifecycle.ts";
 import {
+  getCheckoutIdempotencyKey,
   hasBlockingStripeSubscription,
+  isStripeIdempotencyConflict,
   shouldApplyStripeSubscriptionEvent,
 } from "../_shared/stripeSubscriptionState.ts";
 
@@ -99,6 +101,21 @@ Deno.test("an existing non-terminal Stripe subscription blocks another Checkout"
     stripeSubscriptionId: "",
     status: "trialing",
   }), false);
+});
+
+Deno.test("concurrent Checkout requests share one shop-generation idempotency key", async () => {
+  const firstTabKey = await getCheckoutIdempotencyKey("shop-one", "");
+  const secondTabKey = await getCheckoutIdempotencyKey("shop-one", "");
+  const replacementKey = await getCheckoutIdempotencyKey("shop-one", "sub_canceled");
+  const otherShopKey = await getCheckoutIdempotencyKey("shop-two", "");
+
+  strictEqual(firstTabKey, secondTabKey);
+  strictEqual(firstTabKey === replacementKey, false);
+  strictEqual(firstTabKey === otherShopKey, false);
+  strictEqual(firstTabKey.length <= 255, true);
+  strictEqual(isStripeIdempotencyConflict({ type: "StripeIdempotencyError" }), true);
+  strictEqual(isStripeIdempotencyConflict({ code: "idempotency_error" }), true);
+  strictEqual(isStripeIdempotencyConflict(new Error("card declined")), false);
 });
 
 Deno.test("superseded subscription events cannot overwrite the current subscription", () => {

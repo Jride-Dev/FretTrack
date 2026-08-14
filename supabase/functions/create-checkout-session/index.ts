@@ -1,8 +1,10 @@
 import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import {
+  getCheckoutIdempotencyKey,
   hasBlockingStripeSubscription,
-  isTerminalStripeSubscriptionStatus
+  isStripeIdempotencyConflict,
+  isTerminalStripeSubscriptionStatus,
 } from '../_shared/stripeSubscriptionState.ts';
 
 type SupabaseAnyClient = ReturnType<typeof createClient<any, 'public', any>>;
@@ -82,11 +84,23 @@ Deno.serve(async (request) => {
       checkoutParameters.customer_email = billingEmail;
     }
 
-    const session = await stripe.checkout.sessions.create(checkoutParameters);
+    const idempotencyKey = await getCheckoutIdempotencyKey(
+      shopId,
+      isTerminalStripeSubscriptionStatus(subscription?.provider_status || subscription?.status)
+        ? subscription?.stripe_subscription_id
+        : '',
+    );
+    const session = await stripe.checkout.sessions.create(checkoutParameters, { idempotencyKey });
 
     return json({ success: true, url: session.url });
   } catch (error) {
     console.error('create-checkout-session failed', error);
+    if (isStripeIdempotencyConflict(error)) {
+      return json({
+        success: false,
+        error: 'Another checkout is already in progress for this shop. Finish or reopen that checkout before choosing a different plan.'
+      }, 409);
+    }
     return json({ success: false, error: getErrorMessage(error) }, 500);
   }
 });
