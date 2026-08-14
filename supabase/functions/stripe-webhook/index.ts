@@ -2,6 +2,7 @@ import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import {
   getInvoiceSubscriptionId,
+  getSubscriptionPeriod,
   normalizeBillingInterval,
   normalizePlan,
   normalizeStripeStatus,
@@ -182,10 +183,7 @@ async function syncSubscription(
   const status = normalizeStripeStatus(subscription.status);
   const billingEmail = await getCustomerEmail(customerId);
 
-  const subscriptionWithPeriod = subscription as Stripe.Subscription & {
-    current_period_start?: number | null;
-    current_period_end?: number | null;
-  };
+  const subscriptionPeriod = getSubscriptionPeriod(subscription);
   const trialEndsAt = timestampToIso(subscription.trial_end);
   const { data: applied, error } = await supabase.rpc('apply_stripe_subscription_state', {
     p_shop_id: shopId,
@@ -194,8 +192,8 @@ async function syncSubscription(
     p_plan_id: planId,
     p_status: status,
     p_trial_ends_at: trialEndsAt,
-    p_current_period_starts_at: timestampToIso(subscriptionWithPeriod.current_period_start),
-    p_current_period_ends_at: timestampToIso(subscriptionWithPeriod.current_period_end),
+    p_current_period_starts_at: timestampToIso(subscriptionPeriod.currentPeriodStart),
+    p_current_period_ends_at: timestampToIso(subscriptionPeriod.currentPeriodEnd),
     p_grace_ends_at: status === 'past_due' ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() : null,
     p_billing_email: billingEmail,
     p_stripe_customer_id: customerId,

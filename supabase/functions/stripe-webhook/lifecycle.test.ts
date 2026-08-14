@@ -1,6 +1,7 @@
 import { deepStrictEqual, strictEqual } from "node:assert";
 import {
   getInvoiceSubscriptionId,
+  getSubscriptionPeriod,
   normalizeBillingInterval,
   normalizePlan,
   normalizeStripeStatus,
@@ -25,6 +26,38 @@ Deno.test("invoice subscription lookup supports the current Stripe parent schema
       },
     }),
     "sub_current",
+  );
+});
+
+Deno.test("subscription period lookup supports the current Stripe item schema", () => {
+  deepStrictEqual(
+    getSubscriptionPeriod({
+      current_period_start: 1_600_000_000,
+      current_period_end: 1_602_592_000,
+      items: {
+        data: [{
+          current_period_start: 1_786_734_973,
+          current_period_end: 1_789_413_373,
+        }],
+      },
+    }),
+    {
+      currentPeriodStart: 1_786_734_973,
+      currentPeriodEnd: 1_789_413_373,
+    },
+  );
+});
+
+Deno.test("subscription period lookup preserves legacy top-level timestamps", () => {
+  deepStrictEqual(
+    getSubscriptionPeriod({
+      current_period_start: 1_700_000_000,
+      current_period_end: 1_702_592_000,
+    }),
+    {
+      currentPeriodStart: 1_700_000_000,
+      currentPeriodEnd: 1_702_592_000,
+    },
   );
 });
 

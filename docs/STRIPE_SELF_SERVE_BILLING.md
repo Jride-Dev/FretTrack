@@ -126,6 +126,8 @@ The existing entitlement snapshot remains the app authority. Stripe updates the 
 
 Price IDs are opaque Stripe identifiers. FretTrack maps plans by exact comparison with the configured Shop and Pro Price ID secrets, and snapshots `monthly` or `yearly` from the Stripe subscription metadata/recurring price. It never guesses a plan or interval from characters inside a Price ID.
 
+Current Stripe subscription payloads expose billing-period start/end on the subscription item. FretTrack snapshots those item-level timestamps for renewal display and retains the legacy top-level fields as a compatibility fallback.
+
 Failed webhook processing remains retryable. A later Stripe delivery reprocesses a failed event ID and replaces its failed audit record; only successfully processed or intentionally ignored event IDs short-circuit as duplicates.
 
 ## Launch Smoke Test
