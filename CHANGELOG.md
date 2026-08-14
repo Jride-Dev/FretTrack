@@ -1,5 +1,7 @@
 # Changelog
 
+- Added a local Playwright and Supabase pgTAP testing foundation with authenticated shop fixtures, transactional cross-shop RLS coverage, and isolated pull-request CI reporting.
+
 Current version: `0.2.9-beta.5`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.

@@ -33,6 +33,7 @@ Start here for the current product path:
 - [Print renderer rebuild plan](PRINT_RENDERER_REBUILD_PLAN.md)
 - [Security review checklist](SECURITY_REVIEW_CHECKLIST.md)
 - [Supabase RPC security audit](SUPABASE_RPC_SECURITY_AUDIT.md)
+- [Testing: Playwright, pgTAP, and local Supabase](TESTING.md)
 - [Offline continuity plan](OFFLINE_CONTINUITY_PLAN.md)
 - [Offline mode audit](OFFLINE_MODE_AUDIT.md)
 - [Public invoice links plan](PUBLIC_INVOICE_LINKS_PLAN.md)

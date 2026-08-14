@@ -7,6 +7,7 @@ const localDefaultUrl = 'postgresql://postgres:postgres@127.0.0.1:54322/postgres
 const databaseUrl = process.env.TEST_DATABASE_URL || process.env.LOCAL_DATABASE_URL || localDefaultUrl;
 const allowRemote = process.argv.includes('--allow-remote');
 const resetTestData = process.argv.includes('--reset');
+const writeReportFile = !process.argv.includes('--no-report');
 const reportDir = path.resolve('docs/test-reports');
 const startedAt = new Date();
 const runStamp = startedAt.toISOString().replace(/[:.]/g, '-');
@@ -42,7 +43,7 @@ const sql = postgres(databaseUrl, {
 });
 
 try {
-  await ensureReportDirectory();
+  if (writeReportFile) await ensureReportDirectory();
   await assertRequiredSchema();
 
   if (resetTestData) {
@@ -53,6 +54,7 @@ try {
   for (const shop of shops) {
     const ownerId = deterministicUuid(`owner-${shop.id}`);
     await ensureOwnerUser(ownerId, shop);
+    await ensureApprovedBetaAccess(ownerId, shop);
     await ensureShopProfile(ownerId, shop);
     await ensureOwnerMembership(ownerId, shop);
     const shopSummary = await seedShopAsOwner(ownerId, shop);
@@ -60,16 +62,16 @@ try {
   }
 
   const checks = await runChecks();
-  await writeReport({ summary, checks });
+  if (writeReportFile) await writeReport({ summary, checks });
   console.log(`Seeded ${shops.length} local test shops.`);
-  console.log(`Report written to ${reportPath}`);
+  if (writeReportFile) console.log(`Report written to ${reportPath}`);
   if (errors.length) {
     console.error(`${errors.length} error(s) logged. Review the report before trusting this seed run.`);
     process.exitCode = 1;
   }
 } catch (error) {
   errors.push({ scope: 'fatal', message: error.message, stack: error.stack });
-  await writeReport({ summary: [], checks: [] }).catch(() => {});
+  if (writeReportFile) await writeReport({ summary: [], checks: [] }).catch(() => {});
   console.error(error);
   process.exitCode = 1;
 } finally {
@@ -181,6 +183,19 @@ async function ensureOwnerUser(ownerId, shop) {
     on conflict (provider_id, provider) do update
     set user_id = excluded.user_id,
         identity_data = excluded.identity_data,
+        updated_at = now()
+  `;
+}
+
+async function ensureApprovedBetaAccess(ownerId, shop) {
+  await sql`
+    insert into beta_access_requests (user_id, email, status, reviewed_at, notes)
+    values (${ownerId}::uuid, ${shop.ownerEmail}, 'approved', now(), 'Approved local Playwright fixture.')
+    on conflict (user_id) do update
+    set email = excluded.email,
+        status = 'approved',
+        reviewed_at = coalesce(beta_access_requests.reviewed_at, excluded.reviewed_at),
+        notes = excluded.notes,
         updated_at = now()
   `;
 }
