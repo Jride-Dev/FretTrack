@@ -16,6 +16,7 @@ export default function NewJobSidebar({
   billingAccess,
   betaApproved,
   canEditJobs,
+  amplifierRepairEnabled,
   pendingNewJobCustomer,
   tillSummary,
   moneyOptions,
@@ -44,6 +45,7 @@ export default function NewJobSidebar({
           jobs={jobs}
           customers={customers}
           canWrite={canEditJobs}
+          amplifierRepairEnabled={amplifierRepairEnabled}
           shopProfile={shopProfile}
           assignableMembers={assignableMembers}
           membership={membership}

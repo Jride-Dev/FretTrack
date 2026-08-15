@@ -83,6 +83,7 @@ export default function JobDetail({
   onClose,
   onNotice,
   canWrite = true,
+  amplifierRepairEnabled = true,
   canUploadPhotos = canWrite,
   canEditPhotos = canWrite,
   canOverwritePhotos = canWrite,
@@ -1129,6 +1130,7 @@ export default function JobDetail({
   const intakeSection = (
     <JobIntakeSections
       canWrite={canWrite}
+      amplifierRepairEnabled={amplifierRepairEnabled}
       draftJob={draftJob}
       intakeTypes={intakeTypes}
       normalizeInstrumentType={normalizeInstrumentType}

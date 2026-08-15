@@ -41,6 +41,7 @@ import { getPlanStatus, getPlanVersionText } from '../modules/billing/planStatus
 import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService';
 import { isCurrentOperator } from '../modules/operator/operatorService';
 import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
+import { isAmplifierJob } from '../modules/amplifiers/amplifierRepair.js';
 
 const APP_VERSION = '0.2.9-beta.5';
 const APP_NAME = 'FretTrack Systems';
@@ -98,6 +99,8 @@ export default function App() {
   const appVersionText = getPlanVersionText(APP_VERSION, planStatus);
   const {
     permissionContext,
+    amplifierRepairEnabled,
+    canEditAmplifierRepair,
     canEditJobs,
     canWrite,
     canManageShop,
@@ -131,7 +134,7 @@ export default function App() {
     setHasUnsavedPageChanges,
     confirmUnsavedNavigation,
     navigateTo,
-    selectJob: handleSelectJob,
+    selectJob: selectWorkspaceJob,
     closeJobDetail,
     resetWorkspaceNavigation
   } = useWorkspaceNavigation({
@@ -142,6 +145,11 @@ export default function App() {
     onAccessDenied: () => setNotice({ type: 'error', message: 'This area is not available for your account.' })
   });
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
+
+  function handleSelectJob(jobId) {
+    const job = jobs.find((item) => item.id === jobId);
+    return selectWorkspaceJob(jobId, isAmplifierJob(job) ? 'amplifier-detail' : 'detail');
+  }
 
   async function refreshJobs() {
     const loadedJobs = await getJobs();
@@ -560,7 +568,7 @@ export default function App() {
       return;
     }
 
-    if (selectedJob && mode === 'detail') {
+    if (selectedJob && ['detail', 'amplifier-detail'].includes(mode)) {
       if (hasSupabaseConfig && !isOnline) {
         setNotice({ type: 'error', message: 'Offline draft mode is for new job intake only. Existing job edits require an active connection.' });
         return;
@@ -607,6 +615,26 @@ export default function App() {
       type: 'success',
       message: `Saved job ${savedJob?.jobNumber || ''} successfully.`
     });
+  }
+
+  async function handleAmplifierJobCreate(jobDraft) {
+    if (!amplifierRepairEnabled) {
+      throw new Error('Amplifier Repair is available on Pro.');
+    }
+    if (!canEditAmplifierRepair) {
+      throw new Error('Your shop role is read-only.');
+    }
+    if (hasSupabaseConfig && !isOnline) {
+      throw new Error('Creating amplifier work orders requires an active connection.');
+    }
+
+    const savedJob = await addJob(jobDraft);
+    const loadedJobs = await refreshJobs();
+    await refreshCustomers(loadedJobs);
+    setHasUnsavedPageChanges(false);
+    selectWorkspaceJob(savedJob.id, 'amplifier-detail', { skipDirtyGuard: true });
+    setNotice({ type: 'success', message: `Created amplifier job ${savedJob.jobNumber || ''}.` });
+    return savedJob;
   }
 
   function handleAssignmentChanged(jobId, assignment) {
@@ -1101,7 +1129,7 @@ export default function App() {
     );
   }
 
-  const isJobMode = mode === 'new' || mode === 'detail';
+  const isJobMode = mode === 'new' || mode === 'detail' || mode === 'amplifier-detail';
   const getHeaderNavClass = (targetMode, baseClass = '') => [
     baseClass,
     mode === targetMode ? 'header-nav-active' : ''
@@ -1157,6 +1185,13 @@ export default function App() {
           </button>
           <button type="button" className={getHeaderNavClass('new')} onClick={() => showNewJob()}>New Job</button>
           <button type="button" className={getHeaderNavClass('list')} onClick={() => navigateTo('list')}>Current Jobs</button>
+          <button
+            type="button"
+            className={['amplifiers', 'amplifier-detail'].includes(mode) ? 'header-nav-active' : undefined}
+            onClick={() => navigateTo('amplifiers')}
+          >
+            Amplifier Repair
+          </button>
           <button type="button" className={getHeaderNavClass('customers')} onClick={() => navigateTo('customers')}>Customers</button>
           <button type="button" className={getHeaderNavClass('inventory')} onClick={() => navigateTo('inventory')}>Inventory</button>
           <button type="button" className={getHeaderNavClass('shipping')} onClick={() => navigateTo('shipping')}>Shipping</button>
@@ -1216,8 +1251,8 @@ export default function App() {
         />
       )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
-      <div className={`layout app-layout${mode === 'detail' && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${mode === 'list' ? ' full-content' : ''}`}>
-        {mode !== 'list' && (
+      <div className={`layout app-layout${['detail', 'amplifier-detail'].includes(mode) && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${['list', 'amplifiers', 'amplifier-detail'].includes(mode) ? ' full-content' : ''}`}>
+        {!['list', 'amplifiers', 'amplifier-detail'].includes(mode) && (
           <NewJobSidebar
             isCollapsed={isNewJobSidebarCollapsed}
             onToggle={toggleNewJobSidebar}
@@ -1230,6 +1265,7 @@ export default function App() {
             billingAccess={billingAccess}
             betaApproved={betaApproved}
             canEditJobs={canEditJobs}
+            amplifierRepairEnabled={amplifierRepairEnabled}
             pendingNewJobCustomer={pendingNewJobCustomer}
             tillSummary={tillSummary}
             moneyOptions={moneyOptions}
@@ -1268,6 +1304,8 @@ export default function App() {
             }}
             access={{
               canDeletePhotos,
+              amplifierRepairEnabled,
+              canEditAmplifierRepair,
               canEditCustomers,
               canEditJobs,
               canEditPhotos,
@@ -1290,6 +1328,7 @@ export default function App() {
               isNewJobSidebarCollapsed,
               onAssignmentChanged: handleAssignmentChanged,
               onCloseJobDetail: closeJobDetail,
+              onCreateAmplifierJob: handleAmplifierJobCreate,
               onCreateJobForCustomer: showNewJob,
               onCustomerSaved: handleCustomerSaved,
               onDirtyChange: setHasUnsavedPageChanges,

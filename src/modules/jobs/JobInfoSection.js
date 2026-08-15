@@ -5,6 +5,7 @@ import {
   getModelsForBrand,
   getOrientationOptions,
   getStringCountOptions,
+  isStringedInstrumentType,
   normalizeStringCount
 } from '../instruments/instrumentService';
 import { smsEnabled } from '../../data/messagesRepository';
@@ -14,6 +15,7 @@ import { toLocalDateTimeInputValue } from '../../shared/utils/dateFormat';
 
 export default function JobInfoSection({
   canWrite = true,
+  amplifierRepairEnabled = true,
   draftJob,
   intakeTypes,
   normalizeInstrumentType,
@@ -129,7 +131,7 @@ export default function JobInfoSection({
         <div className="instrument-selector" role="group" aria-label="Instrument Type">
           <span>Instrument Type</span>
           <div className="segmented-control instrument-type-control">
-            {getInstrumentTypeOptions().map((option) => (
+            {getInstrumentTypeOptions().filter((option) => amplifierRepairEnabled || option.value !== 'Amplifier').map((option) => (
               <button
                 type="button"
                 key={option.value}
@@ -208,43 +210,47 @@ export default function JobInfoSection({
                 disabled={!canWrite}
               />
             </label>
-            <label>
-              Orientation
-              <select name="orientation" value={draftJob.techDetails.orientation || 'Unknown'} onChange={updateTechField} disabled={!canWrite}>
-                {getOrientationOptions(draftJob.techDetails.orientation).map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              String Count
-              <select
-                value={stringCountSelectValue}
-                disabled={!canWrite}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setShowCustomStringCount(value === 'custom');
-                  updateStringCount(value === 'custom' ? stringCount : value);
-                }}
-              >
-                {getStringCountOptions(instrumentType).map((count) => (
-                  <option key={count} value={count}>{count}-string</option>
-                ))}
-                <option value="custom">Custom</option>
-              </select>
-            </label>
-            {showCustomStringCount && (
-              <label>
-                Custom String Count
-                <input
-                  type="number"
-                  min="1"
-                  max="24"
-                  value={stringCount}
-                  onChange={(event) => updateStringCount(event.target.value)}
-                  disabled={!canWrite}
-                />
-              </label>
+            {isStringedInstrumentType(instrumentType) && (
+              <>
+                <label>
+                  Orientation
+                  <select name="orientation" value={draftJob.techDetails.orientation || 'Unknown'} onChange={updateTechField} disabled={!canWrite}>
+                    {getOrientationOptions(draftJob.techDetails.orientation).map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  String Count
+                  <select
+                    value={stringCountSelectValue}
+                    disabled={!canWrite}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setShowCustomStringCount(value === 'custom');
+                      updateStringCount(value === 'custom' ? stringCount : value);
+                    }}
+                  >
+                    {getStringCountOptions(instrumentType).map((count) => (
+                      <option key={count} value={count}>{count}-string</option>
+                    ))}
+                    <option value="custom">Custom</option>
+                  </select>
+                </label>
+                {showCustomStringCount && (
+                  <label>
+                    Custom String Count
+                    <input
+                      type="number"
+                      min="1"
+                      max="24"
+                      value={stringCount}
+                      onChange={(event) => updateStringCount(event.target.value)}
+                      disabled={!canWrite}
+                    />
+                  </label>
+                )}
+              </>
             )}
           </div>
         </fieldset>

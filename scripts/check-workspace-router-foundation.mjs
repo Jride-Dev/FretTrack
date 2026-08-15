@@ -39,7 +39,7 @@ assert.match(appSource, /useWorkspaceNavigation\(\{/, 'App must obtain workspace
 assert.doesNotMatch(appSource, /useState\(['"]new['"]\)/, 'App must not own workspace mode state directly.');
 assert.doesNotMatch(appSource, /jobDetailReturnModeRef/, 'App must not own Job Detail return navigation state directly.');
 assert.match(navigationSource, /function navigateTo\(nextMode\)/, 'Workspace navigation must own permission-aware page transitions.');
-assert.match(navigationSource, /function selectJob\(jobId\)/, 'Workspace navigation must own job-detail selection transitions.');
+assert.match(navigationSource, /function selectJob\(jobId, detailMode = 'detail', \{ skipDirtyGuard = false \} = \{\}\)/, 'Workspace navigation must own job-detail selection transitions, focused detail targets, and explicit safe post-save transitions.');
 assert.match(navigationSource, /function closeJobDetail\(\)/, 'Workspace navigation must own Job Detail close transitions.');
 assert.match(navigationSource, /saveWorkspaceState\(shopId, \{ mode, selectedJobId \}\)/, 'Workspace navigation must persist page and selection state.');
 assert.match(navigationSource, /window\.confirm\(UNSAVED_CHANGES_MESSAGE\)/, 'Workspace navigation must preserve the dirty-state confirmation.');
@@ -64,6 +64,14 @@ assert.deepEqual(
   }),
   { mode: 'detail', selectedJobId: 'job-2' },
   'A saved Job Detail must restore when the selected job belongs to the loaded shop data.'
+);
+assert.deepEqual(
+  resolveStoredWorkspaceState({
+    workspaceState: { mode: 'detail', selectedJobId: 'amp-1' },
+    jobs: [{ id: 'amp-1', instrumentType: 'Amplifier' }]
+  }),
+  { mode: 'amplifier-detail', selectedJobId: 'amp-1' },
+  'A saved amplifier job must restore into its dedicated detail page.'
 );
 assert.deepEqual(
   resolveStoredWorkspaceState({
@@ -94,7 +102,9 @@ const expectedModes = [
   'drafts',
   'billing',
   'operator',
-  'detail'
+  'detail',
+  'amplifiers',
+  'amplifier-detail'
 ];
 
 for (const mode of expectedModes) {

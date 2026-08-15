@@ -36,6 +36,7 @@ Shipped or current-branch foundations:
 - authoritative Inventory editor refresh after receiving or stock adjustments
 - local-development protection against accidental hosted Supabase mutations
 - active-shop business address included consistently in generated invoice email and printable invoice-style Job Sheet output
+- separate Amplifier Repair module foundation with shared make/model presets, intake, work queue, before/after electrical diagnostics, private audio/waveform/spectrum evidence, and existing job permissions
 
 Known weak spots:
 

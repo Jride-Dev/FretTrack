@@ -4,6 +4,8 @@ import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import { canAccessOperatorDashboard } from '../modules/auth/permissionService.js';
 
 const AccountingReports = lazy(() => import('../modules/accounting/AccountingReports.jsx'));
+const AmplifierJobDetail = lazy(() => import('../modules/amplifiers/AmplifierJobDetail.jsx'));
+const AmplifierRepairPage = lazy(() => import('../modules/amplifiers/AmplifierRepairPage.jsx'));
 const BillingPage = lazy(() => import('../modules/billing/BillingPage.jsx'));
 const CustomerManager = lazy(() => import('../modules/customers/CustomerManager.jsx'));
 const InventoryPage = lazy(() => import('../modules/inventory/InventoryPage.jsx'));
@@ -68,6 +70,23 @@ function WorkspacePage({
         assignableMembers={assignableMembers}
         teamAssignmentEnabled={teamAssignmentEnabled}
         initialAssigneeFilter={currentJobsAssigneeFilter}
+      />
+    );
+  }
+
+  if (mode === 'amplifiers') {
+    return (
+      <AmplifierRepairPage
+        jobs={jobs}
+        customers={customers}
+        isEntitled={access.amplifierRepairEnabled}
+        canWrite={access.canEditAmplifierRepair}
+        isOnline={isOnline}
+        dateOptions={dateOptions}
+        onCreateJob={actions.onCreateAmplifierJob}
+        onSelectJob={actions.onSelectJob}
+        onNotice={actions.onNotice}
+        onDirtyChange={actions.onDirtyChange}
       />
     );
   }
@@ -216,6 +235,7 @@ function WorkspacePage({
           onClose={actions.onCloseJobDetail}
           onNotice={actions.onNotice}
           canWrite={access.canEditJobs}
+          amplifierRepairEnabled={access.amplifierRepairEnabled}
           canUploadPhotos={access.canUploadPhotos}
           canEditPhotos={access.canEditPhotos}
           canOverwritePhotos={access.canOverwritePhotos}
@@ -235,6 +255,22 @@ function WorkspacePage({
         />
       )
       : <section className="panel empty-state">Select a saved job from the list.</section>;
+  }
+
+  if (mode === 'amplifier-detail') {
+    return selectedJob
+      ? (
+        <AmplifierJobDetail
+          job={selectedJob}
+          canWrite={access.canEditAmplifierRepair}
+          dateOptions={dateOptions}
+          onUpdate={actions.onUpdateJob}
+          onClose={actions.onCloseJobDetail}
+          onDirtyChange={actions.onDirtyChange}
+          onNotice={actions.onNotice}
+        />
+      )
+      : <section className="panel empty-state">Select an amplifier work order from the list.</section>;
   }
 
   return null;

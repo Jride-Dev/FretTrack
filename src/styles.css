@@ -3905,7 +3905,209 @@ th.internal-only {
   white-space: pre-line;
 }
 
+.amplifier-repair-page,
+.amplifier-detail {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.amplifier-module-heading,
+.amplifier-detail-header,
+.amplifier-job-card-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.amplifier-module-heading h2,
+.amplifier-detail-header h2,
+.amplifier-intake h3,
+.amplifier-queue h3,
+.amplifier-detail .panel h3 {
+  margin-top: 0;
+}
+
+.amplifier-module-heading .eyebrow,
+.amplifier-detail-header .eyebrow {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.amplifier-job-count {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
+.amplifier-module-grid {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+}
+
+.amplifier-intake,
+.amplifier-queue,
+.amplifier-detail .panel {
+  min-width: 0;
+}
+
+.amplifier-queue-filters {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 12px;
+}
+
+.amplifier-queue-filters .checkline {
+  align-self: end;
+  min-height: 38px;
+}
+
+.amplifier-job-list {
+  display: grid;
+  gap: 8px;
+  max-height: 720px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.amplifier-job-card {
+  align-items: stretch;
+  background: var(--surface-2);
+  color: var(--text);
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.amplifier-job-card > span,
+.amplifier-job-card > small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amplifier-job-card-heading span,
+.amplifier-job-card small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.amplifier-detail-header {
+  align-items: center;
+}
+
+.amplifier-detail-actions {
+  flex: 0 0 auto;
+}
+
+.amplifier-bench-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.amplifier-safety-warning {
+  background: color-mix(in srgb, var(--surface-2) 72%, var(--warning) 28%);
+  border: 1px solid var(--warning);
+  color: var(--text);
+  margin-bottom: 16px;
+  padding: 10px 12px;
+}
+
+.amplifier-measurement-stages,
+.amplifier-evidence-list {
+  display: grid;
+  gap: 16px;
+}
+
+.amplifier-measurement-stage {
+  border: 1px solid var(--border);
+  min-width: 0;
+  padding: 14px;
+}
+
+.amplifier-measurement-stage legend {
+  font-weight: 800;
+  padding: 0 8px;
+}
+
+.amplifier-evidence-capture {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 16px;
+  padding: 12px;
+}
+
+.amplifier-recording-actions {
+  justify-content: flex-start;
+}
+
+.amplifier-evidence-preview,
+.amplifier-evidence-card {
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.amplifier-evidence-preview audio,
+.amplifier-evidence-card audio {
+  max-width: 100%;
+  width: 100%;
+}
+
+.amplifier-evidence-preview img,
+.amplifier-evidence-card img {
+  max-height: 420px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.amplifier-evidence-card-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.amplifier-evidence-card-heading > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.amplifier-evidence-card-heading small {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 1024px) {
+  .amplifier-module-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .amplifier-bench-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .photo-editor-backdrop {
     padding: 8px;
   }
@@ -4056,6 +4258,28 @@ th.internal-only {
 }
 
 @media (max-width: 768px) {
+  .amplifier-module-heading,
+  .amplifier-detail-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .amplifier-detail-actions,
+  .amplifier-detail-actions button {
+    width: 100%;
+  }
+
+  .amplifier-queue-filters,
+  .amplifier-bench-grid,
+  .amplifier-evidence-capture {
+    grid-template-columns: 1fr;
+  }
+
+  .amplifier-evidence-card-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   button,
   .button,
   a.button-link,
