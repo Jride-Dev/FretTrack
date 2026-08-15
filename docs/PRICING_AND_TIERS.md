@@ -90,6 +90,8 @@ Pro is the advanced reporting and automation tier. Phase 1 currently unlocks:
 - Team Members
 - Advanced Reporting
 - Team Assignment and workload visibility
+- Amplifier Repair
+- Scheduled Email for transactional job messages up to 30 days ahead
 
 Pro subscriptions and Pro trials use the FretTrack Pro emblem and labels such as `Trial: Pro`, `Pro Monthly`, `Pro Yearly`, or `Pro, canceling`. Trial Pro access keeps Advanced Reporting unlocked through the existing entitlement snapshot; non-Pro shops continue to see the Pro locked state.
 
@@ -101,6 +103,8 @@ The current Pro reporting dashboard includes operational tables for shop overvie
 
 The 0.2.9-D Reports hardening pass adds Pro report browser printing, per-section CSV exports, a summary CSV export, simple job-status/date filters, 25-row previews, 250-row show-all safety, 1,000-row export caps, and section-level error containment. Browser print / Save as PDF is the current printable output path; direct PDF generation and server-side report aggregation remain future work.
 
+The Pro Scheduled Email foundation schedules already-composed transactional job emails through Resend for delivery up to 30 days ahead. It snapshots the recipient and message, requires email opt-in, supports provider cancellation before delivery, and continues to count recipients against the existing monthly email cap. Six-/twelve-month service reminders and other recurring marketing automation remain separate future work because they require long-horizon scheduling plus consent and unsubscribe policy.
+
 Future Pro candidates are documented only and are not implemented in this phase:
 
 - CSV export boundary
@@ -108,7 +112,7 @@ Future Pro candidates are documented only and are not implemented in this phase:
 - inventory alerts and forecasting
 - scheduling reminders
 - message templates
-- automated email
+- long-horizon and recurring email automation
 - SMS messaging
 - larger photo storage
 

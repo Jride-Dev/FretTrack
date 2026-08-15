@@ -235,7 +235,7 @@ assertIncludes(app, 'shopProfile={shopProfile}', 'App must pass the active shop 
 
 const edgeFunction = read('supabase/functions/send-email/index.ts');
 assertIncludes(edgeFunction, ".from('jobs')", 'Email Edge Function must load the target job.');
-assertIncludes(edgeFunction, ".select('id, shop_id')", 'Email Edge Function must load job shop_id.');
+assertIncludes(edgeFunction, ".select('id, shop_id, email_opt_in')", 'Email Edge Function must load job shop_id and email opt-in state.');
 assertIncludes(edgeFunction, ".eq('id', jobId)", 'Email Edge Function must scope access to the requested job id.');
 assertIncludes(edgeFunction, ".from('shop_members')", 'Email Edge Function must verify shop membership.');
 assertIncludes(edgeFunction, ".eq('shop_id', job.shop_id)", 'Email Edge Function must authorize against the job shop.');

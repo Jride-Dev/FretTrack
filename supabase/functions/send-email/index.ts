@@ -1,5 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+type SupabaseAnyClient = ReturnType<typeof createClient<any, 'public', any>>;
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-frettrack-key',
@@ -7,6 +9,8 @@ const corsHeaders = {
 };
 
 const EMAIL_RATE_LIMIT_PER_HOUR = 50;
+const MIN_SCHEDULE_LEAD_MS = 2 * 60 * 1000;
+const MAX_SCHEDULE_LEAD_MS = 30 * 24 * 60 * 60 * 1000;
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
@@ -21,6 +25,12 @@ Deno.serve(async (request) => {
 
   const payload = await request.json().catch(() => ({}));
   const jobId = payload.job_id || payload.jobId || payload.job?.id || '';
+  const action = String(payload.action || 'send').trim().toLowerCase();
+
+  if (action === 'cancel_scheduled') {
+    return await cancelScheduledEmail(request, jobId, payload.message_id || payload.messageId || '');
+  }
+
   const customerId = payload.customer_id || payload.customerId || null;
   const toRecipients = normalizeRecipients(payload.to || payload.message?.recipient || payload.job?.email || '');
   const ccRecipients = normalizeRecipients(payload.cc || payload.message?.cc || []);
@@ -30,6 +40,13 @@ Deno.serve(async (request) => {
   const subject = payload.subject || payload.message?.subject || '';
   const body = payload.body || payload.message?.body || '';
   const html = typeof payload.html === 'string' ? payload.html : '';
+  const templateKey = String(payload.template_key || payload.templateKey || '').trim();
+  const scheduledAtResult = normalizeScheduledAt(payload.scheduled_at || payload.scheduledAt || '');
+
+  if (scheduledAtResult.error) {
+    return json({ success: false, error: scheduledAtResult.error }, 400);
+  }
+  const scheduledAt = scheduledAtResult.value;
 
   const missing = requiredFields({ job_id: jobId, to, subject, body });
   if (missing.length) {
@@ -39,6 +56,15 @@ Deno.serve(async (request) => {
   const access = await resolveJobWriteAccess(request, jobId);
   if (access.error) {
     return access.error;
+  }
+
+  if (scheduledAt) {
+    if (!access.emailOptIn) {
+      return json({ success: false, error: 'Email opt-in is required before scheduling a customer email.' }, 400);
+    }
+    if (!await shopHasEntitlement(createServiceClient(), access.shopId, 'scheduled_email')) {
+      return json({ success: false, error: 'Scheduled Email is available on Pro.' }, 403);
+    }
   }
 
   const resendApiKey = Deno.env.get('RESEND_API_KEY');
@@ -52,6 +78,7 @@ Deno.serve(async (request) => {
       recipient: to,
       subject,
       body,
+      templateKey,
       status: 'failed',
       provider: 'resend',
       errorMessage: 'Resend is not configured.'
@@ -74,6 +101,7 @@ Deno.serve(async (request) => {
         recipient: to,
         subject,
         body,
+        templateKey,
         status: 'failed',
         provider: 'resend',
         errorMessage
@@ -99,7 +127,8 @@ Deno.serve(async (request) => {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Idempotency-Key': `frettrack-email/${quotaRequestId}`
       },
       body: JSON.stringify({
         from: fromEmail,
@@ -108,7 +137,8 @@ Deno.serve(async (request) => {
         ...(bccRecipients.length ? { bcc: bccRecipients } : {}),
         subject,
         text: body,
-        ...(html ? { html } : {})
+        ...(html ? { html } : {}),
+        ...(scheduledAt ? { scheduled_at: scheduledAt } : {})
       })
     });
 
@@ -125,6 +155,7 @@ Deno.serve(async (request) => {
         recipient: to,
         subject,
         body,
+        templateKey,
         status: 'failed',
         provider: 'resend',
         errorMessage
@@ -141,16 +172,19 @@ Deno.serve(async (request) => {
       recipient: to,
       subject,
       body,
-      status: 'sent',
+      templateKey,
+      status: scheduledAt ? 'scheduled' : 'sent',
       provider: 'resend',
       providerMessageId: providerResponse.id || '',
-      sentAt: new Date().toISOString()
+      scheduledAt,
+      sentAt: scheduledAt ? '' : new Date().toISOString()
     });
 
     return json({
       success: true,
       id: providerResponse.id || '',
       provider: 'resend',
+      scheduled: Boolean(scheduledAt),
       message,
       usage: {
         recipientCount,
@@ -169,6 +203,7 @@ Deno.serve(async (request) => {
       recipient: to,
       subject,
       body,
+      templateKey,
       status: 'failed',
       provider: 'resend',
       errorMessage
@@ -206,6 +241,28 @@ function normalizeRequestId(value: unknown) {
     : crypto.randomUUID();
 }
 
+function normalizeScheduledAt(value: unknown) {
+  const candidate = String(value || '').trim();
+  if (!candidate) {
+    return { value: '', error: '' };
+  }
+
+  const timestamp = new Date(candidate).getTime();
+  if (!Number.isFinite(timestamp)) {
+    return { value: '', error: 'Choose a valid date and time for the scheduled email.' };
+  }
+
+  const leadTime = timestamp - Date.now();
+  if (leadTime < MIN_SCHEDULE_LEAD_MS) {
+    return { value: '', error: 'Scheduled email time must be at least 2 minutes in the future.' };
+  }
+  if (leadTime > MAX_SCHEDULE_LEAD_MS) {
+    return { value: '', error: 'Scheduled emails can be set up to 30 days ahead.' };
+  }
+
+  return { value: new Date(timestamp).toISOString(), error: '' };
+}
+
 async function logMessage(message: {
   jobId: string;
   customerId?: string | null;
@@ -213,10 +270,12 @@ async function logMessage(message: {
   recipient: string;
   subject?: string;
   body: string;
-  status: 'sent' | 'failed';
+  templateKey?: string;
+  status: 'sent' | 'failed' | 'scheduled';
   provider: 'resend';
   providerMessageId?: string;
   errorMessage?: string;
+  scheduledAt?: string;
   sentAt?: string;
 }) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -237,10 +296,13 @@ async function logMessage(message: {
       recipient: message.recipient,
       subject: message.subject || null,
       body: message.body,
+      template_key: message.templateKey || '',
       status: message.status,
       provider: message.provider,
       provider_message_id: message.providerMessageId || '',
       error_message: message.errorMessage || '',
+      scheduled_at: message.scheduledAt || null,
+      canceled_at: null,
       sent_at: message.sentAt || null,
       created_at: now
     })
@@ -262,24 +324,24 @@ async function resolveJobWriteAccess(request: Request, jobId: string) {
   const token = authorization.replace(/^Bearer\s+/i, '').trim();
 
   if (!supabaseUrl || !serviceRoleKey || !token) {
-    return { error: json({ success: false, error: 'Authenticated shop access is required.' }, 401), shopId: '' };
+    return { error: json({ success: false, error: 'Authenticated shop access is required.' }, 401), shopId: '', emailOptIn: false };
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   const { data: userData, error: userError } = await supabase.auth.getUser(token);
   const user = userData?.user;
   if (userError || !user) {
-    return { error: json({ success: false, error: 'Authenticated shop access is required.' }, 401), shopId: '' };
+    return { error: json({ success: false, error: 'Authenticated shop access is required.' }, 401), shopId: '', emailOptIn: false };
   }
 
   const { data: job, error: jobError } = await supabase
     .from('jobs')
-    .select('id, shop_id')
+    .select('id, shop_id, email_opt_in')
     .eq('id', jobId)
     .single();
 
   if (jobError || !job) {
-    return { error: json({ success: false, error: 'Work order was not found.' }, 404), shopId: '' };
+    return { error: json({ success: false, error: 'Work order was not found.' }, 404), shopId: '', emailOptIn: false };
   }
 
   const { data: membership, error: membershipError } = await supabase
@@ -290,15 +352,84 @@ async function resolveJobWriteAccess(request: Request, jobId: string) {
     .maybeSingle();
 
   if (membershipError || !['owner', 'admin', 'tech'].includes(membership?.role || '')) {
-    return { error: json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403), shopId: '' };
+    return { error: json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403), shopId: '', emailOptIn: false };
   }
 
-  const hasEffectiveAccess = await canUseShopWriteRole(supabase, job.shop_id, membership.role);
+  const membershipRole = String(membership?.role || '');
+  const hasEffectiveAccess = await canUseShopWriteRole(supabase as SupabaseAnyClient, job.shop_id, membershipRole);
   if (!hasEffectiveAccess) {
-    return { error: json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403), shopId: '' };
+    return { error: json({ success: false, error: 'Your shop role cannot send customer messages.' }, 403), shopId: '', emailOptIn: false };
   }
 
-  return { error: null, shopId: job.shop_id };
+  return { error: null, shopId: job.shop_id, emailOptIn: job.email_opt_in === true };
+}
+
+async function cancelScheduledEmail(request: Request, jobId: string, messageId: string) {
+  if (!jobId || !messageId) {
+    return json({ success: false, error: 'Work order and scheduled message are required.' }, 400);
+  }
+
+  const access = await resolveJobWriteAccess(request, jobId);
+  if (access.error) {
+    return access.error;
+  }
+
+  const supabase = createServiceClient();
+  const { data: message, error: messageError } = await supabase
+    .from('customer_messages')
+    .select('*')
+    .eq('id', messageId)
+    .eq('job_id', jobId)
+    .eq('channel', 'email')
+    .maybeSingle();
+
+  if (messageError || !message) {
+    return json({ success: false, error: 'Scheduled email was not found.' }, 404);
+  }
+  if (message.status === 'canceled') {
+    return json({ success: true, canceled: true, message });
+  }
+  if (message.status !== 'scheduled' || !message.provider_message_id || !message.scheduled_at) {
+    return json({ success: false, error: 'This email is not awaiting scheduled delivery.' }, 409);
+  }
+  if (new Date(message.scheduled_at).getTime() <= Date.now()) {
+    return json({ success: false, error: 'The scheduled delivery time has passed, so this email can no longer be canceled here.' }, 409);
+  }
+
+  const resendApiKey = Deno.env.get('RESEND_API_KEY');
+  if (!resendApiKey) {
+    return json({ success: false, error: 'Resend is not configured.' }, 503);
+  }
+
+  const response = await fetch(`https://api.resend.com/emails/${encodeURIComponent(message.provider_message_id)}/cancel`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  const providerResponse = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    return json({
+      success: false,
+      error: providerResponse.message || providerResponse.error || 'Resend cancellation failed.'
+    }, response.status >= 400 && response.status < 500 ? response.status : 502);
+  }
+
+  const { data: canceledMessage, error: updateError } = await supabase
+    .from('customer_messages')
+    .update({ status: 'canceled', canceled_at: new Date().toISOString() })
+    .eq('id', message.id)
+    .eq('status', 'scheduled')
+    .select()
+    .single();
+
+  if (updateError || !canceledMessage) {
+    console.error('scheduled email cancellation log failed', updateError);
+    return json({ success: false, error: 'The provider canceled the email, but FretTrack could not update message history. Refresh before retrying.' }, 500);
+  }
+
+  return json({ success: true, canceled: true, message: canceledMessage });
 }
 
 async function reserveEmailRecipientQuota(shopId: string, requestId: string, recipientCount: number) {
@@ -353,7 +484,7 @@ function createServiceClient() {
   return createClient(supabaseUrl, serviceRoleKey);
 }
 
-async function canUseShopWriteRole(supabase: ReturnType<typeof createClient>, shopId: string, role: string) {
+async function canUseShopWriteRole(supabase: SupabaseAnyClient, shopId: string, role: string) {
   if (role === 'owner') {
     return await shopLifecycleAllowsWrite(supabase, shopId);
   }
@@ -370,7 +501,7 @@ async function canUseShopWriteRole(supabase: ReturnType<typeof createClient>, sh
   return await shopHasTeamMembers(supabase, shopId);
 }
 
-async function shopLifecycleAllowsWrite(supabase: ReturnType<typeof createClient>, shopId: string) {
+async function shopLifecycleAllowsWrite(supabase: SupabaseAnyClient, shopId: string) {
   const { profile, subscription } = await loadShopAccessState(supabase, shopId);
   const status = subscription?.status || profile?.subscription_status || 'active';
   const trialEndsAt = subscription?.trial_ends_at || profile?.trial_ends_at || '';
@@ -387,7 +518,11 @@ async function shopLifecycleAllowsWrite(supabase: ReturnType<typeof createClient
   return !['read_only', 'canceled', 'cancelled'].includes(status);
 }
 
-async function shopHasTeamMembers(supabase: ReturnType<typeof createClient>, shopId: string) {
+async function shopHasTeamMembers(supabase: SupabaseAnyClient, shopId: string) {
+  return await shopHasEntitlement(supabase, shopId, 'team_members');
+}
+
+async function shopHasEntitlement(supabase: SupabaseAnyClient, shopId: string, key: string) {
   const { profile, subscription } = await loadShopAccessState(supabase, shopId);
   const status = subscription?.status || profile?.subscription_status || 'active';
   const trialEndsAt = subscription?.trial_ends_at || profile?.trial_ends_at || '';
@@ -402,26 +537,26 @@ async function shopHasTeamMembers(supabase: ReturnType<typeof createClient>, sho
     .from('plan_entitlements')
     .select('value')
     .eq('plan_id', planId)
-    .eq('key', 'team_members')
+    .eq('key', key)
     .maybeSingle();
 
   if (trialExpired) {
     return Boolean(entitlement?.value);
   }
 
-  const profileOverride = profile?.feature_overrides?.team_members;
+  const profileOverride = profile?.feature_overrides?.[key];
   const { data: override } = await supabase
     .from('shop_entitlement_overrides')
     .select('value')
     .eq('shop_id', shopId)
-    .eq('key', 'team_members')
+    .eq('key', key)
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
     .maybeSingle();
 
   return Boolean(override?.value ?? profileOverride ?? entitlement?.value);
 }
 
-async function loadShopAccessState(supabase: ReturnType<typeof createClient>, shopId: string) {
+async function loadShopAccessState(supabase: SupabaseAnyClient, shopId: string) {
   const [{ data: profile }, { data: subscription }] = await Promise.all([
     supabase
       .from('shop_profiles')

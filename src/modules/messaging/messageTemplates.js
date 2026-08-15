@@ -6,6 +6,11 @@ export const messageTemplates = {
     subject: "We've got your {{instrument}} - Job #{{job_number}}",
     body: "Hi {{customer_name}},\n\nWe've checked in your {{instrument}}.\n\nJob #: {{job_number}}\n\nWe'll go through it and reach out once we have an estimate or if anything comes up.\n\n{{shop_signature}}"
   },
+  drop_off_scheduled: {
+    label: 'Drop Off Scheduled',
+    subject: 'Drop-off scheduled for {{appointment_datetime}} - Job #{{job_number}}',
+    body: "Hi {{customer_name}},\n\nYour appointment is scheduled for {{appointment_datetime}}.\n\nPlease reply if you need to change the drop-off time.\n\nJob #: {{job_number}}\nInstrument: {{instrument}}\n\n{{shop_signature}}"
+  },
   estimate_ready: {
     label: 'Estimate ready',
     subject: 'Estimate ready for your {{instrument}} (Job #{{job_number}})',

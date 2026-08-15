@@ -1,5 +1,6 @@
 # Changelog
 
+- Added a Pro-gated transactional email scheduler that snapshots recipient/subject/body, schedules and cancels through Resend up to 30 days ahead, requires customer email opt-in, preserves immediate email behavior and quota enforcement, and adds a Drop Off Scheduled template sourced from the job appointment time.
 - Added a Pro-gated Amplifier Repair workspace with make/model presets, amplifier intake, an amplifier-only work queue, a dedicated bench worksheet, before/after electrical and digital diagnostics, private audio/waveform/spectrum evidence, role-aware permissions, server-authoritative entitlement enforcement, historical read access after downgrade, and refresh-safe detail routing.
 - Expanded browser validation with Pro/Shop amplifier entitlement and persistence coverage, quieter self-contained image fixtures, and an opt-in read-only Browserbase smoke runner for the production sign-in shell.
 - Hardened the merged Work Note, local test-seed, and Stripe lifecycle fixes after adversarial review: failed Work Note retries keep one row identity, deterministic seed collisions recover without crossing shops or rewriting audit history, older Stripe events cannot advance synchronization state, and itemless Stripe payloads are handled safely.

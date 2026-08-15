@@ -117,6 +117,7 @@ export default function App() {
     canDeletePhotos,
     canViewBilling,
     canSendEmail,
+    canScheduleEmail,
     canSendSms,
     teamAssignmentEnabled,
     entitlementMessage
@@ -1317,6 +1318,7 @@ export default function App() {
               canOverwritePhotos,
               canPreviewCustomerImport,
               canSendEmail,
+              canScheduleEmail,
               canSendSms,
               canUploadPhotos,
               canViewBilling,

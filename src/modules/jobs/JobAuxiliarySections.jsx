@@ -5,6 +5,7 @@ import { getSmsMode } from '../../data/messagesRepository';
 
 export default function buildJobAuxiliarySections({
   canSendEmail,
+  canScheduleEmail,
   canSendSms,
   canWrite,
   draftJob,
@@ -22,6 +23,7 @@ export default function buildJobAuxiliarySections({
       <MessagesPanel
         canWrite={canWrite}
         canSendEmailByPlan={canSendEmail}
+        canScheduleEmail={canScheduleEmail}
         canSendSmsByPlan={canSendSms}
         entitlementMessage={entitlementMessage}
         job={draftJob}

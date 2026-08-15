@@ -16,6 +16,8 @@ Rapid repeated Work Note submissions now coalesce onto one in-flight save. The S
 
 FretTrack `0.2.9-beta.5` is an architecture and workflow-reliability release candidate. It preserves the existing repair-shop experience while separating workspace navigation, Inventory, and Job Detail presentation into smaller feature boundaries that are safer to maintain and test.
 
+Pro Scheduled Email foundation: Pro shops can schedule an already-composed transactional job email from Work Order Messages up to 30 days ahead, review its provider-scheduled time, and cancel it before delivery. FretTrack snapshots the recipient, subject, body, template, and scheduled time; requires customer email opt-in; retains existing role, shop-isolation, message-history, immediate-send, and recipient-quota behavior; and adds the requested Drop Off Scheduled template using the job's appointment time. Migration `20260815095604_pro_email_scheduling_foundation.sql` and the updated `send-email` function require reviewed rollout and are not deployed by this branch.
+
 ## Stripe paid-launch readiness
 
 FretTrack now has source-controlled owner/admin-only Stripe Checkout and Billing Portal actions plus a signature-verified, replay-aware webhook that synchronizes Shop and Pro subscriptions. Merely opening, canceling, abandoning, or failing Checkout cannot change a beta shop's plan or entitlements; paid state changes remain behind the verified webhook boundary.

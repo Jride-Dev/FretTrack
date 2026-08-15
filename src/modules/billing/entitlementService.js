@@ -31,6 +31,7 @@ export const CURRENT_SUBSCRIPTION_TIER_ORDER = [
 
 export const PREMIUM_FEATURES = {
   AMPLIFIER_REPAIR: 'amplifier_repair',
+  SCHEDULED_EMAIL: 'scheduled_email',
   PHOTO_EDITOR: 'photo_editor',
   ADVANCED_REPORTING: 'advanced_reporting',
   TEAM_MEMBERS: 'team_members',
@@ -68,6 +69,7 @@ const defaultEntitlements = {
   mobile_pwa: true,
   inventory: true,
   amplifier_repair: false,
+  scheduled_email: false,
   advanced_accounting: false,
   advanced_branding: false,
   photo_editor: false,
@@ -113,6 +115,7 @@ const tierEntitlements = {
     team_members: true,
     team_assignment: true,
     amplifier_repair: true,
+    scheduled_email: true,
     max_users: 10,
     max_storage_bytes: PRO_USAGE_LIMITS.maxPhotoStorageBytes,
     monthly_email_limit: PRO_USAGE_LIMITS.monthlyEmailLimit,
@@ -125,6 +128,7 @@ const tierEntitlements = {
     team_members: true,
     team_assignment: true,
     amplifier_repair: true,
+    scheduled_email: true,
     business_analytics: true,
     inventory_analytics: true,
     revenue_dashboards: true,
@@ -157,6 +161,7 @@ export const premiumFeatureGroups = [
     label: 'Pro',
     features: [
       [PREMIUM_FEATURES.AMPLIFIER_REPAIR, 'Amplifier Repair'],
+      [PREMIUM_FEATURES.SCHEDULED_EMAIL, 'Scheduled Email'],
       [PREMIUM_FEATURES.PHOTO_EDITOR, 'Photo Editor'],
       [PREMIUM_FEATURES.TEAM_MEMBERS, 'Team Members'],
       [PREMIUM_FEATURES.TEAM_ASSIGNMENT, 'Team Assignment'],
@@ -285,6 +290,7 @@ export function normalizeEntitlementSnapshot(snapshot = {}, shopId = '') {
       canExportCsv: Boolean(entitlements.csv_export),
       canUsePhotoEditor: Boolean(entitlements.photo_editor),
       canUseAmplifierRepair: Boolean(entitlements.amplifier_repair),
+      canScheduleEmail: canWrite && Boolean(entitlements.email_messages) && Boolean(entitlements.scheduled_email),
       canUseAdvancedReporting: Boolean(entitlements.advanced_reporting),
       canManageTeamMembers: Boolean(entitlements.team_members),
       canUseTeamAssignment: Boolean(entitlements.team_assignment),
@@ -357,6 +363,10 @@ export function canUseAmplifierRepair(snapshot) {
   return getShopFeatureValue(snapshot, PREMIUM_FEATURES.AMPLIFIER_REPAIR);
 }
 
+export function canUseScheduledEmail(snapshot) {
+  return getShopFeatureValue(snapshot, PREMIUM_FEATURES.SCHEDULED_EMAIL);
+}
+
 export function canUsePhotoEditor(snapshot) {
   return getShopFeatureValue(snapshot, PREMIUM_FEATURES.PHOTO_EDITOR);
 }
@@ -415,6 +425,7 @@ export function getEnabledFeatureLabels(snapshot) {
     ['sms_messages', 'SMS messages'],
     ['inventory', 'Inventory'],
     ['amplifier_repair', 'Amplifier repair'],
+    ['scheduled_email', 'Scheduled email'],
     ['advanced_accounting', 'Advanced accounting'],
     ['photo_editor', 'Photo editor'],
     ['advanced_reporting', 'Advanced reporting'],

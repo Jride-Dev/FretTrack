@@ -37,6 +37,7 @@ Shipped or current-branch foundations:
 - local-development protection against accidental hosted Supabase mutations
 - active-shop business address included consistently in generated invoice email and printable invoice-style Job Sheet output
 - separate Amplifier Repair module foundation with shared make/model presets, intake, work queue, before/after electrical diagnostics, private audio/waveform/spectrum evidence, and existing job permissions
+- Pro Scheduled Email foundation for provider-managed transactional job emails up to 30 days ahead, including cancellation and a Drop Off Scheduled template
 
 Known weak spots:
 
@@ -87,7 +88,7 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - stable intake-to-pickup job workflow
 - customers, inventory purchasing foundation, and scheduling working together
 - reliable work-order and invoice email summaries
-- customer-facing **Drop Off Scheduled** email template using the authoritative appointment date and time from Scheduling, including: “Your appointment is scheduled for [date and time].”
+- customer-facing **Drop Off Scheduled** email template using the authoritative job appointment date and time, including: “Your appointment is scheduled for [date and time].”
 - reliable beta application and approval notification flow
 - practical photo documentation editor for annotated customer/shop records
 - dependable basic print output

@@ -89,6 +89,7 @@ export default function JobDetail({
   canOverwritePhotos = canWrite,
   canDeletePhotos = canWrite,
   canSendEmail = true,
+  canScheduleEmail = false,
   canSendSms = true,
   entitlementMessage = '',
   shopProfile = null,
@@ -987,6 +988,9 @@ export default function JobDetail({
     if ((message.channel === 'email' || message.channel === 'both') && !canSendEmail) {
       return { ok: false, error: entitlementMessage || 'Email sending is unavailable for this shop plan or billing state.' };
     }
+    if (message.scheduledAt && !canScheduleEmail) {
+      return { ok: false, error: 'Scheduled Email is available on Pro.' };
+    }
     if ((message.channel === 'sms' || message.channel === 'both') && !canSendSms) {
       return { ok: false, error: entitlementMessage || 'SMS sending is unavailable for this shop plan or billing state.' };
     }
@@ -1240,6 +1244,7 @@ export default function JobDetail({
 
   const { activityTimeline, messagesPanel, schedulingSection } = buildJobAuxiliarySections({
     canSendEmail,
+    canScheduleEmail,
     canSendSms,
     canWrite,
     draftJob,
