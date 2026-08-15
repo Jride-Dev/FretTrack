@@ -8,25 +8,48 @@ export function hasPendingWorkLogDraft(value) {
   return Boolean(getPendingWorkLogText(value));
 }
 
+export function getWorkLogSubmission(previousSubmission, { jobId, text, id, timestamp }) {
+  const normalizedText = getPendingWorkLogText(text);
+  if (
+    previousSubmission?.jobId === jobId
+    && previousSubmission?.id
+    && previousSubmission?.timestamp
+  ) {
+    return previousSubmission.text === normalizedText
+      ? previousSubmission
+      : { ...previousSubmission, text: normalizedText };
+  }
+
+  return {
+    jobId,
+    text: normalizedText,
+    id,
+    timestamp
+  };
+}
+
 export function appendWorkLogDraft(job, value, { id, timestamp }) {
   const text = getPendingWorkLogText(value);
   if (!text) {
     return job;
   }
 
+  const entry = {
+    id,
+    jobId: job.id,
+    text,
+    entry: text,
+    createdAt: timestamp,
+    timestamp
+  };
+  const existingEntries = job.workLog || [];
+  const alreadyAppended = existingEntries.some((item) => item.id === id);
+
   return {
     ...job,
-    workLog: [
-      ...(job.workLog || []),
-      {
-        id,
-        jobId: job.id,
-        text,
-        entry: text,
-        createdAt: timestamp,
-        timestamp
-      }
-    ]
+    workLog: alreadyAppended
+      ? existingEntries.map((item) => item.id === id ? { ...item, ...entry } : item)
+      : [...existingEntries, entry]
   };
 }
 

@@ -68,6 +68,7 @@ import {
   appendWorkLogDraft,
   buildRemoveWorkLogEntryJob,
   buildUpdateWorkLogEntryPatch,
+  getWorkLogSubmission,
   hasPendingWorkLogDraft
 } from './workLogDraft.js';
 
@@ -124,6 +125,7 @@ export default function JobDetail({
   const imageImportInputRef = useRef(null);
   const paymentAutosaveTimeoutRef = useRef(null);
   const workLogSavePromiseRef = useRef(null);
+  const workLogRetrySubmissionRef = useRef(null);
   const hasPendingWorkLog = hasPendingWorkLogDraft(workLogText);
   const hasUnsettledWorkLog = hasPendingWorkLog || isSavingWorkLog;
   const hasUnsavedChanges = isDirty || hasUnsettledWorkLog;
@@ -138,6 +140,9 @@ export default function JobDetail({
     setDraftJob(job);
     setTimelineEvents(job.events || []);
     setDocumentEmailDraft(null);
+    if (workLogRetrySubmissionRef.current?.jobId !== job.id) {
+      workLogRetrySubmissionRef.current = null;
+    }
     if (!workLogSavePromiseRef.current) {
       setWorkLogText('');
     }
@@ -444,15 +449,21 @@ export default function JobDetail({
     if (!hasPendingWorkLog) {
       return saveDraftNow();
     }
-    const timestamp = new Date().toISOString();
     const submittedWorkLogText = workLogText;
-    const nextJob = appendWorkLogDraft(draftJob, submittedWorkLogText, {
+    const submission = getWorkLogSubmission(workLogRetrySubmissionRef.current, {
+      jobId: draftJob.id,
+      text: submittedWorkLogText,
       id: crypto.randomUUID(),
-      timestamp
+      timestamp: new Date().toISOString()
     });
+    workLogRetrySubmissionRef.current = submission;
+    const nextJob = appendWorkLogDraft(draftJob, submission.text, submission);
 
     const savePromise = saveDraftNow(nextJob)
       .then((savedJob) => {
+        if (workLogRetrySubmissionRef.current?.id === submission.id) {
+          workLogRetrySubmissionRef.current = null;
+        }
         setWorkLogText((current) => current === submittedWorkLogText ? '' : current);
         return savedJob;
       })
@@ -474,6 +485,7 @@ export default function JobDetail({
 
   function discardWorkLogDraft() {
     if (!hasPendingWorkLog || window.confirm('Discard this unsaved Work Note?')) {
+      workLogRetrySubmissionRef.current = null;
       setWorkLogText('');
     }
   }

@@ -1,5 +1,6 @@
 import { deepStrictEqual, strictEqual } from "node:assert";
 import {
+  getFirstSubscriptionItem,
   getInvoiceSubscriptionId,
   getSubscriptionPeriod,
   normalizeBillingInterval,
@@ -59,6 +60,17 @@ Deno.test("subscription period lookup preserves legacy top-level timestamps", ()
       currentPeriodEnd: 1_702_592_000,
     },
   );
+});
+
+Deno.test("itemless subscription payloads are handled without dereferencing missing data", () => {
+  strictEqual(getFirstSubscriptionItem({}), null);
+  strictEqual(getFirstSubscriptionItem({ items: null }), null);
+  strictEqual(getFirstSubscriptionItem({ items: {} }), null);
+  strictEqual(getFirstSubscriptionItem({ items: { data: [] } }), null);
+  deepStrictEqual(getSubscriptionPeriod({ items: { data: [] } }), {
+    currentPeriodStart: null,
+    currentPeriodEnd: null,
+  });
 });
 
 Deno.test("invoice subscription lookup supports expanded and legacy references", () => {
