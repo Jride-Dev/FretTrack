@@ -137,6 +137,11 @@ assert.ok(
   /\|\|\s*getStripeId\(value\.subscription\)/.test(webhookLifecycle),
   'Invoice events must retain compatibility with legacy Stripe subscription references.',
 );
+assert.ok(
+  webhookLifecycle.includes('getFirstSubscriptionItem') &&
+    webhookFunction.includes('const item = getFirstSubscriptionItem(subscription);'),
+  'Webhook subscription item access must remain safe for itemless or partially expanded Stripe payloads.',
+);
 const webhookLifecycleTest = read('supabase/functions/stripe-webhook/lifecycle.test.ts');
 assert.ok(/subscription:\s*["']sub_current["']/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover the current invoice parent schema.');
 assert.ok(/subscription:\s*["']sub_legacy["']/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover the legacy invoice schema.');
@@ -145,6 +150,7 @@ assert.ok(/\[\s*["']canceled["'],\s*["']canceled["']\s*\]/.test(webhookLifecycle
 assert.ok(webhookLifecycleTest.includes('toProfileSubscriptionStatus("past_due"), "active"'), 'Stripe lifecycle tests must cover the coarse profile mirror for failed-payment grace access.');
 assert.ok(webhookLifecycleTest.includes('concurrent Checkout requests share one shop-generation idempotency key'), 'Stripe lifecycle tests must cover concurrent Checkout idempotency.');
 assert.ok(webhookLifecycleTest.includes('existing Stripe subscription lookup checks later pages before allowing Checkout'), 'Stripe lifecycle tests must cover an open subscription beyond Stripe\'s first page.');
+assert.ok(webhookLifecycleTest.includes('itemless subscription payloads are handled without dereferencing missing data'), 'Stripe lifecycle tests must cover itemless subscription payloads.');
 
 const billingPage = read('src/modules/billing/BillingPage.jsx');
 assert.ok(billingPage.includes('Start Shop Monthly'), 'Billing page must expose Shop Checkout.');
@@ -198,6 +204,24 @@ assert.ok(
   concurrencyMigration.includes('update public.shop_profiles') &&
     concurrencyMigration.includes('insert into public.shop_subscriptions'),
   'Subscription and mirrored profile access state must be applied in one database transaction.',
+);
+
+const eventOrderingMigration = read('supabase/migrations/20260815051722_stripe_event_ordering_hardening.sql');
+assert.ok(
+  eventOrderingMigration.includes('p_stripe_event_created_at < cursor_row.last_started_event_created_at') &&
+    eventOrderingMigration.includes('return 0;'),
+  'Stripe synchronization must reject an older event before it advances the stored generation.',
+);
+assert.ok(
+  webhookFunction.includes('if (generation === 0)') &&
+    webhookFunction.includes('Older Stripe subscription event ignored before synchronization.'),
+  'The Stripe webhook must treat a rejected event-ordering generation as an ignored event.',
+);
+const eventOrderingTest = read('supabase/tests/database/stripe_event_ordering_hardening.test.sql');
+assert.ok(
+  eventOrderingTest.includes('an older Stripe event is rejected without a new generation') &&
+    eventOrderingTest.includes('a rejected older event does not replace the newer event cursor'),
+  'Database regression coverage must prove that an older Stripe event cannot displace newer state.',
 );
 
 const triggerHardeningMigration = read('supabase/migrations/20260812025459_harden_set_updated_at_search_path.sql');

@@ -1,5 +1,6 @@
 # Changelog
 
+- Hardened the merged Work Note, local test-seed, and Stripe lifecycle fixes after adversarial review: failed Work Note retries keep one row identity, deterministic seed collisions recover without crossing shops or rewriting audit history, older Stripe events cannot advance synchronization state, and itemless Stripe payloads are handled safely.
 - Preserved Stripe subscription renewal dates with the current item-level period fields while retaining legacy top-level webhook compatibility.
 - Recorded the completed Stripe concurrency migration/webhook rollout and fresh pre-migration backup evidence while keeping real Stripe lifecycle smoke tests as a paid-launch gate.
 - Made local Playwright shop seeding safely retryable by reusing deterministic jobs before requesting a new job number, with a second no-reset CI seed pass.

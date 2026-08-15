@@ -1,6 +1,7 @@
 import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import {
+  getFirstSubscriptionItem,
   getInvoiceSubscriptionId,
   getSubscriptionPeriod,
   normalizeBillingInterval,
@@ -156,6 +157,15 @@ async function syncCurrentStripeSubscription(
   }
 
   const generation = await beginSubscriptionSync(supabase, shopId, event);
+  if (generation === null) {
+    return {
+      status: 'ignored',
+      shopId,
+      customerId,
+      subscriptionId: subscriptionForMapping.id,
+      errorMessage: 'Older Stripe subscription event ignored before synchronization.'
+    };
+  }
   const currentSubscription = await stripe.subscriptions.retrieve(subscriptionId);
   return syncSubscription(supabase, currentSubscription, shopId, {
     generation,
@@ -173,7 +183,7 @@ async function syncSubscription(
   const shopId = normalizeText(subscription.metadata?.shop_id || fallbackShopId) || await findShopIdByCustomer(supabase, customerId);
   if (!shopId) throw new Error(`Unable to map Stripe subscription ${subscription.id} to a shop.`);
 
-  const item = subscription.items.data[0];
+  const item = getFirstSubscriptionItem(subscription);
   const priceId = item?.price?.id || '';
   const planId = planFromPriceId(priceId) || normalizePlan(subscription.metadata?.plan_id);
   if (!planId) throw new Error(`Stripe subscription ${subscription.id} uses an unrecognized FretTrack price.`);
@@ -231,6 +241,9 @@ async function beginSubscriptionSync(
   });
   if (error) throw error;
   const generation = Number(data);
+  if (generation === 0) {
+    return null;
+  }
   if (!Number.isSafeInteger(generation) || generation < 1) {
     throw new Error('Stripe subscription sync did not return a valid generation.');
   }
