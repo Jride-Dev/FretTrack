@@ -83,6 +83,7 @@ const unrelatedMigrations = changed.filter((file) => (
   && !file.endsWith('_pro_team_assignment_foundation.sql')
   && !file.endsWith('_email_photo_usage_caps_foundation.sql')
   && !file.endsWith('_job_dates_scheduling_sync.sql')
+  && !file.endsWith('_pro_email_scheduling_foundation.sql')
 ));
 assert.equal(unrelatedMigrations.length, 0, 'Scheduling layout changes must not add unrelated Supabase migrations.');
 

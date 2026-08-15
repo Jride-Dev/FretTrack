@@ -54,6 +54,7 @@
     "check:inventory-module-boundaries": "node scripts/check-inventory-module-boundaries.mjs",
     "check:job-detail-module-boundaries": "node scripts/check-job-detail-module-boundaries.mjs",
     "check:amplifier-repair-module": "node scripts/check-amplifier-repair-module.mjs",
+    "check:pro-email-scheduling": "node scripts/check-pro-email-scheduling.mjs",
     "check:work-log-draft-safety": "node scripts/check-work-log-draft-safety.mjs",
     "check:purchase-unit-conversion": "node scripts/check-purchase-unit-conversion.mjs",
     "check:invoice-email-modal": "node scripts/check-invoice-email-modal.mjs",

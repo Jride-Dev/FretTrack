@@ -2630,6 +2630,30 @@ form.panel button {
   gap: 8px;
 }
 
+.message-scheduling {
+  align-items: end;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-soft);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.65fr) auto;
+  padding: 12px;
+}
+
+.message-scheduling p {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
+.message-scheduling .premium-chip {
+  vertical-align: middle;
+}
+
+.message-history td:last-child button {
+  white-space: normal;
+}
+
 .message-history h4 {
   margin: 0 0 8px;
 }
@@ -4326,6 +4350,20 @@ th.internal-only {
   .customer-filter-bar,
   .customer-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .message-scheduling {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .message-scheduling button,
+  .message-actions button {
+    width: 100%;
+  }
+
+  .message-actions {
+    flex-direction: column;
   }
 
   .string-gauges {

@@ -331,7 +331,8 @@ export function isDuplicateWorkOrderError(error) {
 
 export async function sendCustomerMessage(job, message) {
   const normalizedJob = normalizeJob(job);
-  const channel = message.channel;
+  const action = message.action || 'send';
+  const channel = message.channel || 'email';
   const recipient = message.to || message.recipient || (channel === 'sms' ? normalizedJob.phone : normalizedJob.email);
 
   if (channel === 'sms' && !smsEnabled) {
@@ -357,7 +358,9 @@ export async function sendCustomerMessage(job, message) {
     headers: functionHeaders(),
     body: {
       request_id: crypto.randomUUID(),
+      action,
       job_id: normalizedJob.id,
+      message_id: message.messageId || '',
       customer_id: message.customerId || null,
       to: recipient,
       cc: message.cc || [],
@@ -365,7 +368,8 @@ export async function sendCustomerMessage(job, message) {
       subject: message.subject || '',
       body: message.body || '',
       html: message.html || '',
-      template_key: message.templateKey || ''
+      template_key: message.templateKey || '',
+      scheduled_at: message.scheduledAt || ''
     }
   });
 
@@ -1378,6 +1382,7 @@ function fromDbJobEvent(event) {
 }
 
 function normalizeCustomerMessage(message) {
+  const allowedStatuses = new Set(['sent', 'failed', 'scheduled', 'canceled']);
   return {
     id: message.id || crypto.randomUUID(),
     jobId: message.jobId || message.job_id || '',
@@ -1387,10 +1392,12 @@ function normalizeCustomerMessage(message) {
     subject: message.subject || '',
     body: message.body || '',
     templateKey: message.templateKey || message.template_key || '',
-    status: message.status === 'sent' ? 'sent' : 'failed',
+    status: allowedStatuses.has(message.status) ? message.status : 'failed',
     provider: message.provider || '',
     providerMessageId: message.providerMessageId || message.provider_message_id || '',
     errorMessage: message.errorMessage || message.error_message || '',
+    scheduledAt: message.scheduledAt || message.scheduled_at || '',
+    canceledAt: message.canceledAt || message.canceled_at || '',
     sentAt: message.sentAt || message.sent_at || '',
     createdAt: message.createdAt || message.created_at || new Date().toISOString()
   };
@@ -1410,6 +1417,8 @@ function toDbCustomerMessage(message) {
     provider: message.provider,
     provider_message_id: message.providerMessageId,
     error_message: message.errorMessage,
+    scheduled_at: message.scheduledAt || null,
+    canceled_at: message.canceledAt || null,
     sent_at: message.sentAt || null,
     created_at: message.createdAt
   };
@@ -1429,6 +1438,8 @@ function fromDbCustomerMessage(message) {
     provider: message.provider,
     providerMessageId: message.provider_message_id,
     errorMessage: message.error_message,
+    scheduledAt: message.scheduled_at,
+    canceledAt: message.canceled_at,
     sentAt: message.sent_at,
     createdAt: message.created_at
   };

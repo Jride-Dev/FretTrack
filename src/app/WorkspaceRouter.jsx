@@ -241,6 +241,7 @@ function WorkspacePage({
           canOverwritePhotos={access.canOverwritePhotos}
           canDeletePhotos={access.canDeletePhotos}
           canSendEmail={access.canSendEmail}
+          canScheduleEmail={access.canScheduleEmail}
           canSendSms={access.canSendSms}
           entitlementMessage={access.entitlementMessage}
           shopProfile={shopProfile}
