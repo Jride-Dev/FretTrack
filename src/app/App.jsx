@@ -99,6 +99,8 @@ export default function App() {
   const appVersionText = getPlanVersionText(APP_VERSION, planStatus);
   const {
     permissionContext,
+    amplifierRepairEnabled,
+    canEditAmplifierRepair,
     canEditJobs,
     canWrite,
     canManageShop,
@@ -616,7 +618,10 @@ export default function App() {
   }
 
   async function handleAmplifierJobCreate(jobDraft) {
-    if (!canWrite) {
+    if (!amplifierRepairEnabled) {
+      throw new Error('Amplifier Repair is available on Pro.');
+    }
+    if (!canEditAmplifierRepair) {
       throw new Error('Your shop role is read-only.');
     }
     if (hasSupabaseConfig && !isOnline) {
@@ -1260,6 +1265,7 @@ export default function App() {
             billingAccess={billingAccess}
             betaApproved={betaApproved}
             canEditJobs={canEditJobs}
+            amplifierRepairEnabled={amplifierRepairEnabled}
             pendingNewJobCustomer={pendingNewJobCustomer}
             tillSummary={tillSummary}
             moneyOptions={moneyOptions}
@@ -1298,6 +1304,8 @@ export default function App() {
             }}
             access={{
               canDeletePhotos,
+              amplifierRepairEnabled,
+              canEditAmplifierRepair,
               canEditCustomers,
               canEditJobs,
               canEditPhotos,

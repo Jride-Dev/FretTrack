@@ -62,6 +62,14 @@ BROWSERBASE_PROJECT_ID=
 
 GitHub-hosted Browserbase jobs must use separate Actions secrets with those exact names. Never prefix either value with `VITE_`, place it in frontend code, or print it in test output.
 
+Run the opt-in, read-only production smoke with:
+
+```powershell
+npm run test:browserbase:smoke
+```
+
+The runner opens only the approved FretTrack production hosts, verifies the public sign-in shell, records the session in Browserbase, and releases the session immediately. It does not sign in or mutate production data. Override the approved target with `BROWSERBASE_SMOKE_URL` only for `https://app.frettrack-app.com` or `https://frettrack-app.com`.
+
 ## Continuous integration
 
 The Quality Checks workflow runs local Supabase in its own job, applies repository migrations, runs pgTAP, creates isolated browser fixtures, installs Chromium, and runs Playwright. Playwright failure artifacts are retained for seven days. The existing regression-and-build job remains separate so a database/browser failure is clearly distinguishable from a source regression or production build failure.

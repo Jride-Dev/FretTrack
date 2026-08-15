@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(13);
+select plan(19);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -11,27 +11,31 @@ insert into auth.users (
 values
   ('31000000-0000-4000-a000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'amp-owner-a@frettrack.local', crypt('FretTrackTest123!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now()),
   ('31000000-0000-4000-a000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'amp-viewer-a@frettrack.local', crypt('FretTrackTest123!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now()),
-  ('32000000-0000-4000-a000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'amp-owner-b@frettrack.local', crypt('FretTrackTest123!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now());
+  ('32000000-0000-4000-a000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'amp-owner-b@frettrack.local', crypt('FretTrackTest123!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now()),
+  ('33000000-0000-4000-a000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'amp-shop-owner@frettrack.local', crypt('FretTrackTest123!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now());
 
 insert into public.shop_profiles (shop_id, shop_name, created_by, subscription_tier, subscription_status)
 values
   ('amp-pgtap-shop-a', 'Amplifier pgTAP Shop A', '31000000-0000-4000-a000-000000000001', 'pro', 'active'),
-  ('amp-pgtap-shop-b', 'Amplifier pgTAP Shop B', '32000000-0000-4000-a000-000000000001', 'pro', 'active');
+  ('amp-pgtap-shop-b', 'Amplifier pgTAP Shop B', '32000000-0000-4000-a000-000000000001', 'pro', 'active'),
+  ('amp-pgtap-shop-c', 'Amplifier pgTAP Shop C', '33000000-0000-4000-a000-000000000001', 'pro', 'active');
 
 update public.shop_subscriptions
 set plan_id = 'pro', status = 'active', trial_ends_at = null, grace_ends_at = null
-where shop_id in ('amp-pgtap-shop-a', 'amp-pgtap-shop-b');
+where shop_id in ('amp-pgtap-shop-a', 'amp-pgtap-shop-b', 'amp-pgtap-shop-c');
 
 insert into public.shop_members (shop_id, user_id, role, display_name)
 values
   ('amp-pgtap-shop-a', '31000000-0000-4000-a000-000000000001', 'owner', 'Amp Shop A Owner'),
   ('amp-pgtap-shop-a', '31000000-0000-4000-a000-000000000002', 'viewer', 'Amp Shop A Viewer'),
-  ('amp-pgtap-shop-b', '32000000-0000-4000-a000-000000000001', 'owner', 'Amp Shop B Owner');
+  ('amp-pgtap-shop-b', '32000000-0000-4000-a000-000000000001', 'owner', 'Amp Shop B Owner'),
+  ('amp-pgtap-shop-c', '33000000-0000-4000-a000-000000000001', 'owner', 'Amp Shop Owner');
 
 insert into public.jobs (id, shop_id, customer_name, guitar_brand, job_number, date_received, job_date, job_day_code, daily_sequence, tech_details)
 values
   ('a1000000-0000-4000-a000-000000000001', 'amp-pgtap-shop-a', 'Amp Customer A', 'Fender', 'AMP-A', current_date, current_date, 'AMP-A', 1, '{"instrumentType":"Amplifier"}'::jsonb),
-  ('b1000000-0000-4000-a000-000000000001', 'amp-pgtap-shop-b', 'Amp Customer B', 'Vox', 'AMP-B', current_date, current_date, 'AMP-B', 1, '{"instrumentType":"Amplifier"}'::jsonb);
+  ('b1000000-0000-4000-a000-000000000001', 'amp-pgtap-shop-b', 'Amp Customer B', 'Vox', 'AMP-B', current_date, current_date, 'AMP-B', 1, '{"instrumentType":"Amplifier"}'::jsonb),
+  ('c1000000-0000-4000-a000-000000000001', 'amp-pgtap-shop-c', 'Historical Amp Customer', 'Marshall', 'AMP-C', current_date, current_date, 'AMP-C', 1, '{"instrumentType":"Amplifier"}'::jsonb);
 
 insert into public.job_evidence (
   id, job_id, evidence_kind, test_type, storage_path, file_name, mime_type,
@@ -39,7 +43,16 @@ insert into public.job_evidence (
 )
 values
   ('a2000000-0000-4000-a000-000000000001', 'a1000000-0000-4000-a000-000000000001', 'audio', 'noise_floor_zero', 'a1000000-0000-4000-a000-000000000001/noise.webm', 'noise.webm', 'audio/webm', 1024, '31000000-0000-4000-a000-000000000001'),
-  ('b2000000-0000-4000-a000-000000000001', 'b1000000-0000-4000-a000-000000000001', 'spectrum', 'spectrum_analysis', 'b1000000-0000-4000-a000-000000000001/rta.png', 'rta.png', 'image/png', 2048, '32000000-0000-4000-a000-000000000001');
+  ('b2000000-0000-4000-a000-000000000001', 'b1000000-0000-4000-a000-000000000001', 'spectrum', 'spectrum_analysis', 'b1000000-0000-4000-a000-000000000001/rta.png', 'rta.png', 'image/png', 2048, '32000000-0000-4000-a000-000000000001'),
+  ('c2000000-0000-4000-a000-000000000001', 'c1000000-0000-4000-a000-000000000001', 'audio', 'noise_floor_zero', 'c1000000-0000-4000-a000-000000000001/history.webm', 'history.webm', 'audio/webm', 1024, '33000000-0000-4000-a000-000000000001');
+
+update public.shop_profiles
+set subscription_tier = 'shop'
+where shop_id = 'amp-pgtap-shop-c';
+
+update public.shop_subscriptions
+set plan_id = 'shop'
+where shop_id = 'amp-pgtap-shop-c';
 
 select ok(
   (select relrowsecurity from pg_class where oid = 'public.job_evidence'::regclass),
@@ -89,6 +102,15 @@ select isnt_empty(
   'an owner can add evidence to their own shop job'
 );
 
+select isnt_empty(
+  $$
+    insert into public.jobs (id, shop_id, customer_name, guitar_brand, job_number, date_received, job_date, job_day_code, daily_sequence, tech_details)
+    values ('a1000000-0000-4000-a000-000000000002', 'amp-pgtap-shop-a', 'Second Amp Customer', 'Ampeg', 'AMP-A2', current_date, current_date, 'AMP-A2', 2, '{"instrumentType":"Amplifier"}'::jsonb)
+    returning 1
+  $$,
+  'a Pro owner can create an amplifier work order'
+);
+
 select throws_like(
   $$
     insert into public.job_evidence (job_id, evidence_kind, test_type, storage_path, file_name, mime_type, file_size_bytes)
@@ -126,6 +148,46 @@ select throws_like(
 select is_empty(
   $$delete from public.job_evidence where job_id = 'a1000000-0000-4000-a000-000000000001' returning 1$$,
   'a viewer cannot delete diagnostic evidence'
+);
+
+reset role;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '33000000-0000-4000-a000-000000000001';
+set local "request.jwt.claim.role" = 'authenticated';
+
+select is((select count(*)::integer from public.job_evidence), 1, 'a Shop owner can still read historical amplifier evidence');
+
+select throws_like(
+  $$
+    insert into public.job_evidence (job_id, evidence_kind, test_type, storage_path, file_name, mime_type, file_size_bytes)
+    values ('c1000000-0000-4000-a000-000000000001', 'audio', 'other', 'c1000000-0000-4000-a000-000000000001/blocked.webm', 'blocked.webm', 'audio/webm', 1024)
+  $$,
+  '%row-level security policy%',
+  'a Shop owner cannot add evidence to a historical amplifier job'
+);
+
+select throws_like(
+  $$update public.jobs set reason_for_visit = 'Blocked edit' where id = 'c1000000-0000-4000-a000-000000000001'$$,
+  '%Amplifier Repair is available on Pro%',
+  'a Shop owner cannot edit a historical amplifier work order'
+);
+
+select throws_like(
+  $$
+    insert into public.jobs (id, shop_id, customer_name, guitar_brand, job_number, date_received, job_date, job_day_code, daily_sequence, tech_details)
+    values ('c1000000-0000-4000-a000-000000000002', 'amp-pgtap-shop-c', 'Blocked Amp Customer', 'Vox', 'AMP-C2', current_date, current_date, 'AMP-C2', 2, '{"instrumentType":"Amplifier"}'::jsonb)
+  $$,
+  '%Amplifier Repair is available on Pro%',
+  'a Shop owner cannot create a new amplifier work order'
+);
+
+select isnt_empty(
+  $$
+    insert into public.jobs (id, shop_id, customer_name, guitar_brand, job_number, date_received, job_date, job_day_code, daily_sequence, tech_details)
+    values ('c1000000-0000-4000-a000-000000000003', 'amp-pgtap-shop-c', 'Guitar Customer', 'Fender', 'GTR-C3', current_date, current_date, 'GTR-C3', 3, '{"instrumentType":"Electric"}'::jsonb)
+    returning 1
+  $$,
+  'a Shop owner can continue creating ordinary guitar jobs'
 );
 
 reset role;

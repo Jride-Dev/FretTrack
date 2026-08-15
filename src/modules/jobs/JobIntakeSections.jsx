@@ -2,6 +2,7 @@ import JobInfoSection from './JobInfoSection';
 
 export default function JobIntakeSections({
   canWrite,
+  amplifierRepairEnabled,
   draftJob,
   intakeTypes,
   normalizeInstrumentType,
@@ -14,6 +15,7 @@ export default function JobIntakeSections({
   return (
     <JobInfoSection
       canWrite={canWrite}
+      amplifierRepairEnabled={amplifierRepairEnabled}
       draftJob={draftJob}
       intakeTypes={intakeTypes}
       normalizeInstrumentType={normalizeInstrumentType}

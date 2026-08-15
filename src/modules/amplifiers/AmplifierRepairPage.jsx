@@ -32,6 +32,7 @@ export default function AmplifierRepairPage({
   jobs = [],
   customers = [],
   canWrite = true,
+  isEntitled = true,
   isOnline = true,
   dateOptions = {},
   onCreateJob,
@@ -108,13 +109,14 @@ export default function AmplifierRepairPage({
       </div>
 
       <div className="amplifier-module-grid">
-        <form className="panel amplifier-intake" onSubmit={submit}>
+        <form className="panel amplifier-intake" onSubmit={submit} aria-disabled={!isEntitled}>
           <h3>New Amplifier Work Order</h3>
-          {!canWrite && <p className="muted-text">Your shop role can view amplifier work orders but cannot create them.</p>}
+          {!isEntitled && <p className="feature-access-note">Amplifier Repair is available on Pro. Existing amplifier work orders remain available to view.</p>}
+          {isEntitled && !canWrite && <p className="muted-text">Your shop role can view amplifier work orders but cannot create them.</p>}
           <div className="form-grid">
             <label className="wide">
               Existing Customer
-              <select name="customerId" value={form.customerId} onChange={selectCustomer} disabled={!canWrite}>
+              <select name="customerId" value={form.customerId} onChange={selectCustomer} disabled={!canWrite || !isEntitled}>
                 <option value="">Enter a customer below</option>
                 {customers.map((customer) => (
                   <option key={customer.id} value={customer.id}>{customer.displayName || customer.customerName || 'Unnamed Customer'}</option>
@@ -123,64 +125,64 @@ export default function AmplifierRepairPage({
             </label>
             <label>
               Customer
-              <input name="customerName" value={form.customerName} onChange={updateField} disabled={!canWrite} required />
+              <input name="customerName" value={form.customerName} onChange={updateField} disabled={!canWrite || !isEntitled} required />
             </label>
             <label>
               Phone
-              <input name="phone" value={form.phone} onChange={updateField} disabled={!canWrite} />
+              <input name="phone" value={form.phone} onChange={updateField} disabled={!canWrite || !isEntitled} />
             </label>
             <label>
               Email
-              <input type="email" name="email" value={form.email} onChange={updateField} disabled={!canWrite} />
+              <input type="email" name="email" value={form.email} onChange={updateField} disabled={!canWrite || !isEntitled} />
             </label>
             <AmplifierMakeModelFields
               brand={form.guitarBrand}
               model={form.model}
-              disabled={!canWrite}
+              disabled={!canWrite || !isEntitled}
               requiredBrand
               listIdPrefix="amplifier-intake"
               onChange={updateField}
             />
             <label>
               Year
-              <input name="instrumentYear" value={form.instrumentYear} onChange={updateField} disabled={!canWrite} />
+              <input name="instrumentYear" value={form.instrumentYear} onChange={updateField} disabled={!canWrite || !isEntitled} />
             </label>
             <label>
               Serial Number
-              <input name="serial" value={form.serial} onChange={updateField} disabled={!canWrite} />
+              <input name="serial" value={form.serial} onChange={updateField} disabled={!canWrite || !isEntitled} />
             </label>
             <label>
               Amplifier Type
-              <select name="amplifierType" value={form.amplifierType} onChange={updateField} disabled={!canWrite}>
+              <select name="amplifierType" value={form.amplifierType} onChange={updateField} disabled={!canWrite || !isEntitled}>
                 {AMPLIFIER_TYPES.map((value) => <option key={value}>{value}</option>)}
               </select>
             </label>
             <label>
               Technology
-              <select name="technology" value={form.technology} onChange={updateField} disabled={!canWrite}>
+              <select name="technology" value={form.technology} onChange={updateField} disabled={!canWrite || !isEntitled}>
                 {AMPLIFIER_TECHNOLOGIES.map((value) => <option key={value}>{value}</option>)}
               </select>
             </label>
             <label>
               Date Received
-              <input type="date" name="dateReceived" value={form.dateReceived} onChange={updateField} disabled={!canWrite} />
+              <input type="date" name="dateReceived" value={form.dateReceived} onChange={updateField} disabled={!canWrite || !isEntitled} />
             </label>
             <label>
               Promise Date
-              <input type="date" name="promiseDate" value={form.promiseDate} onChange={updateField} disabled={!canWrite} />
+              <input type="date" name="promiseDate" value={form.promiseDate} onChange={updateField} disabled={!canWrite || !isEntitled} />
             </label>
             <label>
               Priority
-              <select name="priority" value={form.priority} onChange={updateField} disabled={!canWrite}>
+              <select name="priority" value={form.priority} onChange={updateField} disabled={!canWrite || !isEntitled}>
                 {JOB_PRIORITY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
             </label>
             <label className="wide">
               Reported Symptoms / Customer Request
-              <textarea name="reasonForVisit" value={form.reasonForVisit} onChange={updateField} rows="4" disabled={!canWrite} />
+              <textarea name="reasonForVisit" value={form.reasonForVisit} onChange={updateField} rows="4" disabled={!canWrite || !isEntitled} />
             </label>
           </div>
-          <button type="submit" disabled={!canWrite || !isOnline || isSaving}>{isSaving ? 'Creating…' : 'Create Amplifier Work Order'}</button>
+          <button type="submit" disabled={!isEntitled || !canWrite || !isOnline || isSaving}>{isSaving ? 'Creating…' : 'Create Amplifier Work Order'}</button>
         </form>
 
         <section className="panel amplifier-queue">

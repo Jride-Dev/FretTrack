@@ -12,6 +12,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:seed": "node scripts/seed-local-test-shops.mjs --reset --no-report",
+    "test:browserbase:smoke": "node scripts/smoke-browserbase.mjs",
     "test:db": "supabase test db --local",
     "test:amplifier-evidence:local": "node scripts/test-local-amplifier-evidence.mjs",
     "build": "vite build",

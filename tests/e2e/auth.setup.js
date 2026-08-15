@@ -7,6 +7,8 @@ const ownerPassword = process.env.PLAYWRIGHT_OWNER_PASSWORD || 'FretTrackTest123
 const ukOwnerStorageState = 'playwright/.auth/test2-owner.json';
 const ukOwnerEmail = process.env.PLAYWRIGHT_UK_OWNER_EMAIL || 'test2.owner@frettrack.local';
 const ukOwnerPassword = process.env.PLAYWRIGHT_UK_OWNER_PASSWORD || ownerPassword;
+const shopOwnerStorageState = 'playwright/.auth/test3-owner.json';
+const shopOwnerEmail = process.env.PLAYWRIGHT_SHOP_OWNER_EMAIL || 'test3.owner@frettrack.local';
 
 async function authenticateOwner(page, { email, password, shopName, storageState }) {
   await mkdir('playwright/.auth', { recursive: true });
@@ -35,5 +37,14 @@ setup('authenticate the local UK test-shop owner', async ({ page }) => {
     password: ukOwnerPassword,
     shopName: 'test2 shop',
     storageState: ukOwnerStorageState,
+  });
+});
+
+setup('authenticate the local Shop-plan owner', async ({ page }) => {
+  await authenticateOwner(page, {
+    email: shopOwnerEmail,
+    password: ownerPassword,
+    shopName: 'test3 shop',
+    storageState: shopOwnerStorageState,
   });
 });

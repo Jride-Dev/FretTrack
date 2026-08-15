@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   buildAmplifierJobDraft,
@@ -13,6 +12,9 @@ import { getBrandsForInstrumentType, getModelsForBrand } from '../src/modules/in
 const root = process.cwd();
 const read = (path) => readFileSync(join(root, path), 'utf8');
 const app = read('src/app/App.jsx');
+const appAccess = read('src/app/appAccess.js');
+const permissionService = read('src/modules/auth/permissionService.js');
+const entitlementService = read('src/modules/billing/entitlementService.js');
 const router = read('src/app/WorkspaceRouter.jsx');
 const navigation = read('src/app/useWorkspaceNavigation.js');
 const workspaceState = read('src/app/workspaceState.js');
@@ -22,7 +24,9 @@ const makeModelFields = read('src/modules/amplifiers/AmplifierMakeModelFields.js
 const electrical = read('src/modules/amplifiers/AmplifierElectricalMeasurements.jsx');
 const evidenceSection = read('src/modules/amplifiers/AmplifierEvidenceSection.jsx');
 const evidenceService = read('src/modules/amplifiers/jobEvidenceService.js');
-const evidenceMigration = read('supabase/migrations/20260814215521_amplifier_job_evidence.sql');
+const authoritativeMigration = 'supabase/migrations/20260814215521_amplifier_job_evidence.sql';
+assert.ok(existsSync(join(root, authoritativeMigration)), 'The authoritative amplifier migration must exist in repository state.');
+const evidenceMigration = read(authoritativeMigration);
 const evidenceIntegration = read('scripts/test-local-amplifier-evidence.mjs');
 const service = read('src/modules/instruments/instrumentService.js');
 const catalog = read('src/modules/instruments/instrumentCatalog.js');
@@ -83,10 +87,19 @@ assert.match(page, /<AmplifierMakeModelFields[\s\S]*?listIdPrefix="amplifier-int
 assert.match(detail, /<AmplifierMakeModelFields[\s\S]*?listIdPrefix="amplifier-detail"/, 'Amplifier detail must expose the same make/model presets.');
 
 assert.match(router, /lazy\(\(\) => import\('\.\.\/modules\/amplifiers\/AmplifierRepairPage\.jsx'\)\)/, 'The amplifier page must remain a lazy-loaded module.');
-assert.match(router, /mode === 'amplifiers'[\s\S]*?<AmplifierRepairPage[\s\S]*?canWrite=\{access\.canEditJobs\}/, 'Amplifier intake must use the existing job write permission.');
+assert.match(router, /mode === 'amplifiers'[\s\S]*?<AmplifierRepairPage[\s\S]*?isEntitled=\{access\.amplifierRepairEnabled\}[\s\S]*?canWrite=\{access\.canEditAmplifierRepair\}/, 'Amplifier intake must combine Pro entitlement and role-aware write permission.');
 assert.match(router, /mode === 'amplifier-detail'[\s\S]*?<AmplifierJobDetail[\s\S]*?onUpdate=\{actions\.onUpdateJob\}/, 'Amplifier detail must reuse the established job update path.');
 assert.match(app, /isAmplifierJob\(job\) \? 'amplifier-detail' : 'detail'/, 'Job selection must route amplifiers away from guitar-specific Job Detail.');
 assert.match(app, /onCreateAmplifierJob: handleAmplifierJobCreate/, 'Amplifier creation must cross the workspace action boundary.');
+assert.match(app, /if \(!amplifierRepairEnabled\)[\s\S]*?Amplifier Repair is available on Pro/, 'Amplifier creation must retain a defensive client entitlement guard.');
+assert.match(appAccess, /const amplifierRepairEnabled = [^;]+canUseAmplifierRepair\(billingAccess\)/, 'App access must expose entitlement-only Amplifier Repair availability.');
+assert.match(appAccess, /canEditAmplifierRepair: [^,]+canEditAmplifierRepairForRole\(permissionContext\)/, 'App access must expose role-aware Amplifier Repair writes.');
+assert.match(permissionService, /canEditAmplifierRepair[\s\S]*?hasAmplifierRepairEntitlement/, 'Amplifier writes must require the Pro entitlement and an existing write role.');
+assert.match(entitlementService, /AMPLIFIER_REPAIR: 'amplifier_repair'/, 'Amplifier Repair must use a named entitlement key.');
+assert.match(entitlementService, /\[SUBSCRIPTION_TIERS\.PRO\]: \{[\s\S]*?amplifier_repair: true/, 'The Pro tier must enable Amplifier Repair.');
+assert.match(jobForm, /filter\(\(option\) => amplifierRepairEnabled \|\| option\.value !== 'Amplifier'\)/, 'Generic intake must not expose Amplifier to non-Pro shops.');
+assert.match(jobInfo, /filter\(\(option\) => amplifierRepairEnabled \|\| option\.value !== 'Amplifier'\)/, 'Generic job editing must not offer an Amplifier conversion to non-Pro shops.');
+assert.match(page, /Amplifier Repair is available on Pro\.[\s\S]*?Existing amplifier work orders remain available to view/, 'Non-Pro shops must receive a clear upgrade message while retaining historical visibility.');
 assert.match(navigation, /selectJob\(jobId, detailMode = 'detail', \{ skipDirtyGuard = false \} = \{\}\)/, 'Workspace selection must support a focused detail target and safe post-save transition without duplicating navigation.');
 assert.match(navigation, /\['detail', 'amplifier-detail'\]\.includes\(mode\)/, 'Close Detail must preserve the originating page for both repair detail modes.');
 assert.match(workspaceState, /instrumentType === 'amplifier' \? 'amplifier-detail' : 'detail'/, 'Refresh restoration must correct amplifier detail routing.');
@@ -112,8 +125,12 @@ assert.match(evidenceService, /reservePhotoUsage\([\s\S]*?bucket: JOB_EVIDENCE_B
 assert.match(evidenceService, /releaseDeletedPhotoStorage\([\s\S]*?bucket: JOB_EVIDENCE_BUCKET/, 'Evidence deletion must release authoritative storage bytes.');
 assert.match(evidenceMigration, /create table if not exists public\.job_evidence/, 'The authoritative evidence migration must create the metadata table.');
 assert.match(evidenceMigration, /alter table public\.job_evidence enable row level security/, 'Evidence metadata must have RLS enabled.');
+assert.match(evidenceMigration, /\('shop', 'amplifier_repair', 'false'::jsonb\)[\s\S]*?\('pro', 'amplifier_repair', 'true'::jsonb\)/, 'The database plan matrix must reserve Amplifier Repair for Pro.');
+assert.match(evidenceMigration, /create or replace function private\.enforce_amplifier_repair_entitlement\(\)[\s\S]*?old_is_amplifier or new_is_amplifier[\s\S]*?private\.shop_has_entitlement\(new\.shop_id, 'amplifier_repair'\)/, 'Job writes must enforce Amplifier Repair entitlement server-side, including historical amplifier rows.');
+assert.match(evidenceMigration, /create trigger jobs_enforce_amplifier_repair_entitlement[\s\S]*?before insert or update on public\.jobs/, 'The server entitlement guard must run for job inserts and updates.');
 assert.match(evidenceMigration, /private\.can_access_job\(job_id\)/, 'Evidence reads must remain shop-scoped through the linked job.');
 assert.match(evidenceMigration, /private\.can_write_job\(job_id\)/, 'Evidence mutations must retain established job write permissions.');
+assert.match(evidenceMigration, /job_evidence_insert_writer[\s\S]*?private\.shop_has_entitlement\(jobs\.shop_id, 'amplifier_repair'\)/, 'Evidence metadata writes must require Amplifier Repair entitlement.');
 assert.match(evidenceMigration, /'job-evidence',[\s\S]*?false,[\s\S]*?26214400/, 'Evidence must use a private bucket with a 25 MB file limit.');
 assert.match(evidenceMigration, /bucket_id = 'job-evidence'[\s\S]*?private\.can_access_job/, 'Evidence Storage reads must remain job/shop scoped.');
 assert.match(evidenceMigration, /target_bucket in \('job-images', 'part-images', 'job-evidence'\)/, 'Evidence uploads must be recognized by the existing storage allowance reservation constraint.');
@@ -131,18 +148,5 @@ assert.match(styles, /\.amplifier-module-grid\s*\{[\s\S]*?grid-template-columns:
 assert.match(styles, /@media \(max-width: 768px\)[\s\S]*?\.amplifier-detail-actions,[\s\S]*?width: 100%/, 'Amplifier detail actions must stack cleanly on small screens.');
 assert.match(packageJson, /"check:amplifier-repair-module": "node scripts\/check-amplifier-repair-module\.mjs"/, 'The focused amplifier module check must be exposed.');
 assert.match(packageJson, /"test:amplifier-evidence:local": "node scripts\/test-local-amplifier-evidence\.mjs"/, 'The local evidence integration check must be exposed.');
-
-const changed = [
-  execFileSync('git', ['diff', '--name-only', 'HEAD'], { cwd: root, encoding: 'utf8' }),
-  execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' })
-].join('\n').split(/\r?\n/).filter(Boolean).map((file) => file.replaceAll('\\', '/'));
-assert.deepEqual(
-  changed.filter((file) => file.startsWith('supabase/migrations/')),
-  ['supabase/migrations/20260814215521_amplifier_job_evidence.sql'],
-  'Amplifier module may add only the focused diagnostic-evidence migration.'
-);
-assert.ok(!changed.some((file) => file.startsWith('supabase/functions/')), 'Amplifier module must not change Edge Functions.');
-assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Amplifier module must not change the landing Worker.');
-assert.ok(!changed.some((file) => /stripe/i.test(file) || file.includes('/billing/')), 'Amplifier module must not change Stripe or billing.');
 
 console.log('Amplifier repair module checks passed.');

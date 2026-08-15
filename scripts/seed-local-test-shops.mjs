@@ -17,7 +17,8 @@ const shops = Array.from({ length: 5 }, (_, index) => ({
   index: index + 1,
   id: `test${index + 1}-shop`,
   name: `test${index + 1} shop`,
-  ownerEmail: `test${index + 1}.owner@frettrack.local`
+  ownerEmail: `test${index + 1}.owner@frettrack.local`,
+  planId: index === 2 ? 'shop' : 'pro'
 }));
 
 const brands = ['Fender', 'Gibson', 'Martin', 'Taylor', 'Ibanez', 'Yamaha', 'PRS', 'Gretsch', 'Squier', 'Epiphone'];
@@ -325,7 +326,9 @@ function buildCustomer(shop, customerNumber) {
 }
 
 function buildJobPayload(shop, customer, customerNumber) {
-  const instrument = pickInstrument(customerNumber);
+  const instrument = customerNumber === 20 && shop.planId === 'pro'
+    ? { type: 'Amplifier', brand: 'Fender', model: 'Deluxe Reverb' }
+    : pickInstrument(customerNumber);
   const jobDate = offsetDate(customerNumber + shop.index);
   const measurements = buildMeasurements(customerNumber, instrument.type);
   const damageMap = buildDamageMap(customerNumber, instrument.type);
@@ -357,6 +360,16 @@ function buildJobPayload(shop, customer, customerNumber) {
       damageMap,
       measurements,
       neckInspection: buildNeckInspection(shop, customerNumber),
+      ...(instrument.type === 'Amplifier' ? {
+        amplifier: {
+          amplifierType: 'Combo',
+          technology: 'Tube',
+          diagnosis: 'Seeded amplifier diagnosis for persistence testing.',
+          repairPerformed: '',
+          finalTestStatus: 'Not tested',
+          electricalMeasurements: { baseline: {}, final: {} }
+        }
+      } : {}),
       authorizationNotes: 'Fictitious local seed authorization only.',
       discountType: customerNumber % 5 === 0 ? 'percent' : 'none',
       discountValue: customerNumber % 5 === 0 ? '10' : ''
@@ -461,7 +474,7 @@ async function ensureShopProfile(ownerId, shop) {
       ${localization.lengthUnit},
       now(),
       ${ownerId}::uuid,
-      'pro',
+      ${shop.planId},
       'active',
       now(),
       now()
@@ -482,7 +495,7 @@ async function ensureShopProfile(ownerId, shop) {
         length_unit = excluded.length_unit,
         onboarded_at = excluded.onboarded_at,
         created_by = excluded.created_by,
-        subscription_tier = 'pro',
+        subscription_tier = excluded.subscription_tier,
         subscription_status = 'active',
         trial_ends_at = null,
         updated_at = now()
@@ -497,9 +510,9 @@ async function ensureShopProfile(ownerId, shop) {
       created_at,
       updated_at
     )
-    values (${shop.id}, 'pro', 'active', ${shop.ownerEmail}, now(), now())
+    values (${shop.id}, ${shop.planId}, 'active', ${shop.ownerEmail}, now(), now())
     on conflict (shop_id) do update
-    set plan_id = 'pro',
+    set plan_id = excluded.plan_id,
         status = 'active',
         trial_ends_at = null,
         grace_ends_at = null,
@@ -583,13 +596,14 @@ function buildWorkLogs(shop, job, customerNumber) {
 }
 
 function buildImageMetadata(shop, job, customerNumber) {
+  const imageUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360"%3E%3Crect width="640" height="360" fill="%23212a36"/%3E%3Ctext x="320" y="180" fill="%23ffffff" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="28"%3ELocal test image%3C/text%3E%3C/svg%3E';
   return [
     {
       id: deterministicUuid(`${shop.id}-${job.id}-image-front`),
       job_id: job.id,
-      url: `local-test://${shop.id}/${job.id}/front-${customerNumber}.jpg`,
-      public_url: `local-test://${shop.id}/${job.id}/front-${customerNumber}.jpg`,
-      storage_path: `${job.id}/front-${customerNumber}.jpg`,
+      url: imageUrl,
+      public_url: imageUrl,
+      storage_path: '',
       file_name: `front-${customerNumber}.jpg`,
       original_filename: `front-${customerNumber}.jpg`,
       uploaded_at: new Date().toISOString(),

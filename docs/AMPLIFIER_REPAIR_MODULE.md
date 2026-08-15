@@ -2,6 +2,8 @@
 
 FretTrack's first Amplifier Repair slice is a separate workspace page rather than another guitar Job Detail tab. It reuses the established customer, job-number, status, priority, permission, audit, and job-persistence paths while keeping amplifier bench records isolated from guitar neck, string, and damage-map controls.
 
+Amplifier Repair is a Pro feature. Shop-plan users see the upgrade surface but cannot create amplifier jobs or convert guitar jobs into amplifier jobs. If a shop downgrades after using the module, its existing amplifier records and evidence remain readable while all amplifier/evidence writes are blocked. Both the application and PostgreSQL enforce this boundary.
+
 ## Included workflow
 
 - Create an amplifier work order for an existing or newly entered customer.
@@ -24,7 +26,7 @@ An amplifier remains a normal shop-scoped job with `instrumentType: "Amplifier"`
 
 The make/model presets live in the shared instrument catalog used by both generic Job intake and the dedicated Amplifier Repair screens. Selecting or typing a recognized make narrows the model suggestions to that manufacturer. Both controls remain editable, so the catalog never prevents an unlisted or custom value from being saved.
 
-Migration `20260814215521_amplifier_job_evidence.sql` adds only the persistent evidence boundary required for media: a private `job-evidence` Storage bucket and a `job_evidence` metadata table. Table and object policies reuse `private.can_access_job` and `private.can_write_job`, so evidence inherits the linked job's shop isolation and role permissions. Evidence files are restricted to approved audio/image formats and 25 MB per file. The bucket is separate from repair-photo rendering, while uploads reuse the existing atomic reservation and storage-byte ledger so diagnostic media cannot bypass the shop's configured upload/storage allowance.
+Migration `20260814215521_amplifier_job_evidence.sql` adds the Pro entitlement and persistent evidence boundary required for media: a private `job-evidence` Storage bucket and a `job_evidence` metadata table. A job trigger protects amplifier inserts and updates, while table and object policies combine `private.can_access_job`, `private.can_write_job`, and `private.shop_has_entitlement`. Evidence therefore inherits shop isolation and role permissions without losing historical read access after a downgrade. Evidence files are restricted to approved audio/image formats and 25 MB per file. The bucket is separate from repair-photo rendering, while uploads reuse the existing atomic reservation and storage-byte ledger so diagnostic media cannot bypass the shop's configured upload/storage allowance.
 
 Tube-amplifier voltages can be lethal. FretTrack only records technician-entered values and displays a qualified-technician warning; it does not provide measurement procedures.
 

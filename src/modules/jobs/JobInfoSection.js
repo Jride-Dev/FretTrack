@@ -15,6 +15,7 @@ import { toLocalDateTimeInputValue } from '../../shared/utils/dateFormat';
 
 export default function JobInfoSection({
   canWrite = true,
+  amplifierRepairEnabled = true,
   draftJob,
   intakeTypes,
   normalizeInstrumentType,
@@ -130,7 +131,7 @@ export default function JobInfoSection({
         <div className="instrument-selector" role="group" aria-label="Instrument Type">
           <span>Instrument Type</span>
           <div className="segmented-control instrument-type-control">
-            {getInstrumentTypeOptions().map((option) => (
+            {getInstrumentTypeOptions().filter((option) => amplifierRepairEnabled || option.value !== 'Amplifier').map((option) => (
               <button
                 type="button"
                 key={option.value}

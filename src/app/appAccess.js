@@ -1,6 +1,7 @@
 import {
   canDeletePhotos as canDeletePhotosForRole,
   canEditCustomers as canEditCustomersForRole,
+  canEditAmplifierRepair as canEditAmplifierRepairForRole,
   canEditJobs as canEditJobsForRole,
   canEditPhotos as canEditPhotosForRole,
   canEditScheduling as canEditSchedulingForRole,
@@ -15,6 +16,7 @@ import {
   getShopWriteAccess
 } from '../modules/auth/permissionService.js';
 import {
+  canUseAmplifierRepair,
   canUseTeamAssignment,
   getEffectiveStatus,
   isReadOnlyStatus
@@ -36,10 +38,13 @@ export function getAppAccess({
     ? getShopWriteAccess({ ...permissionContext, hasSupabaseConfig })
     : canEditJobs;
   const canManageShop = !hasSupabaseConfig || canManageShopSettings({ role: membership?.role });
+  const amplifierRepairEnabled = !hasSupabaseConfig || canUseAmplifierRepair(billingAccess);
 
   return {
     permissionContext,
     canEditJobs,
+    amplifierRepairEnabled,
+    canEditAmplifierRepair: !hasSupabaseConfig || canEditAmplifierRepairForRole(permissionContext),
     canWrite,
     canManageShop,
     canEditShopSettings: canManageShop && canWrite,

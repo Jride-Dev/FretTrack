@@ -1,3 +1,47 @@
+insert into public.plan_entitlements (plan_id, key, value)
+values
+  ('free', 'amplifier_repair', 'false'::jsonb),
+  ('solo', 'amplifier_repair', 'false'::jsonb),
+  ('shop', 'amplifier_repair', 'false'::jsonb),
+  ('pro', 'amplifier_repair', 'true'::jsonb),
+  ('enterprise', 'amplifier_repair', 'true'::jsonb),
+  ('trial', 'amplifier_repair', 'false'::jsonb)
+on conflict (plan_id, key) do update
+set value = excluded.value,
+    updated_at = now();
+
+create or replace function private.enforce_amplifier_repair_entitlement()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  old_is_amplifier boolean := false;
+  new_is_amplifier boolean := lower(coalesce(new.tech_details ->> 'instrumentType', '')) = 'amplifier';
+begin
+  if tg_op = 'UPDATE' then
+    old_is_amplifier := lower(coalesce(old.tech_details ->> 'instrumentType', '')) = 'amplifier';
+  end if;
+
+  if (old_is_amplifier or new_is_amplifier)
+    and not private.shop_has_entitlement(new.shop_id, 'amplifier_repair') then
+    raise exception 'Amplifier Repair is available on Pro.'
+      using errcode = '42501';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function private.enforce_amplifier_repair_entitlement() from public, anon, authenticated, service_role;
+
+drop trigger if exists jobs_enforce_amplifier_repair_entitlement on public.jobs;
+create trigger jobs_enforce_amplifier_repair_entitlement
+  before insert or update on public.jobs
+  for each row
+  execute function private.enforce_amplifier_repair_entitlement();
+
 create table if not exists public.job_evidence (
   id uuid primary key default gen_random_uuid(),
   job_id uuid not null references public.jobs(id) on delete cascade,
@@ -33,6 +77,12 @@ create policy "job_evidence_insert_writer"
   to authenticated
   with check (
     private.can_write_job(job_id)
+    and exists (
+      select 1
+      from public.jobs
+      where jobs.id = job_evidence.job_id
+        and private.shop_has_entitlement(jobs.shop_id, 'amplifier_repair')
+    )
     and created_by = (select auth.uid())
   );
 
@@ -41,9 +91,23 @@ create policy "job_evidence_update_writer"
   on public.job_evidence
   for update
   to authenticated
-  using (private.can_write_job(job_id))
+  using (
+    private.can_write_job(job_id)
+    and exists (
+      select 1
+      from public.jobs
+      where jobs.id = job_evidence.job_id
+        and private.shop_has_entitlement(jobs.shop_id, 'amplifier_repair')
+    )
+  )
   with check (
     private.can_write_job(job_id)
+    and exists (
+      select 1
+      from public.jobs
+      where jobs.id = job_evidence.job_id
+        and private.shop_has_entitlement(jobs.shop_id, 'amplifier_repair')
+    )
     and created_by = (select auth.uid())
   );
 
@@ -52,7 +116,15 @@ create policy "job_evidence_delete_writer"
   on public.job_evidence
   for delete
   to authenticated
-  using (private.can_write_job(job_id));
+  using (
+    private.can_write_job(job_id)
+    and exists (
+      select 1
+      from public.jobs
+      where jobs.id = job_evidence.job_id
+        and private.shop_has_entitlement(jobs.shop_id, 'amplifier_repair')
+    )
+  );
 
 revoke all on public.job_evidence from anon;
 grant select, insert, update, delete on public.job_evidence to authenticated;
@@ -132,6 +204,12 @@ create policy "job_evidence_storage_insert_writer"
   with check (
     bucket_id = 'job-evidence'
     and private.can_write_job(((storage.foldername(name))[1])::uuid)
+    and exists (
+      select 1
+      from public.jobs
+      where jobs.id = ((storage.foldername(name))[1])::uuid
+        and private.shop_has_entitlement(jobs.shop_id, 'amplifier_repair')
+    )
     and private.has_active_photo_usage_reservation(
       (select jobs.shop_id from public.jobs where jobs.id = ((storage.foldername(name))[1])::uuid),
       bucket_id,
@@ -147,10 +225,22 @@ create policy "job_evidence_storage_update_writer"
   using (
     bucket_id = 'job-evidence'
     and private.can_write_job(((storage.foldername(name))[1])::uuid)
+    and exists (
+      select 1
+      from public.jobs
+      where jobs.id = ((storage.foldername(name))[1])::uuid
+        and private.shop_has_entitlement(jobs.shop_id, 'amplifier_repair')
+    )
   )
   with check (
     bucket_id = 'job-evidence'
     and private.can_write_job(((storage.foldername(name))[1])::uuid)
+    and exists (
+      select 1
+      from public.jobs
+      where jobs.id = ((storage.foldername(name))[1])::uuid
+        and private.shop_has_entitlement(jobs.shop_id, 'amplifier_repair')
+    )
     and private.has_active_photo_usage_reservation(
       (select jobs.shop_id from public.jobs where jobs.id = ((storage.foldername(name))[1])::uuid),
       bucket_id,
@@ -166,4 +256,10 @@ create policy "job_evidence_storage_delete_writer"
   using (
     bucket_id = 'job-evidence'
     and private.can_write_job(((storage.foldername(name))[1])::uuid)
+    and exists (
+      select 1
+      from public.jobs
+      where jobs.id = ((storage.foldername(name))[1])::uuid
+        and private.shop_has_entitlement(jobs.shop_id, 'amplifier_repair')
+    )
   );

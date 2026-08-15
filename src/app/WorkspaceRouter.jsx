@@ -79,7 +79,8 @@ function WorkspacePage({
       <AmplifierRepairPage
         jobs={jobs}
         customers={customers}
-        canWrite={access.canEditJobs}
+        isEntitled={access.amplifierRepairEnabled}
+        canWrite={access.canEditAmplifierRepair}
         isOnline={isOnline}
         dateOptions={dateOptions}
         onCreateJob={actions.onCreateAmplifierJob}
@@ -234,6 +235,7 @@ function WorkspacePage({
           onClose={actions.onCloseJobDetail}
           onNotice={actions.onNotice}
           canWrite={access.canEditJobs}
+          amplifierRepairEnabled={access.amplifierRepairEnabled}
           canUploadPhotos={access.canUploadPhotos}
           canEditPhotos={access.canEditPhotos}
           canOverwritePhotos={access.canOverwritePhotos}
@@ -260,7 +262,7 @@ function WorkspacePage({
       ? (
         <AmplifierJobDetail
           job={selectedJob}
-          canWrite={access.canEditJobs}
+          canWrite={access.canEditAmplifierRepair}
           dateOptions={dateOptions}
           onUpdate={actions.onUpdateJob}
           onClose={actions.onCloseJobDetail}
