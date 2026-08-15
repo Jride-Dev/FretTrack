@@ -267,15 +267,29 @@ async function seedShopAsOwner(ownerId, shop) {
 }
 
 async function ensureSeedJob(tx, jobPayload) {
-  const [existingJob] = await tx`
-    select *
-    from jobs
-    where id = ${jobPayload.id}::uuid
-      and shop_id = ${jobPayload.shop_id}
-    limit 1
-  `;
+  // The owner session cannot see a same-ID row owned by another shop through
+  // RLS. Temporarily use the seeder's local postgres connection to detect a
+  // global primary-key collision, then restore the owner role before writes.
+  await tx`reset role`;
+  const [existingJob] = await tx`select * from jobs where id = ${jobPayload.id}::uuid limit 1`;
+  await tx`set local role authenticated`;
 
   if (existingJob) {
+    if (String(existingJob.shop_id) !== String(jobPayload.shop_id)) {
+      await tx`reset role`;
+      const collisionRecoveryId = deterministicUuid(`${jobPayload.shop_id}-${jobPayload.id}-collision-recovery`);
+      const [recoveredJob] = await tx`select * from jobs where id = ${collisionRecoveryId}::uuid limit 1`;
+      await tx`set local role authenticated`;
+      if (recoveredJob) {
+        assertSeedJobOwnership(recoveredJob, jobPayload, collisionRecoveryId);
+        return recoveredJob;
+      }
+      const [createdRecoveryJob] = await tx`select * from create_job_with_number(${tx.json({
+        ...jobPayload,
+        id: collisionRecoveryId
+      })}::jsonb)`;
+      return createdRecoveryJob;
+    }
     if (String(existingJob.customer_id) !== String(jobPayload.customer_id)) {
       throw new Error(`Existing local seed job ${jobPayload.id} belongs to an unexpected customer.`);
     }
@@ -284,6 +298,15 @@ async function ensureSeedJob(tx, jobPayload) {
 
   const [createdJob] = await tx`select * from create_job_with_number(${tx.json(jobPayload)}::jsonb)`;
   return createdJob;
+}
+
+function assertSeedJobOwnership(job, expectedPayload, jobId) {
+  if (
+    String(job.shop_id) !== String(expectedPayload.shop_id)
+    || String(job.customer_id) !== String(expectedPayload.customer_id)
+  ) {
+    throw new Error(`Existing local seed recovery job ${jobId} belongs to an unexpected shop or customer.`);
+  }
 }
 
 async function setOwnerSession(tx, ownerId) {
@@ -373,11 +396,42 @@ async function seedJobChildren(tx, shop, job, customerNumber) {
   const imageRows = buildImageMetadata(shop, job, customerNumber);
   const eventRows = buildEvents(shop, job, customerNumber);
 
-  await tx`insert into job_parts ${tx(partRows, 'id', 'shop_id', 'job_id', 'sku', 'name', 'quantity', 'cost', 'retail', 'unit_cost', 'retail_price', 'created_at')} on conflict (id) do nothing`;
-  await tx`insert into job_services ${tx(serviceRows, 'id', 'job_id', 'description', 'quantity', 'cost', 'retail', 'created_at')} on conflict (id) do nothing`;
-  await tx`insert into work_logs ${tx(workLogRows, 'id', 'job_id', 'entry', 'text', 'created_at')} on conflict (id) do nothing`;
-  await tx`insert into job_images ${tx(imageRows, 'id', 'job_id', 'url', 'public_url', 'storage_path', 'file_name', 'original_filename', 'uploaded_at', 'category', 'created_at')} on conflict (id) do nothing`;
-  await tx`insert into job_events ${tx(eventRows, 'id', 'shop_id', 'job_id', 'event_type', 'event_label', 'event_note', 'event_data', 'created_at', 'created_by')} on conflict (id) do nothing`;
+  await tx`insert into job_parts ${tx(partRows, 'id', 'shop_id', 'job_id', 'sku', 'name', 'quantity', 'cost', 'retail', 'unit_cost', 'retail_price', 'created_at')}
+    on conflict (id) do update set
+      shop_id = excluded.shop_id,
+      job_id = excluded.job_id,
+      sku = excluded.sku,
+      name = excluded.name,
+      quantity = excluded.quantity,
+      cost = excluded.cost,
+      retail = excluded.retail,
+      unit_cost = excluded.unit_cost,
+      retail_price = excluded.retail_price`;
+  await tx`insert into job_services ${tx(serviceRows, 'id', 'job_id', 'description', 'quantity', 'cost', 'retail', 'created_at')}
+    on conflict (id) do update set
+      job_id = excluded.job_id,
+      description = excluded.description,
+      quantity = excluded.quantity,
+      cost = excluded.cost,
+      retail = excluded.retail`;
+  await tx`insert into work_logs ${tx(workLogRows, 'id', 'job_id', 'entry', 'text', 'created_at')}
+    on conflict (id) do update set
+      job_id = excluded.job_id,
+      entry = excluded.entry,
+      text = excluded.text`;
+  await tx`insert into job_images ${tx(imageRows, 'id', 'job_id', 'url', 'public_url', 'storage_path', 'file_name', 'original_filename', 'uploaded_at', 'category', 'created_at')}
+    on conflict (id) do update set
+      job_id = excluded.job_id,
+      url = excluded.url,
+      public_url = excluded.public_url,
+      storage_path = excluded.storage_path,
+      file_name = excluded.file_name,
+      original_filename = excluded.original_filename,
+      uploaded_at = excluded.uploaded_at,
+      category = excluded.category`;
+  await tx`insert into job_events ${tx(eventRows, 'id', 'shop_id', 'job_id', 'event_type', 'event_label', 'event_note', 'event_data', 'created_at', 'created_by')}
+    on conflict (id) do nothing`;
+  await repairSeedEventOwnership(tx, eventRows);
 
   return {
     parts: partRows.length,
@@ -386,6 +440,20 @@ async function seedJobChildren(tx, shop, job, customerNumber) {
     images: imageRows.length,
     events: eventRows.length
   };
+}
+
+async function repairSeedEventOwnership(tx, eventRows) {
+  // Production audit events intentionally have no authenticated UPDATE policy.
+  // The local seeder connects as postgres, so use that authority only to repair
+  // deterministic fixture rows whose ownership was corrupted between seed runs.
+  await tx`reset role`;
+  await tx`insert into job_events ${tx(eventRows, 'id', 'shop_id', 'job_id', 'event_type', 'event_label', 'event_note', 'event_data', 'created_at', 'created_by')}
+    on conflict (id) do update set
+      shop_id = excluded.shop_id,
+      job_id = excluded.job_id
+    where job_events.shop_id is distinct from excluded.shop_id
+       or job_events.job_id is distinct from excluded.job_id`;
+  await tx`set local role authenticated`;
 }
 
 function buildParts(shop, job, customerNumber) {

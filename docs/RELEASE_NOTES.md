@@ -1,5 +1,7 @@
 # Release Notes
 
+Post-merge adversarial validation now covers three reliability edges. A failed Work Note save reuses its original row identity—including after the user edits the pending text—so retry cannot append a duplicate. Local test seeding detects globally colliding deterministic job IDs, uses a stable shop-owned recovery ID, repairs mismatched mutable fixture children, and preserves production audit-event immutability. Stripe synchronization rejects older event timestamps before advancing the shop generation, and webhook item access safely handles missing or empty subscription items.
+
 Stripe subscription synchronization now snapshots current period start/end from Stripe's current subscription-item fields, with a legacy top-level fallback. This restores renewal dates in Billing without changing subscription access behavior or requiring a migration.
 
 Local test-shop fixture setup can now be retried after a partial shop failure without colliding with jobs already committed for earlier shops. CI seeds the same fixtures a second time without resetting them so this recovery path remains executable.
