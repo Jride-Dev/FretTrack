@@ -2,6 +2,7 @@
 
 - Added a Pro-gated Amplifier Repair workspace with make/model presets, amplifier intake, an amplifier-only work queue, a dedicated bench worksheet, before/after electrical and digital diagnostics, private audio/waveform/spectrum evidence, role-aware permissions, server-authoritative entitlement enforcement, historical read access after downgrade, and refresh-safe detail routing.
 - Expanded browser validation with Pro/Shop amplifier entitlement and persistence coverage, quieter self-contained image fixtures, and an opt-in read-only Browserbase smoke runner for the production sign-in shell.
+- Hardened the merged Work Note, local test-seed, and Stripe lifecycle fixes after adversarial review: failed Work Note retries keep one row identity, deterministic seed collisions recover without crossing shops or rewriting audit history, older Stripe events cannot advance synchronization state, and itemless Stripe payloads are handled safely.
 - Preserved Stripe subscription renewal dates with the current item-level period fields while retaining legacy top-level webhook compatibility.
 - Recorded the completed Stripe concurrency migration/webhook rollout and fresh pre-migration backup evidence while keeping real Stripe lifecycle smoke tests as a paid-launch gate.
 - Made local Playwright shop seeding safely retryable by reusing deterministic jobs before requesting a new job number, with a second no-reset CI seed pass.

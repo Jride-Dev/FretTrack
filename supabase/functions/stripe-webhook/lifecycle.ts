@@ -20,6 +20,23 @@ type SubscriptionPeriodShape = {
   };
 };
 
+type SubscriptionItemShape = {
+  price?: {
+    id?: string | null;
+    recurring?: {
+      interval?: string | null;
+    } | null;
+  } | null;
+  current_period_start?: number | null;
+  current_period_end?: number | null;
+};
+
+type SubscriptionItemsShape = {
+  items?: {
+    data?: SubscriptionItemShape[] | null;
+  } | null;
+};
+
 export function getInvoiceSubscriptionId(invoice: unknown) {
   const value = (invoice || {}) as InvoiceSubscriptionShape;
   return getStripeId(value.parent?.subscription_details?.subscription) ||
@@ -33,6 +50,11 @@ export function getSubscriptionPeriod(subscription: unknown) {
     currentPeriodStart: item?.current_period_start ?? value.current_period_start ?? null,
     currentPeriodEnd: item?.current_period_end ?? value.current_period_end ?? null,
   };
+}
+
+export function getFirstSubscriptionItem(subscription: unknown) {
+  const value = (subscription || {}) as SubscriptionItemsShape;
+  return value.items?.data?.[0] || null;
 }
 
 export function normalizeStripeStatus(status: string) {

@@ -9,7 +9,7 @@ const detail = read('src/modules/jobs/JobDetail.jsx');
 const workLogSection = read('src/modules/jobs/WorkLogSection.js');
 const packageJson = JSON.parse(read('package.json'));
 const draftHelperPath = join(root, 'src/modules/jobs/workLogDraft.js');
-const { appendWorkLogDraft, getPendingWorkLogText, hasPendingWorkLogDraft } = await import(pathToFileURL(draftHelperPath));
+const { appendWorkLogDraft, getPendingWorkLogText, getWorkLogSubmission, hasPendingWorkLogDraft } = await import(pathToFileURL(draftHelperPath));
 
 assert.equal(getPendingWorkLogText('  setup completed  '), 'setup completed');
 assert.equal(hasPendingWorkLogDraft('   '), false);
@@ -34,6 +34,36 @@ assert.deepEqual(appendedJob.workLog[1], {
   timestamp: '2026-08-03T12:00:00.000Z'
 });
 
+const failedSubmission = getWorkLogSubmission(null, {
+  jobId: 'job-1',
+  text: '  Retry this note  ',
+  id: 'retry-entry',
+  timestamp: '2026-08-14T12:00:00.000Z'
+});
+const retriedSubmission = getWorkLogSubmission(failedSubmission, {
+  jobId: 'job-1',
+  text: 'Retry this note',
+  id: 'replacement-entry',
+  timestamp: '2026-08-14T12:01:00.000Z'
+});
+assert.strictEqual(retriedSubmission, failedSubmission, 'A failed Work Note retry must reuse the same row identity.');
+assert.equal(retriedSubmission.id, 'retry-entry', 'Retrying must not generate a second Work Note UUID.');
+const failedAttemptJob = appendWorkLogDraft(originalJob, failedSubmission.text, failedSubmission);
+const retriedJob = appendWorkLogDraft(failedAttemptJob, retriedSubmission.text, retriedSubmission);
+assert.equal(retriedJob.workLog.length, 2, 'Retrying an optimistically retained Work Note must not append its row a second time.');
+assert.equal(retriedJob.workLog.filter((entry) => entry.id === failedSubmission.id).length, 1, 'A retry must retain exactly one row with the stable submission ID.');
+const editedRetrySubmission = getWorkLogSubmission(failedSubmission, {
+  jobId: 'job-1',
+  text: 'Edited retry note',
+  id: 'edited-entry',
+  timestamp: '2026-08-14T12:02:00.000Z'
+});
+assert.equal(editedRetrySubmission.id, failedSubmission.id, 'Editing a failed Work Note retry must retain its original row identity.');
+assert.equal(editedRetrySubmission.text, 'Edited retry note', 'Editing a failed Work Note retry must update the pending row content.');
+const editedRetryJob = appendWorkLogDraft(failedAttemptJob, editedRetrySubmission.text, editedRetrySubmission);
+assert.equal(editedRetryJob.workLog.length, 2, 'Editing a failed Work Note retry must replace its optimistic row instead of appending another note.');
+assert.equal(editedRetryJob.workLog[1].text, 'Edited retry note', 'The retried Work Note must contain the user\'s latest text.');
+
 assert.match(workLogSection, /Save Work Note/, 'The Work Log draft action must be explicitly labeled as a save.');
 assert.match(workLogSection, /Unsaved Work Note/, 'Pending Work Notes must have a visible unsaved-state warning.');
 assert.match(workLogSection, /Discard Draft/, 'Users must be able to deliberately discard a pending Work Note.');
@@ -45,6 +75,8 @@ assert.match(detail, /const hasUnsettledWorkLog = hasPendingWorkLog \|\| isSavin
 assert.match(detail, /if \(!workLogSavePromiseRef\.current\) \{\s*setWorkLogText\(''\);/, 'Optimistic parent updates must not clear a Work Note while its remote save is still running.');
 assert.match(detail, /if \(workLogSavePromiseRef\.current\) \{\s*return workLogSavePromiseRef\.current;/, 'Repeated Work Note submissions must coalesce onto the active save.');
 assert.match(detail, /workLogSavePromiseRef\.current = savePromise/, 'The active Work Note save promise must be recorded before another submission can start.');
+assert.match(detail, /getWorkLogSubmission\(workLogRetrySubmissionRef\.current/, 'Failed Work Note retries must reuse their original submission identity.');
+assert.match(detail, /workLogRetrySubmissionRef\.current = submission/, 'The retry identity must be retained before remote persistence starts.');
 assert.match(workLogSection, /!hasPendingWorkLog \|\| isSavingWorkLog/, 'The Work Note save control must remain disabled while persistence is in flight.');
 for (const actionName of ['printJobSheet', 'printCustomerReport', 'openWorkOrderEmail']) {
   const actionSource = detail.match(new RegExp(`function ${actionName}\\(\\) \\{([\\s\\S]*?)\\n  \\}`))?.[1] || '';
