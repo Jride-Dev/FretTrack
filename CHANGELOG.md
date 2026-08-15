@@ -1,5 +1,6 @@
 # Changelog
 
+- Added a separate Amplifier Repair workspace with make/model presets, amplifier intake, an amplifier-only work queue, a dedicated bench worksheet, before/after electrical and digital diagnostics, private audio/waveform/spectrum evidence, existing job permissions, and refresh-safe detail routing.
 - Preserved Stripe subscription renewal dates with the current item-level period fields while retaining legacy top-level webhook compatibility.
 - Recorded the completed Stripe concurrency migration/webhook rollout and fresh pre-migration backup evidence while keeping real Stripe lifecycle smoke tests as a paid-launch gate.
 - Made local Playwright shop seeding safely retryable by reusing deterministic jobs before requesting a new job number, with a second no-reset CI seed pass.

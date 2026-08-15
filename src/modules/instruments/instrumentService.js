@@ -5,6 +5,7 @@ const instrumentTypeOptions = [
   { value: 'Acoustic', label: INSTRUMENT_CATALOG.Acoustic.label },
   { value: 'Bass', label: INSTRUMENT_CATALOG.Bass.label },
   { value: 'Classical', label: INSTRUMENT_CATALOG.Classical.label },
+  { value: 'Amplifier', label: INSTRUMENT_CATALOG.Amplifier.label },
   { value: 'Other', label: INSTRUMENT_CATALOG.Other.label }
 ];
 
@@ -19,6 +20,7 @@ const stringCountOptionsByType = {
   Bass: [4, 5, 6],
   Acoustic: [6, 12],
   Classical: [6],
+  Amplifier: [],
   Other: [4, 5, 6, 7, 8, 12]
 };
 
@@ -322,6 +324,10 @@ export function getStringCountOptions(instrumentType) {
   return stringCountOptionsByType[normalizeInstrumentType(instrumentType)] || stringCountOptionsByType.Electric;
 }
 
+export function isStringedInstrumentType(instrumentType) {
+  return normalizeInstrumentType(instrumentType) !== 'Amplifier';
+}
+
 export function getStringGaugePresets(instrumentType, stringCount) {
   const normalizedType = normalizeInstrumentType(instrumentType);
   const normalizedCount = normalizeStringCount(stringCount, normalizedType);
@@ -331,11 +337,18 @@ export function getStringGaugePresets(instrumentType, stringCount) {
 }
 
 export function getDefaultStringCount(instrumentType) {
-  return normalizeInstrumentType(instrumentType) === 'Bass' ? 4 : 6;
+  const normalizedType = normalizeInstrumentType(instrumentType);
+  if (normalizedType === 'Amplifier') {
+    return 0;
+  }
+  return normalizedType === 'Bass' ? 4 : 6;
 }
 
 export function normalizeStringCount(value, instrumentType = 'Electric') {
   const parsed = Number(value);
+  if (normalizeInstrumentType(instrumentType) === 'Amplifier') {
+    return 0;
+  }
   if (Number.isFinite(parsed) && parsed >= 1 && parsed <= 24) {
     return Math.trunc(parsed);
   }
@@ -344,6 +357,9 @@ export function normalizeStringCount(value, instrumentType = 'Electric') {
 }
 
 export function resizeStringGauges(gauges = [], stringCount = 6) {
+  if (Number(stringCount) === 0) {
+    return [];
+  }
   const normalizedCount = normalizeStringCount(stringCount);
   const nextGauges = [...(Array.isArray(gauges) ? gauges : [])].slice(0, normalizedCount);
   while (nextGauges.length < normalizedCount) {
@@ -361,6 +377,9 @@ export function getInstrumentStringCount(job = {}) {
 
 export function formatInstrumentLabel(job = {}) {
   const instrumentType = normalizeInstrumentType(job.instrumentType || job.techDetails?.instrumentType);
+  if (!isStringedInstrumentType(instrumentType)) {
+    return instrumentType;
+  }
   const stringCount = getInstrumentStringCount(job);
   return `${instrumentType} (${stringCount}-string)`;
 }

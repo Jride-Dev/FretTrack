@@ -66,17 +66,17 @@ export default function useWorkspaceNavigation({
     return true;
   }
 
-  function selectJob(jobId) {
-    if (!confirmUnsavedNavigation()) {
+  function selectJob(jobId, detailMode = 'detail', { skipDirtyGuard = false } = {}) {
+    if (!skipDirtyGuard && !confirmUnsavedNavigation()) {
       return false;
     }
 
-    if (mode !== 'detail') {
+    if (!['detail', 'amplifier-detail'].includes(mode)) {
       jobDetailReturnModeRef.current = mode;
     }
     setHasUnsavedPageChanges(false);
     setSelectedJobId(jobId);
-    setMode('detail');
+    setMode(detailMode === 'amplifier-detail' ? 'amplifier-detail' : 'detail');
     return true;
   }
 
@@ -150,6 +150,8 @@ export function isAllowedWorkspaceMode(mode, {
     'new',
     'list',
     'detail',
+    'amplifiers',
+    'amplifier-detail',
     'settings',
     'customers',
     'inventory',

@@ -1,5 +1,7 @@
 # Release Notes
 
+FretTrack now has a separate Amplifier Repair workspace for amplifier intake, active-work searching, and professional bench documentation. A shared preset catalog supplies common amplifier manufacturers and matching models in both new intake and saved-job detail while retaining editable fields for boutique, vintage, and custom equipment. Amplifier work orders reuse the existing shop-scoped customer/job, status, priority, audit, permission, and save paths while adding baseline/final electrical readings, digital diagnostics, microphone/audio capture, and oscilloscope/RTA evidence. Guitar-specific neck and string controls stay out of amplifier detail. Migration `20260814215521_amplifier_job_evidence.sql` adds the private, job-scoped media evidence boundary without changing historical jobs or repair-photo behavior.
+
 Stripe subscription synchronization now snapshots current period start/end from Stripe's current subscription-item fields, with a legacy top-level fallback. This restores renewal dates in Billing without changing subscription access behavior or requiring a migration.
 
 Local test-shop fixture setup can now be retried after a partial shop failure without colliding with jobs already committed for earlier shops. CI seeds the same fixtures a second time without resetting them so this recovery path remains executable.

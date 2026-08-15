@@ -9,6 +9,7 @@ import {
   getModelsForBrand,
   getOrientationOptions,
   getStringCountOptions,
+  isStringedInstrumentType,
   normalizeInstrumentType,
   normalizeStringCount,
   resizeStringGauges,
@@ -611,41 +612,45 @@ export default function JobForm({
                 placeholder="Gloss, Nitro, Poly, Satin"
               />
             </label>
-            <label>
-              Orientation
-              <select name="orientation" value={form.orientation || 'Unknown'} onChange={handleChange} disabled={!canWrite}>
-                {getOrientationOptions(form.orientation).map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              String Count
-              <select
-                name="stringCountMode"
-                value={getStringCountSelectValue(form)}
-                onChange={handleChange}
-                disabled={!canWrite}
-              >
-                {getStringCountOptions(form.instrumentType).map((count) => (
-                  <option key={count} value={count}>{count}-string</option>
-                ))}
-                <option value="custom">Custom</option>
-              </select>
-            </label>
-            {getStringCountSelectValue(form) === 'custom' && (
-              <label>
-                Custom String Count
-                <input
-                  type="number"
-                  min="1"
-                  max="24"
-                  name="customStringCount"
-                  value={form.customStringCount || form.stringCount}
-                  onChange={handleChange}
-                  disabled={!canWrite}
-                />
-              </label>
+            {isStringedInstrumentType(form.instrumentType) && (
+              <>
+                <label>
+                  Orientation
+                  <select name="orientation" value={form.orientation || 'Unknown'} onChange={handleChange} disabled={!canWrite}>
+                    {getOrientationOptions(form.orientation).map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  String Count
+                  <select
+                    name="stringCountMode"
+                    value={getStringCountSelectValue(form)}
+                    onChange={handleChange}
+                    disabled={!canWrite}
+                  >
+                    {getStringCountOptions(form.instrumentType).map((count) => (
+                      <option key={count} value={count}>{count}-string</option>
+                    ))}
+                    <option value="custom">Custom</option>
+                  </select>
+                </label>
+                {getStringCountSelectValue(form) === 'custom' && (
+                  <label>
+                    Custom String Count
+                    <input
+                      type="number"
+                      min="1"
+                      max="24"
+                      name="customStringCount"
+                      value={form.customStringCount || form.stringCount}
+                      onChange={handleChange}
+                      disabled={!canWrite}
+                    />
+                  </label>
+                )}
+              </>
             )}
           </div>
         </fieldset>
