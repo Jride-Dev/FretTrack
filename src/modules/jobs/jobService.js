@@ -357,7 +357,7 @@ export async function sendCustomerMessage(job, message) {
   const { data, error } = await supabase.functions.invoke(functionName, {
     headers: functionHeaders(),
     body: {
-      request_id: crypto.randomUUID(),
+      request_id: message.requestId || crypto.randomUUID(),
       action,
       job_id: normalizedJob.id,
       message_id: message.messageId || '',
@@ -377,12 +377,17 @@ export async function sendCustomerMessage(job, message) {
   if (error || data?.success === false || data?.error) {
     const errorData = data || functionErrorData || {};
     const errorMessage = errorData?.error || errorData?.msg || error?.message || 'Provider send failed.';
+    const errorCode = errorData?.code || '';
+    const errorType = error?.constructor?.name || error?.name || '';
+    const retrySameRequest = ['EMAIL_OPERATION_IN_PROGRESS', 'EMAIL_PROVIDER_CONFIRMATION_PENDING', 'EMAIL_HISTORY_RECONCILIATION_REQUIRED', 'EMAIL_CANCELLATION_INDETERMINATE'].includes(errorCode)
+      || ['FunctionsFetchError', 'FunctionsRelayError'].includes(errorType);
     console.error('Customer message send failed.', { error, data: errorData });
     return {
       ok: false,
       message: errorData?.message ? normalizeCustomerMessage(fromDbCustomerMessage(errorData.message)) : null,
       mode: errorData?.mode || '',
-      code: errorData?.code || '',
+      code: errorCode,
+      retrySameRequest,
       usage: errorData?.limit ? {
         limit: errorData.limit,
         used: errorData.used,
@@ -396,6 +401,9 @@ export async function sendCustomerMessage(job, message) {
   return {
     ok: true,
     message: data?.message ? normalizeCustomerMessage(fromDbCustomerMessage(data.message)) : null,
+    messages: Array.isArray(data?.messages)
+      ? data.messages.map((messageItem) => normalizeCustomerMessage(fromDbCustomerMessage(messageItem)))
+      : [],
     mode: data?.mode || '',
     providerMessageId: data?.id || data?.messageId || ''
   };
@@ -1382,7 +1390,7 @@ function fromDbJobEvent(event) {
 }
 
 function normalizeCustomerMessage(message) {
-  const allowedStatuses = new Set(['sent', 'failed', 'scheduled', 'canceled']);
+  const allowedStatuses = new Set(['pending', 'sent', 'failed', 'scheduled', 'canceling', 'canceled']);
   return {
     id: message.id || crypto.randomUUID(),
     jobId: message.jobId || message.job_id || '',
@@ -1395,9 +1403,13 @@ function normalizeCustomerMessage(message) {
     status: allowedStatuses.has(message.status) ? message.status : 'failed',
     provider: message.provider || '',
     providerMessageId: message.providerMessageId || message.provider_message_id || '',
+    requestId: message.requestId || message.request_id || '',
     errorMessage: message.errorMessage || message.error_message || '',
     scheduledAt: message.scheduledAt || message.scheduled_at || '',
     canceledAt: message.canceledAt || message.canceled_at || '',
+    cancelRequestedAt: message.cancelRequestedAt || message.cancel_requested_at || '',
+    providerLastEvent: message.providerLastEvent || message.provider_last_event || '',
+    providerEventAt: message.providerEventAt || message.provider_event_at || '',
     sentAt: message.sentAt || message.sent_at || '',
     createdAt: message.createdAt || message.created_at || new Date().toISOString()
   };
@@ -1416,9 +1428,13 @@ function toDbCustomerMessage(message) {
     status: message.status,
     provider: message.provider,
     provider_message_id: message.providerMessageId,
+    request_id: message.requestId || null,
     error_message: message.errorMessage,
     scheduled_at: message.scheduledAt || null,
     canceled_at: message.canceledAt || null,
+    cancel_requested_at: message.cancelRequestedAt || null,
+    provider_last_event: message.providerLastEvent || null,
+    provider_event_at: message.providerEventAt || null,
     sent_at: message.sentAt || null,
     created_at: message.createdAt
   };
@@ -1437,9 +1453,13 @@ function fromDbCustomerMessage(message) {
     status: message.status,
     provider: message.provider,
     providerMessageId: message.provider_message_id,
+    requestId: message.request_id,
     errorMessage: message.error_message,
     scheduledAt: message.scheduled_at,
     canceledAt: message.canceled_at,
+    cancelRequestedAt: message.cancel_requested_at,
+    providerLastEvent: message.provider_last_event,
+    providerEventAt: message.provider_event_at,
     sentAt: message.sent_at,
     createdAt: message.created_at
   };

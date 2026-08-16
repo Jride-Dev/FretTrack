@@ -11,6 +11,7 @@ const corsHeaders = {
 const EMAIL_RATE_LIMIT_PER_HOUR = 50;
 const MIN_SCHEDULE_LEAD_MS = 2 * 60 * 1000;
 const MAX_SCHEDULE_LEAD_MS = 30 * 24 * 60 * 60 * 1000;
+const EMAIL_OPERATION_LEASE_MS = 2 * 60 * 1000;
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
@@ -29,6 +30,9 @@ Deno.serve(async (request) => {
 
   if (action === 'cancel_scheduled') {
     return await cancelScheduledEmail(request, jobId, payload.message_id || payload.messageId || '');
+  }
+  if (action === 'reconcile_scheduled') {
+    return await reconcileScheduledEmails(request, jobId);
   }
 
   const customerId = payload.customer_id || payload.customerId || null;
@@ -53,18 +57,11 @@ Deno.serve(async (request) => {
     return json({ success: false, error: `Missing required field(s): ${missing.join(', ')}` });
   }
 
-  const access = await resolveJobWriteAccess(request, jobId);
+  const access = await resolveEmailProviderAccess(request, jobId, {
+    scheduled: Boolean(scheduledAt)
+  });
   if (access.error) {
     return access.error;
-  }
-
-  if (scheduledAt) {
-    if (!access.emailOptIn) {
-      return json({ success: false, error: 'Email opt-in is required before scheduling a customer email.' }, 400);
-    }
-    if (!await shopHasEntitlement(createServiceClient(), access.shopId, 'scheduled_email')) {
-      return json({ success: false, error: 'Scheduled Email is available on Pro.' }, 403);
-    }
   }
 
   const resendApiKey = Deno.env.get('RESEND_API_KEY');
@@ -86,8 +83,18 @@ Deno.serve(async (request) => {
     return json({ success: false, error: 'Resend is not configured.', message });
   }
 
-  const quotaRequestId = normalizeRequestId(payload.request_id || payload.requestId);
+  const requestId = normalizeRequestId(payload.request_id || payload.requestId);
+  if (!requestId) {
+    return json({ success: false, error: 'A valid email request ID is required.' }, 400);
+  }
+  const operationKey = scheduledAt
+    ? await buildScheduledOperationKey({ jobId, toRecipients, ccRecipients, bccRecipients, subject, body, html, templateKey, scheduledAt })
+    : '';
+  let claimedMessage: Record<string, any> | null = null;
+  let quotaRequestId = '';
   let quotaReserved = false;
+  let quotaSettled = false;
+  let providerAttempted = false;
   let providerAccepted = false;
 
   try {
@@ -109,8 +116,41 @@ Deno.serve(async (request) => {
       return json({ success: false, error: errorMessage, message });
     }
 
-    const quota = await reserveEmailRecipientQuota(access.shopId, quotaRequestId, recipientCount);
+    const claim = await claimEmailOperation({
+      requestId,
+      operationKey,
+      jobId,
+      customerId,
+      recipient: to,
+      subject,
+      body,
+      templateKey,
+      scheduledAt
+    });
+    const operationMessage = claim.message;
+    claimedMessage = operationMessage;
+    if (!claim.claimed) {
+      if (claim.conflict) {
+        return json({
+          success: false,
+          code: 'EMAIL_REQUEST_ID_REUSED',
+          error: 'This request ID already belongs to a different email payload.',
+          message: operationMessage
+        }, 409);
+      }
+      return emailOperationReplayResponse(operationMessage);
+    }
+
+    const quota = await prepareEmailRecipientQuota(access.shopId, operationMessage, recipientCount);
+    quotaRequestId = quota.requestId || '';
+    quotaReserved = quota.reserved === true;
+    quotaSettled = quota.settled === true;
     if (!quota.allowed) {
+      const failedMessage = await finalizeEmailMessage(operationMessage.id, {
+        status: 'failed',
+        error_message: 'Monthly email limit reached.',
+        processing_started_at: null
+      });
       return json({
         success: false,
         code: quota.code || 'EMAIL_MONTHLY_LIMIT_REACHED',
@@ -118,71 +158,120 @@ Deno.serve(async (request) => {
         limit: quota.limit,
         used: quota.used,
         remaining: quota.remaining,
-        resetDate: quota.resetDate
+        resetDate: quota.resetDate,
+        message: failedMessage || operationMessage
       }, 429);
     }
-    quotaReserved = true;
 
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-        'Idempotency-Key': `frettrack-email/${quotaRequestId}`
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: toRecipients,
-        ...(ccRecipients.length ? { cc: ccRecipients } : {}),
-        ...(bccRecipients.length ? { bcc: bccRecipients } : {}),
-        subject,
-        text: body,
-        ...(html ? { html } : {}),
-        ...(scheduledAt ? { scheduled_at: scheduledAt } : {})
-      })
+    const finalAccess = await resolveEmailProviderAccess(request, jobId, {
+      scheduled: Boolean(scheduledAt),
+      expectedShopId: access.shopId
     });
+    if (finalAccess.error && !quotaSettled) {
+      if (quotaReserved && !quotaSettled) {
+        const quotaRelease = await releaseEmailRecipientQuota(access.shopId, quotaRequestId);
+        quotaReserved = quotaRelease.released !== true;
+        if (quotaReserved) {
+          throw new Error('Email access changed, but the quota reservation could not be released.');
+        }
+      }
+      await finalizeEmailMessage(operationMessage.id, {
+        status: 'failed',
+        error_message: 'Email access changed before the provider request.',
+        processing_started_at: null
+      });
+      return finalAccess.error;
+    }
+
+    providerAttempted = true;
+    let response: Response;
+    try {
+      response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+          'Idempotency-Key': `frettrack-email/${operationMessage.request_id}`
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: toRecipients,
+          ...(ccRecipients.length ? { cc: ccRecipients } : {}),
+          ...(bccRecipients.length ? { bcc: bccRecipients } : {}),
+          subject,
+          text: body,
+          ...(html ? { html } : {}),
+          ...(scheduledAt ? { scheduled_at: scheduledAt } : {})
+        })
+      });
+    } catch (error) {
+      return json({
+        success: false,
+        code: 'EMAIL_PROVIDER_CONFIRMATION_PENDING',
+        error: 'The provider request may have been accepted, but confirmation timed out. Do not create a new message; retry this same operation.',
+        detail: error instanceof Error ? error.message : 'Unknown provider transport error.',
+        message: operationMessage
+      }, 503);
+    }
 
     const providerResponse = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      await releaseEmailRecipientQuota(access.shopId, quotaRequestId);
-      quotaReserved = false;
+      if (quotaReserved && !quotaSettled) {
+        await releaseEmailRecipientQuota(access.shopId, quotaRequestId);
+        quotaReserved = false;
+      }
       const errorMessage = providerResponse.message || providerResponse.error || 'Resend send failed.';
-      const message = await logMessage({
-        jobId,
-        customerId,
-        channel: 'email',
-        recipient: to,
-        subject,
-        body,
-        templateKey,
+      const message = await finalizeEmailMessage(operationMessage.id, {
         status: 'failed',
-        provider: 'resend',
-        errorMessage
+        error_message: errorMessage,
+        provider_last_event: 'failed',
+        provider_event_at: new Date().toISOString(),
+        processing_started_at: null
       });
-      return json({ success: false, error: errorMessage, providerResponse, message });
+      return json({ success: false, code: 'PROVIDER_REJECTED', error: errorMessage, providerResponse, message: message || operationMessage }, 502);
+    }
+
+    if (!providerResponse.id) {
+      return json({
+        success: false,
+        code: 'EMAIL_PROVIDER_CONFIRMATION_PENDING',
+        error: 'The provider accepted the request without a usable message ID. Do not create a new message; retry this same operation.',
+        message: operationMessage
+      }, 503);
     }
 
     providerAccepted = true;
-    const quotaSettlement = await settleEmailRecipientQuota(access.shopId, quotaRequestId);
-    const message = await logMessage({
-      jobId,
-      customerId,
-      channel: 'email',
-      recipient: to,
-      subject,
-      body,
-      templateKey,
+    const quotaSettlement = quotaSettled
+      ? { settled: true, idempotent: true }
+      : await settleEmailRecipientQuota(access.shopId, quotaRequestId);
+    quotaSettled = quotaSettlement.settled === true;
+    const providerMessageId = providerResponse.id || operationMessage.provider_message_id || '';
+    const message = await finalizeEmailMessage(operationMessage.id, {
       status: scheduledAt ? 'scheduled' : 'sent',
-      provider: 'resend',
-      providerMessageId: providerResponse.id || '',
-      scheduledAt,
-      sentAt: scheduledAt ? '' : new Date().toISOString()
+      provider_message_id: providerMessageId,
+      provider_last_event: scheduledAt ? 'scheduled' : 'sent',
+      provider_event_at: new Date().toISOString(),
+      sent_at: scheduledAt ? null : new Date().toISOString(),
+      error_message: '',
+      processing_started_at: null
     });
+
+    if (!message) {
+      return json({
+        success: false,
+        code: 'EMAIL_HISTORY_RECONCILIATION_REQUIRED',
+        error: 'The provider accepted the email, but Message History is still awaiting reconciliation. Do not submit a new message; retry this same operation.',
+        id: providerMessageId,
+        provider: 'resend',
+        scheduled: Boolean(scheduledAt),
+        message: operationMessage
+      }, 503);
+    }
 
     return json({
       success: true,
-      id: providerResponse.id || '',
+      id: providerMessageId,
       provider: 'resend',
       scheduled: Boolean(scheduledAt),
       message,
@@ -192,23 +281,28 @@ Deno.serve(async (request) => {
       }
     });
   } catch (error) {
-    if (quotaReserved && !providerAccepted) {
-      await releaseEmailRecipientQuota(access.shopId, quotaRequestId);
+    const releasableQuotaRequestId = quotaRequestId || claimedMessage?.quota_request_id || '';
+    if (releasableQuotaRequestId && !quotaSettled && !providerAttempted) {
+      await releaseEmailRecipientQuota(access.shopId, releasableQuotaRequestId);
     }
     const errorMessage = error instanceof Error ? error.message : 'Unknown email send error.';
-    const message = await logMessage({
-      jobId,
-      customerId,
-      channel: 'email',
-      recipient: to,
-      subject,
-      body,
-      templateKey,
-      status: 'failed',
-      provider: 'resend',
-      errorMessage
-    });
-    return json({ success: false, error: errorMessage, message });
+    const message = claimedMessage && !providerAttempted
+      ? await finalizeEmailMessage(claimedMessage.id, {
+        status: 'failed',
+        error_message: errorMessage,
+        processing_started_at: null
+      })
+      : claimedMessage;
+    return json({
+      success: false,
+      code: providerAccepted ? 'EMAIL_HISTORY_RECONCILIATION_REQUIRED' : providerAttempted ? 'EMAIL_PROVIDER_CONFIRMATION_PENDING' : 'EMAIL_SEND_FAILED',
+      error: providerAccepted
+        ? 'The provider accepted the email, but Message History is still awaiting reconciliation. Do not submit a new message; retry this same operation.'
+        : providerAttempted
+          ? 'The provider request may have been accepted, but confirmation failed. Do not create a new message; retry this same operation.'
+          : errorMessage,
+      message
+    }, 503);
   }
 });
 
@@ -238,7 +332,223 @@ function normalizeRequestId(value: unknown) {
   const candidate = String(value || '').trim();
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(candidate)
     ? candidate
-    : crypto.randomUUID();
+    : '';
+}
+
+async function buildScheduledOperationKey(message: {
+  jobId: string;
+  toRecipients: string[];
+  ccRecipients: string[];
+  bccRecipients: string[];
+  subject: string;
+  body: string;
+  html: string;
+  templateKey: string;
+  scheduledAt: string;
+}) {
+  const canonical = JSON.stringify({
+    jobId: message.jobId,
+    to: message.toRecipients.map((value) => value.toLowerCase()),
+    cc: message.ccRecipients.map((value) => value.toLowerCase()),
+    bcc: message.bccRecipients.map((value) => value.toLowerCase()),
+    subject: message.subject,
+    body: message.body,
+    html: message.html,
+    templateKey: message.templateKey,
+    scheduledAt: message.scheduledAt
+  });
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function claimEmailOperation(message: {
+  requestId: string;
+  operationKey: string;
+  jobId: string;
+  customerId?: string | null;
+  recipient: string;
+  subject: string;
+  body: string;
+  templateKey: string;
+  scheduledAt: string;
+}) {
+  const supabase = createServiceClient();
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('customer_messages')
+    .insert({
+      job_id: message.jobId,
+      customer_id: message.customerId || null,
+      channel: 'email',
+      recipient: message.recipient,
+      subject: message.subject || null,
+      body: message.body,
+      template_key: message.templateKey || '',
+      status: 'pending',
+      provider: 'resend',
+      provider_message_id: '',
+      request_id: message.requestId,
+      quota_request_id: message.requestId,
+      operation_key: message.operationKey || null,
+      processing_started_at: now,
+      scheduled_at: message.scheduledAt || null,
+      canceled_at: null,
+      cancel_requested_at: null,
+      sent_at: null,
+      created_at: now
+    })
+    .select()
+    .single();
+
+  if (!error && data) {
+    return { claimed: true, message: data };
+  }
+  if (error?.code !== '23505') {
+    throw new Error(`Email history claim failed: ${error?.message || 'Unknown database error.'}`);
+  }
+
+  let existingResult = await supabase
+    .from('customer_messages')
+    .select('*')
+    .eq('request_id', message.requestId)
+    .maybeSingle();
+  if (!existingResult.data && message.operationKey) {
+    existingResult = await supabase
+      .from('customer_messages')
+      .select('*')
+      .eq('job_id', message.jobId)
+      .eq('operation_key', message.operationKey)
+      .in('status', ['pending', 'scheduled', 'canceling', 'sent'])
+      .maybeSingle();
+  }
+  if (existingResult.error || !existingResult.data) {
+    throw new Error(`Email history replay lookup failed: ${existingResult.error?.message || 'Claimed operation was not found.'}`);
+  }
+
+  const existing = existingResult.data;
+  const existingScheduledAt = existing.scheduled_at ? new Date(existing.scheduled_at).getTime() : 0;
+  const requestedScheduledAt = message.scheduledAt ? new Date(message.scheduledAt).getTime() : 0;
+  const requestPayloadChanged = existing.request_id === message.requestId && (
+    String(existing.operation_key || '') !== String(message.operationKey || '')
+    || String(existing.recipient || '') !== message.recipient
+    || String(existing.subject || '') !== message.subject
+    || String(existing.body || '') !== message.body
+    || String(existing.template_key || '') !== message.templateKey
+    || existingScheduledAt !== requestedScheduledAt
+  );
+  if (requestPayloadChanged) {
+    return { claimed: false, conflict: true, message: existing };
+  }
+  const leaseExpired = existing.status === 'pending'
+    && new Date(existing.processing_started_at || 0).getTime() <= Date.now() - EMAIL_OPERATION_LEASE_MS;
+  if (leaseExpired) {
+    const leaseCutoff = new Date(Date.now() - EMAIL_OPERATION_LEASE_MS).toISOString();
+    const { data: reclaimed, error: reclaimError } = await supabase
+      .from('customer_messages')
+      .update({ processing_started_at: now })
+      .eq('id', existing.id)
+      .eq('status', 'pending')
+      .lt('processing_started_at', leaseCutoff)
+      .select()
+      .maybeSingle();
+    if (reclaimError) {
+      throw new Error(`Email history replay claim failed: ${reclaimError.message}`);
+    }
+    if (reclaimed) {
+      return { claimed: true, message: reclaimed };
+    }
+  }
+
+  return { claimed: false, conflict: false, message: existing };
+}
+
+function emailOperationReplayResponse(message: Record<string, any>) {
+  if (['scheduled', 'sent', 'canceled'].includes(message.status)) {
+    return json({
+      success: true,
+      idempotent: true,
+      id: message.provider_message_id || '',
+      provider: message.provider || 'resend',
+      scheduled: Boolean(message.scheduled_at),
+      message
+    });
+  }
+
+  if (message.status === 'failed') {
+    return json({
+      success: false,
+      code: 'EMAIL_OPERATION_FAILED',
+      error: message.error_message || 'The previous provider attempt failed. Submit again to start a new operation.',
+      message
+    }, 409);
+  }
+
+  return json({
+    success: false,
+    code: message.status === 'canceling' ? 'EMAIL_CANCELLATION_IN_PROGRESS' : 'EMAIL_OPERATION_IN_PROGRESS',
+    error: message.status === 'canceling'
+      ? 'Cancellation is awaiting provider confirmation. Retry the cancellation instead of scheduling another email.'
+      : 'This email operation is already in progress. Retry the same operation after a short wait.',
+    message
+  }, 409);
+}
+
+async function prepareEmailRecipientQuota(shopId: string, message: Record<string, any>, recipientCount: number) {
+  const supabase = createServiceClient();
+  let quotaRequestId = message.quota_request_id || message.request_id;
+  const { data: existing, error: existingError } = await supabase
+    .from('shop_usage_reservations')
+    .select('status, expires_at')
+    .eq('shop_id', shopId)
+    .eq('request_id', quotaRequestId)
+    .maybeSingle();
+  if (existingError) {
+    throw new Error(`Email quota lookup failed: ${existingError.message}`);
+  }
+
+  if (existing?.status === 'settled') {
+    return { allowed: true, requestId: quotaRequestId, reserved: false, settled: true, idempotent: true };
+  }
+  if (existing?.status === 'reserved' && new Date(existing.expires_at || 0).getTime() > Date.now()) {
+    return { allowed: true, requestId: quotaRequestId, reserved: true, settled: false, idempotent: true };
+  }
+  if (existing) {
+    quotaRequestId = crypto.randomUUID();
+    const { error: updateError } = await supabase
+      .from('customer_messages')
+      .update({ quota_request_id: quotaRequestId })
+      .eq('id', message.id)
+      .eq('status', 'pending');
+    if (updateError) {
+      throw new Error(`Email quota retry setup failed: ${updateError.message}`);
+    }
+    message.quota_request_id = quotaRequestId;
+  }
+
+  const quota = await reserveEmailRecipientQuota(shopId, quotaRequestId, recipientCount);
+  return {
+    ...quota,
+    requestId: quotaRequestId,
+    reserved: quota.allowed === true && quota.status !== 'settled',
+    settled: quota.status === 'settled'
+  };
+}
+
+async function finalizeEmailMessage(messageId: string, patch: Record<string, unknown>) {
+  const supabase = createServiceClient();
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data, error } = await supabase
+      .from('customer_messages')
+      .update(patch)
+      .eq('id', messageId)
+      .select()
+      .maybeSingle();
+    if (!error && data) {
+      return data;
+    }
+    console.error('customer_messages email state update failed', { attempt: attempt + 1, error });
+  }
+  return null;
 }
 
 function normalizeScheduledAt(value: unknown) {
@@ -317,6 +627,41 @@ async function logMessage(message: {
   return data;
 }
 
+async function resolveEmailProviderAccess(
+  request: Request,
+  jobId: string,
+  options: { scheduled?: boolean; expectedShopId?: string } = {}
+) {
+  const access = await resolveJobWriteAccess(request, jobId);
+  if (access.error) {
+    return access;
+  }
+
+  if (options.expectedShopId && access.shopId !== options.expectedShopId) {
+    return {
+      ...access,
+      error: json({ success: false, error: 'Work order shop access changed. Refresh and try again.' }, 409)
+    };
+  }
+
+  if (options.scheduled) {
+    if (!access.emailOptIn) {
+      return {
+        ...access,
+        error: json({ success: false, error: 'Email opt-in is required before scheduling a customer email.' }, 400)
+      };
+    }
+    if (!await shopHasEntitlement(createServiceClient(), access.shopId, 'scheduled_email')) {
+      return {
+        ...access,
+        error: json({ success: false, error: 'Scheduled Email is available on Pro.' }, 403)
+      };
+    }
+  }
+
+  return access;
+}
+
 async function resolveJobWriteAccess(request: Request, jobId: string) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -389,11 +734,11 @@ async function cancelScheduledEmail(request: Request, jobId: string, messageId: 
   if (message.status === 'canceled') {
     return json({ success: true, canceled: true, message });
   }
-  if (message.status !== 'scheduled' || !message.provider_message_id || !message.scheduled_at) {
-    return json({ success: false, error: 'This email is not awaiting scheduled delivery.' }, 409);
+  if (message.status === 'sent') {
+    return json({ success: false, code: 'EMAIL_ALREADY_SENT', error: 'The provider has already sent this email.', message }, 409);
   }
-  if (new Date(message.scheduled_at).getTime() <= Date.now()) {
-    return json({ success: false, error: 'The scheduled delivery time has passed, so this email can no longer be canceled here.' }, 409);
+  if (!['scheduled', 'canceling'].includes(message.status) || !message.provider_message_id || !message.scheduled_at) {
+    return json({ success: false, error: 'This email is not awaiting scheduled delivery.' }, 409);
   }
 
   const resendApiKey = Deno.env.get('RESEND_API_KEY');
@@ -401,35 +746,179 @@ async function cancelScheduledEmail(request: Request, jobId: string, messageId: 
     return json({ success: false, error: 'Resend is not configured.' }, 503);
   }
 
-  const response = await fetch(`https://api.resend.com/emails/${encodeURIComponent(message.provider_message_id)}/cancel`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      'Content-Type': 'application/json'
+  let cancelingMessage = message;
+  if (message.status === 'scheduled') {
+    const { data, error } = await supabase
+      .from('customer_messages')
+      .update({ status: 'canceling', cancel_requested_at: new Date().toISOString() })
+      .eq('id', message.id)
+      .eq('status', 'scheduled')
+      .select()
+      .maybeSingle();
+    if (error || !data) {
+      return json({ success: false, error: 'The cancellation could not be claimed safely. Refresh before retrying.' }, 409);
     }
-  });
-  const providerResponse = await response.json().catch(() => ({}));
-  if (!response.ok) {
+    cancelingMessage = data;
+  }
+
+  const finalAccess = await resolveJobWriteAccess(request, jobId);
+  if (finalAccess.error || finalAccess.shopId !== access.shopId) {
+    await finalizeEmailMessage(cancelingMessage.id, {
+      status: 'scheduled',
+      cancel_requested_at: null
+    });
+    return finalAccess.error || json({ success: false, error: 'Work order shop access changed. Refresh and try again.' }, 409);
+  }
+
+  try {
+    const response = await fetch(`https://api.resend.com/emails/${encodeURIComponent(cancelingMessage.provider_message_id)}/cancel`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const providerResponse = await response.json().catch(() => ({}));
+
+    if (response.ok) {
+      const canceledMessage = await finalizeEmailMessage(cancelingMessage.id, {
+        status: 'canceled',
+        canceled_at: new Date().toISOString(),
+        provider_last_event: 'canceled',
+        provider_event_at: new Date().toISOString()
+      });
+      if (!canceledMessage) {
+        return json({
+          success: false,
+          code: 'EMAIL_CANCELLATION_INDETERMINATE',
+          error: 'The provider accepted the cancellation, but Message History is still awaiting confirmation. Retry cancellation to reconcile it.',
+          message: cancelingMessage
+        }, 503);
+      }
+      return json({ success: true, canceled: true, message: canceledMessage });
+    }
+
+    const reconciled = await reconcileMessageWithProvider(cancelingMessage, resendApiKey);
+    if (reconciled.status === 'canceled') {
+      return json({ success: true, canceled: true, idempotent: true, message: reconciled });
+    }
+    if (reconciled.status === 'sent') {
+      return json({ success: false, code: 'EMAIL_ALREADY_SENT', error: 'The provider sent this email before cancellation completed.', message: reconciled }, 409);
+    }
+    if (reconciled.status === 'failed') {
+      return json({ success: false, code: 'EMAIL_PROVIDER_FAILED', error: reconciled.error_message || 'The provider reports that this email failed.', message: reconciled }, 409);
+    }
+
     return json({
       success: false,
-      error: providerResponse.message || providerResponse.error || 'Resend cancellation failed.'
+      code: 'EMAIL_CANCELLATION_INDETERMINATE',
+      error: providerResponse.message || providerResponse.error || 'Cancellation is awaiting provider confirmation. Retry this cancellation instead of scheduling another email.',
+      message: reconciled
     }, response.status >= 400 && response.status < 500 ? response.status : 502);
+  } catch (error) {
+    return json({
+      success: false,
+      code: 'EMAIL_CANCELLATION_INDETERMINATE',
+      error: 'Cancellation may have reached the provider, but confirmation timed out. Retry this cancellation to reconcile it.',
+      detail: error instanceof Error ? error.message : 'Unknown provider error.',
+      message: cancelingMessage
+    }, 503);
+  }
+}
+
+async function reconcileScheduledEmails(request: Request, jobId: string) {
+  if (!jobId) {
+    return json({ success: false, error: 'Work order is required for email reconciliation.' }, 400);
+  }
+  const access = await resolveJobWriteAccess(request, jobId);
+  if (access.error) {
+    return access.error;
+  }
+  const resendApiKey = Deno.env.get('RESEND_API_KEY');
+  if (!resendApiKey) {
+    return json({ success: false, error: 'Resend is not configured.' }, 503);
   }
 
-  const { data: canceledMessage, error: updateError } = await supabase
+  const supabase = createServiceClient();
+  const { data: messages, error } = await supabase
     .from('customer_messages')
-    .update({ status: 'canceled', canceled_at: new Date().toISOString() })
-    .eq('id', message.id)
-    .eq('status', 'scheduled')
-    .select()
-    .single();
-
-  if (updateError || !canceledMessage) {
-    console.error('scheduled email cancellation log failed', updateError);
-    return json({ success: false, error: 'The provider canceled the email, but FretTrack could not update message history. Refresh before retrying.' }, 500);
+    .select('*')
+    .eq('job_id', jobId)
+    .eq('channel', 'email')
+    .in('status', ['scheduled', 'canceling'])
+    .order('scheduled_at', { ascending: true })
+    .limit(50);
+  if (error) {
+    return json({ success: false, error: `Scheduled email reconciliation failed: ${error.message}` }, 500);
   }
 
-  return json({ success: true, canceled: true, message: canceledMessage });
+  const reconciled = [];
+  for (const message of messages || []) {
+    reconciled.push(await reconcileMessageWithProvider(message, resendApiKey));
+  }
+  return json({ success: true, reconciled: reconciled.length, messages: reconciled });
+}
+
+async function reconcileMessageWithProvider(message: Record<string, any>, resendApiKey: string) {
+  if (!message.provider_message_id) {
+    return message;
+  }
+  const provider = await retrieveResendEmail(message.provider_message_id, resendApiKey);
+  if (!provider.ok) {
+    return message;
+  }
+
+  const lastEvent = String(provider.data.last_event || '').toLowerCase();
+  const providerEventAt = new Date().toISOString();
+  const sentEvents = new Set(['sent', 'delivered', 'delivery_delayed', 'opened', 'clicked', 'complained']);
+  const failedEvents = new Set(['failed', 'bounced', 'suppressed']);
+  let patch: Record<string, unknown> = {
+    provider_last_event: lastEvent,
+    provider_event_at: providerEventAt
+  };
+
+  if (sentEvents.has(lastEvent)) {
+    patch = {
+      ...patch,
+      status: 'sent',
+      sent_at: providerEventAt,
+      canceled_at: null,
+      error_message: ''
+    };
+  } else if (failedEvents.has(lastEvent)) {
+    patch = {
+      ...patch,
+      status: 'failed',
+      sent_at: null,
+      canceled_at: null,
+      error_message: `Resend reported ${lastEvent}.`
+    };
+  } else if (message.status === 'canceling' && lastEvent === 'scheduled' && !provider.data.scheduled_at) {
+    patch = {
+      ...patch,
+      status: 'canceled',
+      canceled_at: providerEventAt
+    };
+  }
+
+  return await finalizeEmailMessage(message.id, patch) || message;
+}
+
+async function retrieveResendEmail(providerMessageId: string, resendApiKey: string) {
+  try {
+    const response = await fetch(`https://api.resend.com/emails/${encodeURIComponent(providerMessageId)}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.json().catch(() => ({}));
+    return { ok: response.ok, status: response.status, data };
+  } catch (error) {
+    console.error('Resend email reconciliation failed', error);
+    return { ok: false, status: 0, data: {} };
+  }
 }
 
 async function reserveEmailRecipientQuota(shopId: string, requestId: string, recipientCount: number) {

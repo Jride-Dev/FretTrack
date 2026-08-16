@@ -4,7 +4,7 @@ FretTrack is moving from the old `v0.2.6-beta.14` live baseline into product mil
 
 ## Current Product State
 
-The current release candidate is `v0.2.9-beta.5`. It builds toward the `v0.3.0` Operational Shop Release with the existing inventory, scheduling, reporting, trial, photo, shop, and Stripe self-service foundations plus safer workspace, Inventory, and Job Detail module boundaries.
+The current release candidate is `v0.2.9-beta.6`. It builds toward the `v0.3.0` Operational Shop Release with the existing inventory, scheduling, reporting, trial, photo, shop, and Stripe self-service foundations plus Pro Amplifier Repair, Scheduled Email, and safer workspace, Inventory, and Job Detail module boundaries.
 
 Shipped or current-branch foundations:
 

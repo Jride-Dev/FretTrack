@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(11);
+select plan(21);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -47,11 +47,68 @@ select ok(private.shop_has_entitlement('scheduled-pgtap-pro', 'scheduled_email')
 select ok(not private.shop_has_entitlement('scheduled-pgtap-shop', 'scheduled_email'), 'Shop does not have scheduled_email entitlement');
 select has_column('public', 'customer_messages', 'scheduled_at', 'customer_messages stores scheduled delivery time');
 select has_column('public', 'customer_messages', 'canceled_at', 'customer_messages stores cancellation time');
+select has_column('public', 'customer_messages', 'request_id', 'customer_messages stores the stable provider request ID');
+select has_column('public', 'customer_messages', 'operation_key', 'customer_messages stores the scheduled operation fingerprint');
+select has_column('public', 'customer_messages', 'cancel_requested_at', 'customer_messages stores durable cancellation intent');
 select is(
   (select count(*)::integer from public.customer_messages where id = 'e1000000-0000-4000-a000-000000000001' and scheduled_at is null and canceled_at is null),
   1,
   'historical message state remains unchanged'
 );
+
+insert into public.customer_messages (
+  id, job_id, channel, recipient, subject, body, status, provider,
+  request_id, quota_request_id, operation_key, processing_started_at, scheduled_at
+)
+values (
+  'e1000000-0000-4000-a000-000000000003',
+  'd1000000-0000-4000-a000-000000000001',
+  'email', 'pro@example.test', 'Pending', 'Pending snapshot', 'pending', 'resend',
+  'e1000000-0000-4000-a000-000000000003',
+  'e1000000-0000-4000-a000-000000000003',
+  'scheduled-operation-one', now(), now() + interval '2 days'
+);
+select throws_like(
+  $$
+    insert into public.customer_messages (job_id, channel, recipient, subject, body, status, provider, request_id, scheduled_at)
+    values ('d1000000-0000-4000-a000-000000000001', 'email', 'pro@example.test', 'Duplicate request', 'Duplicate request', 'pending', 'resend', 'e1000000-0000-4000-a000-000000000003', now() + interval '2 days')
+  $$,
+  '%duplicate key value%',
+  'stable email request IDs cannot create duplicate history rows'
+);
+select throws_like(
+  $$
+    insert into public.customer_messages (job_id, channel, recipient, subject, body, status, provider, request_id, operation_key, scheduled_at)
+    values ('d1000000-0000-4000-a000-000000000001', 'email', 'pro@example.test', 'Duplicate schedule', 'Duplicate schedule', 'pending', 'resend', 'e1000000-0000-4000-a000-000000000004', 'scheduled-operation-one', now() + interval '2 days')
+  $$,
+  '%duplicate key value%',
+  'concurrent identical scheduled operations cannot create duplicate history rows'
+);
+select lives_ok(
+  $$
+    update public.customer_messages
+    set status = 'scheduled', provider_message_id = 'provider-state-test', processing_started_at = null
+    where id = 'e1000000-0000-4000-a000-000000000003'
+  $$,
+  'a durable pending operation can become provider-scheduled'
+);
+select lives_ok(
+  $$
+    update public.customer_messages
+    set status = 'canceling', cancel_requested_at = now()
+    where id = 'e1000000-0000-4000-a000-000000000003'
+  $$,
+  'a scheduled operation can record cancellation intent before the provider call'
+);
+select lives_ok(
+  $$
+    update public.customer_messages
+    set status = 'canceled', canceled_at = now(), provider_last_event = 'canceled', provider_event_at = now()
+    where id = 'e1000000-0000-4000-a000-000000000003'
+  $$,
+  'a provider-accepted cancellation can finalize the same history row'
+);
+delete from public.customer_messages where id = 'e1000000-0000-4000-a000-000000000003';
 
 set local role authenticated;
 set local "request.jwt.claim.sub" = '41000000-0000-4000-a000-000000000001';
@@ -66,6 +123,22 @@ select throws_like(
   $$,
   '%row-level security policy%',
   'authenticated clients cannot forge provider scheduling state'
+);
+select throws_like(
+  $$
+    insert into public.customer_messages (job_id, channel, recipient, subject, body, status, provider, request_id, processing_started_at, scheduled_at)
+    values ('d1000000-0000-4000-a000-000000000001', 'email', 'pro@example.test', 'Forged pending', 'Forged pending', 'pending', 'resend', 'e1000000-0000-4000-a000-000000000005', now(), now() + interval '1 day')
+  $$,
+  '%row-level security policy%',
+  'authenticated clients cannot forge pending provider operations'
+);
+select throws_like(
+  $$
+    insert into public.customer_messages (job_id, channel, recipient, subject, body, status, provider, provider_message_id, scheduled_at, cancel_requested_at)
+    values ('d1000000-0000-4000-a000-000000000001', 'email', 'pro@example.test', 'Forged cancel', 'Forged cancel', 'canceling', 'resend', 'forged-cancel', now() + interval '1 day', now())
+  $$,
+  '%row-level security policy%',
+  'authenticated clients cannot forge cancellation state'
 );
 select isnt_empty(
   $$

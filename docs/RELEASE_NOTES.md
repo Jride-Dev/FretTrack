@@ -12,11 +12,11 @@ Local test-shop fixture setup can now be retried after a partial shop failure wi
 
 Rapid repeated Work Note submissions now coalesce onto one in-flight save. The Save and Discard controls remain unavailable until persistence finishes, preventing concurrent stale snapshots from deleting the note that another request just created.
 
-## GitHub Release Summary: v0.2.9-beta.5
+## GitHub Release Summary: v0.2.9-beta.6
 
-FretTrack `0.2.9-beta.5` is an architecture and workflow-reliability release candidate. It preserves the existing repair-shop experience while separating workspace navigation, Inventory, and Job Detail presentation into smaller feature boundaries that are safer to maintain and test.
+FretTrack `0.2.9-beta.6` is a paid-launch hardening and Pro workflow release candidate. It adds dedicated Amplifier Repair and Scheduled Email foundations while preserving the existing guitar-repair, immediate-email, permission, shop-isolation, and quota behavior.
 
-Pro Scheduled Email foundation: Pro shops can schedule an already-composed transactional job email from Work Order Messages up to 30 days ahead, review its provider-scheduled time, and cancel it before delivery. FretTrack snapshots the recipient, subject, body, template, and scheduled time; requires customer email opt-in; retains existing role, shop-isolation, message-history, immediate-send, and recipient-quota behavior; and adds the requested Drop Off Scheduled template using the job's appointment time. Migration `20260815095604_pro_email_scheduling_foundation.sql` and the updated `send-email` function require reviewed rollout and are not deployed by this branch.
+Pro Scheduled Email foundation: Pro shops can schedule an already-composed transactional job email from Work Order Messages up to 30 days ahead, review its provider-scheduled time, and cancel it before delivery. FretTrack snapshots the recipient, subject, body, template, and scheduled time; requires customer email opt-in; retains existing role, shop-isolation, message-history, immediate-send, and recipient-quota behavior; and adds the requested Drop Off Scheduled template using the job's appointment time. Migration `20260815095604_pro_email_scheduling_foundation.sql`, `send-email` version 35, and the matching app build were deployed on 2026-08-15.
 
 ## Stripe paid-launch readiness
 
