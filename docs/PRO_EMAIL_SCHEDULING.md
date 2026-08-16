@@ -62,7 +62,7 @@ Race-hardening migration `20260816032817_guard_email_provider_terminal_state.sql
 
 Deployment requires the migrations and matching `send-email` Edge Function before the app build is released. No Supabase Cron job or new provider secret is required; the existing `RESEND_API_KEY`, `SHOP_EMAIL_FROM`, function key, and authenticated job access remain authoritative.
 
-The original foundation and provider-consistency rollout completed on 2026-08-15. The current production baseline has `send-email` version 37 and the matching Cloudflare Pages app bundle. The race-hardening migration and Edge Function change remain local until separately approved for deployment.
+The foundation, provider-consistency, and race-hardening rollout completed on 2026-08-15. Migration `20260816032817_guard_email_provider_terminal_state.sql` is recorded remotely, `send-email` version 38 is active with JWT verification, and the matching Cloudflare Pages app deployment is live.
 
 ## Validation
 
