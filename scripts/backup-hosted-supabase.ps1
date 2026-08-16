@@ -482,7 +482,8 @@ function Backup-StorageBuckets {
     New-Item -ItemType Directory -Path $bucketDir -Force | Out-Null
     Write-Step "Listing Supabase Storage objects in bucket $bucket"
     $objects = @(Get-StorageObjectPaths -BucketName $bucket)
-    $objects | Set-Content -LiteralPath (Join-Path $bucketDir '_object-list.txt') -Encoding UTF8
+    $objectListPath = Join-Path $bucketDir '_object-list.txt'
+    [System.IO.File]::WriteAllLines($objectListPath, [string[]]$objects)
 
     if (-not $objects.Count) {
       Write-Step "No Supabase Storage objects found in bucket $bucket"
