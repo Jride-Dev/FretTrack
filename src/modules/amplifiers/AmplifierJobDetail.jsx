@@ -54,9 +54,12 @@ export default function AmplifierJobDetail({
     if (!canWrite) {
       throw new Error('Your shop role is read-only.');
     }
+    if (!draft.updatedAt) {
+      throw new Error('This amplifier job has no save version. Reload it before saving.');
+    }
     setIsSaving(true);
     try {
-      const saved = await onUpdate?.({ ...draft, updatedAt: new Date().toISOString() });
+      const saved = await onUpdate?.(draft, { expectedUpdatedAt: draft.updatedAt });
       const nextDraft = buildDraft(saved || draft);
       setDraft(nextDraft);
       setBaseline(JSON.stringify(nextDraft));

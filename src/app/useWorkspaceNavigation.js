@@ -17,9 +17,15 @@ export default function useWorkspaceNavigation({
   const [hasUnsavedPageChanges, setHasUnsavedPageChanges] = useState(false);
   const [hydratedShopId, setHydratedShopId] = useState('');
   const jobDetailReturnModeRef = useRef('new');
+  const hasUserNavigatedRef = useRef(false);
 
   useEffect(() => {
     if (!shopId || !isReady || hydratedShopId === shopId) {
+      return;
+    }
+
+    if (hasUserNavigatedRef.current) {
+      setHydratedShopId(shopId);
       return;
     }
 
@@ -62,6 +68,7 @@ export default function useWorkspaceNavigation({
     }
 
     setHasUnsavedPageChanges(false);
+    hasUserNavigatedRef.current = true;
     setMode(nextMode);
     return true;
   }
@@ -75,6 +82,7 @@ export default function useWorkspaceNavigation({
       jobDetailReturnModeRef.current = mode;
     }
     setHasUnsavedPageChanges(false);
+    hasUserNavigatedRef.current = true;
     setSelectedJobId(jobId);
     setMode(detailMode === 'amplifier-detail' ? 'amplifier-detail' : 'detail');
     return true;
@@ -82,6 +90,7 @@ export default function useWorkspaceNavigation({
 
   function closeJobDetail() {
     setHasUnsavedPageChanges(false);
+    hasUserNavigatedRef.current = true;
     setMode(jobDetailReturnModeRef.current || 'new');
   }
 
@@ -90,6 +99,7 @@ export default function useWorkspaceNavigation({
     setSelectedJobId(null);
     setMode('new');
     setHydratedShopId('');
+    hasUserNavigatedRef.current = false;
     jobDetailReturnModeRef.current = 'new';
   }
 

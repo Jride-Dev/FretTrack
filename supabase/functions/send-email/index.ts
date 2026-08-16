@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { buildProviderReconciliationPatch } from './providerReconciliation.ts';
 
 type SupabaseAnyClient = ReturnType<typeof createClient<any, 'public', any>>;
 
@@ -868,38 +869,13 @@ async function reconcileMessageWithProvider(message: Record<string, any>, resend
     return message;
   }
 
-  const lastEvent = String(provider.data.last_event || '').toLowerCase();
   const providerEventAt = new Date().toISOString();
-  const sentEvents = new Set(['sent', 'delivered', 'delivery_delayed', 'opened', 'clicked', 'complained']);
-  const failedEvents = new Set(['failed', 'bounced', 'suppressed']);
-  let patch: Record<string, unknown> = {
-    provider_last_event: lastEvent,
-    provider_event_at: providerEventAt
-  };
-
-  if (sentEvents.has(lastEvent)) {
-    patch = {
-      ...patch,
-      status: 'sent',
-      sent_at: providerEventAt,
-      canceled_at: null,
-      error_message: ''
-    };
-  } else if (failedEvents.has(lastEvent)) {
-    patch = {
-      ...patch,
-      status: 'failed',
-      sent_at: null,
-      canceled_at: null,
-      error_message: `Resend reported ${lastEvent}.`
-    };
-  } else if (message.status === 'canceling' && lastEvent === 'scheduled' && !provider.data.scheduled_at) {
-    patch = {
-      ...patch,
-      status: 'canceled',
-      canceled_at: providerEventAt
-    };
-  }
+  const patch = buildProviderReconciliationPatch({
+    messageStatus: message.status,
+    lastEvent: provider.data.last_event,
+    scheduledAt: provider.data.scheduled_at,
+    providerEventAt
+  });
 
   return await finalizeEmailMessage(message.id, patch) || message;
 }

@@ -45,6 +45,11 @@ assert.match(navigationSource, /saveWorkspaceState\(shopId, \{ mode, selectedJob
 assert.match(navigationSource, /window\.confirm\(UNSAVED_CHANGES_MESSAGE\)/, 'Workspace navigation must preserve the dirty-state confirmation.');
 assert.match(
   navigationSource,
+  /if \(hasUserNavigatedRef\.current\) \{\s*setHydratedShopId\(shopId\);\s*return;/,
+  'A deliberate navigation action must win over late workspace hydration.'
+);
+assert.match(
+  navigationSource,
   /hydratedShopId !== shopId[\s\S]*?return;[\s\S]*?saveWorkspaceState/,
   'Workspace persistence must wait until the saved page has been restored for the current shop.'
 );

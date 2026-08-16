@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { openSeededJob } from '../helpers/jobNavigation.js';
 
+test.describe.configure({ mode: 'serial' });
+
 test('coalesces rapid work note saves and persists exactly one entry', async ({ page }) => {
   await openSeededJob(page, 1);
   await page.getByRole('tab', { name: 'Work' }).click();
@@ -26,4 +28,58 @@ test('coalesces rapid work note saves and persists exactly one entry', async ({ 
     (entries, expectedNote) => entries.filter((entry) => entry.value === expectedNote).length,
     note
   )).toBe(1);
+});
+
+test('keeps an in-flight work note scoped to its original job', async ({ page }) => {
+  let releaseSave;
+  let markSaveStarted;
+  let markHeldRequestFinished;
+  const saveStarted = new Promise((resolve) => {
+    markSaveStarted = resolve;
+  });
+  const saveRelease = new Promise((resolve) => {
+    releaseSave = resolve;
+  });
+  const heldRequestFinished = new Promise((resolve) => {
+    markHeldRequestFinished = resolve;
+  });
+
+  await page.route('**/rest/v1/jobs*', async (route) => {
+    if (route.request().method() === 'PATCH') {
+      markSaveStarted();
+      await saveRelease;
+      await route.continue();
+      markHeldRequestFinished();
+      return;
+    }
+    await route.continue();
+  });
+
+  try {
+    await openSeededJob(page, 1);
+    await page.getByRole('tab', { name: 'Work' }).click();
+    await page.getByLabel('New Work Note').fill(`Held Work Note ${Date.now()}`);
+    await page.getByRole('button', { name: 'Save Work Note' }).click();
+    await saveStarted;
+
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: /^#.* FicticiousJoe Customer 2 \|/ }).click();
+    await expect(page.getByRole('heading', { name: 'FicticiousJoe Customer 2' })).toBeVisible();
+    await page.getByRole('tab', { name: 'Work' }).click();
+    await expect(page.getByLabel('New Work Note')).toHaveValue('');
+    await expect(page.getByText('Saving Work Note…')).toHaveCount(0);
+    await expect(page.getByText(/Unsaved Work Note/)).toHaveCount(0);
+    const secondJobNote = `Independent Job B note ${Date.now()}`;
+    await page.getByLabel('New Work Note').fill(secondJobNote);
+
+    releaseSave();
+    await heldRequestFinished;
+    await page.waitForTimeout(250);
+    await expect(page.getByRole('heading', { name: 'FicticiousJoe Customer 2' })).toBeVisible();
+    await expect(page.getByLabel('New Work Note')).toHaveValue(secondJobNote);
+    await expect(page.getByText('Saving Work Note…')).toHaveCount(0);
+    await expect(page.getByText(/Unsaved Work Note/)).toBeVisible();
+  } finally {
+    releaseSave?.();
+  }
 });
