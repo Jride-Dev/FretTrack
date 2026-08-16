@@ -1,4 +1,4 @@
-# FretTrack v0.2.9-beta.5 Trial Readiness Checklist
+# FretTrack v0.2.9-beta.6 Trial Readiness Checklist
 
 Use this checklist before handing a build to a real trial shop.
 

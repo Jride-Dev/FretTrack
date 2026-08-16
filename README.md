@@ -8,7 +8,7 @@
 
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
-Current version: `0.2.9-beta.5`
+Current version: `0.2.9-beta.6`
 
 FretTrack is a guitar and bass repair shop check-in and work order system for real bench workflow: customer intake, instrument details, inspection notes, damage photos, parts and services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
@@ -22,7 +22,7 @@ Public tester/customer docs are available at [frettrack-app.com/docs](https://fr
 
 ## Current Status
 
-Current release candidate: `v0.2.9-beta.5`
+Current release candidate: `v0.2.9-beta.6`
 
 This includes:
 
@@ -40,6 +40,15 @@ This includes:
 - Jobs, photos, damage map, work logs, accounting foundation, auth/RLS, and multi-shop architecture
 - Pro Team Assignment Foundation with same-shop technician assignment, Current Jobs filtering, workload visibility, audit history, and role-safe self-assignment
 - Server-enforced monthly email-recipient, source-photo upload, and current photo-storage caps with Shop Settings usage warnings
+- Pro-gated Amplifier Repair intake, active-work queue, bench diagnostics, and private evidence capture
+- Pro Scheduled Email with provider-managed delivery, cancellation, consent enforcement, and immutable message snapshots
+- Hardened Stripe lifecycle ordering, retry safety, and current subscription-period synchronization
+
+### beta.6 paid-launch and Pro workflow update
+
+Beta.6 combines the production-hardened Stripe lifecycle and recovery work with two Pro shop workflows: a dedicated Amplifier Repair workspace and transactional Scheduled Email. The release preserves existing guitar repair and immediate-email behavior while adding server-authoritative entitlements, shop isolation, consent and quota enforcement, and focused database/browser coverage.
+
+The matching database migrations, `stripe-webhook` and `send-email` functions, and Cloudflare Pages app build were deployed together on 2026-08-15.
 
 ### beta.4 architecture and reliability upgrade
 

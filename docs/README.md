@@ -11,7 +11,7 @@ FretTrack's historical pre-milestone baseline was `v0.2.6-beta.14`. Current bran
 - `v0.2.63 beta`: Scheduling complete
 - `v0.3.0 beta`: Operational Shop Release
 
-Current release candidate: `v0.2.9-beta.5`. This candidate completes the first architecture-hardening pass around workspace navigation, Inventory presentation, and Job Detail presentation; fixes stale Inventory editor quantities after receiving/adjustments; adds read-only Supabase data-integrity checks; and prevents ordinary local development from silently targeting hosted Supabase.
+Current release candidate: `v0.2.9-beta.6`. This candidate adds the Pro-gated Amplifier Repair and Scheduled Email workflows, hardens Stripe lifecycle ordering and retry safety, and carries the existing architecture, recovery, permission, and shop-isolation work through a coordinated production rollout.
 
 Start here for the current product path:
 

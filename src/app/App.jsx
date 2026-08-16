@@ -43,7 +43,7 @@ import { isCurrentOperator } from '../modules/operator/operatorService';
 import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
 import { isAmplifierJob } from '../modules/amplifiers/amplifierRepair.js';
 
-const APP_VERSION = '0.2.9-beta.5';
+const APP_VERSION = '0.2.9-beta.6';
 const APP_NAME = 'FretTrack Systems';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const PWA_INSTALL_HELP_DISMISSED_KEY = 'frettrack_pwa_install_help_dismissed';

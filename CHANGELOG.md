@@ -14,11 +14,11 @@
 - Hardened Stripe self-serve billing against duplicate subscriptions and superseded events, made Portal prices authoritative over stale Checkout metadata, and kept failed-payment grace states compatible with the legacy shop-profile mirror.
 - Added a local Playwright and Supabase pgTAP testing foundation with authenticated shop fixtures, transactional cross-shop RLS coverage, and isolated pull-request CI reporting.
 
-Current version: `0.2.9-beta.5`
+Current version: `0.2.9-beta.6`
 
 This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
 
-## v0.2.9-beta.5 - Current Beta Candidate
+## v0.2.9-beta.6 - Current Beta Candidate
 
 - Added a paid-launch readiness pass with a 30-day launch checklist, restore-drill runbook, backup automation blocker, Stripe self-serve billing source control, Checkout/Portal/Webhook launch docs, and `npm run check:paid-launch-readiness` validation.
 - Hardened hosted-backup checksum generation to use the platform-independent .NET SHA-256 implementation after the Windows PowerShell hash command failed during a pre-launch backup; the full database, Storage, manifest, and Docker-volume backup now completes end to end.

@@ -5,32 +5,21 @@ Review this file before every production deploy and after every manual database/
 ## Current Deployment Status
 
 - Current branch checked during this review: `main`.
-- `main` was pushed and deployed after Permission Hardening + Premium Trial Management Phase 1.
-- App domain returned `200 OK` on 2026-06-11: https://app.frettrack-app.com/
-- Landing domain returned `200 OK` on 2026-06-11: https://frettrack-app.com/
-- Current app assets served by Cloudflare Pages:
-  - `assets/index-BcktOB5k.js`
-  - `assets/index-BCAqPMbL.css`
+- `v0.2.9-beta.6` release foundations were merged through PRs `#185`, `#186`, and `#187` on 2026-08-15.
+- App domain returned `200 OK` with the beta.6 bundle on 2026-08-15: https://app.frettrack-app.com/
+- The release deployed the Amplifier Repair, Stripe event-ordering, and Scheduled Email migrations through `20260815095604`.
+- Supabase Edge Functions are active at `stripe-webhook` version 14 and `send-email` version 35.
+- Cloudflare Pages production HTML matched the guarded production build and returned the expected CSP, Permissions Policy, Referrer Policy, and content-type protection headers.
 
 ## Current Migration Note
 
-`20260727231401_email_photo_usage_caps_foundation.sql` is intentionally pending. It must be reviewed and applied before deploying the matching `send-email` Edge Function or app build because new Storage upload policies require quota reservation RPCs. After the migration, deploy `send-email`, then App Pages. Do not deploy the Edge Function first, do not use a blanket migration push, and do not deploy the landing Worker. No Stripe secret or provider billing configuration is added.
+Remote migration history matched the repository through `20260815095604_pro_email_scheduling_foundation.sql` after the beta.6 rollout. The production dry run contained only these reviewed migrations, applied in order:
 
-`npm run check:migrations` currently reports no remote-only drift and these pending local migrations:
+- `20260814215521_amplifier_job_evidence.sql`
+- `20260815051722_stripe_event_ordering_hardening.sql`
+- `20260815095604_pro_email_scheduling_foundation.sql`
 
-- `20260606093000`
-- `20260606103000`
-- `20260608120000`
-- `20260609100000`
-- `20260609113000`
-- `20260611120000`
-- `20260611133000`
-- `20260612233321`
-- `20260616034902`
-
-These should be treated as deployment-history alignment items before future production migration work. Some may have already been manually applied or deployment-tested; verify remote migration history before future production migration work.
-
-Do not use a blanket production migration push while unrelated local migrations are still pending.
+Continue using `supabase migration list --linked`, `supabase db push --dry-run`, and `npm run check:migrations` before future production schema changes. Do not use a blanket push when unrelated migrations are pending.
 
 0.2.8 inventory work also includes these migrations that must be verified against remote migration history before production apply:
 

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
-const expectedVersion = '0.2.9-beta.5';
+const expectedVersion = '0.2.9-beta.6';
 const source = (path) => readFileSync(join(root, path), 'utf8');
 const packageJson = JSON.parse(source('package.json'));
 const packageLock = JSON.parse(source('package-lock.json'));
@@ -11,6 +11,10 @@ const app = source('src/app/App.jsx');
 const changelog = source('CHANGELOG.md');
 const releaseNotes = source('docs/RELEASE_NOTES.md');
 const readme = source('README.md');
+const docsReadme = source('docs/README.md');
+const roadmap = source('ROADMAP.md');
+const trialReadiness = source('docs/TRIAL_READINESS.md');
+const publicDocs = source('cloudflare/frettrack-coming-soon/public/docs.html');
 
 assert.equal(packageJson.version, expectedVersion);
 assert.equal(packageLock.version, expectedVersion);
@@ -20,6 +24,10 @@ assert.ok(changelog.includes(`Current version: \`${expectedVersion}\``), 'Change
 assert.ok(changelog.includes(`## v${expectedVersion} - Current Beta Candidate`), 'Current changelog heading must match.');
 assert.ok(releaseNotes.includes(`## GitHub Release Summary: v${expectedVersion}`), 'Release-note heading must match.');
 assert.ok(readme.includes(`Current version: \`${expectedVersion}\``), 'README current-version marker must match.');
+assert.ok(docsReadme.includes(`Current release candidate: \`v${expectedVersion}\``), 'Docs README release candidate must match.');
+assert.ok(roadmap.includes(`The current release candidate is \`v${expectedVersion}\``), 'Roadmap release candidate must match.');
+assert.ok(trialReadiness.startsWith(`# FretTrack v${expectedVersion} Trial Readiness Checklist`), 'Trial readiness heading must match.');
+assert.ok(publicDocs.includes(`Current beta update: v${expectedVersion}`), 'Public docs release marker must match.');
 
 for (const [label, value] of [
   ['package.json', source('package.json')],

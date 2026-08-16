@@ -42,6 +42,8 @@ Migration `20260815095604_pro_email_scheduling_foundation.sql`:
 
 Deployment requires both the migration and the updated `send-email` Edge Function before the app build is released. No Supabase Cron job or new provider secret is required; the existing `RESEND_API_KEY`, `SHOP_EMAIL_FROM`, function key, and authenticated job access remain authoritative.
 
+Production rollout completed on 2026-08-15: the migration is recorded remotely, `send-email` version 35 is active with JWT verification, and the matching Cloudflare Pages app bundle is live.
+
 ## Validation
 
 ```powershell
