@@ -146,6 +146,8 @@ export default function App() {
     onAccessDenied: () => setNotice({ type: 'error', message: 'This area is not available for your account.' })
   });
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
+  const selectedJobIdRef = useRef(selectedJobId);
+  selectedJobIdRef.current = selectedJobId;
 
   function handleSelectJob(jobId) {
     const job = jobs.find((item) => item.id === jobId);
@@ -656,7 +658,7 @@ export default function App() {
     navigateTo('list');
   }
 
-  async function handleUpdate(job) {
+  async function handleUpdate(job, options = {}) {
     if (!canWrite) {
       setNotice({ type: 'error', message: 'Your shop role is read-only.' });
       return job;
@@ -666,11 +668,16 @@ export default function App() {
       throw new Error('Offline draft mode is for new job intake only. Existing job edits require an active connection.');
     }
 
-    setJobs((current) => current.map((item) => (item.id === job.id ? job : item)));
-    const savedJob = await updateJob(job);
+    if (!options.expectedUpdatedAt) {
+      setJobs((current) => current.map((item) => (item.id === job.id ? job : item)));
+    }
+    const savedJob = await updateJob(job, options);
+    if (selectedJobIdRef.current !== job.id) {
+      setJobs((current) => current.map((item) => (item.id === savedJob.id ? savedJob : item)));
+      return savedJob;
+    }
     const loadedJobs = await refreshJobs();
     await refreshCustomers(loadedJobs);
-    setSelectedJobId(savedJob.id);
     return savedJob;
   }
 

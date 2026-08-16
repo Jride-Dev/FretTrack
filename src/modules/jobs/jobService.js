@@ -20,6 +20,7 @@ const STORAGE_KEY = 'guitar_checkin_jobs';
 const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
 const fretTrackFunctionKey = import.meta.env.VITE_FRETTRACK_FUNCTION_KEY || '';
 const duplicateWorkOrderPrefix = 'MULTIPLE WORK ORDERS CANNOT BE CREATED';
+export const JOB_SAVE_CONFLICT_CODE = 'FRETTRACK_JOB_SAVE_CONFLICT';
 export const smsEnabled = import.meta.env.VITE_SMS_ENABLED === 'true';
 const defaultTechDetails = {
   intakeType: 'Walk-In',
@@ -455,7 +456,7 @@ function functionHeaders() {
   };
 }
 
-export async function updateJob(updatedJob) {
+export async function updateJob(updatedJob, { expectedUpdatedAt = null } = {}) {
   const previousJob = getLocalJobs().find((item) => item.id === updatedJob.id);
   const job = normalizeJob({
     ...updatedJob,
@@ -468,20 +469,33 @@ export async function updateJob(updatedJob) {
   if (savedCustomer?.id) {
     job.customerId = savedCustomer.id;
   }
-  saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
-
   if (!hasSupabaseConfig || !supabase) {
+    saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
     logJobUpdated(job, previousJob);
     return job;
   }
 
-  const { error } = await updateSupabaseJob(job);
+  if (!expectedUpdatedAt) {
+    saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
+  }
+
+  const { error } = await updateSupabaseJob(job, { expectedUpdatedAt });
 
   if (error) {
+    if (error.code === JOB_SAVE_CONFLICT_CODE) {
+      throw error;
+    }
+    if (expectedUpdatedAt) {
+      console.error('Supabase version-guarded updateJob failed.', error);
+      throw new Error(`Remote job save failed: ${error.message}. No local or remote amplifier changes were saved.`);
+    }
     console.error('Supabase updateJob failed. Local copy saved only.', error);
     throw new Error(`Remote job save failed: ${error.message}. Local copy was saved only on this browser.`);
   }
 
+  if (expectedUpdatedAt) {
+    saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
+  }
   await syncJobChildren(job);
   logJobUpdated(job, previousJob);
   return job;
@@ -535,13 +549,17 @@ export async function ensureRemoteJob(job) {
   return normalizedJob;
 }
 
-async function updateSupabaseJob(job) {
+async function updateSupabaseJob(job, { expectedUpdatedAt = null } = {}) {
   const activeShopId = getActiveShopId(job.shopId);
-  let { data, error } = await supabase
+  let updateQuery = supabase
     .from('jobs')
     .update(toDbJob(job))
     .eq('id', job.id)
-    .eq('shop_id', activeShopId)
+    .eq('shop_id', activeShopId);
+  if (expectedUpdatedAt) {
+    updateQuery = updateQuery.eq('updated_at', expectedUpdatedAt);
+  }
+  let { data, error } = await updateQuery
     .select('id')
     .maybeSingle();
 
@@ -550,6 +568,9 @@ async function updateSupabaseJob(job) {
   }
 
   if (!error && !data) {
+    if (expectedUpdatedAt) {
+      return { error: createJobSaveConflictError() };
+    }
     return createMissingRemoteJob(job);
   }
 
@@ -558,19 +579,32 @@ async function updateSupabaseJob(job) {
   }
 
   console.warn('Retrying job update with legacy Supabase payload.', error);
-  ({ data, error } = await supabase
+  let legacyUpdateQuery = supabase
     .from('jobs')
     .update(toLegacyDbJob(job))
     .eq('id', job.id)
-    .eq('shop_id', activeShopId)
+    .eq('shop_id', activeShopId);
+  if (expectedUpdatedAt) {
+    legacyUpdateQuery = legacyUpdateQuery.eq('updated_at', expectedUpdatedAt);
+  }
+  ({ data, error } = await legacyUpdateQuery
     .select('id')
     .maybeSingle());
 
   if (!error && !data) {
+    if (expectedUpdatedAt) {
+      return { error: createJobSaveConflictError() };
+    }
     return createMissingRemoteJob(job);
   }
 
   return { error };
+}
+
+function createJobSaveConflictError() {
+  const error = new Error('This amplifier job changed in another session. Reload it before saving so another technician\'s work is not overwritten.');
+  error.code = JOB_SAVE_CONFLICT_CODE;
+  return error;
 }
 
 async function createMissingRemoteJob(job) {

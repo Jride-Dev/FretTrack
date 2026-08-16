@@ -35,9 +35,9 @@ const assignmentHelpers = read('src/modules/jobs/teamAssignment.js');
 const assignmentService = read('src/modules/jobs/teamAssignmentService.js');
 const assignmentControl = read('src/modules/jobs/JobAssignmentControl.jsx');
 const jobDetailHeader = read('src/modules/jobs/JobDetailHeader.jsx');
+const jobDetailShell = read('src/modules/jobs/JobDetailShell.jsx');
 const jobService = read('src/modules/jobs/jobService.js');
 const jobForm = read('src/modules/jobs/JobForm.jsx');
-const jobDetail = read('src/modules/jobs/JobDetail.jsx');
 const currentJobs = read('src/modules/jobs/CurrentJobsPage.jsx');
 const compactJobs = read('src/modules/jobs/JobList.jsx');
 const workload = read('src/modules/shops/TeamWorkloadSummary.jsx');
@@ -84,7 +84,7 @@ assert.ok(assignmentService.includes("supabase.rpc('get_assignable_shop_members'
 assert.ok(assignmentService.includes("supabase.rpc('update_job_assignment'"), 'Assignment changes must use the targeted RPC.');
 assert.ok(assignmentService.includes("data.shopId !== shopId"), 'Client assignment responses must be reconciled to explicit shop context.');
 
-assert.ok(jobDetail.includes('<JobDetailHeader'), 'Job Detail must render its header boundary.');
+assert.ok(jobDetailShell.includes('<JobDetailHeader'), 'Job Detail shell must render its header boundary.');
 assert.ok(jobDetailHeader.includes('<JobAssignmentControl'), 'Job Detail header must render assignment controls.');
 assert.ok(jobForm.includes('Assigned Technician'), 'New Job must support optional assignment.');
 assert.ok(jobForm.includes('<option value="">Unassigned</option>'), 'New Job must default to Unassigned.');
@@ -125,8 +125,8 @@ const changed = [
   .filter(Boolean)
   .map((file) => file.replaceAll('\\', '/'));
 assert.ok(
-  !changed.some((file) => file.startsWith('supabase/functions/') && file !== 'supabase/functions/send-email/index.ts'),
-  'Only the usage-cap send-email integration may change an Edge Function.'
+  !changed.some((file) => file.startsWith('supabase/functions/') && !file.startsWith('supabase/functions/send-email/')),
+  'Only the established send-email integration may change an Edge Function.'
 );
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Landing Worker files must not change.');
 assert.ok(!changed.some((file) => /stripe/i.test(file)), 'Stripe code must not change.');

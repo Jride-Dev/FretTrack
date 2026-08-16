@@ -21,6 +21,8 @@ includes(migration, "status in ('sent', 'failed')", 'Authenticated message polic
 assert.ok(!/pg_cron|cron\.schedule|net\.http_post/i.test(migration), 'Provider-managed scheduling must not add a duplicate cron dispatcher.');
 
 const edge = read('supabase/functions/send-email/index.ts');
+const providerReconciliation = read('supabase/functions/send-email/providerReconciliation.ts');
+const providerReconciliationTest = read('supabase/functions/send-email/providerReconciliation.test.ts');
 includes(edge, "action === 'cancel_scheduled'", 'Email function must expose scheduled-email cancellation.');
 includes(edge, "{ scheduled_at: scheduledAt }", 'Resend request must receive the scheduled delivery timestamp.');
 includes(edge, "template_key: message.templateKey || ''", 'Scheduled history must snapshot the selected template.');
@@ -45,6 +47,11 @@ includes(edge, "code: 'EMAIL_PROVIDER_CONFIRMATION_PENDING'", 'Ambiguous provide
 includes(edge, "action === 'reconcile_scheduled'", 'Elapsed scheduled messages must expose provider reconciliation.');
 includes(edge, "method: 'GET'", 'Provider reconciliation must retrieve authoritative Resend state.');
 includes(edge, "status: 'canceling'", 'Cancellation intent must be durable before the provider call.');
+includes(edge, 'buildProviderReconciliationPatch({', 'Provider reconciliation must use the tested terminal-state mapper.');
+includes(providerReconciliation, "new Set(['canceled', 'cancel_accepted'])", 'Provider terminal cancellation events must finalize Message History.');
+assert.ok(providerReconciliation.indexOf('sentEvents.has(normalizedEvent)') < providerReconciliation.indexOf('canceledEvents.has(normalizedEvent)'), 'Sent provider events must retain precedence over cancellation finalization.');
+includes(providerReconciliationTest, "for (const lastEvent of ['canceled', 'cancel_accepted'])", 'Executable coverage must include each supported terminal cancellation event.');
+includes(providerReconciliationTest, "lastEvent: 'delivered'", 'Executable coverage must prove an already-sent message is never marked canceled.');
 
 for (const column of ['request_id uuid', 'quota_request_id uuid', 'operation_key text', 'processing_started_at timestamptz', 'cancel_requested_at timestamptz', 'provider_last_event text']) {
   includes(hardeningMigration, column, `Hardening migration must add ${column}.`);

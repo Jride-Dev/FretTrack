@@ -124,8 +124,11 @@ export default function JobDetail({
   const [isInventoryLoading, setIsInventoryLoading] = useState(false);
   const imageImportInputRef = useRef(null);
   const paymentAutosaveTimeoutRef = useRef(null);
+  const activeJobIdRef = useRef(job.id);
+  const hydratedJobIdRef = useRef(job.id);
   const workLogSavePromiseRef = useRef(null);
   const workLogRetrySubmissionRef = useRef(null);
+  activeJobIdRef.current = job.id;
   const hasPendingWorkLog = hasPendingWorkLogDraft(workLogText);
   const hasUnsettledWorkLog = hasPendingWorkLog || isSavingWorkLog;
   const hasUnsavedChanges = isDirty || hasUnsettledWorkLog;
@@ -137,14 +140,18 @@ export default function JobDetail({
   }, [setDirty]);
 
   useEffect(() => {
+    const didSwitchJobs = hydratedJobIdRef.current !== job.id;
+    hydratedJobIdRef.current = job.id;
     setDraftJob(job);
     setTimelineEvents(job.events || []);
     setDocumentEmailDraft(null);
     if (workLogRetrySubmissionRef.current?.jobId !== job.id) {
       workLogRetrySubmissionRef.current = null;
     }
-    if (!workLogSavePromiseRef.current) {
+    if (didSwitchJobs) {
+      workLogSavePromiseRef.current = null;
       setWorkLogText('');
+      setIsSavingWorkLog(false);
     }
     setIsDirty(false);
   }, [job, setIsDirty]);
@@ -301,16 +308,23 @@ export default function JobDetail({
     if (!canWrite) {
       throw new Error('Your shop role is read-only.');
     }
-    setSaveStatus('saving');
+    const savingJobId = jobToSave.id;
+    if (activeJobIdRef.current === savingJobId) {
+      setSaveStatus('saving');
+    }
     try {
       const savedJob = await onUpdate(jobToSave);
-      setDraftJob(savedJob || jobToSave);
-      setIsDirty(false);
-      refreshTimelineEvents();
+      if (activeJobIdRef.current === savingJobId) {
+        setDraftJob(savedJob || jobToSave);
+        setIsDirty(false);
+        refreshTimelineEvents();
+      }
       return savedJob;
     } catch (error) {
-      setDirty(true);
-      setSaveStatus('error');
+      if (activeJobIdRef.current === savingJobId) {
+        setDirty(true);
+        setSaveStatus('error');
+      }
       throw error;
     }
   }
@@ -443,8 +457,8 @@ export default function JobDetail({
     if (!canWrite) {
       throw new Error('Your shop role is read-only.');
     }
-    if (workLogSavePromiseRef.current) {
-      return workLogSavePromiseRef.current;
+    if (workLogSavePromiseRef.current?.jobId === draftJob.id) {
+      return workLogSavePromiseRef.current.promise;
     }
     if (!hasPendingWorkLog) {
       return saveDraftNow();
@@ -461,10 +475,12 @@ export default function JobDetail({
 
     const savePromise = saveDraftNow(nextJob)
       .then((savedJob) => {
-        if (workLogRetrySubmissionRef.current?.id === submission.id) {
+        if (activeJobIdRef.current === submission.jobId && workLogRetrySubmissionRef.current?.id === submission.id) {
           workLogRetrySubmissionRef.current = null;
         }
-        setWorkLogText((current) => current === submittedWorkLogText ? '' : current);
+        if (activeJobIdRef.current === submission.jobId) {
+          setWorkLogText((current) => current === submittedWorkLogText ? '' : current);
+        }
         return savedJob;
       })
       .catch((error) => {
@@ -472,13 +488,15 @@ export default function JobDetail({
         throw error;
       })
       .finally(() => {
-        if (workLogSavePromiseRef.current === savePromise) {
+        if (workLogSavePromiseRef.current?.promise === savePromise) {
           workLogSavePromiseRef.current = null;
-          setIsSavingWorkLog(false);
+          if (activeJobIdRef.current === submission.jobId) {
+            setIsSavingWorkLog(false);
+          }
         }
       });
 
-    workLogSavePromiseRef.current = savePromise;
+    workLogSavePromiseRef.current = { jobId: submission.jobId, promise: savePromise };
     setIsSavingWorkLog(true);
     return savePromise;
   }

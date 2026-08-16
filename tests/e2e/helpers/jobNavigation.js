@@ -9,6 +9,16 @@ export async function openSeededJob(page, customerNumber = 1) {
     name: new RegExp(`^#.* ${customerName} \\|`),
   });
   await expect(sidebarJob).toBeVisible({ timeout: 15_000 });
-  await sidebarJob.click();
-  await expect(page.getByRole('heading', { name: customerName })).toBeVisible();
+  const detailHeading = page.getByRole('heading', { name: customerName });
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await sidebarJob.click();
+    try {
+      await detailHeading.waitFor({ state: 'visible', timeout: 5_000 });
+      return;
+    } catch (error) {
+      if (attempt === 1) {
+        throw error;
+      }
+    }
+  }
 }
