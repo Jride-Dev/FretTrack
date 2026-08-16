@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(21);
+select plan(31);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -108,6 +108,113 @@ select lives_ok(
   $$,
   'a provider-accepted cancellation can finalize the same history row'
 );
+
+select has_function(
+  'public',
+  'reconcile_customer_email_provider_state',
+  array['uuid', 'text', 'text', 'timestamp with time zone', 'timestamp with time zone', 'timestamp with time zone', 'text'],
+  'provider reconciliation uses an atomic database transition'
+);
+select ok(
+  not has_function_privilege(
+    'anon',
+    'public.reconcile_customer_email_provider_state(uuid, text, text, timestamptz, timestamptz, timestamptz, text)',
+    'execute'
+  ),
+  'anonymous callers cannot reconcile provider email state'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'public.reconcile_customer_email_provider_state(uuid, text, text, timestamptz, timestamptz, timestamptz, text)',
+    'execute'
+  ),
+  'authenticated callers cannot reconcile provider email state'
+);
+select ok(
+  has_function_privilege(
+    'service_role',
+    'public.reconcile_customer_email_provider_state(uuid, text, text, timestamptz, timestamptz, timestamptz, text)',
+    'execute'
+  ),
+  'the email Edge Function service role can reconcile provider state'
+);
+
+do $test$
+begin
+  perform * from public.reconcile_customer_email_provider_state(
+    'e1000000-0000-4000-a000-000000000003',
+    'sent',
+    'delivered',
+    '2026-08-16T03:00:00Z',
+    '2026-08-16T03:00:00Z',
+    null,
+    ''
+  );
+end;
+$test$;
+select is(
+  (select status from public.reconcile_customer_email_provider_state(
+    'e1000000-0000-4000-a000-000000000003',
+    'canceled',
+    'cancel_accepted',
+    '2026-08-16T03:01:00Z',
+    null,
+    '2026-08-16T03:01:00Z',
+    ''
+  )),
+  'sent',
+  'a losing cancellation request receives the authoritative sent row'
+);
+select is(
+  (select status from public.customer_messages where id = 'e1000000-0000-4000-a000-000000000003'),
+  'sent',
+  'a late cancellation cannot replace an already-recorded delivery'
+);
+select is(
+  (select provider_last_event from public.customer_messages where id = 'e1000000-0000-4000-a000-000000000003'),
+  'delivered',
+  'a rejected late cancellation cannot replace the delivered provider event'
+);
+select ok(
+  (select sent_at is not null and canceled_at is null from public.customer_messages where id = 'e1000000-0000-4000-a000-000000000003'),
+  'sent and canceled timestamps remain consistent after a late cancellation'
+);
+
+insert into public.customer_messages (
+  id, job_id, channel, recipient, subject, body, status, provider,
+  provider_message_id, scheduled_at, cancel_requested_at, provider_last_event, provider_event_at
+)
+values (
+  'e1000000-0000-4000-a000-000000000004',
+  'd1000000-0000-4000-a000-000000000001',
+  'email', 'pro@example.test', 'Ordering', 'Ordering snapshot', 'canceling', 'resend',
+  'provider-ordering-test', now() + interval '2 days', now(), 'scheduled', '2026-08-16T03:02:00Z'
+);
+do $test$
+begin
+  perform * from public.reconcile_customer_email_provider_state(
+    'e1000000-0000-4000-a000-000000000004',
+    'failed',
+    'failed',
+    '2026-08-16T03:01:00Z',
+    null,
+    null,
+    'Older provider failure'
+  );
+end;
+$test$;
+select is(
+  (select status from public.customer_messages where id = 'e1000000-0000-4000-a000-000000000004'),
+  'canceling',
+  'an older provider observation cannot replace newer message state'
+);
+select is(
+  (select provider_last_event from public.customer_messages where id = 'e1000000-0000-4000-a000-000000000004'),
+  'scheduled',
+  'an older provider observation cannot replace newer provider metadata'
+);
+delete from public.customer_messages where id = 'e1000000-0000-4000-a000-000000000004';
 delete from public.customer_messages where id = 'e1000000-0000-4000-a000-000000000003';
 
 set local role authenticated;

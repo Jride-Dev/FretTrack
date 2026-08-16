@@ -552,6 +552,31 @@ async function finalizeEmailMessage(messageId: string, patch: Record<string, unk
   return null;
 }
 
+async function finalizeProviderReconciliation(
+  messageId: string,
+  patch: Record<string, unknown>
+): Promise<Record<string, any> | null> {
+  const supabase = createServiceClient();
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data, error } = await supabase
+      .rpc('reconcile_customer_email_provider_state', {
+        p_message_id: messageId,
+        p_status: typeof patch.status === 'string' ? patch.status : null,
+        p_provider_last_event: typeof patch.provider_last_event === 'string' ? patch.provider_last_event : '',
+        p_provider_event_at: typeof patch.provider_event_at === 'string' ? patch.provider_event_at : null,
+        p_sent_at: typeof patch.sent_at === 'string' ? patch.sent_at : null,
+        p_canceled_at: typeof patch.canceled_at === 'string' ? patch.canceled_at : null,
+        p_error_message: typeof patch.error_message === 'string' ? patch.error_message : null
+      })
+      .maybeSingle();
+    if (!error && data) {
+      return data as Record<string, any>;
+    }
+    console.error('customer_messages provider reconciliation failed', { attempt: attempt + 1, error });
+  }
+  return null;
+}
+
 function normalizeScheduledAt(value: unknown) {
   const candidate = String(value || '').trim();
   if (!candidate) {
@@ -782,12 +807,21 @@ async function cancelScheduledEmail(request: Request, jobId: string, messageId: 
     const providerResponse = await response.json().catch(() => ({}));
 
     if (response.ok) {
-      const canceledMessage = await finalizeEmailMessage(cancelingMessage.id, {
-        status: 'canceled',
-        canceled_at: new Date().toISOString(),
-        provider_last_event: 'canceled',
-        provider_event_at: new Date().toISOString()
-      });
+      const providerEventAt = new Date().toISOString();
+      const canceledMessage = await finalizeProviderReconciliation(cancelingMessage.id, buildProviderReconciliationPatch({
+        messageStatus: cancelingMessage.status,
+        lastEvent: 'canceled',
+        scheduledAt: cancelingMessage.scheduled_at,
+        providerEventAt
+      }));
+      if (canceledMessage?.status === 'sent') {
+        return json({
+          success: false,
+          code: 'EMAIL_ALREADY_SENT',
+          error: 'The provider sent this email before cancellation completed.',
+          message: canceledMessage
+        }, 409);
+      }
       if (!canceledMessage) {
         return json({
           success: false,
@@ -877,7 +911,7 @@ async function reconcileMessageWithProvider(message: Record<string, any>, resend
     providerEventAt
   });
 
-  return await finalizeEmailMessage(message.id, patch) || message;
+  return await finalizeProviderReconciliation(message.id, patch) || message;
 }
 
 async function retrieveResendEmail(providerMessageId: string, resendApiKey: string) {

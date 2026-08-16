@@ -26,6 +26,7 @@ The **Drop Off Scheduled** template uses the job's stored drop-off appointment a
 - Authenticated clients cannot forge `scheduled` or `canceled` provider states through table writes. The service-role Edge Function owns those transitions.
 - Cancellation is job-scoped and reuses the same owner/admin/tech write-access boundary as customer email sending.
 - Cancellation first records a `canceling` state. A timeout therefore appears as **Cancellation pending confirmation**, and retrying that cancellation repairs the same row rather than leaving a misleading scheduled record.
+- Provider reconciliation locks the Message History row and applies terminal-state precedence atomically. Once delivery is recorded, a delayed canceled, failed, or nonterminal result returns the stored sent row instead of replacing its status or timestamp. Older non-delivery observations also cannot replace newer provider metadata.
 - Each accepted schedule consumes the existing monthly recipient quota. Cancellation does not restore quota because the provider request was already accepted and FretTrack's current usage ledger has no provider-reversal state.
 - Resend receives an idempotency key for each FretTrack request.
 
@@ -52,9 +53,16 @@ Follow-up migration `20260816004706_harden_email_provider_consistency.sql`:
 - adds honest `pending` and `canceling` states; and
 - keeps all provider-operation metadata service-owned under RLS.
 
-Deployment requires both the migration and the updated `send-email` Edge Function before the app build is released. No Supabase Cron job or new provider secret is required; the existing `RESEND_API_KEY`, `SHOP_EMAIL_FROM`, function key, and authenticated job access remain authoritative.
+Race-hardening migration `20260816032817_guard_email_provider_terminal_state.sql`:
 
-The original foundation rollout completed on 2026-08-15: its migration is recorded remotely, `send-email` version 35 is active with JWT verification, and the matching Cloudflare Pages app bundle is live. The follow-up consistency migration, Edge Function changes, and app changes remain local until separately approved for deployment.
+- adds a service-role-only provider reconciliation transition;
+- serializes concurrent reconciliation with a row lock;
+- makes recorded delivery irreversible; and
+- rejects older non-delivery observations before they can replace newer provider state.
+
+Deployment requires the migrations and matching `send-email` Edge Function before the app build is released. No Supabase Cron job or new provider secret is required; the existing `RESEND_API_KEY`, `SHOP_EMAIL_FROM`, function key, and authenticated job access remain authoritative.
+
+The original foundation and provider-consistency rollout completed on 2026-08-15. The current production baseline has `send-email` version 37 and the matching Cloudflare Pages app bundle. The race-hardening migration and Edge Function change remain local until separately approved for deployment.
 
 ## Validation
 
