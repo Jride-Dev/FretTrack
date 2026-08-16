@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   mkdtempSync,
   mkdirSync,
+  readFileSync,
   rmSync,
   unlinkSync,
   utimesSync,
@@ -13,11 +14,16 @@ import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const root = process.cwd();
+const backupScriptSource = readFileSync(resolve(root, 'scripts/backup-hosted-supabase.ps1'), 'utf8');
 const restoreScript = resolve(root, 'scripts/refresh-local-db-from-hosted-backup.ps1');
 const fixtureRoot = mkdtempSync(join(tmpdir(), 'frettrack-backup-safety-'));
 const powershell = process.platform === 'win32' ? 'powershell.exe' : 'pwsh';
 
 try {
+  assert.ok(
+    backupScriptSource.includes('[System.IO.File]::WriteAllLines($objectListPath, [string[]]$objects)'),
+    'Backup must create an object inventory file even when a Storage bucket is empty.'
+  );
   const validSnapshot = createSnapshot('hosted-supabase-20260813-100000');
   const failedSnapshot = createSnapshot('hosted-supabase-20260813-110000');
   writeFileSync(join(failedSnapshot, 'FAILED.txt'), 'Storage copy failed.\n');
@@ -55,9 +61,10 @@ function createSnapshot(name) {
     ['data.sql', '-- data'],
     ['migration_history_schema.sql', '-- migration schema'],
     ['migration_history_data.sql', '-- migration data'],
-    ['storage-buckets/bucket-list.txt', 'job-images\n'],
+    ['storage-buckets/bucket-list.txt', 'job-images\njob-evidence\n'],
     ['storage-buckets/job-images/_object-list.txt', 'job-images/photo.jpg\n'],
-    ['storage-buckets/job-images/photo.jpg', 'photo bytes']
+    ['storage-buckets/job-images/photo.jpg', 'photo bytes'],
+    ['storage-buckets/job-evidence/_object-list.txt', '']
   ]);
 
   for (const [relativePath, content] of files) {
