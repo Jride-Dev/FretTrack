@@ -55,12 +55,12 @@ assert.match(migration, /not private\.is_shop_member\(target_shop_id\)[\s\S]*rai
 assert.match(migration, /private\.photo_path_belongs_to_shop[\s\S]*Photo storage path does not belong to the requested shop/, 'Photo reservations must validate exact shop ownership.');
 assert.match(migration, /storage\.objects[\s\S]*metadata->>'size'/, 'Settlement must read authoritative stored bytes.');
 
-const emailReserve = emailFunction.indexOf('reserveEmailRecipientQuota(');
+const emailReserve = emailFunction.indexOf('prepareEmailRecipientQuota(');
 const providerSend = emailFunction.indexOf("fetch('https://api.resend.com/emails'");
 assert.ok(emailReserve > 0 && providerSend > emailReserve, 'Email quota must be reserved before provider send.');
 assert.match(emailFunction, /recipientCount = toRecipients\.length \+ ccRecipients\.length \+ bccRecipients\.length/, 'To, CC, and BCC recipients must be counted authoritatively.');
 assert.match(emailFunction, /if \(!response\.ok\) \{[\s\S]*releaseEmailRecipientQuota/, 'Rejected email sends must release quota.');
-assert.match(emailFunction, /quotaReserved && !providerAccepted[\s\S]*releaseEmailRecipientQuota/, 'Thrown email failures must release quota before provider acceptance.');
+assert.match(emailFunction, /!quotaSettled && !providerAttempted[\s\S]*releaseEmailRecipientQuota/, 'Pre-provider email failures must release unsettled quota.');
 assert.match(emailFunction, /EMAIL_MONTHLY_LIMIT_REACHED[\s\S]*limit:[\s\S]*used:[\s\S]*remaining:[\s\S]*resetDate:/, 'Email limit response must be stable and structured.');
 
 const photoReserve = photoService.indexOf('await reservePhotoUsage(');

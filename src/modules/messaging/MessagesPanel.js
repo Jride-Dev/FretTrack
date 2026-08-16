@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatShopDateTime, toLocalDateTimeInputValue } from '../../shared/utils/dateFormat';
 import { getShopDateOptions } from '../shops/shopConfig';
 import { buildShopSignature, defaultTemplateKey, instrumentName, messageTemplates, renderTemplate } from './messageTemplates';
 import { sendCustomerChannelMessage, smsDisabledMessage, smsEnabled } from './messageService';
+
+const RECONCILIATION_RETRY_MS = 30_000;
 
 export default function MessagesPanel({
   canWrite = true,
@@ -23,7 +25,20 @@ export default function MessagesPanel({
   const [scheduledAt, setScheduledAt] = useState('');
   const [sendState, setSendState] = useState({ sending: '', error: '', success: '' });
   const [smsMode, setSmsMode] = useState('checking');
+  const [reconcileTick, setReconcileTick] = useState(0);
+  const scheduleOperationRef = useRef(null);
+  const reconciliationRef = useRef({ currentKey: '', inFlight: false, mounted: false, timerId: null });
   const dateOptions = getShopDateOptions(shopProfile || undefined);
+  const messages = job.messages || [];
+  const reconciliationKey = messages
+    .filter((message) => message.status === 'canceling' || (
+      message.status === 'scheduled'
+      && new Date(message.scheduledAt).getTime() <= Date.now()
+    ))
+    .map((message) => `${message.id}:${message.status}:${message.scheduledAt || ''}`)
+    .sort()
+    .join('|');
+  reconciliationRef.current.currentKey = reconciliationKey;
 
   const variables = useMemo(() => ({
     customer_name: job.customerName || '',
@@ -63,6 +78,59 @@ export default function MessagesPanel({
       active = false;
     };
   }, [onGetSmsMode]);
+
+  useEffect(() => {
+    const nextScheduledAt = messages
+      .filter((message) => message.status === 'scheduled')
+      .map((message) => new Date(message.scheduledAt).getTime())
+      .filter((timestamp) => Number.isFinite(timestamp) && timestamp > Date.now())
+      .sort((left, right) => left - right)[0];
+    if (!nextScheduledAt) return undefined;
+    const timer = window.setTimeout(
+      () => setReconcileTick((current) => current + 1),
+      Math.min(Math.max(nextScheduledAt - Date.now() + 1000, 1000), 2_147_000_000)
+    );
+    return () => window.clearTimeout(timer);
+  }, [job.id, messages.map((message) => `${message.id}:${message.status}:${message.scheduledAt || ''}`).join('|')]);
+
+  useEffect(() => {
+    const state = reconciliationRef.current;
+    state.mounted = true;
+    return () => {
+      state.mounted = false;
+      if (state.timerId) window.clearTimeout(state.timerId);
+    };
+  }, []);
+
+  useEffect(() => {
+    const state = reconciliationRef.current;
+    if (state.timerId) {
+      window.clearTimeout(state.timerId);
+      state.timerId = null;
+    }
+    if (!canWrite || !onSendMessage || !reconciliationKey) return;
+    if (state.inFlight) return;
+    state.inFlight = true;
+    const attemptedKey = reconciliationKey;
+    Promise.resolve(onSendMessage({ action: 'reconcile_scheduled', channel: 'email' }))
+      .then((result) => {
+        if (!result?.ok) {
+          console.warn('Scheduled email reconciliation did not complete.', result?.error || 'Unknown reconciliation error.');
+        }
+      })
+      .catch((error) => {
+        console.warn('Scheduled email reconciliation failed.', error);
+      })
+      .finally(() => {
+        state.inFlight = false;
+        if (!state.mounted || !state.currentKey) return;
+        const delay = state.currentKey === attemptedKey ? RECONCILIATION_RETRY_MS : 0;
+        state.timerId = window.setTimeout(
+          () => setReconcileTick((current) => current + 1),
+          delay
+        );
+      });
+  }, [canWrite, job.id, reconciliationKey, reconcileTick]);
 
   function applyTemplate(nextTemplateKey, options = { saveSelection: true }) {
     const cleanTemplateKey = messageTemplates[nextTemplateKey] ? nextTemplateKey : defaultTemplateKey;
@@ -117,8 +185,6 @@ export default function MessagesPanel({
   }
 
   async function handleScheduleEmail() {
-    setSendState({ sending: 'schedule', error: '', success: '' });
-
     if (!canScheduleEmail) {
       setSendState({ sending: '', error: 'Scheduled Email is available on Pro.', success: '' });
       return;
@@ -143,18 +209,56 @@ export default function MessagesPanel({
       return;
     }
 
-    const result = await onSendMessage({
-      channel: 'email',
+    const operationFingerprint = JSON.stringify({
+      jobId: job.id,
+      recipient: job.email || '',
       templateKey,
       subject,
       body,
       scheduledAt: new Date(timestamp).toISOString()
     });
+    if (!scheduleOperationRef.current || scheduleOperationRef.current.fingerprint !== operationFingerprint) {
+      scheduleOperationRef.current = {
+        fingerprint: operationFingerprint,
+        requestId: crypto.randomUUID(),
+        inFlight: false
+      };
+    }
+    if (scheduleOperationRef.current.inFlight) return;
+    scheduleOperationRef.current.inFlight = true;
+    const requestId = scheduleOperationRef.current.requestId;
+    setSendState({ sending: 'schedule', error: '', success: '' });
+
+    let result;
+    try {
+      result = await onSendMessage({
+        channel: 'email',
+        templateKey,
+        subject,
+        body,
+        requestId,
+        scheduledAt: new Date(timestamp).toISOString()
+      });
+    } catch (error) {
+      result = {
+        ok: false,
+        retrySameRequest: true,
+        error: error?.message || 'Email scheduling confirmation was interrupted. Retry this same operation.'
+      };
+    } finally {
+      if (scheduleOperationRef.current?.requestId === requestId) {
+        scheduleOperationRef.current.inFlight = false;
+      }
+    }
     if (!result.ok) {
+      if (!result.retrySameRequest && scheduleOperationRef.current?.requestId === requestId) {
+        scheduleOperationRef.current = null;
+      }
       setSendState({ sending: '', error: result.error || 'Email could not be scheduled.', success: '' });
       return;
     }
 
+    scheduleOperationRef.current = null;
     setScheduledAt('');
     setSendState({ sending: '', error: '', success: 'Email scheduled with the delivery provider and added to message history.' });
   }
@@ -173,7 +277,6 @@ export default function MessagesPanel({
     setSendState({ sending: '', error: '', success: 'Scheduled email canceled.' });
   }
 
-  const messages = job.messages || [];
   const canSendEmail = canSendEmailByPlan && Boolean(job.email && body.trim());
   const canSendSms = canSendSmsByPlan && smsEnabled && Boolean(job.phone && body.trim() && job.smsOptIn);
   const scheduleMin = toLocalDateTimeInputValue(Date.now() + 2 * 60 * 1000);
@@ -316,14 +419,16 @@ export default function MessagesPanel({
                     {message.errorMessage && <p className="message-error">{message.errorMessage}</p>}
                   </td>
                   <td>
-                    {message.status === 'scheduled' && new Date(message.scheduledAt).getTime() > Date.now() && canWrite ? (
+                    {((message.status === 'scheduled' && new Date(message.scheduledAt).getTime() > Date.now()) || message.status === 'canceling') && canWrite ? (
                       <button
                         type="button"
                         className="secondary"
                         disabled={Boolean(sendState.sending)}
                         onClick={() => handleCancelScheduledEmail(message)}
                       >
-                        {sendState.sending === `cancel:${message.id}` ? 'Canceling...' : 'Cancel scheduled email'}
+                        {sendState.sending === `cancel:${message.id}`
+                          ? 'Canceling...'
+                          : message.status === 'canceling' ? 'Retry cancellation' : 'Cancel scheduled email'}
                       </button>
                     ) : null}
                   </td>
@@ -338,6 +443,8 @@ export default function MessagesPanel({
 }
 
 function formatMessageStatus(message) {
+  if (message.status === 'pending') return 'Provider confirmation pending';
+  if (message.status === 'canceling') return 'Cancellation pending confirmation';
   if (message.status === 'scheduled') {
     return new Date(message.scheduledAt).getTime() > Date.now()
       ? 'Scheduled with provider'

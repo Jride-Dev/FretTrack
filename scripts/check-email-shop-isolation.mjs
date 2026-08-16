@@ -42,7 +42,7 @@ function assertThrowsShopContext(fn, message) {
 
 const sendEmailFunction = read('supabase/functions/send-email/index.ts');
 assert.ok(
-  sendEmailFunction.indexOf('reserveEmailRecipientQuota(') < sendEmailFunction.indexOf("fetch('https://api.resend.com/emails'"),
+  sendEmailFunction.indexOf('prepareEmailRecipientQuota(') < sendEmailFunction.indexOf("fetch('https://api.resend.com/emails'"),
   'Email recipient quota must be reserved after shop resolution and before provider send.'
 );
 assertIncludes(sendEmailFunction, 'releaseEmailRecipientQuota(access.shopId, quotaRequestId)', 'Failed sends must release the same shop reservation.');
@@ -246,6 +246,7 @@ const unrelatedMigrations = changed.filter((file) => (
   file.startsWith('supabase/migrations/')
   && !file.endsWith('_add_shop_country_localization.sql')
   && !file.endsWith('_pro_team_assignment_foundation.sql')
+  && !file.endsWith('_harden_email_provider_consistency.sql')
 ));
 assert.equal(unrelatedMigrations.length, 0, 'Email isolation changes must not add unrelated Supabase migrations.');
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Landing Worker files must not change.');
