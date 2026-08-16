@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(31);
+select plan(32);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -140,9 +140,8 @@ select ok(
   'the email Edge Function service role can reconcile provider state'
 );
 
-do $test$
-begin
-  perform * from public.reconcile_customer_email_provider_state(
+select is(
+  (select status from public.reconcile_customer_email_provider_state(
     'e1000000-0000-4000-a000-000000000003',
     'sent',
     'delivered',
@@ -150,9 +149,10 @@ begin
     '2026-08-16T03:00:00Z',
     null,
     ''
-  );
-end;
-$test$;
+  )),
+  'sent',
+  'a delivered provider event replaces an earlier recorded cancellation'
+);
 select is(
   (select status from public.reconcile_customer_email_provider_state(
     'e1000000-0000-4000-a000-000000000003',
