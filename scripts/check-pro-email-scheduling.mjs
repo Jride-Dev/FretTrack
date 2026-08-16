@@ -8,6 +8,7 @@ const includes = (source, expected, message) => assert.ok(source.includes(expect
 
 const migration = read('supabase/migrations/20260815095604_pro_email_scheduling_foundation.sql');
 const hardeningMigration = read('supabase/migrations/20260816004706_harden_email_provider_consistency.sql');
+const terminalStateMigration = read('supabase/migrations/20260816032817_guard_email_provider_terminal_state.sql');
 for (const plan of ['free', 'solo', 'shop', 'pro', 'enterprise', 'trial']) {
   includes(migration, `('${plan}', 'scheduled_email'`, `Migration must seed scheduled_email for ${plan}.`);
 }
@@ -48,6 +49,7 @@ includes(edge, "action === 'reconcile_scheduled'", 'Elapsed scheduled messages m
 includes(edge, "method: 'GET'", 'Provider reconciliation must retrieve authoritative Resend state.');
 includes(edge, "status: 'canceling'", 'Cancellation intent must be durable before the provider call.');
 includes(edge, 'buildProviderReconciliationPatch({', 'Provider reconciliation must use the tested terminal-state mapper.');
+includes(edge, ".rpc('reconcile_customer_email_provider_state'", 'Provider reconciliation must use the atomic database transition.');
 includes(providerReconciliation, "new Set(['canceled', 'cancel_accepted'])", 'Provider terminal cancellation events must finalize Message History.');
 assert.ok(providerReconciliation.indexOf('sentEvents.has(normalizedEvent)') < providerReconciliation.indexOf('canceledEvents.has(normalizedEvent)'), 'Sent provider events must retain precedence over cancellation finalization.');
 includes(providerReconciliationTest, "for (const lastEvent of ['canceled', 'cancel_accepted'])", 'Executable coverage must include each supported terminal cancellation event.');
@@ -60,6 +62,10 @@ includes(hardeningMigration, "status in ('pending', 'sent', 'failed', 'scheduled
 includes(hardeningMigration, 'customer_messages_email_request_id_uidx', 'History request IDs must be unique.');
 includes(hardeningMigration, 'customer_messages_scheduled_operation_uidx', 'Concurrent identical schedules must be unique.');
 includes(hardeningMigration, 'and request_id is null', 'Authenticated writers must not forge provider operation IDs.');
+includes(terminalStateMigration, "stored_message.status = 'sent'", 'A recorded delivery must be irreversible during reconciliation.');
+includes(terminalStateMigration, 'p_provider_event_at < stored_message.provider_event_at', 'Older provider observations must not replace newer state.');
+includes(terminalStateMigration, 'for update', 'Provider reconciliation must serialize concurrent transitions on the message row.');
+includes(terminalStateMigration, 'to service_role', 'Only the service role may invoke provider reconciliation.');
 
 const panel = read('src/modules/messaging/MessagesPanel.js');
 includes(panel, 'Schedule Email', 'Messages panel must expose scheduled email.');
@@ -88,6 +94,7 @@ const rlsTest = read('supabase/tests/database/scheduled_email_foundation_rls.tes
 includes(rlsTest, 'authenticated clients cannot forge provider scheduling state', 'pgTAP must cover forged scheduled records.');
 includes(rlsTest, 'Shop owner cannot read another shop scheduled messages', 'pgTAP must cover shop isolation.');
 includes(rlsTest, 'historical message state remains unchanged', 'pgTAP must cover historical message stability.');
+includes(rlsTest, 'a late cancellation cannot replace an already-recorded delivery', 'pgTAP must cover late cancellation ordering.');
 
 const proBrowserTest = read('tests/e2e/authenticated/pro-email-scheduling.spec.js');
 includes(proBrowserTest, "selectOption('drop_off_scheduled')", 'Playwright must cover the Pro scheduling surface and drop-off template.');
