@@ -5,19 +5,22 @@ Review this file before every production deploy and after every manual database/
 ## Current Deployment Status
 
 - Current branch checked during this review: `main`.
-- `v0.2.9-beta.6` release foundations were merged through PRs `#185`, `#186`, and `#187` on 2026-08-15.
-- App domain returned `200 OK` with the beta.6 bundle on 2026-08-15: https://app.frettrack-app.com/
-- The release deployed the Amplifier Repair, Stripe event-ordering, and Scheduled Email migrations through `20260815095604`.
-- Supabase Edge Functions are active at `stripe-webhook` version 14 and `send-email` version 35.
+- `v0.2.9-beta.6` release foundations and scheduled-email consistency hardening were merged through PRs `#185`-`#188` on 2026-08-15. PR `#189` fixed empty Storage-bucket inventories before the production backup was accepted.
+- App domain returned `200 OK` with the beta.6 bundle on 2026-08-15: https://app.frettrack-app.com/. Its JavaScript asset matched guarded build `assets/index-D7CbFlkS.js` and Cloudflare Pages deployment `94ed126c.frettrack.pages.dev`.
+- The release deployed the Amplifier Repair, Stripe event-ordering, Scheduled Email, and provider-consistency migrations through `20260816004706`.
+- Supabase Edge Functions are active at `stripe-webhook` version 14 and `send-email` version 36. An unauthenticated `send-email` request returned `401` after deployment.
 - Cloudflare Pages production HTML matched the guarded production build and returned the expected CSP, Permissions Policy, Referrer Policy, and content-type protection headers.
+- Pre-migration snapshot `backups/hosted-supabase-20260815-183640` passed the full restore validator, including manifest hashes and inventories for all four Storage buckets. Its compare report found no schema, migration-history, or row-count drift from the immediately preceding snapshot.
 
 ## Current Migration Note
 
-Remote migration history matched the repository through `20260815095604_pro_email_scheduling_foundation.sql` after the beta.6 rollout. The production dry run contained only these reviewed migrations, applied in order:
+Remote migration history matched the repository through `20260816004706_harden_email_provider_consistency.sql` after the beta.6 hardening rollout. The original release applied these reviewed migrations in order:
 
 - `20260814215521_amplifier_job_evidence.sql`
 - `20260815051722_stripe_event_ordering_hardening.sql`
 - `20260815095604_pro_email_scheduling_foundation.sql`
+
+The follow-up production dry run contained only `20260816004706_harden_email_provider_consistency.sql`; it was applied before deploying `send-email` version 36 and the guarded Cloudflare Pages bundle.
 
 Continue using `supabase migration list --linked`, `supabase db push --dry-run`, and `npm run check:migrations` before future production schema changes. Do not use a blanket push when unrelated migrations are pending.
 
