@@ -9,7 +9,7 @@ const CONTENT_SECURITY_POLICY = [
   "form-action 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.supabase.co https://devglobe.app",
+  "img-src 'self' data: blob: https://*.supabase.co https://devglobe.app https://api.producthunt.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
   "worker-src 'self' blob:",
@@ -810,6 +810,13 @@ function landingPage() {
         gap: 14px;
       }
 
+      .footer-badges {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
       .footer-badge {
         align-items: center;
         display: inline-flex;
@@ -1383,9 +1390,14 @@ function landingPage() {
     <footer>
       <div class="footer-inner">
         <span>FretTrack Systems</span>
-        <a class="footer-badge" href="https://devglobe.app/projects/frettrack?utm_source=badge&utm_medium=embed" target="_blank" rel="noopener">
-          <img src="https://devglobe.app/badges/launched-on-devglobe-dark.svg" alt="Launched on DevGlobe" width="250" height="54">
-        </a>
+        <div class="footer-badges">
+          <a class="footer-badge" href="https://devglobe.app/projects/frettrack?utm_source=badge&utm_medium=embed" target="_blank" rel="noopener">
+            <img src="https://devglobe.app/badges/launched-on-devglobe-dark.svg" alt="Launched on DevGlobe" width="250" height="54">
+          </a>
+          <a class="footer-badge" href="https://www.producthunt.com/products/frettrack/reviews/new?utm_source=badge-product_review&utm_medium=badge&utm_source=badge-frettrack" target="_blank" rel="noopener noreferrer">
+            <img src="https://api.producthunt.com/widgets/embed-image/v1/product_review.svg?product_id=1257938&theme=light" alt="Review FretTrack on Product Hunt" width="250" height="54" loading="lazy">
+          </a>
+        </div>
         <div class="footer-links">
           <a href="${APP_URL}">App Login</a>
           <a href="/docs">Docs</a>
