@@ -134,6 +134,7 @@ assert.match(entitlementService, /\[SUBSCRIPTION_TIERS\.PRO\]: \{[\s\S]*?keyboar
 assert.match(jobForm, /keyboardRepairEnabled \|\| option\.value !== 'Keyboard'/, 'Generic intake must hide Keyboard from non-Pro shops.');
 assert.match(jobInfo, /keyboardRepairEnabled \|\| option\.value !== 'Keyboard'/, 'Generic job editing must not offer a Keyboard conversion to non-Pro shops.');
 assert.match(page, /Keyboard Repair is available on Pro\.[\s\S]*?Existing keyboard work orders remain available to view/, 'Downgraded shops must keep historical visibility with a clear upgrade message.');
+assert.match(page, /const submitLockRef = useRef\(false\);[\s\S]*?if \(submitLockRef\.current\) \{[\s\S]*?return;[\s\S]*?submitLockRef\.current = true;[\s\S]*?finally \{[\s\S]*?submitLockRef\.current = false;/, 'Keyboard intake must synchronously coalesce rapid duplicate submissions.');
 assert.match(navigation, /'keyboards'[\s\S]*?'keyboard-detail'/, 'Workspace navigation must recognize Keyboard Repair modes.');
 assert.match(workspaceState, /instrumentType === 'keyboard'[\s\S]*?'keyboard-detail'/, 'Refresh restoration must correct keyboard detail routing.');
 

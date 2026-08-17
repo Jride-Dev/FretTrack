@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatShopDate, toIsoDateInputValue } from '../../shared/utils/dateFormat.js';
 import { JOB_PRIORITY_OPTIONS } from '../jobs/jobPriority.js';
 import KeyboardMakeModelFields from './KeyboardMakeModelFields.jsx';
@@ -51,6 +51,7 @@ export default function KeyboardRepairPage({
   const [search, setSearch] = useState('');
   const [includeClosed, setIncludeClosed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const submitLockRef = useRef(false);
   const [keyStates, setKeyStates] = useState([]);
   const visibleJobs = useMemo(() => filterKeyboardJobs(jobs, search, includeClosed), [includeClosed, jobs, search]);
   const selectedCustomer = customers.find((customer) => customer.id === form.customerId) || null;
@@ -90,6 +91,9 @@ export default function KeyboardRepairPage({
 
   async function submit(event) {
     event.preventDefault();
+    if (submitLockRef.current) {
+      return;
+    }
     if (!canWrite) {
       onNotice?.({ type: 'error', message: 'Your shop role is read-only.' });
       return;
@@ -103,6 +107,7 @@ export default function KeyboardRepairPage({
       return;
     }
 
+    submitLockRef.current = true;
     setIsSaving(true);
     try {
       await onCreateJob?.(buildKeyboardJobDraft(form, selectedCustomer));
@@ -110,6 +115,7 @@ export default function KeyboardRepairPage({
     } catch (error) {
       onNotice?.({ type: 'error', message: error?.message || 'Keyboard work order could not be created.' });
     } finally {
+      submitLockRef.current = false;
       setIsSaving(false);
     }
   }

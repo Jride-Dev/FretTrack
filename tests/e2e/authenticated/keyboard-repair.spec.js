@@ -27,6 +27,29 @@ test('Pro owner creates a keyboard work order and persists bench details through
   await expect(page.getByRole('group', { name: 'Final function test' }).getByLabel('Velocity response')).toHaveValue('Passed');
 });
 
+test('rapid duplicate activation creates exactly one keyboard work order', async ({ page }) => {
+  const uniqueModel = `Double Submit Keyboard ${Date.now()}`;
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Keyboard Repair' }).click();
+  await page.getByLabel('Existing Customer').selectOption({ label: 'FicticiousJoe Customer 19' });
+  await page.getByLabel('Manufacturer').fill('Roland');
+  await page.getByLabel('Model', { exact: true }).fill(uniqueModel);
+  await page.getByLabel('Reported Symptoms / Customer Request').fill('Rapid duplicate intake regression fixture.');
+
+  const createButton = page.getByRole('button', { name: 'Create Keyboard Work Order' });
+  await createButton.evaluate((button) => {
+    const form = button.closest('form');
+    form.requestSubmit(button);
+    form.requestSubmit(button);
+  });
+
+  await expect(page.getByText('Keyboard work order', { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: 'Keyboard Repair' }).click();
+  await page.getByLabel('Search').fill(uniqueModel);
+  await expect(page.getByRole('button', { name: new RegExp(uniqueModel) })).toHaveCount(1);
+});
+
 test('rejects a stale keyboard save instead of erasing another technician session', async ({ context, page }) => {
   const uniqueModel = `Concurrent Keyboard ${Date.now()}`;
   await page.goto('/');
