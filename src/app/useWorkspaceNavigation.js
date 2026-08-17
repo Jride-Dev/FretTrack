@@ -78,13 +78,13 @@ export default function useWorkspaceNavigation({
       return false;
     }
 
-    if (!['detail', 'amplifier-detail'].includes(mode)) {
+    if (!['detail', 'amplifier-detail', 'keyboard-detail'].includes(mode)) {
       jobDetailReturnModeRef.current = mode;
     }
     setHasUnsavedPageChanges(false);
     hasUserNavigatedRef.current = true;
     setSelectedJobId(jobId);
-    setMode(detailMode === 'amplifier-detail' ? 'amplifier-detail' : 'detail');
+    setMode(['amplifier-detail', 'keyboard-detail'].includes(detailMode) ? detailMode : 'detail');
     return true;
   }
 
@@ -162,6 +162,8 @@ export function isAllowedWorkspaceMode(mode, {
     'detail',
     'amplifiers',
     'amplifier-detail',
+    'keyboards',
+    'keyboard-detail',
     'settings',
     'customers',
     'inventory',

@@ -4123,6 +4123,29 @@ th.internal-only {
   overflow-wrap: anywhere;
 }
 
+.keyboard-test-stages {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.keyboard-test-stage {
+  border: 1px solid var(--border);
+  min-width: 0;
+  padding: 14px;
+}
+
+.keyboard-test-stage legend {
+  font-weight: 800;
+  padding: 0 8px;
+}
+
+.keyboard-test-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 @media (max-width: 1024px) {
   .amplifier-module-grid {
     grid-template-columns: 1fr;
@@ -4130,6 +4153,10 @@ th.internal-only {
 
   .amplifier-bench-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .keyboard-test-stages {
+    grid-template-columns: 1fr;
   }
 
   .photo-editor-backdrop {
@@ -4295,7 +4322,8 @@ th.internal-only {
 
   .amplifier-queue-filters,
   .amplifier-bench-grid,
-  .amplifier-evidence-capture {
+  .amplifier-evidence-capture,
+  .keyboard-test-grid {
     grid-template-columns: 1fr;
   }
 

@@ -2,6 +2,7 @@ import {
   canDeletePhotos as canDeletePhotosForRole,
   canEditCustomers as canEditCustomersForRole,
   canEditAmplifierRepair as canEditAmplifierRepairForRole,
+  canEditKeyboardRepair as canEditKeyboardRepairForRole,
   canScheduleEmail as canScheduleEmailForRole,
   canEditJobs as canEditJobsForRole,
   canEditPhotos as canEditPhotosForRole,
@@ -18,6 +19,7 @@ import {
 } from '../modules/auth/permissionService.js';
 import {
   canUseAmplifierRepair,
+  canUseKeyboardRepair,
   canUseTeamAssignment,
   getEffectiveStatus,
   isReadOnlyStatus
@@ -40,12 +42,15 @@ export function getAppAccess({
     : canEditJobs;
   const canManageShop = !hasSupabaseConfig || canManageShopSettings({ role: membership?.role });
   const amplifierRepairEnabled = !hasSupabaseConfig || canUseAmplifierRepair(billingAccess);
+  const keyboardRepairEnabled = !hasSupabaseConfig || canUseKeyboardRepair(billingAccess);
 
   return {
     permissionContext,
     canEditJobs,
     amplifierRepairEnabled,
     canEditAmplifierRepair: !hasSupabaseConfig || canEditAmplifierRepairForRole(permissionContext),
+    keyboardRepairEnabled,
+    canEditKeyboardRepair: !hasSupabaseConfig || canEditKeyboardRepairForRole(permissionContext),
     canScheduleEmail: !hasSupabaseConfig || canScheduleEmailForRole(permissionContext),
     canWrite,
     canManageShop,

@@ -3,13 +3,17 @@ export function resolveStoredWorkspaceState({
   jobs = [],
   isAllowedMode = () => false
 } = {}) {
-  const isDetailMode = ['detail', 'amplifier-detail'].includes(workspaceState.mode);
+  const isDetailMode = ['detail', 'amplifier-detail', 'keyboard-detail'].includes(workspaceState.mode);
 
   const selectedJob = jobs.find((job) => job.id === workspaceState.selectedJobId);
   if (isDetailMode && selectedJob) {
     const instrumentType = String(selectedJob.instrumentType || selectedJob.techDetails?.instrumentType || '').trim().toLowerCase();
     return {
-      mode: instrumentType === 'amplifier' ? 'amplifier-detail' : 'detail',
+      mode: instrumentType === 'amplifier'
+        ? 'amplifier-detail'
+        : instrumentType === 'keyboard'
+          ? 'keyboard-detail'
+          : 'detail',
       selectedJobId: workspaceState.selectedJobId
     };
   }

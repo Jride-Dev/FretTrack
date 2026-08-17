@@ -3,6 +3,7 @@ import {
   canUseTeamAssignment as hasTeamAssignmentEntitlement,
   canUseAdvancedReporting,
   canUseAmplifierRepair as hasAmplifierRepairEntitlement,
+  canUseKeyboardRepair as hasKeyboardRepairEntitlement,
   canUseScheduledEmail as hasScheduledEmailEntitlement,
   canUsePhotoEditor as hasPhotoEditorEntitlement,
   isReadOnlyStatus
@@ -94,6 +95,11 @@ export function canEditAmplifierRepair({ role, entitlementSnapshot } = {}) {
     && hasAmplifierRepairEntitlement(entitlementSnapshot);
 }
 
+export function canEditKeyboardRepair({ role, entitlementSnapshot } = {}) {
+  return canWriteShop({ role, entitlementSnapshot })
+    && hasKeyboardRepairEntitlement(entitlementSnapshot);
+}
+
 export function canScheduleEmail({ role, entitlementSnapshot } = {}) {
   return canWriteShop({ role, entitlementSnapshot })
     && hasScheduledEmailEntitlement(entitlementSnapshot);
@@ -176,6 +182,7 @@ export function getCurrentAccessPermissions({ isOperator, role, entitlementSnaps
     canWriteShipping: canWriteShipping(context),
     canEditCustomers: canEditCustomers(context),
     canEditAmplifierRepair: canEditAmplifierRepair(context),
+    canEditKeyboardRepair: canEditKeyboardRepair(context),
     canScheduleEmail: canScheduleEmail(context),
     canEditJobs: canEditJobs(context),
     canEditPhotos: canEditPhotos(context),

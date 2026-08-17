@@ -68,7 +68,7 @@ assert.deepEqual(
 
 assert.match(catalog, /Amplifier:\s*\{[\s\S]*?label: 'Amplifier'/, 'The shared instrument catalog must recognize amplifiers.');
 assert.match(service, /\{ value: 'Amplifier', label: INSTRUMENT_CATALOG\.Amplifier\.label \}/, 'Shared instrument options must expose Amplifier.');
-assert.match(service, /normalizedType === 'Amplifier'[\s\S]*?return 0/, 'Amplifiers must use a zero string-count default.');
+assert.match(service, /\['Amplifier', 'Keyboard'\]\.includes\(normalizedType\)[\s\S]*?return 0/, 'Amplifiers must use a zero string-count default.');
 assert.match(service, /if \(!isStringedInstrumentType\(instrumentType\)\)[\s\S]*?return instrumentType/, 'Shared labels must omit guitar string counts for amplifiers.');
 assert.match(jobForm, /isStringedInstrumentType\(form\.instrumentType\)/, 'Generic intake must hide string-only controls for amplifiers.');
 assert.match(jobInfo, /isStringedInstrumentType\(instrumentType\)/, 'Generic job information must hide string-only controls for amplifiers.');
@@ -90,7 +90,7 @@ assert.match(detail, /<AmplifierMakeModelFields[\s\S]*?listIdPrefix="amplifier-d
 assert.match(router, /lazy\(\(\) => import\('\.\.\/modules\/amplifiers\/AmplifierRepairPage\.jsx'\)\)/, 'The amplifier page must remain a lazy-loaded module.');
 assert.match(router, /mode === 'amplifiers'[\s\S]*?<AmplifierRepairPage[\s\S]*?isEntitled=\{access\.amplifierRepairEnabled\}[\s\S]*?canWrite=\{access\.canEditAmplifierRepair\}/, 'Amplifier intake must combine Pro entitlement and role-aware write permission.');
 assert.match(router, /mode === 'amplifier-detail'[\s\S]*?<AmplifierJobDetail[\s\S]*?onUpdate=\{actions\.onUpdateJob\}/, 'Amplifier detail must reuse the established job update path.');
-assert.match(app, /isAmplifierJob\(job\) \? 'amplifier-detail' : 'detail'/, 'Job selection must route amplifiers away from guitar-specific Job Detail.');
+assert.match(app, /isAmplifierJob\(job\)[\s\S]*?'amplifier-detail'/, 'Job selection must route amplifiers away from guitar-specific Job Detail.');
 assert.match(app, /onCreateAmplifierJob: handleAmplifierJobCreate/, 'Amplifier creation must cross the workspace action boundary.');
 assert.match(app, /if \(!amplifierRepairEnabled\)[\s\S]*?Amplifier Repair is available on Pro/, 'Amplifier creation must retain a defensive client entitlement guard.');
 assert.match(appAccess, /const amplifierRepairEnabled = [^;]+canUseAmplifierRepair\(billingAccess\)/, 'App access must expose entitlement-only Amplifier Repair availability.');
@@ -98,12 +98,12 @@ assert.match(appAccess, /canEditAmplifierRepair: [^,]+canEditAmplifierRepairForR
 assert.match(permissionService, /canEditAmplifierRepair[\s\S]*?hasAmplifierRepairEntitlement/, 'Amplifier writes must require the Pro entitlement and an existing write role.');
 assert.match(entitlementService, /AMPLIFIER_REPAIR: 'amplifier_repair'/, 'Amplifier Repair must use a named entitlement key.');
 assert.match(entitlementService, /\[SUBSCRIPTION_TIERS\.PRO\]: \{[\s\S]*?amplifier_repair: true/, 'The Pro tier must enable Amplifier Repair.');
-assert.match(jobForm, /filter\(\(option\) => amplifierRepairEnabled \|\| option\.value !== 'Amplifier'\)/, 'Generic intake must not expose Amplifier to non-Pro shops.');
-assert.match(jobInfo, /filter\(\(option\) => amplifierRepairEnabled \|\| option\.value !== 'Amplifier'\)/, 'Generic job editing must not offer an Amplifier conversion to non-Pro shops.');
+assert.match(jobForm, /amplifierRepairEnabled \|\| option\.value !== 'Amplifier'/, 'Generic intake must not expose Amplifier to non-Pro shops.');
+assert.match(jobInfo, /amplifierRepairEnabled \|\| option\.value !== 'Amplifier'/, 'Generic job editing must not offer an Amplifier conversion to non-Pro shops.');
 assert.match(page, /Amplifier Repair is available on Pro\.[\s\S]*?Existing amplifier work orders remain available to view/, 'Non-Pro shops must receive a clear upgrade message while retaining historical visibility.');
 assert.match(navigation, /selectJob\(jobId, detailMode = 'detail', \{ skipDirtyGuard = false \} = \{\}\)/, 'Workspace selection must support a focused detail target and safe post-save transition without duplicating navigation.');
-assert.match(navigation, /\['detail', 'amplifier-detail'\]\.includes\(mode\)/, 'Close Detail must preserve the originating page for both repair detail modes.');
-assert.match(workspaceState, /instrumentType === 'amplifier' \? 'amplifier-detail' : 'detail'/, 'Refresh restoration must correct amplifier detail routing.');
+assert.match(navigation, /\['detail', 'amplifier-detail', 'keyboard-detail'\]\.includes\(mode\)/, 'Close Detail must preserve the originating page for repair detail modes.');
+assert.match(workspaceState, /instrumentType === 'amplifier'[\s\S]*?'amplifier-detail'/, 'Refresh restoration must correct amplifier detail routing.');
 
 for (const label of ['Safety Notes', 'Diagnosis', 'Repair Performed', 'Parts Replaced', 'Bench Test Notes', 'Final Test']) {
   assert.ok(detail.includes(label), `Amplifier detail must include ${label}.`);

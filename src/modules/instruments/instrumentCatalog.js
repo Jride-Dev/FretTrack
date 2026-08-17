@@ -279,6 +279,33 @@ export const INSTRUMENT_CATALOG = {
       Ortega: ['R Series', 'Family Series', 'Feel Series']
     }
   },
+  Keyboard: {
+    label: 'Keyboard / Synthesizer',
+    aliases: ['Keyboard', 'Synth', 'Synthesizer', 'Digital Piano', 'Stage Piano', 'MIDI Controller', 'Electric Piano', 'Organ'],
+    brands: {
+      Yamaha: ['DX7', 'MONTAGE', 'MODX', 'MOTIF', 'CP Series', 'YC Series', 'Reface', 'P Series', 'Clavinova', 'PSR Series'],
+      Roland: ['JUNO', 'JUPITER', 'FANTOM', 'RD Series', 'FP Series', 'D-50', 'JX Series', 'SH Series', 'GAIA'],
+      Korg: ['Kronos', 'Nautilus', 'Krome', 'M1', 'Triton', 'Wavestate', 'Opsix', 'Minilogue', 'Monologue', 'Prologue'],
+      Nord: ['Stage', 'Electro', 'Piano', 'Wave', 'Lead'],
+      Casio: ['Privia', 'Celviano', 'CT-S Series', 'WK Series', 'CZ Series'],
+      Kurzweil: ['K2000', 'K2500', 'K2600', 'PC Series', 'Forte', 'SP Series'],
+      Sequential: ['Prophet-5', 'Prophet-6', 'Prophet Rev2', 'Take 5', 'Trigon-6', 'OB-6'],
+      Moog: ['Minimoog', 'Subsequent 37', 'Grandmother', 'Matriarch', 'Muse', 'One'],
+      Arturia: ['KeyLab', 'MiniLab', 'AstroLab', 'PolyBrute', 'MatrixBrute', 'MicroFreak', 'MiniFreak'],
+      Akai: ['MPC Key', 'MPK Series', 'Advance'],
+      Alesis: ['QS Series', 'Quadrasynth', 'Fusion', 'Recital', 'V Series'],
+      Novation: ['Launchkey', 'SL MkIII', 'Bass Station II', 'Summit', 'Peak', 'MiniNova'],
+      'Native Instruments': ['Komplete Kontrol S Series', 'Komplete Kontrol A Series', 'Kontrol M Series'],
+      Studiologic: ['SL Series', 'Numa Compact', 'Numa X Piano'],
+      Hammond: ['SK Series', 'XK Series', 'M-Solo'],
+      Rhodes: ['Mark I', 'Mark II', 'Mark V', 'MK8'],
+      Wurlitzer: ['200', '200A', '206', '140B'],
+      Ensoniq: ['ESQ-1', 'SQ-80', 'VFX', 'EPS', 'ASR-10', 'TS Series'],
+      'E-mu': ['Emulator', 'Emax', 'Proteus', 'PK Series'],
+      Kawai: ['MP Series', 'ES Series', 'CA Series', 'K Series'],
+      Oberheim: ['OB-X', 'OB-Xa', 'OB-8', 'OB-X8', 'Matrix-6', 'Matrix-12']
+    }
+  },
   Amplifier: {
     label: 'Amplifier',
     aliases: ['Amp', 'Guitar Amplifier', 'Bass Amplifier'],

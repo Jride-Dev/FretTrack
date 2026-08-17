@@ -6,6 +6,8 @@ import { canAccessOperatorDashboard } from '../modules/auth/permissionService.js
 const AccountingReports = lazy(() => import('../modules/accounting/AccountingReports.jsx'));
 const AmplifierJobDetail = lazy(() => import('../modules/amplifiers/AmplifierJobDetail.jsx'));
 const AmplifierRepairPage = lazy(() => import('../modules/amplifiers/AmplifierRepairPage.jsx'));
+const KeyboardJobDetail = lazy(() => import('../modules/keyboards/KeyboardJobDetail.jsx'));
+const KeyboardRepairPage = lazy(() => import('../modules/keyboards/KeyboardRepairPage.jsx'));
 const BillingPage = lazy(() => import('../modules/billing/BillingPage.jsx'));
 const CustomerManager = lazy(() => import('../modules/customers/CustomerManager.jsx'));
 const InventoryPage = lazy(() => import('../modules/inventory/InventoryPage.jsx'));
@@ -84,6 +86,23 @@ function WorkspacePage({
         isOnline={isOnline}
         dateOptions={dateOptions}
         onCreateJob={actions.onCreateAmplifierJob}
+        onSelectJob={actions.onSelectJob}
+        onNotice={actions.onNotice}
+        onDirtyChange={actions.onDirtyChange}
+      />
+    );
+  }
+
+  if (mode === 'keyboards') {
+    return (
+      <KeyboardRepairPage
+        jobs={jobs}
+        customers={customers}
+        isEntitled={access.keyboardRepairEnabled}
+        canWrite={access.canEditKeyboardRepair}
+        isOnline={isOnline}
+        dateOptions={dateOptions}
+        onCreateJob={actions.onCreateKeyboardJob}
         onSelectJob={actions.onSelectJob}
         onNotice={actions.onNotice}
         onDirtyChange={actions.onDirtyChange}
@@ -236,6 +255,7 @@ function WorkspacePage({
           onNotice={actions.onNotice}
           canWrite={access.canEditJobs}
           amplifierRepairEnabled={access.amplifierRepairEnabled}
+          keyboardRepairEnabled={access.keyboardRepairEnabled}
           canUploadPhotos={access.canUploadPhotos}
           canEditPhotos={access.canEditPhotos}
           canOverwritePhotos={access.canOverwritePhotos}
@@ -272,6 +292,22 @@ function WorkspacePage({
         />
       )
       : <section className="panel empty-state">Select an amplifier work order from the list.</section>;
+  }
+
+  if (mode === 'keyboard-detail') {
+    return selectedJob
+      ? (
+        <KeyboardJobDetail
+          job={selectedJob}
+          canWrite={access.canEditKeyboardRepair}
+          dateOptions={dateOptions}
+          onUpdate={actions.onUpdateJob}
+          onClose={actions.onCloseJobDetail}
+          onDirtyChange={actions.onDirtyChange}
+          onNotice={actions.onNotice}
+        />
+      )
+      : <section className="panel empty-state">Select a keyboard work order from the list.</section>;
   }
 
   return null;

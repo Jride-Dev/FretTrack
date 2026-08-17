@@ -84,6 +84,7 @@ export default function JobDetail({
   onNotice,
   canWrite = true,
   amplifierRepairEnabled = true,
+  keyboardRepairEnabled = true,
   canUploadPhotos = canWrite,
   canEditPhotos = canWrite,
   canOverwritePhotos = canWrite,
@@ -1153,6 +1154,7 @@ export default function JobDetail({
     <JobIntakeSections
       canWrite={canWrite}
       amplifierRepairEnabled={amplifierRepairEnabled}
+      keyboardRepairEnabled={keyboardRepairEnabled}
       draftJob={draftJob}
       intakeTypes={intakeTypes}
       normalizeInstrumentType={normalizeInstrumentType}

@@ -5,6 +5,7 @@ const instrumentTypeOptions = [
   { value: 'Acoustic', label: INSTRUMENT_CATALOG.Acoustic.label },
   { value: 'Bass', label: INSTRUMENT_CATALOG.Bass.label },
   { value: 'Classical', label: INSTRUMENT_CATALOG.Classical.label },
+  { value: 'Keyboard', label: INSTRUMENT_CATALOG.Keyboard.label },
   { value: 'Amplifier', label: INSTRUMENT_CATALOG.Amplifier.label },
   { value: 'Other', label: INSTRUMENT_CATALOG.Other.label }
 ];
@@ -20,6 +21,7 @@ const stringCountOptionsByType = {
   Bass: [4, 5, 6],
   Acoustic: [6, 12],
   Classical: [6],
+  Keyboard: [],
   Amplifier: [],
   Other: [4, 5, 6, 7, 8, 12]
 };
@@ -325,7 +327,7 @@ export function getStringCountOptions(instrumentType) {
 }
 
 export function isStringedInstrumentType(instrumentType) {
-  return normalizeInstrumentType(instrumentType) !== 'Amplifier';
+  return !['Amplifier', 'Keyboard'].includes(normalizeInstrumentType(instrumentType));
 }
 
 export function getStringGaugePresets(instrumentType, stringCount) {
@@ -338,7 +340,7 @@ export function getStringGaugePresets(instrumentType, stringCount) {
 
 export function getDefaultStringCount(instrumentType) {
   const normalizedType = normalizeInstrumentType(instrumentType);
-  if (normalizedType === 'Amplifier') {
+  if (['Amplifier', 'Keyboard'].includes(normalizedType)) {
     return 0;
   }
   return normalizedType === 'Bass' ? 4 : 6;
@@ -346,7 +348,7 @@ export function getDefaultStringCount(instrumentType) {
 
 export function normalizeStringCount(value, instrumentType = 'Electric') {
   const parsed = Number(value);
-  if (normalizeInstrumentType(instrumentType) === 'Amplifier') {
+  if (['Amplifier', 'Keyboard'].includes(normalizeInstrumentType(instrumentType))) {
     return 0;
   }
   if (Number.isFinite(parsed) && parsed >= 1 && parsed <= 24) {
