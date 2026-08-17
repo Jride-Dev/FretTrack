@@ -135,6 +135,7 @@ export default function KeyboardWorkflowPanel({
     setIsWorking(true);
     try {
       const saved = await saveKeyboardKeyState(job.id, finding, finding.updatedAt);
+      if (!saved?.id) throw new Error('The keyboard finding save could not be confirmed. Reload the keyboard diagnostics before retrying.');
       setWorkflow((current) => ({
         ...current,
         keyStates: [...current.keyStates.filter((state) => state.id !== saved.id), saved].sort((a, b) => a.midiNote - b.midiNote)
@@ -198,6 +199,7 @@ export default function KeyboardWorkflowPanel({
     setIsWorking(true);
     try {
       const savedFindings = [];
+      const failedFindings = [];
       for (const item of pending) {
         const fault = getKeyboardFault(item.faultCode, effectiveFaultCodes);
         const draft = {
@@ -207,7 +209,21 @@ export default function KeyboardWorkflowPanel({
           damageStatus: fault.damageStatus || 'electrical',
           notes: item.notes
         };
-        savedFindings.push(await saveKeyboardKeyState(job.id, draft));
+        try {
+          const saved = await saveKeyboardKeyState(job.id, draft);
+          if (!saved?.id) throw new Error('The keyboard finding save could not be confirmed.');
+          savedFindings.push(saved);
+        } catch (error) {
+          failedFindings.push({ item, error });
+        }
+      }
+      if (failedFindings.length) {
+        await load();
+        onNotice?.({
+          type: 'error',
+          message: `Applied ${savedFindings.length} of ${pending.length} MIDI findings. ${failedFindings.length} could not be confirmed; reload and retry the remaining findings.`
+        });
+        return;
       }
       setWorkflow((current) => ({
         ...current,

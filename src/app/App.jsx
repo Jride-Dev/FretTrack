@@ -91,6 +91,11 @@ export default function App() {
   const [selectedOfflineDraftId, setSelectedOfflineDraftId] = useState('');
   const [syncingDraftId, setSyncingDraftId] = useState('');
   const manualSignOutRef = useRef(false);
+  const shopAccessRequestIdRef = useRef(0);
+  const jobsRequestIdRef = useRef(0);
+  const customersRequestIdRef = useRef(0);
+  const assignableMembersRequestIdRef = useRef(0);
+  const offlineDraftsRequestIdRef = useRef(0);
 
   useEffect(() => {
     clearVitePreloadReloadGuard();
@@ -171,20 +176,47 @@ export default function App() {
   }
 
   async function refreshJobs(targetShopId = membership?.shopId || getSelectedShop().shopId) {
+    const requestedShopId = targetShopId || (hasSupabaseConfig ? '' : 'local');
+    const selectedShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
+    if (selectedShopId !== requestedShopId) {
+      return null;
+    }
+    const requestId = ++jobsRequestIdRef.current;
     const loadedJobs = await getJobs();
+    const activeShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
+    if (requestId !== jobsRequestIdRef.current || activeShopId !== requestedShopId) {
+      return null;
+    }
     const sortedJobs = sortNewestFirst(loadedJobs);
     setJobs(sortedJobs);
-    setJobsReadyShopId(targetShopId || 'local');
+    setJobsReadyShopId(requestedShopId);
     return sortedJobs;
   }
 
-  async function refreshCustomers(sourceJobs = jobs) {
+  async function refreshCustomers(sourceJobs = jobs, targetShopId = membership?.shopId || getSelectedShop().shopId) {
+    if (!Array.isArray(sourceJobs)) {
+      return null;
+    }
+    const requestedShopId = targetShopId || (hasSupabaseConfig ? '' : 'local');
+    const selectedShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
+    if (selectedShopId !== requestedShopId) {
+      return null;
+    }
+    const requestId = ++customersRequestIdRef.current;
     const loadedCustomers = await getCustomers(sourceJobs);
+    const activeShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
+    if (requestId !== customersRequestIdRef.current || activeShopId !== requestedShopId) {
+      return null;
+    }
     setCustomers(loadedCustomers);
     return loadedCustomers;
   }
 
   async function refreshAssignableMembers(shopId = membership?.shopId) {
+    if (shopId && getSelectedShop().shopId !== shopId) {
+      return null;
+    }
+    const requestId = ++assignableMembersRequestIdRef.current;
     if (!shopId) {
       setAssignableMembers([]);
       setAssignableMembersError('');
@@ -194,19 +226,31 @@ export default function App() {
     setAssignableMembersError('');
     try {
       const members = await getAssignableShopMembers(shopId);
+      if (requestId !== assignableMembersRequestIdRef.current || getSelectedShop().shopId !== shopId) {
+        return null;
+      }
       setAssignableMembers(members);
       return members;
     } catch (error) {
+      if (requestId !== assignableMembersRequestIdRef.current || getSelectedShop().shopId !== shopId) {
+        return null;
+      }
       console.error('Assignable shop members failed to load.', error);
       setAssignableMembers([]);
       setAssignableMembersError(getErrorMessage(error, 'Unable to load active shop members.'));
       return [];
     } finally {
-      setAssignableMembersLoading(false);
+      if (requestId === assignableMembersRequestIdRef.current && getSelectedShop().shopId === shopId) {
+        setAssignableMembersLoading(false);
+      }
     }
   }
 
   async function refreshOfflineDraftQueue(shopId = membership?.shopId || getSelectedShop().shopId) {
+    if (shopId && getSelectedShop().shopId !== shopId) {
+      return null;
+    }
+    const requestId = ++offlineDraftsRequestIdRef.current;
     if (!shopId) {
       setOfflineDrafts([]);
       setSelectedOfflineDraftId('');
@@ -214,6 +258,9 @@ export default function App() {
     }
 
     const drafts = await getOfflineDrafts(shopId);
+    if (requestId !== offlineDraftsRequestIdRef.current || getSelectedShop().shopId !== shopId) {
+      return null;
+    }
     setOfflineDrafts(drafts);
     setSelectedOfflineDraftId((currentDraftId) => {
       if (drafts.some((draft) => draft.id === currentDraftId)) {
@@ -457,10 +504,13 @@ export default function App() {
   }
 
   async function loadShopAccess(preferredShopId = getSelectedShop().shopId, options = {}) {
+    const requestId = ++shopAccessRequestIdRef.current;
+    const isCurrentRequest = () => requestId === shopAccessRequestIdRef.current;
     setIsMembershipLoading(true);
     setJobsReadyShopId('');
     try {
       const availableMemberships = await getCurrentUserShopMemberships();
+      if (!isCurrentRequest()) return null;
       setMemberships(availableMemberships);
       const currentMembership = resolveMembership(availableMemberships, preferredShopId);
       setMembership(currentMembership);
@@ -473,9 +523,11 @@ export default function App() {
       setSelectedShop(currentMembership);
       setShopName(currentMembership.shopName || getCurrentShopName());
       const currentEntitlements = await getShopEntitlementSnapshot(currentMembership.shopId);
+      if (!isCurrentRequest()) return null;
       setEntitlementSnapshot(currentEntitlements);
       setIsShopProfileLoading(true);
       const currentShopProfile = await getCurrentShopProfile(currentMembership.shopId);
+      if (!isCurrentRequest()) return null;
       setShopProfile(currentShopProfile);
       if (currentShopProfile?.shopName) {
         setShopName(currentShopProfile.shopName);
@@ -487,10 +539,14 @@ export default function App() {
       }
 
       const loadedJobs = await refreshJobs(currentMembership.shopId);
-      await refreshCustomers(loadedJobs);
+      if (!isCurrentRequest() || !loadedJobs) return null;
+      await refreshCustomers(loadedJobs, currentMembership.shopId);
+      if (!isCurrentRequest()) return null;
       await refreshOfflineDraftQueue(currentMembership.shopId);
+      if (!isCurrentRequest()) return null;
       await checkSupabaseConnection();
     } catch (error) {
+      if (!isCurrentRequest()) return null;
       console.error('Shop membership load failed.', error);
       setSupabaseStatus('error');
       setNotice({
@@ -501,8 +557,10 @@ export default function App() {
         throw error;
       }
     } finally {
-      setIsShopProfileLoading(false);
-      setIsMembershipLoading(false);
+      if (isCurrentRequest()) {
+        setIsShopProfileLoading(false);
+        setIsMembershipLoading(false);
+      }
     }
   }
 

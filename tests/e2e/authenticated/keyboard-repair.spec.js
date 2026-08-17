@@ -165,6 +165,37 @@ test('persists per-key faults, MIDI evidence, checklist progress, and parts requ
   await expect(page.getByText('C4 rubber contact strip', { exact: true })).toBeVisible();
 });
 
+test('continues a MIDI batch after one finding cannot be confirmed', async ({ page }) => {
+  const suffix = Date.now();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Keyboard Repair' }).click();
+  await page.getByLabel('Existing Customer').selectOption({ label: 'FicticiousJoe Customer 19' });
+  await page.getByLabel('Manufacturer').fill('Korg');
+  await page.getByLabel('Model', { exact: true }).fill(`MIDI Recovery Keyboard ${suffix}`);
+  await page.getByLabel('Reported Symptoms / Customer Request').fill('MIDI batch partial-save regression fixture.');
+  await page.getByRole('button', { name: 'Create Keyboard Work Order' }).click();
+
+  let insertCount = 0;
+  await page.route('**/rest/v1/key_damage_map*', async (route) => {
+    if (route.request().method() === 'POST' && ++insertCount === 1) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: 'null' });
+      return;
+    }
+    await route.continue();
+  });
+
+  try {
+    await page.getByLabel('Raw MIDI Diagnostic Log').fill('NOTE_ON ch=1 note=60 velocity=0\nNOTE_ON ch=1 note=62 velocity=118');
+    await page.getByRole('button', { name: 'Apply MIDI Findings' }).click();
+
+    await expect(page.getByText('Applied 1 of 2 MIDI findings. 1 could not be confirmed; reload and retry the remaining findings.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'D4, Missing Note Off' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'C4, MIDI preview: Zero Velocity Trigger' })).toBeVisible();
+  } finally {
+    await page.unroute('**/rest/v1/key_damage_map*');
+  }
+});
+
 test('rejects concurrent creation of the same per-key finding', async ({ context, page }) => {
   const uniqueModel = `Concurrent Key Map ${Date.now()}`;
   await page.goto('/');

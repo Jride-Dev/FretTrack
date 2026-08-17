@@ -151,6 +151,8 @@ assert.match(keybedSvg, /<svg[\s\S]*?role="button"/, 'The visual damage map must
 assert.match(keybedSvg, /tone-\$\{keyTone/, 'The visual damage map must apply a color-coded health tone to every key.');
 assert.match(workflowPanel, /sendCustomerMessage\(savedJob,[\s\S]*?templateKey: 'keyboard_diagnostic_report'/, 'Customer diagnostic reports must use established message persistence.');
 assert.match(workflowService, /\.eq\('updated_at', expectedUpdatedAt\)/, 'Per-key writes must reject stale technician sessions.');
+assert.match(workflowService, /if \(!data\?\.id\) throw new Error\('The keyboard finding save could not be confirmed\./, 'New per-key findings must require a confirmed persisted row.');
+assert.match(workflowPanel, /const failedFindings = \[\];[\s\S]*?for \(const item of pending\)[\s\S]*?failedFindings\.push\(\{ item, error \}\)[\s\S]*?if \(failedFindings\.length\) \{[\s\S]*?await load\(\);/, 'A failed MIDI finding must not stop later findings, and partial batches must reload authoritative state.');
 for (const label of ['Keys and key return', 'Velocity response', 'Aftertouch', 'Main audio outputs', 'MIDI DIN', 'USB data / host', 'Pedal inputs', 'Power and startup']) {
   assert.ok(keyboardRepairSource.includes(label), `Keyboard function testing must include ${label}.`);
 }

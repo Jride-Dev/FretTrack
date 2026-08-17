@@ -154,6 +154,7 @@ export async function saveKeyboardKeyState(jobId, state, expectedUpdatedAt = '')
     const { data, error } = await supabase.from('key_damage_map').insert(payload).select().single();
     if (error?.code === '23505') throw new Error('This key was changed in another session. Reload the keyboard diagnostics before saving.');
     if (error) throw error;
+    if (!data?.id) throw new Error('The keyboard finding save could not be confirmed. Reload the keyboard diagnostics before retrying.');
     return fromDbKeyState(data);
   }
   if (!expectedUpdatedAt) throw new Error('This key finding has no save version. Reload it before saving.');
