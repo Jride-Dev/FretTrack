@@ -1,5 +1,6 @@
 # Changelog
 
+- Added a Product Hunt review badge to the public FretTrack portal footer, including responsive badge layout and the required image security policy allowance.
 - Prevented an in-flight Work Note save from leaking draft, saving, or dirty state into another selected job, added optimistic concurrency to amplifier saves so a stale technician session is rejected instead of overwriting newer bench work, and made scheduled-email reconciliation atomic so a delayed cancellation cannot replace a delivery another request already recorded.
 - Added a Pro-gated transactional email scheduler that snapshots recipient/subject/body, schedules and cancels through Resend up to 30 days ahead, requires customer email opt-in, preserves immediate email behavior and quota enforcement, and adds a Drop Off Scheduled template sourced from the job appointment time.
 - Added a Pro-gated Amplifier Repair workspace with make/model presets, amplifier intake, an amplifier-only work queue, a dedicated bench worksheet, before/after electrical and digital diagnostics, private audio/waveform/spectrum evidence, role-aware permissions, server-authoritative entitlement enforcement, historical read access after downgrade, and refresh-safe detail routing.

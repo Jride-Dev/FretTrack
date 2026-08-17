@@ -143,6 +143,10 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /Stripe-powered account management planned/);
   assert.match(html, /https:\/\/devglobe\.app\/projects\/frettrack\?utm_source=badge&utm_medium=embed/);
   assert.match(html, /Launched on DevGlobe/);
+  assert.match(html, /https:\/\/www\.producthunt\.com\/products\/frettrack\/reviews\/new\?utm_source=badge-product_review&utm_medium=badge&utm_source=badge-frettrack/);
+  assert.match(html, /https:\/\/api\.producthunt\.com\/widgets\/embed-image\/v1\/product_review\.svg\?product_id=1257938&theme=light/);
+  assert.match(html, /Review FretTrack on Product Hunt/);
+  assert.match(response.headers.get('content-security-policy') || '', /img-src[^;]*https:\/\/api\.producthunt\.com/);
   assert.match(html, /href="\/docs"/);
   assert.match(html, /href="https:\/\/discord\.gg\/PaEhWTfz9e" target="_blank" rel="noopener">Discord<\/a>/);
   assert.match(html, /href="https:\/\/github\.com\/Jride-Dev\/FretTrack" target="_blank" rel="noopener">GitHub<\/a>/);
