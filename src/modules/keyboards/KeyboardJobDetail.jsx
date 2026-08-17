@@ -3,7 +3,10 @@ import { formatShopDate } from '../../shared/utils/dateFormat.js';
 import JobStatusSelect from '../jobs/JobStatusSelect.jsx';
 import { JOB_PRIORITY_OPTIONS } from '../jobs/jobPriority.js';
 import KeyboardFunctionalTests from './KeyboardFunctionalTests.jsx';
+import KeyboardDiagnosticChecklist from './KeyboardDiagnosticChecklist.jsx';
 import KeyboardMakeModelFields from './KeyboardMakeModelFields.jsx';
+import KeyboardWorkflowPanel from './KeyboardWorkflowPanel.jsx';
+import { KEYBOARD_SENSOR_TECHNOLOGIES } from './keyboardDiagnostics.js';
 import {
   KEYBOARD_ACTIONS,
   KEYBOARD_FINAL_TEST_STATUSES,
@@ -25,14 +28,25 @@ function buildDraft(job) {
   };
 }
 
+function mergeJobPart(job, jobPart) {
+  return {
+    ...job,
+    parts: [...(job.parts || []).filter((part) => part.id !== jobPart.id), jobPart]
+  };
+}
+
 export default function KeyboardJobDetail({
   job,
   canWrite = true,
   dateOptions = {},
   onUpdate,
   onClose,
+  onRefresh,
   onDirtyChange,
-  onNotice
+  onNotice,
+  canSendEmail = false,
+  entitlementMessage = '',
+  shopProfile = null
 }) {
   const [draft, setDraft] = useState(() => buildDraft(job));
   const [baseline, setBaseline] = useState(() => JSON.stringify(buildDraft(job)));
@@ -119,6 +133,21 @@ export default function KeyboardJobDetail({
         }
       }
     }));
+  }
+
+  function updateDiagnosticChecklist(diagnosticChecklist) {
+    setDraft((current) => ({
+      ...current,
+      techDetails: {
+        ...current.techDetails,
+        keyboard: { ...current.techDetails.keyboard, diagnosticChecklist }
+      }
+    }));
+  }
+
+  function addInventoryPartToDraft(jobPart) {
+    setDraft((current) => mergeJobPart(current, jobPart));
+    setBaseline((current) => JSON.stringify(mergeJobPart(JSON.parse(current), jobPart)));
   }
 
   function closeDetail() {
@@ -226,6 +255,16 @@ export default function KeyboardJobDetail({
             </select>
           </label>
           <label>
+            Sensor Technology
+            <select name="sensorTechnology" value={keyboard.sensorTechnology} onChange={updateKeyboardField} disabled={!canWrite}>
+              {KEYBOARD_SENSOR_TECHNOLOGIES.map((value) => <option key={value}>{value}</option>)}
+            </select>
+          </label>
+          <label>
+            Lowest MIDI Note
+            <input type="number" min="0" max="127" name="lowestMidiNote" value={keyboard.lowestMidiNote} onChange={updateKeyboardField} disabled={!canWrite} placeholder="Auto from key count" />
+          </label>
+          <label>
             Sound Engine / Architecture
             <input name="soundEngine" value={keyboard.soundEngine} onChange={updateKeyboardField} disabled={!canWrite} placeholder="Analog, FM, sample-based…" />
           </label>
@@ -269,12 +308,35 @@ export default function KeyboardJobDetail({
 
       <KeyboardFunctionalTests keyboard={keyboard} canWrite={canWrite} onChange={updateFunctionalTest} />
 
+      <KeyboardWorkflowPanel
+        job={draft}
+        keyboard={keyboard}
+        canWrite={canWrite}
+        canSendEmail={canSendEmail}
+        entitlementMessage={entitlementMessage}
+        shopProfile={shopProfile}
+        onRefresh={onRefresh}
+        onSaveJob={save}
+        onInventoryPartAdded={addInventoryPartToDraft}
+        onNotice={onNotice}
+      />
+
+      <KeyboardDiagnosticChecklist keyboard={keyboard} canWrite={canWrite} onChange={updateDiagnosticChecklist} />
+
       <section className="panel">
         <h3>Bench Worksheet</h3>
         <div className="form-grid keyboard-bench-grid amplifier-bench-grid">
           <label className="wide">
             Initial Test Notes
             <textarea name="initialTestNotes" value={keyboard.initialTestNotes} onChange={updateKeyboardField} rows="4" disabled={!canWrite} />
+          </label>
+          <label className="wide">
+            MIDI Diagnostic Summary
+            <textarea name="midiDiagnosticSummary" value={keyboard.midiDiagnosticSummary} onChange={updateKeyboardField} rows="3" disabled={!canWrite} placeholder="Summarize note, velocity, aftertouch, and controller findings." />
+          </label>
+          <label className="wide">
+            Raw MIDI Diagnostic Log
+            <textarea name="midiDiagnosticLog" value={keyboard.midiDiagnosticLog} onChange={updateKeyboardField} rows="8" disabled={!canWrite} className="keyboard-midi-log" placeholder="Paste timestamped MIDI monitor output here." />
           </label>
           <label className="wide">
             Diagnosis

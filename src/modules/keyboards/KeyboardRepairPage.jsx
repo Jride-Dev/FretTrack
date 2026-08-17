@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatShopDate, toIsoDateInputValue } from '../../shared/utils/dateFormat.js';
 import { JOB_PRIORITY_OPTIONS } from '../jobs/jobPriority.js';
 import KeyboardMakeModelFields from './KeyboardMakeModelFields.jsx';
+import { KEYBOARD_SENSOR_TECHNOLOGIES, buildKeyboardRepairAnalytics } from './keyboardDiagnostics.js';
+import { listKeyboardKeyStates } from './keyboardWorkflowService.js';
 import {
   KEYBOARD_ACTIONS,
   KEYBOARD_KEY_COUNTS,
@@ -23,6 +25,7 @@ function initialForm() {
     keyboardType: 'Synthesizer',
     keyCount: '61',
     keyAction: 'Unknown',
+    sensorTechnology: 'Unknown',
     includedAccessories: '',
     reasonForVisit: '',
     dateReceived: toIsoDateInputValue(),
@@ -48,9 +51,20 @@ export default function KeyboardRepairPage({
   const [search, setSearch] = useState('');
   const [includeClosed, setIncludeClosed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [keyStates, setKeyStates] = useState([]);
   const visibleJobs = useMemo(() => filterKeyboardJobs(jobs, search, includeClosed), [includeClosed, jobs, search]);
   const selectedCustomer = customers.find((customer) => customer.id === form.customerId) || null;
   const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initialValues), [form, initialValues]);
+  const keyboardJobIds = useMemo(() => jobs.filter((job) => String(job.techDetails?.instrumentType || job.instrumentType || '').toLowerCase() === 'keyboard').map((job) => job.id).filter(Boolean), [jobs]);
+  const analytics = useMemo(() => buildKeyboardRepairAnalytics(jobs, keyStates), [jobs, keyStates]);
+
+  useEffect(() => {
+    let active = true;
+    listKeyboardKeyStates(keyboardJobIds)
+      .then((rows) => { if (active) setKeyStates(rows); })
+      .catch((error) => console.warn('Keyboard repair analytics could not load key findings.', error));
+    return () => { active = false; };
+  }, [keyboardJobIds.join(',')]);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -111,6 +125,13 @@ export default function KeyboardRepairPage({
         <span className="keyboard-job-count amplifier-job-count">{visibleJobs.length} shown</span>
       </div>
 
+      <section className="keyboard-analytics-grid" aria-label="Keyboard repair analytics">
+        <article><strong>{analytics.openJobs}</strong><span>Open keyboard jobs</span></article>
+        <article><strong>{analytics.averageRepairDays == null ? '—' : analytics.averageRepairDays.toFixed(1)}</strong><span>Average repair days</span></article>
+        <article><strong>{analytics.topModel?.[0] || '—'}</strong><span>{analytics.topModel ? `${analytics.topModel[1]} repair${analytics.topModel[1] === 1 ? '' : 's'}` : 'Most serviced model'}</span></article>
+        <article><strong>{analytics.topFault?.[0] || '—'}</strong><span>{analytics.topFault ? `${analytics.topFault[1]} logged key fault${analytics.topFault[1] === 1 ? '' : 's'}` : 'Most common key fault'}</span></article>
+      </section>
+
       <div className="keyboard-module-grid amplifier-module-grid">
         <form className="panel keyboard-intake amplifier-intake" onSubmit={submit} aria-disabled={!isEntitled}>
           <h3>New Keyboard Work Order</h3>
@@ -170,6 +191,12 @@ export default function KeyboardRepairPage({
               Key Action
               <select name="keyAction" value={form.keyAction} onChange={updateField} disabled={!canWrite || !isEntitled}>
                 {KEYBOARD_ACTIONS.map((value) => <option key={value}>{value}</option>)}
+              </select>
+            </label>
+            <label>
+              Sensor Technology
+              <select name="sensorTechnology" value={form.sensorTechnology} onChange={updateField} disabled={!canWrite || !isEntitled}>
+                {KEYBOARD_SENSOR_TECHNOLOGIES.map((value) => <option key={value}>{value}</option>)}
               </select>
             </label>
             <label>

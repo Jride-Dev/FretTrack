@@ -4146,6 +4146,161 @@ th.internal-only {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.keyboard-analytics-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.keyboard-analytics-grid article {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px;
+}
+
+.keyboard-analytics-grid strong {
+  font-size: 1.15rem;
+  overflow-wrap: anywhere;
+}
+
+.keyboard-analytics-grid span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.keyboard-workflow-panel,
+.keyboard-parts-cross-reference,
+.keyboard-customer-report {
+  display: grid;
+  gap: 14px;
+}
+
+.keyboard-keybed {
+  background: #2a2a2a;
+  border: 1px solid var(--border);
+  display: flex;
+  min-height: 154px;
+  overflow-x: auto;
+  padding: 8px;
+}
+
+.keyboard-key {
+  border-radius: 0 0 4px 4px;
+  flex: 0 0 32px;
+  height: 136px;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.keyboard-key.white {
+  background: #fff;
+  border: 1px solid #777;
+  color: #222;
+  z-index: 1;
+}
+
+.keyboard-key.black {
+  background: #171717;
+  border: 1px solid #000;
+  color: #fff;
+  flex-basis: 22px;
+  height: 84px;
+  margin-left: -11px;
+  margin-right: -11px;
+  z-index: 2;
+}
+
+.keyboard-key span {
+  bottom: 5px;
+  font-size: 0.62rem;
+  left: 2px;
+  position: absolute;
+  right: 2px;
+  text-align: center;
+}
+
+.keyboard-key.fault.minor { box-shadow: inset 0 -10px #e8b446; }
+.keyboard-key.fault.moderate { box-shadow: inset 0 -10px #dc7a32; }
+.keyboard-key.fault.major { box-shadow: inset 0 -10px #c94040; }
+.keyboard-key.pass { box-shadow: inset 0 -8px #3f9f6b; }
+.keyboard-key.selected { outline: 3px solid var(--accent); outline-offset: -3px; }
+
+.keyboard-finding-editor {
+  border-top: 1px solid var(--border-soft);
+  padding-top: 14px;
+}
+
+.keyboard-parts-cross-reference,
+.keyboard-customer-report {
+  border-top: 1px solid var(--border-soft);
+  margin-top: 8px;
+  padding-top: 16px;
+}
+
+.keyboard-parts-matches {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.keyboard-part-match {
+  align-items: flex-start;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  text-align: left;
+}
+
+.keyboard-parts-requests,
+.keyboard-checklist-items {
+  display: grid;
+  gap: 8px;
+}
+
+.keyboard-parts-request {
+  align-items: center;
+  border: 1px solid var(--border-soft);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  padding: 10px;
+}
+
+.keyboard-checklist-item {
+  align-items: center;
+  border: 1px solid var(--border-soft);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr) minmax(150px, auto);
+  padding: 10px;
+}
+
+.keyboard-checklist-number {
+  align-items: center;
+  background: var(--surface-2);
+  border-radius: 50%;
+  display: inline-flex;
+  font-weight: 800;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+.keyboard-checklist-step {
+  display: grid;
+  gap: 6px;
+}
+
+.keyboard-midi-log {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre;
+}
+
 @media (max-width: 1024px) {
   .amplifier-module-grid {
     grid-template-columns: 1fr;
@@ -4157,6 +4312,11 @@ th.internal-only {
 
   .keyboard-test-stages {
     grid-template-columns: 1fr;
+  }
+
+  .keyboard-analytics-grid,
+  .keyboard-parts-matches {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .photo-editor-backdrop {
@@ -4323,8 +4483,16 @@ th.internal-only {
   .amplifier-queue-filters,
   .amplifier-bench-grid,
   .amplifier-evidence-capture,
-  .keyboard-test-grid {
+  .keyboard-test-grid,
+  .keyboard-analytics-grid,
+  .keyboard-parts-matches,
+  .keyboard-parts-request,
+  .keyboard-checklist-item {
     grid-template-columns: 1fr;
+  }
+
+  .keyboard-checklist-number {
+    display: none;
   }
 
   .amplifier-evidence-card-heading {

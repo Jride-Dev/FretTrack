@@ -302,9 +302,13 @@ function WorkspacePage({
           canWrite={access.canEditKeyboardRepair}
           dateOptions={dateOptions}
           onUpdate={actions.onUpdateJob}
+          onRefresh={actions.onRefreshJobs}
           onClose={actions.onCloseJobDetail}
           onDirtyChange={actions.onDirtyChange}
           onNotice={actions.onNotice}
+          canSendEmail={access.canSendEmail}
+          entitlementMessage={access.entitlementMessage}
+          shopProfile={shopProfile}
         />
       )
       : <section className="panel empty-state">Select a keyboard work order from the list.</section>;

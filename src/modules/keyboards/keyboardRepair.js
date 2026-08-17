@@ -1,5 +1,6 @@
 import { normalizeInstrumentType } from '../instruments/instrumentService.js';
 import { normalizeJobPriority } from '../jobs/jobPriority.js';
+import { normalizeKeyboardChecklist } from './keyboardDiagnostics.js';
 
 export const KEYBOARD_TYPES = [
   'Synthesizer',
@@ -43,6 +44,8 @@ export const DEFAULT_KEYBOARD_DETAILS = {
   keyboardType: 'Synthesizer',
   keyCount: '61',
   keyAction: 'Unknown',
+  sensorTechnology: 'Unknown',
+  lowestMidiNote: '',
   soundEngine: '',
   powerRequirements: '',
   includedAccessories: '',
@@ -51,6 +54,8 @@ export const DEFAULT_KEYBOARD_DETAILS = {
   affectedKeys: '',
   keybedNotes: '',
   powerSupplyReadings: '',
+  midiDiagnosticSummary: '',
+  midiDiagnosticLog: '',
   diagnosis: '',
   repairPerformed: '',
   partsReplaced: '',
@@ -62,7 +67,8 @@ export const DEFAULT_KEYBOARD_DETAILS = {
   functionalTests: {
     initial: DEFAULT_KEYBOARD_FUNCTION_STAGE,
     final: DEFAULT_KEYBOARD_FUNCTION_STAGE
-  }
+  },
+  diagnosticChecklist: normalizeKeyboardChecklist({}, 'Synthesizer')
 };
 
 export function isKeyboardJob(job = {}) {
@@ -74,6 +80,7 @@ export function normalizeKeyboardDetails(details = {}) {
   return {
     ...DEFAULT_KEYBOARD_DETAILS,
     ...source,
+    diagnosticChecklist: normalizeKeyboardChecklist(source.diagnosticChecklist, source.keyboardType || DEFAULT_KEYBOARD_DETAILS.keyboardType),
     functionalTests: {
       initial: {
         ...DEFAULT_KEYBOARD_FUNCTION_STAGE,
@@ -131,6 +138,7 @@ export function buildKeyboardJobDraft(values = {}, customer = null) {
         keyboardType: values.keyboardType,
         keyCount: values.keyCount,
         keyAction: values.keyAction,
+        sensorTechnology: values.sensorTechnology,
         includedAccessories: values.includedAccessories
       })
     },

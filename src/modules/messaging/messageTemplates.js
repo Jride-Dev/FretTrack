@@ -45,6 +45,11 @@ export const messageTemplates = {
     label: 'Update with photos',
     subject: 'Update on your {{instrument}} - Job #{{job_number}}',
     body: "Hi {{customer_name}},\n\nHere's a quick update on your {{instrument}}.\n\nI've attached a couple photos so you can see what's going on.\n\nLet me know how you'd like to proceed.\n\nJob #: {{job_number}}\n\n{{shop_signature}}"
+  },
+  keyboard_diagnostic_report: {
+    label: 'Keyboard diagnostic report',
+    subject: 'Keyboard diagnostic report - Job #{{job_number}}',
+    body: "Hi {{customer_name}},\n\nYour keyboard diagnostic report is ready. The report includes the keybed findings, diagnosis, recommended parts, and current repair estimate.\n\nJob #: {{job_number}}\nInstrument: {{instrument}}\n\nReply if you have questions or would like to approve the work.\n\n{{shop_signature}}"
   }
 };
 
