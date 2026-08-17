@@ -52,6 +52,7 @@ const NEW_JOB_SIDEBAR_COLLAPSED_KEY = 'frettrack:new-job-sidebar-collapsed';
 
 export default function App() {
   const [jobs, setJobs] = useState([]);
+  const [jobsReadyShopId, setJobsReadyShopId] = useState('');
   const [customers, setCustomers] = useState([]);
   const [assignableMembers, setAssignableMembers] = useState([]);
   const [assignableMembersError, setAssignableMembersError] = useState('');
@@ -133,6 +134,7 @@ export default function App() {
   const {
     mode,
     selectedJobId,
+    isWorkspaceReady,
     setMode,
     setSelectedJobId,
     setHasUnsavedPageChanges,
@@ -144,7 +146,13 @@ export default function App() {
   } = useWorkspaceNavigation({
     shopId: membership?.shopId,
     jobs,
-    isReady: Boolean(membership?.shopId && shopProfile && !isMembershipLoading && !isShopProfileLoading),
+    isReady: Boolean(
+      membership?.shopId
+      && shopProfile
+      && jobsReadyShopId === membership.shopId
+      && !isMembershipLoading
+      && !isShopProfileLoading
+    ),
     access: { isOperator, canManageShop, canViewBilling, canWrite },
     onAccessDenied: () => setNotice({ type: 'error', message: 'This area is not available for your account.' })
   });
@@ -162,10 +170,11 @@ export default function App() {
     return selectWorkspaceJob(jobId, detailMode);
   }
 
-  async function refreshJobs() {
+  async function refreshJobs(targetShopId = membership?.shopId || getSelectedShop().shopId) {
     const loadedJobs = await getJobs();
     const sortedJobs = sortNewestFirst(loadedJobs);
     setJobs(sortedJobs);
+    setJobsReadyShopId(targetShopId || 'local');
     return sortedJobs;
   }
 
@@ -449,6 +458,7 @@ export default function App() {
 
   async function loadShopAccess(preferredShopId = getSelectedShop().shopId, options = {}) {
     setIsMembershipLoading(true);
+    setJobsReadyShopId('');
     try {
       const availableMemberships = await getCurrentUserShopMemberships();
       setMemberships(availableMemberships);
@@ -476,7 +486,7 @@ export default function App() {
         return;
       }
 
-      const loadedJobs = await refreshJobs();
+      const loadedJobs = await refreshJobs(currentMembership.shopId);
       await refreshCustomers(loadedJobs);
       await refreshOfflineDraftQueue(currentMembership.shopId);
       await checkSupabaseConnection();
@@ -1161,6 +1171,14 @@ export default function App() {
             Sign Out
           </button>
         </section>
+      </main>
+    );
+  }
+
+  if (hasSupabaseConfig && session && membership && shopProfile && !isWorkspaceReady) {
+    return (
+      <main className="app auth-shell">
+        <section className="panel auth-panel">Loading shop workspace...</section>
       </main>
     );
   }

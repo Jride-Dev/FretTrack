@@ -136,6 +136,7 @@ assert.match(jobInfo, /keyboardRepairEnabled \|\| option\.value !== 'Keyboard'/,
 assert.match(page, /Keyboard Repair is available on Pro\.[\s\S]*?Existing keyboard work orders remain available to view/, 'Downgraded shops must keep historical visibility with a clear upgrade message.');
 assert.match(page, /const submitLockRef = useRef\(false\);[\s\S]*?if \(submitLockRef\.current\) \{[\s\S]*?return;[\s\S]*?submitLockRef\.current = true;[\s\S]*?finally \{[\s\S]*?submitLockRef\.current = false;/, 'Keyboard intake must synchronously coalesce rapid duplicate submissions.');
 assert.match(navigation, /'keyboards'[\s\S]*?'keyboard-detail'/, 'Workspace navigation must recognize Keyboard Repair modes.');
+assert.match(app, /jobsReadyShopId === membership\.shopId[\s\S]*?!isWorkspaceReady[\s\S]*?Loading shop workspace/, 'Keyboard detail restoration must wait for current-shop jobs before rendering a fallback workspace.');
 assert.match(workspaceState, /instrumentType === 'keyboard'[\s\S]*?'keyboard-detail'/, 'Refresh restoration must correct keyboard detail routing.');
 
 for (const label of ['Keyboard Identity', 'Affected Keys', 'Keybed / Contact Notes', 'Power Supply Readings', 'Diagnosis', 'Repair Performed', 'Parts Replaced', 'Calibration / Adjustment Notes', 'Final Test']) {

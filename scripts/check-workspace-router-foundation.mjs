@@ -36,6 +36,7 @@ for (const sidebarFeature of ['JobForm', 'JobList', 'UpcomingSchedulePanel', 'Ti
   assert.match(sidebarSource, new RegExp(sidebarFeature), `New Job sidebar must retain ${sidebarFeature}.`);
 }
 assert.match(appSource, /useWorkspaceNavigation\(\{/, 'App must obtain workspace state from the navigation hook.');
+assert.match(appSource, /jobsReadyShopId === membership\.shopId[\s\S]*?!isWorkspaceReady[\s\S]*?Loading shop workspace/, 'Hosted workspace restoration must wait for current-shop jobs and navigation hydration instead of flashing the generic workspace.');
 assert.doesNotMatch(appSource, /useState\(['"]new['"]\)/, 'App must not own workspace mode state directly.');
 assert.doesNotMatch(appSource, /jobDetailReturnModeRef/, 'App must not own Job Detail return navigation state directly.');
 assert.match(navigationSource, /function navigateTo\(nextMode\)/, 'Workspace navigation must own permission-aware page transitions.');

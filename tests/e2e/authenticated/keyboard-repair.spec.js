@@ -50,6 +50,50 @@ test('rapid duplicate activation creates exactly one keyboard work order', async
   await expect(page.getByRole('button', { name: new RegExp(uniqueModel) })).toHaveCount(1);
 });
 
+test('restores an open keyboard work order after a delayed reload', async ({ page }) => {
+  const uniqueModel = `Reload Keyboard ${Date.now()}`;
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Keyboard Repair' }).click();
+  await page.getByLabel('Existing Customer').selectOption({ label: 'FicticiousJoe Customer 19' });
+  await page.getByLabel('Manufacturer').fill('Korg');
+  await page.getByLabel('Model', { exact: true }).fill(uniqueModel);
+  await page.getByLabel('Reported Symptoms / Customer Request').fill('Immediate detail reload regression fixture.');
+  await page.getByRole('button', { name: 'Create Keyboard Work Order' }).click();
+  await expect(page.getByText('Keyboard work order', { exact: true })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => {
+    const stateKey = Object.keys(localStorage).find((key) => key.startsWith('frettrack_workspace_state:'));
+    return stateKey ? JSON.parse(localStorage.getItem(stateKey) || '{}').mode : '';
+  })).toBe('keyboard-detail');
+
+  let markJobsLoadStarted;
+  let releaseJobsLoad;
+  const jobsLoadStarted = new Promise((resolve) => { markJobsLoadStarted = resolve; });
+  const jobsLoadRelease = new Promise((resolve) => { releaseJobsLoad = resolve; });
+  await page.route('**/rest/v1/jobs*', async (route) => {
+    if (route.request().method() === 'GET') {
+      markJobsLoadStarted();
+      await jobsLoadRelease;
+    }
+    await route.continue();
+  });
+
+  try {
+    const reload = page.reload();
+    await jobsLoadStarted;
+    await expect(page.getByText('Loading shop workspace...')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'New Job' })).toHaveCount(0);
+    releaseJobsLoad();
+    await reload;
+
+    await expect(page.getByText('Keyboard work order', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: new RegExp(uniqueModel) })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Keyboard Identity' })).toBeVisible();
+  } finally {
+    releaseJobsLoad?.();
+    await page.unroute('**/rest/v1/jobs*');
+  }
+});
+
 test('rejects a stale keyboard save instead of erasing another technician session', async ({ context, page }) => {
   const uniqueModel = `Concurrent Keyboard ${Date.now()}`;
   await page.goto('/');

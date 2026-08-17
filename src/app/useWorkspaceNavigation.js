@@ -106,6 +106,7 @@ export default function useWorkspaceNavigation({
   return {
     mode,
     selectedJobId,
+    isWorkspaceReady: Boolean(shopId && isReady && hydratedShopId === shopId),
     hasUnsavedPageChanges,
     setMode,
     setSelectedJobId,
