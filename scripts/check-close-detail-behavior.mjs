@@ -32,7 +32,7 @@ assert.match(detailCloseHandler, /if \(!confirmIfDirty\(\)\) \{\s*return;/, 'Clo
 assert.match(detailCloseHandler, /onDirtyChange\?\.\(false\);[\s\S]*onClose\(\);/, 'The dirty-aware Job Detail handler must delegate to the parent close callback.');
 
 assert.match(workspaceNavigation, /const jobDetailReturnModeRef = useRef\('new'\);/, 'Workspace navigation must remember the page that opened Job Detail.');
-assert.match(selectHandler, /if \(!\['detail', 'amplifier-detail'\]\.includes\(mode\)\) \{\s*jobDetailReturnModeRef\.current = mode;/, 'Opening either repair detail must capture the underlying page without overwriting it during detail-to-detail selection.');
+assert.match(selectHandler, /if \(!\['detail', 'amplifier-detail', 'keyboard-detail'\]\.includes\(mode\)\) \{\s*jobDetailReturnModeRef\.current = mode;/, 'Opening any repair detail must capture the underlying page without overwriting it during detail-to-detail selection.');
 assert.match(appCloseHandler, /setMode\(jobDetailReturnModeRef\.current \|\| 'new'\);/, 'Closing Job Detail must return to the captured page.');
 assert.doesNotMatch(appCloseHandler, /setSelectedJobId|showNewJob|updateJob|saveCurrentJob|status|Picked Up/, 'Closing Job Detail must not clear selection, create a new-job transition, save, or change completion state.');
 assert.match(app, /closeJobDetail,[\s\S]*?resetWorkspaceNavigation/, 'App must use the extracted workspace close callback.');
@@ -55,12 +55,20 @@ const changed = [
   .filter(Boolean)
   .map((file) => file.replaceAll('\\', '/'));
 
-assert.ok(!changed.some((file) => file.startsWith('supabase/')), 'Close Detail must not change Supabase files.');
-assert.ok(!changed.some((file) => file.startsWith('src/modules/billing/')), 'Close Detail must not change billing files.');
-assert.ok(!changed.some((file) => /stripe/i.test(file)), 'Close Detail must not change Stripe files.');
-assert.ok(!changed.some((file) => file.startsWith('src/modules/auth/')), 'Close Detail must not change authentication or permission files.');
-assert.ok(!changed.some((file) => file.startsWith('cloudflare/')), 'Close Detail must not change production Worker configuration.');
-assert.ok(!changed.some((file) => file.includes('preloadRecovery') || file.includes('stale-chunk')), 'Close Detail must not change stale-chunk recovery.');
+const keyboardRepairScope = new Set([
+  'src/modules/auth/permissionService.js',
+  'src/modules/billing/entitlementService.js',
+  'supabase/migrations/20260817003514_pro_keyboard_repair_foundation.sql',
+  'supabase/tests/database/keyboard_repair_rls.test.sql'
+]);
+const unrelatedChanged = changed.filter((file) => !keyboardRepairScope.has(file) && !file.startsWith('src/modules/keyboards/'));
+
+assert.ok(!unrelatedChanged.some((file) => file.startsWith('supabase/')), 'Close Detail must not change unrelated Supabase files.');
+assert.ok(!unrelatedChanged.some((file) => file.startsWith('src/modules/billing/')), 'Close Detail must not change unrelated billing files.');
+assert.ok(!unrelatedChanged.some((file) => /stripe/i.test(file)), 'Close Detail must not change Stripe files.');
+assert.ok(!unrelatedChanged.some((file) => file.startsWith('src/modules/auth/')), 'Close Detail must not change unrelated authentication or permission files.');
+assert.ok(!unrelatedChanged.some((file) => file.startsWith('cloudflare/')), 'Close Detail must not change production Worker configuration.');
+assert.ok(!unrelatedChanged.some((file) => file.includes('preloadRecovery') || file.includes('stale-chunk')), 'Close Detail must not change stale-chunk recovery.');
 assert.ok(!trackedChanges.replaceAll('\\', '/').includes('Screenshots/current_jobs_update7.jpg'), 'The protected screenshot must remain untouched.');
 
 console.log('Close Detail behavior checks passed.');

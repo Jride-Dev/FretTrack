@@ -276,13 +276,10 @@ export async function addJob(job) {
     return newJob;
   }
 
-  const duplicateRemoteJob = await findRemoteDuplicateWorkOrder(newJob);
-  if (duplicateRemoteJob) {
-    throw new Error(getDuplicateWorkOrderMessage(duplicateRemoteJob.id, duplicateRemoteJob.job_number || newJob.jobNumber));
-  }
-
+  const remotePayload = toDbJob(newJob, { includeAssignment: true });
+  remotePayload.job_number = '';
   const { data, error } = await supabase.rpc('create_job_with_number', {
-    job_payload: toDbJob(newJob, { includeAssignment: true })
+    job_payload: remotePayload
   });
 
   if (error) {
@@ -487,7 +484,7 @@ export async function updateJob(updatedJob, { expectedUpdatedAt = null } = {}) {
     }
     if (expectedUpdatedAt) {
       console.error('Supabase version-guarded updateJob failed.', error);
-      throw new Error(`Remote job save failed: ${error.message}. No local or remote amplifier changes were saved.`);
+      throw new Error(`Remote job save failed: ${error.message}. No local or remote job changes were saved.`);
     }
     console.error('Supabase updateJob failed. Local copy saved only.', error);
     throw new Error(`Remote job save failed: ${error.message}. Local copy was saved only on this browser.`);
@@ -602,7 +599,7 @@ async function updateSupabaseJob(job, { expectedUpdatedAt = null } = {}) {
 }
 
 function createJobSaveConflictError() {
-  const error = new Error('This amplifier job changed in another session. Reload it before saving so another technician\'s work is not overwritten.');
+  const error = new Error('This job changed in another session. Reload it before saving so another technician\'s work is not overwritten.');
   error.code = JOB_SAVE_CONFLICT_CODE;
   return error;
 }

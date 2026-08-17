@@ -78,6 +78,7 @@ export default function JobForm({
   customers = [],
   canWrite = true,
   amplifierRepairEnabled = true,
+  keyboardRepairEnabled = true,
   shopProfile = null,
   assignableMembers = [],
   membership = null,
@@ -533,7 +534,10 @@ export default function JobForm({
         <div className="instrument-selector" role="group" aria-label="Instrument Type">
           <span>Instrument Type</span>
           <div className="segmented-control instrument-type-control">
-            {getInstrumentTypeOptions().filter((option) => amplifierRepairEnabled || option.value !== 'Amplifier').map((option) => (
+            {getInstrumentTypeOptions().filter((option) => (
+              (amplifierRepairEnabled || option.value !== 'Amplifier')
+              && (keyboardRepairEnabled || option.value !== 'Keyboard')
+            )).map((option) => (
               <button
                 type="button"
                 key={option.value}

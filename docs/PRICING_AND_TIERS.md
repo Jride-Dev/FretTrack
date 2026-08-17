@@ -91,6 +91,7 @@ Pro is the advanced reporting and automation tier. Phase 1 currently unlocks:
 - Advanced Reporting
 - Team Assignment and workload visibility
 - Amplifier Repair
+- Keyboard Repair
 - Scheduled Email for transactional job messages up to 30 days ahead
 
 Pro subscriptions and Pro trials use the FretTrack Pro emblem and labels such as `Trial: Pro`, `Pro Monthly`, `Pro Yearly`, or `Pro, canceling`. Trial Pro access keeps Advanced Reporting unlocked through the existing entitlement snapshot; non-Pro shops continue to see the Pro locked state.

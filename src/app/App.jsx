@@ -42,6 +42,7 @@ import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService'
 import { isCurrentOperator } from '../modules/operator/operatorService';
 import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
 import { isAmplifierJob } from '../modules/amplifiers/amplifierRepair.js';
+import { isKeyboardJob } from '../modules/keyboards/keyboardRepair.js';
 
 const APP_VERSION = '0.2.9-beta.6';
 const APP_NAME = 'FretTrack Systems';
@@ -51,6 +52,7 @@ const NEW_JOB_SIDEBAR_COLLAPSED_KEY = 'frettrack:new-job-sidebar-collapsed';
 
 export default function App() {
   const [jobs, setJobs] = useState([]);
+  const [jobsReadyShopId, setJobsReadyShopId] = useState('');
   const [customers, setCustomers] = useState([]);
   const [assignableMembers, setAssignableMembers] = useState([]);
   const [assignableMembersError, setAssignableMembersError] = useState('');
@@ -89,6 +91,11 @@ export default function App() {
   const [selectedOfflineDraftId, setSelectedOfflineDraftId] = useState('');
   const [syncingDraftId, setSyncingDraftId] = useState('');
   const manualSignOutRef = useRef(false);
+  const shopAccessRequestIdRef = useRef(0);
+  const jobsRequestIdRef = useRef(0);
+  const customersRequestIdRef = useRef(0);
+  const assignableMembersRequestIdRef = useRef(0);
+  const offlineDraftsRequestIdRef = useRef(0);
 
   useEffect(() => {
     clearVitePreloadReloadGuard();
@@ -101,6 +108,8 @@ export default function App() {
     permissionContext,
     amplifierRepairEnabled,
     canEditAmplifierRepair,
+    keyboardRepairEnabled,
+    canEditKeyboardRepair,
     canEditJobs,
     canWrite,
     canManageShop,
@@ -130,6 +139,7 @@ export default function App() {
   const {
     mode,
     selectedJobId,
+    isWorkspaceReady,
     setMode,
     setSelectedJobId,
     setHasUnsavedPageChanges,
@@ -141,7 +151,13 @@ export default function App() {
   } = useWorkspaceNavigation({
     shopId: membership?.shopId,
     jobs,
-    isReady: Boolean(membership?.shopId && shopProfile && !isMembershipLoading && !isShopProfileLoading),
+    isReady: Boolean(
+      membership?.shopId
+      && shopProfile
+      && jobsReadyShopId === membership.shopId
+      && !isMembershipLoading
+      && !isShopProfileLoading
+    ),
     access: { isOperator, canManageShop, canViewBilling, canWrite },
     onAccessDenied: () => setNotice({ type: 'error', message: 'This area is not available for your account.' })
   });
@@ -151,23 +167,56 @@ export default function App() {
 
   function handleSelectJob(jobId) {
     const job = jobs.find((item) => item.id === jobId);
-    return selectWorkspaceJob(jobId, isAmplifierJob(job) ? 'amplifier-detail' : 'detail');
+    const detailMode = isAmplifierJob(job)
+      ? 'amplifier-detail'
+      : isKeyboardJob(job)
+        ? 'keyboard-detail'
+        : 'detail';
+    return selectWorkspaceJob(jobId, detailMode);
   }
 
-  async function refreshJobs() {
+  async function refreshJobs(targetShopId = membership?.shopId || getSelectedShop().shopId) {
+    const requestedShopId = targetShopId || (hasSupabaseConfig ? '' : 'local');
+    const selectedShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
+    if (selectedShopId !== requestedShopId) {
+      return null;
+    }
+    const requestId = ++jobsRequestIdRef.current;
     const loadedJobs = await getJobs();
+    const activeShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
+    if (requestId !== jobsRequestIdRef.current || activeShopId !== requestedShopId) {
+      return null;
+    }
     const sortedJobs = sortNewestFirst(loadedJobs);
     setJobs(sortedJobs);
+    setJobsReadyShopId(requestedShopId);
     return sortedJobs;
   }
 
-  async function refreshCustomers(sourceJobs = jobs) {
+  async function refreshCustomers(sourceJobs = jobs, targetShopId = membership?.shopId || getSelectedShop().shopId) {
+    if (!Array.isArray(sourceJobs)) {
+      return null;
+    }
+    const requestedShopId = targetShopId || (hasSupabaseConfig ? '' : 'local');
+    const selectedShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
+    if (selectedShopId !== requestedShopId) {
+      return null;
+    }
+    const requestId = ++customersRequestIdRef.current;
     const loadedCustomers = await getCustomers(sourceJobs);
+    const activeShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
+    if (requestId !== customersRequestIdRef.current || activeShopId !== requestedShopId) {
+      return null;
+    }
     setCustomers(loadedCustomers);
     return loadedCustomers;
   }
 
   async function refreshAssignableMembers(shopId = membership?.shopId) {
+    if (shopId && getSelectedShop().shopId !== shopId) {
+      return null;
+    }
+    const requestId = ++assignableMembersRequestIdRef.current;
     if (!shopId) {
       setAssignableMembers([]);
       setAssignableMembersError('');
@@ -177,19 +226,31 @@ export default function App() {
     setAssignableMembersError('');
     try {
       const members = await getAssignableShopMembers(shopId);
+      if (requestId !== assignableMembersRequestIdRef.current || getSelectedShop().shopId !== shopId) {
+        return null;
+      }
       setAssignableMembers(members);
       return members;
     } catch (error) {
+      if (requestId !== assignableMembersRequestIdRef.current || getSelectedShop().shopId !== shopId) {
+        return null;
+      }
       console.error('Assignable shop members failed to load.', error);
       setAssignableMembers([]);
       setAssignableMembersError(getErrorMessage(error, 'Unable to load active shop members.'));
       return [];
     } finally {
-      setAssignableMembersLoading(false);
+      if (requestId === assignableMembersRequestIdRef.current && getSelectedShop().shopId === shopId) {
+        setAssignableMembersLoading(false);
+      }
     }
   }
 
   async function refreshOfflineDraftQueue(shopId = membership?.shopId || getSelectedShop().shopId) {
+    if (shopId && getSelectedShop().shopId !== shopId) {
+      return null;
+    }
+    const requestId = ++offlineDraftsRequestIdRef.current;
     if (!shopId) {
       setOfflineDrafts([]);
       setSelectedOfflineDraftId('');
@@ -197,6 +258,9 @@ export default function App() {
     }
 
     const drafts = await getOfflineDrafts(shopId);
+    if (requestId !== offlineDraftsRequestIdRef.current || getSelectedShop().shopId !== shopId) {
+      return null;
+    }
     setOfflineDrafts(drafts);
     setSelectedOfflineDraftId((currentDraftId) => {
       if (drafts.some((draft) => draft.id === currentDraftId)) {
@@ -440,9 +504,13 @@ export default function App() {
   }
 
   async function loadShopAccess(preferredShopId = getSelectedShop().shopId, options = {}) {
+    const requestId = ++shopAccessRequestIdRef.current;
+    const isCurrentRequest = () => requestId === shopAccessRequestIdRef.current;
     setIsMembershipLoading(true);
+    setJobsReadyShopId('');
     try {
       const availableMemberships = await getCurrentUserShopMemberships();
+      if (!isCurrentRequest()) return null;
       setMemberships(availableMemberships);
       const currentMembership = resolveMembership(availableMemberships, preferredShopId);
       setMembership(currentMembership);
@@ -455,9 +523,11 @@ export default function App() {
       setSelectedShop(currentMembership);
       setShopName(currentMembership.shopName || getCurrentShopName());
       const currentEntitlements = await getShopEntitlementSnapshot(currentMembership.shopId);
+      if (!isCurrentRequest()) return null;
       setEntitlementSnapshot(currentEntitlements);
       setIsShopProfileLoading(true);
       const currentShopProfile = await getCurrentShopProfile(currentMembership.shopId);
+      if (!isCurrentRequest()) return null;
       setShopProfile(currentShopProfile);
       if (currentShopProfile?.shopName) {
         setShopName(currentShopProfile.shopName);
@@ -468,11 +538,15 @@ export default function App() {
         return;
       }
 
-      const loadedJobs = await refreshJobs();
-      await refreshCustomers(loadedJobs);
+      const loadedJobs = await refreshJobs(currentMembership.shopId);
+      if (!isCurrentRequest() || !loadedJobs) return null;
+      await refreshCustomers(loadedJobs, currentMembership.shopId);
+      if (!isCurrentRequest()) return null;
       await refreshOfflineDraftQueue(currentMembership.shopId);
+      if (!isCurrentRequest()) return null;
       await checkSupabaseConnection();
     } catch (error) {
+      if (!isCurrentRequest()) return null;
       console.error('Shop membership load failed.', error);
       setSupabaseStatus('error');
       setNotice({
@@ -483,8 +557,10 @@ export default function App() {
         throw error;
       }
     } finally {
-      setIsShopProfileLoading(false);
-      setIsMembershipLoading(false);
+      if (isCurrentRequest()) {
+        setIsShopProfileLoading(false);
+        setIsMembershipLoading(false);
+      }
     }
   }
 
@@ -571,7 +647,7 @@ export default function App() {
       return;
     }
 
-    if (selectedJob && ['detail', 'amplifier-detail'].includes(mode)) {
+    if (selectedJob && ['detail', 'amplifier-detail', 'keyboard-detail'].includes(mode)) {
       if (hasSupabaseConfig && !isOnline) {
         setNotice({ type: 'error', message: 'Offline draft mode is for new job intake only. Existing job edits require an active connection.' });
         return;
@@ -637,6 +713,26 @@ export default function App() {
     setHasUnsavedPageChanges(false);
     selectWorkspaceJob(savedJob.id, 'amplifier-detail', { skipDirtyGuard: true });
     setNotice({ type: 'success', message: `Created amplifier job ${savedJob.jobNumber || ''}.` });
+    return savedJob;
+  }
+
+  async function handleKeyboardJobCreate(jobDraft) {
+    if (!keyboardRepairEnabled) {
+      throw new Error('Keyboard Repair is available on Pro.');
+    }
+    if (!canEditKeyboardRepair) {
+      throw new Error('Your shop role is read-only.');
+    }
+    if (hasSupabaseConfig && !isOnline) {
+      throw new Error('Creating keyboard work orders requires an active connection.');
+    }
+
+    const savedJob = await addJob(jobDraft);
+    const loadedJobs = await refreshJobs();
+    await refreshCustomers(loadedJobs);
+    setHasUnsavedPageChanges(false);
+    selectWorkspaceJob(savedJob.id, 'keyboard-detail', { skipDirtyGuard: true });
+    setNotice({ type: 'success', message: `Created keyboard job ${savedJob.jobNumber || ''}.` });
     return savedJob;
   }
 
@@ -1137,7 +1233,15 @@ export default function App() {
     );
   }
 
-  const isJobMode = mode === 'new' || mode === 'detail' || mode === 'amplifier-detail';
+  if (hasSupabaseConfig && session && membership && shopProfile && !isWorkspaceReady) {
+    return (
+      <main className="app auth-shell">
+        <section className="panel auth-panel">Loading shop workspace...</section>
+      </main>
+    );
+  }
+
+  const isJobMode = ['new', 'detail', 'amplifier-detail', 'keyboard-detail'].includes(mode);
   const getHeaderNavClass = (targetMode, baseClass = '') => [
     baseClass,
     mode === targetMode ? 'header-nav-active' : ''
@@ -1200,6 +1304,13 @@ export default function App() {
           >
             Amplifier Repair
           </button>
+          <button
+            type="button"
+            className={['keyboards', 'keyboard-detail'].includes(mode) ? 'header-nav-active' : undefined}
+            onClick={() => navigateTo('keyboards')}
+          >
+            Keyboard Repair
+          </button>
           <button type="button" className={getHeaderNavClass('customers')} onClick={() => navigateTo('customers')}>Customers</button>
           <button type="button" className={getHeaderNavClass('inventory')} onClick={() => navigateTo('inventory')}>Inventory</button>
           <button type="button" className={getHeaderNavClass('shipping')} onClick={() => navigateTo('shipping')}>Shipping</button>
@@ -1259,8 +1370,8 @@ export default function App() {
         />
       )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
-      <div className={`layout app-layout${['detail', 'amplifier-detail'].includes(mode) && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${['list', 'amplifiers', 'amplifier-detail'].includes(mode) ? ' full-content' : ''}`}>
-        {!['list', 'amplifiers', 'amplifier-detail'].includes(mode) && (
+      <div className={`layout app-layout${['detail', 'amplifier-detail', 'keyboard-detail'].includes(mode) && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${['list', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) ? ' full-content' : ''}`}>
+        {!['list', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) && (
           <NewJobSidebar
             isCollapsed={isNewJobSidebarCollapsed}
             onToggle={toggleNewJobSidebar}
@@ -1274,6 +1385,7 @@ export default function App() {
             betaApproved={betaApproved}
             canEditJobs={canEditJobs}
             amplifierRepairEnabled={amplifierRepairEnabled}
+            keyboardRepairEnabled={keyboardRepairEnabled}
             pendingNewJobCustomer={pendingNewJobCustomer}
             tillSummary={tillSummary}
             moneyOptions={moneyOptions}
@@ -1314,6 +1426,8 @@ export default function App() {
               canDeletePhotos,
               amplifierRepairEnabled,
               canEditAmplifierRepair,
+              keyboardRepairEnabled,
+              canEditKeyboardRepair,
               canEditCustomers,
               canEditJobs,
               canEditPhotos,
@@ -1338,6 +1452,7 @@ export default function App() {
               onAssignmentChanged: handleAssignmentChanged,
               onCloseJobDetail: closeJobDetail,
               onCreateAmplifierJob: handleAmplifierJobCreate,
+              onCreateKeyboardJob: handleKeyboardJobCreate,
               onCreateJobForCustomer: showNewJob,
               onCustomerSaved: handleCustomerSaved,
               onDirtyChange: setHasUnsavedPageChanges,

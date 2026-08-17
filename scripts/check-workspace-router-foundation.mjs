@@ -36,6 +36,10 @@ for (const sidebarFeature of ['JobForm', 'JobList', 'UpcomingSchedulePanel', 'Ti
   assert.match(sidebarSource, new RegExp(sidebarFeature), `New Job sidebar must retain ${sidebarFeature}.`);
 }
 assert.match(appSource, /useWorkspaceNavigation\(\{/, 'App must obtain workspace state from the navigation hook.');
+assert.match(appSource, /jobsReadyShopId === membership\.shopId[\s\S]*?!isWorkspaceReady[\s\S]*?Loading shop workspace/, 'Hosted workspace restoration must wait for current-shop jobs and navigation hydration instead of flashing the generic workspace.');
+assert.match(appSource, /if \(selectedShopId !== requestedShopId\) \{[\s\S]*?return null;[\s\S]*?const requestId = \+\+jobsRequestIdRef\.current;[\s\S]*?requestId !== jobsRequestIdRef\.current \|\| activeShopId !== requestedShopId[\s\S]*?return null;[\s\S]*?setJobs\(sortedJobs\);[\s\S]*?setJobsReadyShopId\(requestedShopId\)/, 'Only the latest response for the selected shop may publish jobs or mark the workspace ready.');
+assert.match(appSource, /const requestId = \+\+shopAccessRequestIdRef\.current;[\s\S]*?const isCurrentRequest = \(\) => requestId === shopAccessRequestIdRef\.current;[\s\S]*?if \(!isCurrentRequest\(\)\) return null;[\s\S]*?const loadedJobs = await refreshJobs\(currentMembership\.shopId\);[\s\S]*?if \(!isCurrentRequest\(\) \|\| !loadedJobs\) return null;/, 'A superseded shop bootstrap must stop before publishing another shop\'s workspace data.');
+assert.match(appSource, /const requestId = \+\+customersRequestIdRef\.current;[\s\S]*?requestId !== customersRequestIdRef\.current \|\| activeShopId !== requestedShopId[\s\S]*?return null;[\s\S]*?setCustomers\(loadedCustomers\)/, 'Customer refreshes must reject stale or cross-shop responses.');
 assert.doesNotMatch(appSource, /useState\(['"]new['"]\)/, 'App must not own workspace mode state directly.');
 assert.doesNotMatch(appSource, /jobDetailReturnModeRef/, 'App must not own Job Detail return navigation state directly.');
 assert.match(navigationSource, /function navigateTo\(nextMode\)/, 'Workspace navigation must own permission-aware page transitions.');
