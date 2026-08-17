@@ -4179,56 +4179,74 @@ th.internal-only {
   gap: 14px;
 }
 
-.keyboard-keybed {
+.keyboard-keybed-scroll {
   background: #2a2a2a;
   border: 1px solid var(--border);
-  display: flex;
-  min-height: 154px;
   overflow-x: auto;
   padding: 8px;
+  width: 100%;
 }
 
-.keyboard-key {
-  border-radius: 0 0 4px 4px;
-  flex: 0 0 32px;
-  height: 136px;
-  margin: 0;
-  padding: 0;
-  position: relative;
+.keyboard-keybed-svg {
+  display: block;
+  max-width: none;
 }
 
-.keyboard-key.white {
-  background: #fff;
-  border: 1px solid #777;
-  color: #222;
-  z-index: 1;
+.keyboard-svg-key {
+  cursor: pointer;
+  outline: none;
 }
 
-.keyboard-key.black {
-  background: #171717;
-  border: 1px solid #000;
-  color: #fff;
-  flex-basis: 22px;
-  height: 84px;
-  margin-left: -11px;
-  margin-right: -11px;
-  z-index: 2;
+.keyboard-svg-key rect {
+  stroke: #686868;
+  stroke-width: 1;
+  transition: fill 120ms ease, stroke 120ms ease;
 }
 
-.keyboard-key span {
-  bottom: 5px;
-  font-size: 0.62rem;
-  left: 2px;
-  position: absolute;
-  right: 2px;
-  text-align: center;
+.keyboard-svg-key.white rect { fill: #fff; }
+.keyboard-svg-key.black rect { fill: #161616; stroke: #050505; }
+.keyboard-svg-key text { fill: #222; font-size: 8px; pointer-events: none; }
+.keyboard-svg-key.tone-good rect { fill: #74c996; }
+.keyboard-svg-key.tone-dead rect { fill: #d85151; }
+.keyboard-svg-key.tone-velocity rect { fill: #e59442; }
+.keyboard-svg-key.tone-mechanical rect { fill: #d86f72; }
+.keyboard-svg-key.tone-dirty rect { fill: #d5b94c; }
+.keyboard-svg-key.midi-preview rect { stroke: #8d6de8; stroke-dasharray: 4 2; stroke-width: 3; }
+.keyboard-svg-key.selected rect,
+.keyboard-svg-key:focus rect { stroke: var(--accent); stroke-width: 4; }
+
+.keyboard-key-popover {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 18%);
+  display: grid;
+  gap: 12px;
+  padding: 14px;
 }
 
-.keyboard-key.fault.minor { box-shadow: inset 0 -10px #e8b446; }
-.keyboard-key.fault.moderate { box-shadow: inset 0 -10px #dc7a32; }
-.keyboard-key.fault.major { box-shadow: inset 0 -10px #c94040; }
-.keyboard-key.pass { box-shadow: inset 0 -8px #3f9f6b; }
-.keyboard-key.selected { outline: 3px solid var(--accent); outline-offset: -3px; }
+.keyboard-midi-parser {
+  align-items: start;
+  border: 1px solid var(--border-soft);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.8fr) auto;
+  padding: 12px;
+}
+
+.keyboard-midi-findings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.keyboard-midi-findings span {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  padding: 4px 8px;
+}
 
 .keyboard-finding-editor {
   border-top: 1px solid var(--border-soft);
@@ -4317,6 +4335,10 @@ th.internal-only {
   .keyboard-analytics-grid,
   .keyboard-parts-matches {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .keyboard-midi-parser {
+    grid-template-columns: 1fr;
   }
 
   .photo-editor-backdrop {

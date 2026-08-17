@@ -77,7 +77,10 @@ test('persists per-key faults, MIDI evidence, checklist progress, and parts requ
   await page.getByRole('button', { name: 'Save Key Finding' }).click();
   await expect(page.getByText('Saved C4 diagnostic finding.')).toBeVisible();
 
-  await page.getByLabel('Raw MIDI Diagnostic Log').fill('NOTE_ON ch=1 note=60 velocity=0\nNOTE_ON ch=1 note=60 velocity=118');
+  await page.getByLabel('Raw MIDI Diagnostic Log').fill('NOTE_ON ch=1 note=60 velocity=0\nNOTE_ON ch=1 note=62 velocity=118');
+  await expect(page.getByText('D4: Missing Note Off')).toBeVisible();
+  await page.getByRole('button', { name: 'Apply MIDI Findings' }).click();
+  await expect(page.getByText('Applied 1 MIDI finding to the keybed.')).toBeVisible();
   await page.getByLabel('MIDI Diagnostic Summary').fill('C4 misses low-velocity strikes.');
   await page.getByLabel('Diagnostic Path').selectOption('piano');
   await page.getByLabel('Run a slow and fast full-key sweep for trigger and velocity consistency status').selectOption('Attention');
@@ -89,6 +92,7 @@ test('persists per-key faults, MIDI evidence, checklist progress, and parts requ
 
   await page.reload();
   await expect(page.getByRole('button', { name: 'C4, Dead Rubber Contact' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'D4, Missing Note Off' })).toBeVisible();
   await expect(page.getByLabel('Raw MIDI Diagnostic Log')).toHaveValue(/velocity=118/);
   await expect(page.getByLabel('Run a slow and fast full-key sweep for trigger and velocity consistency status')).toHaveValue('Attention');
   await expect(page.getByText('C4 rubber contact strip', { exact: true })).toBeVisible();

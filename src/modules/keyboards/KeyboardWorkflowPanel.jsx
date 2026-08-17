@@ -9,8 +9,10 @@ import {
   getKeyboardFault,
   isBlackMidiNote,
   keyboardMidiRange,
-  midiNoteLabel
+  midiNoteLabel,
+  parseMidiDiagnosticLog
 } from './keyboardDiagnostics.js';
+import KeyboardKeybedSvg from './KeyboardKeybedSvg.jsx';
 import {
   createKeyboardPartRequest,
   deleteKeyboardKeyState,
@@ -20,16 +22,19 @@ import {
   updateKeyboardPartRequest
 } from './keyboardWorkflowService.js';
 
-const EMPTY_WORKFLOW = { keyStates: [], partRequests: [], inventoryParts: [] };
+const EMPTY_WORKFLOW = { keyStates: [], partRequests: [], inventoryParts: [], profile: null, faultCodes: [], compatibilities: [] };
 
-function emptyFinding(midiNote) {
+function emptyFinding(midiNote, keyRange = []) {
   return {
     id: '',
+    keyIndex: Math.max(0, keyRange.indexOf(midiNote)),
     midiNote,
     keyLabel: midiNoteLabel(midiNote),
+    noteName: midiNoteLabel(midiNote),
     conditionStatus: 'fault',
     faultCode: 'stuck_key',
     faultCategory: 'Mechanical',
+    damageStatus: 'structural',
     severity: 'moderate',
     velocityMin: '',
     velocityMax: '',
@@ -59,6 +64,7 @@ export default function KeyboardWorkflowPanel({
   const [isLoading, setIsLoading] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   async function load() {
     if (!job.id) return;
@@ -75,37 +81,53 @@ export default function KeyboardWorkflowPanel({
 
   useEffect(() => {
     setSelectedMidiNote(keyRange[0]);
-    setFinding(emptyFinding(keyRange[0]));
+    setFinding(emptyFinding(keyRange[0], keyRange));
+    setIsEditorOpen(false);
     load();
   }, [job.id]);
 
   useEffect(() => {
     if (!keyRange.includes(selectedMidiNote)) {
       setSelectedMidiNote(keyRange[0]);
-      setFinding(emptyFinding(keyRange[0]));
+      setFinding(emptyFinding(keyRange[0], keyRange));
     }
   }, [keyRange.join(','), selectedMidiNote]);
 
   const statesByNote = useMemo(() => new Map(workflow.keyStates.map((state) => [state.midiNote, state])), [workflow.keyStates]);
+  const effectiveFaultCodes = workflow.faultCodes.length ? workflow.faultCodes : KEYBOARD_FAULTS;
+  const midiFindings = useMemo(
+    () => parseMidiDiagnosticLog(keyboard.midiDiagnosticLog).filter((item) => keyRange.includes(item.midiNote)),
+    [keyboard.midiDiagnosticLog, keyRange.join(',')]
+  );
+  const midiFindingsByNote = useMemo(() => new Map(midiFindings.map((item) => [item.midiNote, item])), [midiFindings]);
   const selectedState = statesByNote.get(selectedMidiNote) || null;
   const inventoryMatches = useMemo(
-    () => findKeyboardInventoryMatches(workflow.inventoryParts, finding.faultCode),
-    [finding.faultCode, workflow.inventoryParts]
+    () => findKeyboardInventoryMatches(workflow.inventoryParts, finding.faultCode, {
+      compatibilities: workflow.compatibilities,
+      faultCodes: effectiveFaultCodes,
+      noteName: finding.noteName || finding.keyLabel,
+      keyIndex: finding.keyIndex,
+      keyColor: isBlackMidiNote(finding.midiNote) ? 'black' : 'white',
+      manufacturer: job.guitarBrand,
+      model: job.model
+    }),
+    [effectiveFaultCodes, finding.faultCode, finding.keyIndex, finding.midiNote, finding.noteName, job.guitarBrand, job.model, workflow.compatibilities, workflow.inventoryParts]
   );
 
   function selectKey(midiNote) {
     setSelectedMidiNote(midiNote);
     const existing = statesByNote.get(midiNote);
-    setFinding(existing ? { ...existing } : emptyFinding(midiNote));
+    setFinding(existing ? { ...existing } : emptyFinding(midiNote, keyRange));
     setRequestPartName('');
+    setIsEditorOpen(true);
   }
 
   function updateFinding(event) {
     const { name, value } = event.target;
     setFinding((current) => {
       if (name !== 'faultCode') return { ...current, [name]: value };
-      const fault = getKeyboardFault(value);
-      return { ...current, faultCode: value, faultCategory: fault.category };
+      const fault = getKeyboardFault(value, effectiveFaultCodes);
+      return { ...current, faultCode: value, faultCategory: fault.category, damageStatus: fault.damageStatus || 'electrical' };
     });
   }
 
@@ -132,7 +154,8 @@ export default function KeyboardWorkflowPanel({
     try {
       await deleteKeyboardKeyState(selectedState);
       setWorkflow((current) => ({ ...current, keyStates: current.keyStates.filter((state) => state.id !== selectedState.id) }));
-      setFinding(emptyFinding(selectedMidiNote));
+      setFinding(emptyFinding(selectedMidiNote, keyRange));
+      setIsEditorOpen(false);
       onNotice?.({ type: 'success', message: `Removed ${selectedState.keyLabel} diagnostic finding.` });
     } catch (error) {
       onNotice?.({ type: 'error', message: error.message || 'Unable to remove key finding.' });
@@ -150,17 +173,50 @@ export default function KeyboardWorkflowPanel({
     setIsWorking(true);
     try {
       const request = await createKeyboardPartRequest(job.id, {
-        keyStateId: finding.id || null,
+        keyDamageId: finding.id || null,
         inventoryPartId: part?.id || null,
         requestedPart,
         quantity: requestQuantity,
-        notes: `${finding.keyLabel}: ${getKeyboardFault(finding.faultCode).label}`
+        notes: `${finding.keyLabel}: ${getKeyboardFault(finding.faultCode, effectiveFaultCodes).label}${part?.keyboardCompatibility?.partScope === 'key_group' ? ` (${part.keyboardCompatibility.groupSize}-key group)` : ''}`
       });
       setWorkflow((current) => ({ ...current, partRequests: [...current.partRequests, request] }));
       setRequestPartName('');
       onNotice?.({ type: 'success', message: `Requested ${requestedPart}.` });
     } catch (error) {
       onNotice?.({ type: 'error', message: error.message || 'Unable to create parts request.' });
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function applyMidiFindings() {
+    const pending = midiFindings.filter((item) => !statesByNote.has(item.midiNote));
+    if (!pending.length) {
+      onNotice?.({ type: 'success', message: 'The MIDI preview has no new key findings to apply.' });
+      return;
+    }
+    setIsWorking(true);
+    try {
+      const savedFindings = [];
+      for (const item of pending) {
+        const fault = getKeyboardFault(item.faultCode, effectiveFaultCodes);
+        const draft = {
+          ...emptyFinding(item.midiNote, keyRange),
+          faultCode: item.faultCode,
+          faultCategory: fault.category,
+          damageStatus: fault.damageStatus || 'electrical',
+          notes: item.notes
+        };
+        savedFindings.push(await saveKeyboardKeyState(job.id, draft));
+      }
+      setWorkflow((current) => ({
+        ...current,
+        keyStates: [...current.keyStates, ...savedFindings].sort((left, right) => left.keyIndex - right.keyIndex)
+      }));
+      onNotice?.({ type: 'success', message: `Applied ${savedFindings.length} MIDI finding${savedFindings.length === 1 ? '' : 's'} to the keybed.` });
+    } catch (error) {
+      await load();
+      onNotice?.({ type: 'error', message: error.message || 'Unable to apply the MIDI findings.' });
     } finally {
       setIsWorking(false);
     }
@@ -237,27 +293,32 @@ export default function KeyboardWorkflowPanel({
         <button type="button" className="button-tertiary" onClick={load} disabled={isLoading || isWorking}>Reload Findings</button>
       </div>
       {loadError && <p className="feature-access-note">{loadError}</p>}
-      <div className="keyboard-keybed" role="group" aria-label="Keyboard keybed diagnostic map">
-        {keyRange.map((midiNote) => {
-          const state = statesByNote.get(midiNote);
-          return (
-            <button
-              type="button"
-              key={midiNote}
-              className={[
-                'keyboard-key',
-                isBlackMidiNote(midiNote) ? 'black' : 'white',
-                state?.conditionStatus === 'fault' ? `fault ${state.severity}` : state?.conditionStatus || '',
-                selectedMidiNote === midiNote ? 'selected' : ''
-              ].filter(Boolean).join(' ')}
-              onClick={() => selectKey(midiNote)}
-              title={`${midiNoteLabel(midiNote)}${state?.faultCode ? `: ${getKeyboardFault(state.faultCode).label}` : ''}`}
-              aria-label={`${midiNoteLabel(midiNote)}${state?.faultCode ? `, ${getKeyboardFault(state.faultCode).label}` : ', no finding'}`}
-            ><span>{midiNoteLabel(midiNote)}</span></button>
-          );
-        })}
-      </div>
+      <KeyboardKeybedSvg
+        keyRange={keyRange}
+        statesByNote={statesByNote}
+        midiFindingsByNote={midiFindingsByNote}
+        selectedMidiNote={selectedMidiNote}
+        faultCodes={effectiveFaultCodes}
+        onSelect={selectKey}
+      />
 
+      <section className="keyboard-midi-parser">
+        <div>
+          <h4>MIDI Log Parser</h4>
+          <p className="muted-text">The pasted bench log is parsed locally. A velocity-zero note-on closes an active note normally; an unmatched zero-velocity event or an unclosed note-on is flagged for review.</p>
+        </div>
+        <div className="keyboard-midi-findings" aria-live="polite">
+          {midiFindings.map((item) => <span key={`${item.midiNote}-${item.faultCode}`}>{item.noteName}: {getKeyboardFault(item.faultCode, effectiveFaultCodes).label}</span>)}
+          {!midiFindings.length && <span>No MIDI anomalies detected in the current pasted log.</span>}
+        </div>
+        <button type="button" className="button-tertiary" onClick={applyMidiFindings} disabled={!canWrite || isWorking || !midiFindings.length}>Apply MIDI Findings</button>
+      </section>
+
+      {isEditorOpen && <div className="keyboard-key-popover" role="dialog" aria-label={`${finding.keyLabel} key finding`}>
+        <div className="panel-heading">
+          <h4>{finding.keyLabel} Key Health</h4>
+          <button type="button" className="button-tertiary" onClick={() => setIsEditorOpen(false)}>Close</button>
+        </div>
       <div className="form-grid keyboard-finding-editor">
         <label>
           Selected Key
@@ -266,13 +327,19 @@ export default function KeyboardWorkflowPanel({
         <label>
           State
           <select name="conditionStatus" value={finding.conditionStatus} onChange={updateFinding} disabled={!canWrite}>
-            <option value="fault">Fault</option><option value="pass">Pass</option><option value="not_tested">Not tested</option>
+            <option value="fault">Defective</option><option value="pass">Good</option><option value="not_tested">Not tested</option>
+          </select>
+        </label>
+        <label>
+          Damage Type
+          <select name="damageStatus" value={finding.damageStatus} onChange={updateFinding} disabled={!canWrite || finding.conditionStatus !== 'fault'}>
+            <option value="structural">Structural</option><option value="electrical">Electrical</option><option value="dirty">Dirty</option><option value="clean">Clean</option>
           </select>
         </label>
         <label>
           Fault
           <select name="faultCode" value={finding.faultCode} onChange={updateFinding} disabled={!canWrite || finding.conditionStatus !== 'fault'}>
-            {KEYBOARD_FAULTS.map((fault) => <option key={fault.code} value={fault.code}>{fault.label}</option>)}
+            {effectiveFaultCodes.map((fault) => <option key={fault.code} value={fault.code}>{fault.label}</option>)}
           </select>
         </label>
         <label>
@@ -289,6 +356,7 @@ export default function KeyboardWorkflowPanel({
         <button type="button" onClick={saveFinding} disabled={!canWrite || isWorking || isLoading}>Save Key Finding</button>
         {selectedState && <button type="button" className="button-tertiary" onClick={removeFinding} disabled={!canWrite || isWorking}>Remove Finding</button>}
       </div>
+      </div>}
 
       <section className="keyboard-parts-cross-reference">
         <h4>Fault-to-Parts Cross-reference</h4>
@@ -296,7 +364,7 @@ export default function KeyboardWorkflowPanel({
         <div className="keyboard-parts-matches">
           {inventoryMatches.map((part) => (
             <button type="button" className="keyboard-part-match" key={part.id} onClick={() => requestPart(part)} disabled={!canWrite || isWorking}>
-              <strong>{part.name}</strong><span>{part.quantityOnHand} on hand · {part.location || 'No bin'}</span><small>{part.sku || part.partNumber || 'No SKU'}</small>
+              <strong>{part.name}</strong><span>{part.quantityOnHand} on hand · {part.location || 'No bin'}</span><small>{part.keyboardCompatibility ? `${part.keyboardCompatibility.partScope === 'key_group' ? `${part.keyboardCompatibility.groupSize}-key group` : 'Exact key match'} · ` : ''}{part.sku || part.partNumber || 'No SKU'}</small>
             </button>
           ))}
           {!inventoryMatches.length && <p className="empty-state">No active inventory item matches this fault yet.</p>}

@@ -5,11 +5,14 @@ function fromDbKeyState(row = {}) {
   return {
     id: row.id,
     jobId: row.job_id,
+    keyIndex: row.key_index,
     midiNote: row.midi_note,
-    keyLabel: row.key_label,
-    conditionStatus: row.condition_status,
+    keyLabel: row.note_name,
+    noteName: row.note_name,
+    conditionStatus: row.health_state === 'good' ? 'pass' : row.health_state === 'not_tested' ? 'not_tested' : 'fault',
+    healthState: row.health_state,
+    damageStatus: row.status,
     faultCode: row.fault_code || '',
-    faultCategory: row.fault_category || '',
     severity: row.severity || 'moderate',
     velocityMin: row.velocity_min,
     velocityMax: row.velocity_max,
@@ -23,7 +26,7 @@ function fromDbPartRequest(row = {}) {
   return {
     id: row.id,
     jobId: row.job_id,
-    keyStateId: row.key_state_id || '',
+    keyDamageId: row.key_damage_id || '',
     inventoryPartId: row.inventory_part_id || '',
     jobPartId: row.job_part_id || '',
     requestedPart: row.requested_part || '',
@@ -32,6 +35,35 @@ function fromDbPartRequest(row = {}) {
     notes: row.notes || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at
+  };
+}
+
+function fromDbFaultCode(row = {}) {
+  return {
+    code: row.code,
+    label: row.label,
+    category: row.category,
+    damageStatus: row.damage_status,
+    overlayTone: row.overlay_tone,
+    partKeywords: row.part_keywords || [],
+    defaultGroupSize: row.default_group_size,
+    isActive: row.is_active
+  };
+}
+
+function fromDbCompatibility(row = {}) {
+  return {
+    id: row.id,
+    partId: row.part_id,
+    faultCode: row.fault_code,
+    partScope: row.part_scope,
+    groupSize: Number(row.group_size || 1),
+    keyColor: row.key_color || '',
+    noteName: row.note_name || '',
+    manufacturer: row.manufacturer || '',
+    modelPattern: row.model_pattern || '',
+    startKeyIndex: row.start_key_index,
+    endKeyIndex: row.end_key_index
   };
 }
 
@@ -61,7 +93,7 @@ export async function listKeyboardKeyStates(jobIds) {
   const chunks = [];
   for (let index = 0; index < ids.length; index += 100) chunks.push(ids.slice(index, index + 100));
   const pages = await Promise.all(chunks.map(async (chunk) => {
-    const { data, error } = await supabase.from('keyboard_key_states').select('*').in('job_id', chunk).order('midi_note');
+    const { data, error } = await supabase.from('key_damage_map').select('*').in('job_id', chunk).order('key_index');
     if (error) throw error;
     return data || [];
   }));
@@ -76,37 +108,57 @@ export async function listKeyboardPartRequests(jobId) {
 }
 
 export async function loadKeyboardWorkflow(jobId, shopId) {
-  const [keyStates, partRequests, inventoryParts] = await Promise.all([
+  const [keyStates, partRequests, inventoryParts, profileResult, faultResult, compatibilityResult] = await Promise.all([
     listKeyboardKeyStates(jobId),
     listKeyboardPartRequests(jobId),
-    listParts(shopId, { activeOnly: true })
+    listParts(shopId, { activeOnly: true }),
+    supabase.from('keyboard_profiles').select('*').eq('job_id', jobId).maybeSingle(),
+    supabase.from('fault_codes').select('*').eq('is_active', true).order('label'),
+    supabase.from('keyboard_part_compatibility').select('*')
   ]);
-  return { keyStates, partRequests, inventoryParts };
+  if (profileResult.error) throw profileResult.error;
+  if (faultResult.error) throw faultResult.error;
+  if (compatibilityResult.error) throw compatibilityResult.error;
+  return {
+    keyStates,
+    partRequests,
+    inventoryParts,
+    profile: profileResult.data ? {
+      jobId: profileResult.data.job_id,
+      keyCount: Number(profileResult.data.key_count),
+      actionType: profileResult.data.action_type,
+      sensorType: profileResult.data.sensor_type,
+      lowestMidiNote: Number(profileResult.data.lowest_midi_note)
+    } : null,
+    faultCodes: (faultResult.data || []).map(fromDbFaultCode),
+    compatibilities: (compatibilityResult.data || []).map(fromDbCompatibility)
+  };
 }
 
 export async function saveKeyboardKeyState(jobId, state, expectedUpdatedAt = '') {
   requireConfigured();
   const payload = {
     job_id: jobId,
+    key_index: Number(state.keyIndex),
     midi_note: Number(state.midiNote),
-    key_label: state.keyLabel,
-    condition_status: state.conditionStatus,
-    fault_code: state.conditionStatus === 'fault' ? state.faultCode : '',
-    fault_category: state.conditionStatus === 'fault' ? state.faultCategory : '',
+    note_name: state.noteName || state.keyLabel,
+    health_state: state.conditionStatus === 'pass' ? 'good' : state.conditionStatus === 'not_tested' ? 'not_tested' : 'defective',
+    status: state.conditionStatus === 'pass' ? 'clean' : state.damageStatus,
+    fault_code: state.conditionStatus === 'fault' ? state.faultCode : null,
     severity: state.severity || 'moderate',
     velocity_min: state.velocityMin === '' || state.velocityMin == null ? null : Number(state.velocityMin),
     velocity_max: state.velocityMax === '' || state.velocityMax == null ? null : Number(state.velocityMax),
     notes: String(state.notes || '').trim()
   };
   if (!state.id) {
-    const { data, error } = await supabase.from('keyboard_key_states').insert(payload).select().single();
+    const { data, error } = await supabase.from('key_damage_map').insert(payload).select().single();
     if (error?.code === '23505') throw new Error('This key was changed in another session. Reload the keyboard diagnostics before saving.');
     if (error) throw error;
     return fromDbKeyState(data);
   }
   if (!expectedUpdatedAt) throw new Error('This key finding has no save version. Reload it before saving.');
   const { data, error } = await supabase
-    .from('keyboard_key_states')
+    .from('key_damage_map')
     .update(payload)
     .eq('id', state.id)
     .eq('job_id', jobId)
@@ -121,7 +173,7 @@ export async function saveKeyboardKeyState(jobId, state, expectedUpdatedAt = '')
 export async function deleteKeyboardKeyState(state) {
   requireConfigured();
   const { data, error } = await supabase
-    .from('keyboard_key_states')
+    .from('key_damage_map')
     .delete()
     .eq('id', state.id)
     .eq('updated_at', state.updatedAt)
@@ -134,7 +186,7 @@ export async function createKeyboardPartRequest(jobId, request) {
   requireConfigured();
   const { data, error } = await supabase.from('keyboard_part_requests').insert({
     job_id: jobId,
-    key_state_id: request.keyStateId || null,
+    key_damage_id: request.keyDamageId || null,
     inventory_part_id: request.inventoryPartId || null,
     requested_part: String(request.requestedPart || '').trim(),
     quantity: Math.max(Number(request.quantity || 1), 1),

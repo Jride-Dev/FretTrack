@@ -13,7 +13,8 @@ import {
   findKeyboardInventoryMatches,
   keyboardMidiRange,
   midiNoteLabel,
-  normalizeKeyboardChecklist
+  normalizeKeyboardChecklist,
+  parseMidiDiagnosticLog
 } from '../src/modules/keyboards/keyboardDiagnostics.js';
 import {
   getBrandsForInstrumentType,
@@ -28,10 +29,12 @@ const migrationPath = 'supabase/migrations/20260817003514_pro_keyboard_repair_fo
 const workflowMigrationPath = 'supabase/migrations/20260817005658_keyboard_repair_crm_workflow.sql';
 const fulfillmentMigrationPath = 'supabase/migrations/20260817011009_keyboard_part_request_fulfillment.sql';
 const hardeningMigrationPath = 'supabase/migrations/20260817011534_harden_keyboard_repair_workflow.sql';
+const normalizedMigrationPath = 'supabase/migrations/20260817012310_normalize_keyboard_damage_map.sql';
 assert.ok(existsSync(join(root, migrationPath)), 'The authoritative Keyboard Repair migration must exist.');
 assert.ok(existsSync(join(root, workflowMigrationPath)), 'The Keyboard Repair CRM workflow migration must exist.');
 assert.ok(existsSync(join(root, fulfillmentMigrationPath)), 'The atomic Keyboard Repair parts fulfillment migration must exist.');
 assert.ok(existsSync(join(root, hardeningMigrationPath)), 'The Keyboard Repair workflow hardening migration must exist.');
+assert.ok(existsSync(join(root, normalizedMigrationPath)), 'The normalized Keyboard Repair damage-map migration must exist.');
 
 const app = read('src/app/App.jsx');
 const appAccess = read('src/app/appAccess.js');
@@ -51,8 +54,10 @@ const migration = read(migrationPath);
 const workflowMigration = read(workflowMigrationPath);
 const fulfillmentMigration = read(fulfillmentMigrationPath);
 const hardeningMigration = read(hardeningMigrationPath);
+const normalizedMigration = read(normalizedMigrationPath);
 const workflowPanel = read('src/modules/keyboards/KeyboardWorkflowPanel.jsx');
 const workflowService = read('src/modules/keyboards/keyboardWorkflowService.js');
+const keybedSvg = read('src/modules/keyboards/KeyboardKeybedSvg.jsx');
 const checklistPanel = read('src/modules/keyboards/KeyboardDiagnosticChecklist.jsx');
 const packageJson = read('package.json');
 
@@ -87,6 +92,11 @@ assert.equal(midiNoteLabel(108), 'C8', 'MIDI 108 must map to the highest key of 
 assert.deepEqual([keyboardMidiRange('88')[0], keyboardMidiRange('88').at(-1)], [21, 108], 'An 88-key map must cover A0 through C8.');
 assert.equal(normalizeKeyboardChecklist({}, 'Digital Piano').templateKey, 'piano', 'Digital pianos must receive the piano diagnostic path.');
 assert.equal(findKeyboardInventoryMatches([{ id: 'contact', name: 'Rubber Contact Strip', quantityOnHand: 2 }], 'dead_rubber_contact')[0].id, 'contact', 'Contact faults must cross-reference matching inventory.');
+assert.deepEqual(parseMidiDiagnosticLog('NOTE_ON ch=1 note=60 velocity=100\nNOTE_OFF ch=1 note=60 velocity=0'), [], 'A complete note-on/off pair must not create a MIDI finding.');
+assert.deepEqual(parseMidiDiagnosticLog('NOTE_ON ch=1 note=60 velocity=100\nNOTE_ON ch=1 note=60 velocity=0'), [], 'A velocity-zero note-on must close an active note normally.');
+assert.equal(parseMidiDiagnosticLog('NOTE_ON ch=1 note=61 velocity=0')[0].faultCode, 'zero_velocity', 'An unmatched zero-velocity trigger must be surfaced for review.');
+assert.equal(parseMidiDiagnosticLog('NOTE_ON ch=1 note=62 velocity=80')[0].faultCode, 'missing_note_off', 'An unclosed note-on must be surfaced for review.');
+assert.equal(parseMidiDiagnosticLog('NOTE_ON note=60 velocity=0\nNOTE_ON note=60 velocity=80').length, 1, 'Multiple anomalies on one physical key must collapse into one authoritative preview.');
 const analytics = buildKeyboardRepairAnalytics([{ ...keyboardJob, id: 'analytics', status: 'On Bench' }], [{ conditionStatus: 'fault', faultCode: 'velocity_spike' }]);
 assert.equal(analytics.openJobs, 1, 'Keyboard analytics must count open keyboard work.');
 assert.equal(analytics.topFault[0], 'Velocity Spike', 'Keyboard analytics must summarize standardized fault labels.');
@@ -134,6 +144,9 @@ for (const label of ['Sensor Technology', 'Visual Keybed Diagnostics', 'Raw MIDI
   assert.ok(detail.includes(label) || workflowPanel.includes(label) || checklistPanel.includes(label), `Keyboard workflow must include ${label}.`);
 }
 assert.match(workflowPanel, /findKeyboardInventoryMatches[\s\S]*?fulfillKeyboardPartRequest/, 'Fault matches must connect to atomic inventory request fulfillment.');
+assert.match(workflowPanel, /parseMidiDiagnosticLog[\s\S]*?Apply MIDI Findings/, 'The bench log parser must preview and deliberately apply detected MIDI anomalies.');
+assert.match(keybedSvg, /<svg[\s\S]*?role="button"/, 'The visual damage map must expose keyboard-accessible SVG keys.');
+assert.match(keybedSvg, /tone-\$\{keyTone/, 'The visual damage map must apply a color-coded health tone to every key.');
 assert.match(workflowPanel, /sendCustomerMessage\(savedJob,[\s\S]*?templateKey: 'keyboard_diagnostic_report'/, 'Customer diagnostic reports must use established message persistence.');
 assert.match(workflowService, /\.eq\('updated_at', expectedUpdatedAt\)/, 'Per-key writes must reject stale technician sessions.');
 for (const label of ['Keys and key return', 'Velocity response', 'Aftertouch', 'Main audio outputs', 'MIDI DIN', 'USB data / host', 'Pedal inputs', 'Power and startup']) {
@@ -162,6 +175,13 @@ assert.match(fulfillmentMigration, /for update[\s\S]*?public\.add_inventory_part
 assert.match(fulfillmentMigration, /if target_request\.job_part_id is not null[\s\S]*?return fulfilled_part/, 'Parts fulfillment retries must return the original job part without consuming stock twice.');
 assert.match(hardeningMigration, /revoke update on public\.keyboard_part_requests from authenticated[\s\S]*?grant update \(requested_part, quantity, request_status, notes\)/, 'Clients must not be able to forge the fulfillment linkage column.');
 assert.match(hardeningMigration, /alter function public\.fulfill_keyboard_part_request\(uuid\) security definer/, 'Atomic fulfillment must own the protected linkage update after client column access is revoked.');
+for (const code of ['velocity_spike', 'no_trigger', 'stuck_note', 'broken_stem']) {
+  assert.ok(normalizedMigration.includes(`('${code}'`), `The normalized fault catalog must seed ${code}.`);
+}
+assert.match(normalizedMigration, /create table public\.keyboard_profiles[\s\S]*?key_count[\s\S]*?action_type[\s\S]*?sensor_type/, 'Keyboard profiles must normalize the physical keybed definition.');
+assert.match(normalizedMigration, /create table public\.key_damage_map[\s\S]*?unique \(job_id, key_index\)/, 'The normalized damage map must store one authoritative row per physical key.');
+assert.match(normalizedMigration, /create table public\.keyboard_part_compatibility[\s\S]*?part_scope[\s\S]*?group_size/, 'Inventory compatibility must support individual keys and grouped contact strips.');
+assert.match(normalizedMigration, /alter table public\.fault_codes enable row level security[\s\S]*?grant select on public\.fault_codes, public\.keyboard_profiles to authenticated/, 'Normalized keyboard tables must enable RLS and explicitly opt into the Data API.');
 assert.match(packageJson, /"check:keyboard-repair-module": "node scripts\/check-keyboard-repair-module\.mjs"/, 'The focused Keyboard Repair checker must be exposed.');
 
 console.log('Keyboard repair module checks passed.');

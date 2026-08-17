@@ -15,13 +15,18 @@ export const KEYBOARD_SENSOR_TECHNOLOGIES = [
 ];
 
 export const KEYBOARD_FAULTS = [
-  { code: 'stuck_key', label: 'Stuck Key', category: 'Mechanical', partKeywords: ['key', 'spring', 'bushing'] },
+  { code: 'stuck_key', label: 'Stuck Key', category: 'Mechanical', damageStatus: 'structural', overlayTone: 'mechanical', partKeywords: ['key', 'spring', 'bushing'] },
+  { code: 'stuck_note', label: 'Stuck Note', category: 'Electrical', damageStatus: 'electrical', overlayTone: 'dead', partKeywords: ['rubber contact', 'contact strip', 'sensor'], defaultGroupSize: 12 },
   { code: 'slow_return', label: 'Slow Key Return', category: 'Mechanical', partKeywords: ['spring', 'felt', 'bushing'] },
   { code: 'uneven_key_height', label: 'Uneven Key Height', category: 'Mechanical', partKeywords: ['felt', 'balance rail', 'key'] },
-  { code: 'broken_keytop', label: 'Broken Keytop', category: 'Physical', partKeywords: ['keytop', 'key'] },
+  { code: 'broken_keytop', label: 'Broken Keytop', category: 'Physical', damageStatus: 'structural', overlayTone: 'dead', partKeywords: ['keytop', 'replacement key', 'key'], defaultGroupSize: 1 },
+  { code: 'broken_stem', label: 'Broken Key Stem', category: 'Physical', damageStatus: 'structural', overlayTone: 'dead', partKeywords: ['replacement key', 'key stem', 'key'], defaultGroupSize: 1 },
   { code: 'cracked_key_hinge', label: 'Cracked Key Hinge', category: 'Physical', partKeywords: ['key', 'hinge'] },
   { code: 'noisy_key', label: 'Noisy Key', category: 'Mechanical', partKeywords: ['felt', 'grease', 'bushing'] },
-  { code: 'dead_key', label: 'Dead Key', category: 'Electrical', partKeywords: ['rubber contact', 'contact strip', 'sensor'] },
+  { code: 'dead_key', label: 'Dead Key', category: 'Electrical', damageStatus: 'electrical', overlayTone: 'dead', partKeywords: ['rubber contact', 'contact strip', 'sensor'], defaultGroupSize: 12 },
+  { code: 'no_trigger', label: 'No Trigger', category: 'Electrical', damageStatus: 'electrical', overlayTone: 'dead', partKeywords: ['rubber contact', 'contact strip', 'sensor'], defaultGroupSize: 12 },
+  { code: 'zero_velocity', label: 'Zero Velocity Trigger', category: 'Sensor', damageStatus: 'electrical', overlayTone: 'dead', partKeywords: ['rubber contact', 'contact strip', 'sensor'], defaultGroupSize: 12 },
+  { code: 'missing_note_off', label: 'Missing Note Off', category: 'Electrical', damageStatus: 'electrical', overlayTone: 'dead', partKeywords: ['rubber contact', 'contact strip', 'sensor'], defaultGroupSize: 12 },
   { code: 'intermittent_key', label: 'Intermittent Key', category: 'Electrical', partKeywords: ['rubber contact', 'contact strip', 'ribbon'] },
   { code: 'velocity_spike', label: 'Velocity Spike', category: 'Sensor', partKeywords: ['rubber contact', 'contact strip', 'sensor'] },
   { code: 'velocity_dropout', label: 'Velocity Dropout', category: 'Sensor', partKeywords: ['rubber contact', 'contact strip', 'sensor'] },
@@ -115,8 +120,8 @@ export function keyboardMidiRange(keyCount = '61', lowestMidiNote = '') {
   return Array.from({ length: safeCount }, (_, index) => start + index);
 }
 
-export function getKeyboardFault(code = '') {
-  return KEYBOARD_FAULTS.find((fault) => fault.code === code) || KEYBOARD_FAULTS.at(-1);
+export function getKeyboardFault(code = '', faultCodes = KEYBOARD_FAULTS) {
+  return faultCodes.find((fault) => fault.code === code) || KEYBOARD_FAULTS.find((fault) => fault.code === code) || KEYBOARD_FAULTS.at(-1);
 }
 
 export function getKeyboardChecklist(keyboardType = '') {
@@ -139,21 +144,101 @@ export function normalizeKeyboardChecklist(checklist = {}, keyboardType = '') {
   };
 }
 
-export function findKeyboardInventoryMatches(parts = [], faultCode = '') {
-  const keywords = getKeyboardFault(faultCode).partKeywords;
-  if (!keywords.length) return [];
+export function findKeyboardInventoryMatches(parts = [], faultCode = '', context = {}) {
+  const fault = getKeyboardFault(faultCode, context.faultCodes);
+  const keywords = fault.partKeywords || [];
+  const compatibilityRows = (context.compatibilities || []).filter((row) => row.faultCode === faultCode);
   return parts
     .map((part) => {
       const haystack = [part.name, part.sku, part.category, part.description, part.manufacturer, part.partNumber]
         .join(' ')
         .toLowerCase();
-      const score = keywords.reduce((total, keyword) => total + (haystack.includes(keyword) ? 1 : 0), 0);
-      return { part, score };
+      const compatibility = compatibilityRows.find((row) => {
+        if (row.partId !== part.id) return false;
+        if (row.noteName && row.noteName.toLowerCase() !== String(context.noteName || '').toLowerCase()) return false;
+        if (row.keyColor && row.keyColor !== 'any' && row.keyColor !== context.keyColor) return false;
+        if (row.manufacturer && !String(context.manufacturer || '').toLowerCase().includes(row.manufacturer.toLowerCase())) return false;
+        if (row.modelPattern && !String(context.model || '').toLowerCase().includes(row.modelPattern.toLowerCase())) return false;
+        if (row.startKeyIndex != null && Number(context.keyIndex) < row.startKeyIndex) return false;
+        if (row.endKeyIndex != null && Number(context.keyIndex) > row.endKeyIndex) return false;
+        return true;
+      });
+      const keywordScore = keywords.reduce((total, keyword) => total + (haystack.includes(keyword) ? 1 : 0), 0);
+      const pitchClass = String(context.noteName || '').replace(/-?\d+$/, '').toLowerCase();
+      const exactKeyHeuristic = /replacement\s+key|keytop/.test(haystack)
+        && pitchClass
+        && [`white ${pitchClass}`, `black ${pitchClass}`, `key ${pitchClass}`, `keytop ${pitchClass}`].some((label) => haystack.includes(label));
+      const inferredCompatibility = compatibility || (exactKeyHeuristic ? {
+        partScope: 'single_key', groupSize: 1, noteName: context.noteName, inferred: true
+      } : fault.defaultGroupSize > 1 && keywordScore ? {
+        partScope: 'key_group', groupSize: fault.defaultGroupSize, inferred: true
+      } : null);
+      return { part: { ...part, keyboardCompatibility: inferredCompatibility }, score: (compatibility ? 100 : exactKeyHeuristic ? 50 : 0) + keywordScore };
     })
     .filter(({ score }) => score > 0)
     .sort((left, right) => right.score - left.score || right.part.quantityOnHand - left.part.quantityOnHand)
     .slice(0, 8)
     .map(({ part }) => part);
+}
+
+function noteNameToMidi(noteName = '') {
+  const match = String(noteName).trim().match(/^([A-Ga-g])([#b]?)(-?\d)$/);
+  if (!match) return null;
+  const natural = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[match[1].toUpperCase()];
+  const accidental = match[2] === '#' ? 1 : match[2] === 'b' ? -1 : 0;
+  const midiNote = (Number(match[3]) + 1) * 12 + natural + accidental;
+  return midiNote >= 0 && midiNote <= 127 ? midiNote : null;
+}
+
+function parseMidiNoteFromLine(line = '') {
+  const numeric = line.match(/\b(?:note|key)\s*[:=]?\s*(\d{1,3})\b/i);
+  if (numeric) {
+    const note = Number(numeric[1]);
+    return note >= 0 && note <= 127 ? note : null;
+  }
+  const named = line.match(/\b([A-Ga-g][#b]?-?\d)\b/);
+  return named ? noteNameToMidi(named[1]) : null;
+}
+
+export function parseMidiDiagnosticLog(rawLog = '') {
+  const activeNotes = new Map();
+  const findings = new Map();
+  const addFinding = (midiNote, faultCode, notes) => {
+    const existing = findings.get(midiNote);
+    const priority = { zero_velocity: 1, missing_note_off: 2 };
+    if (existing && priority[existing.faultCode] > priority[faultCode]) return;
+    findings.set(midiNote, {
+      midiNote,
+      noteName: midiNoteLabel(midiNote),
+      faultCode,
+      damageStatus: 'electrical',
+      notes: existing ? `${existing.notes} ${notes}` : notes
+    });
+  };
+
+  String(rawLog || '').split(/\r?\n/).forEach((rawLine, index) => {
+    const line = rawLine.trim();
+    if (!line) return;
+    const isNoteOn = /\bnote[_\s-]?on\b/i.test(line);
+    const isNoteOff = /\bnote[_\s-]?off\b/i.test(line);
+    if (!isNoteOn && !isNoteOff) return;
+    const midiNote = parseMidiNoteFromLine(line);
+    if (midiNote == null) return;
+    const velocityMatch = line.match(/\b(?:velocity|vel)\s*[:=]?\s*(\d{1,3})\b/i);
+    const velocity = velocityMatch ? Number(velocityMatch[1]) : null;
+
+    if (isNoteOff || (isNoteOn && velocity === 0)) {
+      if (activeNotes.has(midiNote)) activeNotes.delete(midiNote);
+      else if (isNoteOn && velocity === 0) addFinding(midiNote, 'zero_velocity', `Line ${index + 1}: note-on arrived with zero velocity and no matching active note.`);
+      return;
+    }
+    if (isNoteOn) activeNotes.set(midiNote, index + 1);
+  });
+
+  activeNotes.forEach((lineNumber, midiNote) => {
+    addFinding(midiNote, 'missing_note_off', `Line ${lineNumber}: note-on has no matching note-off in the pasted capture.`);
+  });
+  return [...findings.values()].sort((left, right) => left.midiNote - right.midiNote);
 }
 
 export function buildKeyboardRepairAnalytics(jobs = [], keyStates = []) {
