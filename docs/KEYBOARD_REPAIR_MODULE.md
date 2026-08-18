@@ -19,6 +19,7 @@ Keyboard Repair is a Pro and Enterprise feature. Shop-plan users can open the mo
 - Follow instrument-family diagnostic paths for pianos, synths/workstations, MIDI controllers, organs, and uncommon keyboards, including ribbon-cable and diode-matrix checks.
 - Cross-reference failed contacts, sensors, springs, keytops, and related faults against active shop inventory, then turn a request into an ordinary FretTrack job part through the existing stock transaction.
 - Switch the same saved job between Keyboard Bench and Work Order, Parts & Payments to add inventory/manual parts, labor, tax, discounts, payments, balances, invoice email, print documents, photos, scheduling, messages, and timeline history.
+- Use a Keyboard Inspection tab in the shared work-order workspace for keybed/contact findings, power readings, MIDI notes, functional tests, guided diagnostics, and final verification without exposing guitar neck, string, or Damage Map fields.
 - Review keyboard workload, average completed repair time, most-serviced model, and most common logged key fault on the module dashboard.
 - Send a customer diagnostic email assembled from the saved profile, fault map, diagnosis, requested parts, and current job costs through the existing consent, quota, history, and provider workflow.
 
