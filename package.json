@@ -56,6 +56,7 @@
     "check:amplifier-repair-module": "node scripts/check-amplifier-repair-module.mjs",
     "check:keyboard-repair-module": "node scripts/check-keyboard-repair-module.mjs",
     "check:specialist-work-order-commerce": "node scripts/check-specialist-work-order-commerce.mjs",
+    "check:billing-save-integrity": "node scripts/check-billing-save-integrity.mjs",
     "check:pro-email-scheduling": "node scripts/check-pro-email-scheduling.mjs",
     "check:work-log-draft-safety": "node scripts/check-work-log-draft-safety.mjs",
     "check:purchase-unit-conversion": "node scripts/check-purchase-unit-conversion.mjs",

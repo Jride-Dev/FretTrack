@@ -1509,46 +1509,32 @@ function instrumentLabel(job) {
 }
 
 async function syncJobChildren(job) {
-  await supabase.from('job_parts').delete().eq('job_id', job.id);
-  if (job.parts.length) {
-    const { error } = await supabase.from('job_parts').insert(
-      job.parts.map((part) => ({
-        id: part.id,
-        shop_id: getActiveShopId(part.shopId || job.shopId),
-        job_id: job.id,
-        part_id: part.partId || null,
-        name: part.name,
-        sku: part.sku || null,
-        quantity: Number(part.quantity || 1),
-        cost: Number(part.cost || 0),
-        retail: Number(part.retail || 0),
-        unit_cost: Number(part.cost || 0),
-        retail_price: Number(part.retail || 0),
-        created_at: part.createdAt
-      }))
-    );
-    if (error) {
-      console.error('Supabase sync parts failed.', error);
-    }
-  }
+  const partRows = job.parts.map((part) => ({
+    id: part.id,
+    shop_id: getActiveShopId(part.shopId || job.shopId),
+    job_id: job.id,
+    part_id: part.partId || null,
+    name: part.name,
+    sku: part.sku || null,
+    quantity: Number(part.quantity || 1),
+    cost: Number(part.cost || 0),
+    retail: Number(part.retail || 0),
+    unit_cost: Number(part.cost || 0),
+    retail_price: Number(part.retail || 0),
+    created_at: part.createdAt
+  }));
+  await syncReplaceableJobChildren('job_parts', job.id, partRows, 'Billing parts');
 
-  await supabase.from('job_services').delete().eq('job_id', job.id);
-  if (job.services.length) {
-    const { error } = await supabase.from('job_services').insert(
-      job.services.map((service) => ({
-        id: service.id,
-        job_id: job.id,
-        description: service.description,
-        quantity: Number(service.quantity || 1),
-        cost: Number(service.cost || 0),
-        retail: Number(service.retail || 0),
-        created_at: service.createdAt
-      }))
-    );
-    if (error) {
-      console.error('Supabase sync services failed.', error);
-    }
-  }
+  const serviceRows = job.services.map((service) => ({
+    id: service.id,
+    job_id: job.id,
+    description: service.description,
+    quantity: Number(service.quantity || 1),
+    cost: Number(service.cost || 0),
+    retail: Number(service.retail || 0),
+    created_at: service.createdAt
+  }));
+  await syncReplaceableJobChildren('job_services', job.id, serviceRows, 'Billing services');
 
   const workLogs = job.workLog.map((log) => ({
     id: log.id,
@@ -1581,6 +1567,28 @@ async function syncJobChildren(job) {
   if (deleteWorkLogsError) {
     console.error('Supabase stale work log cleanup failed.', deleteWorkLogsError);
     throw new Error(`Work log cleanup failed: ${deleteWorkLogsError.message}`);
+  }
+}
+
+async function syncReplaceableJobChildren(tableName, jobId, rows, label) {
+  if (rows.length) {
+    const { error: saveError } = await supabase.from(tableName).upsert(rows, { onConflict: 'id' });
+    if (saveError) {
+      console.error(`Supabase ${label.toLowerCase()} save failed.`, saveError);
+      throw new Error(`${label} save failed: ${saveError.message}`);
+    }
+  }
+
+  const savedIds = rows.map((row) => row.id);
+  let cleanupQuery = supabase.from(tableName).delete().eq('job_id', jobId);
+  if (savedIds.length) {
+    cleanupQuery = cleanupQuery.not('id', 'in', `(${savedIds.join(',')})`);
+  }
+
+  const { error: cleanupError } = await cleanupQuery;
+  if (cleanupError) {
+    console.error(`Supabase stale ${label.toLowerCase()} cleanup failed.`, cleanupError);
+    throw new Error(`${label} cleanup failed: ${cleanupError.message}`);
   }
 }
 
