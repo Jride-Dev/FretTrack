@@ -79,8 +79,32 @@ assert.deepEqual(
     workspaceState: { mode: 'detail', selectedJobId: 'amp-1' },
     jobs: [{ id: 'amp-1', instrumentType: 'Amplifier' }]
   }),
+  { mode: 'detail', selectedJobId: 'amp-1' },
+  'An amplifier commercial work order must remain open after refresh.'
+);
+assert.deepEqual(
+  resolveStoredWorkspaceState({
+    workspaceState: { mode: 'amplifier-detail', selectedJobId: 'amp-1' },
+    jobs: [{ id: 'amp-1', instrumentType: 'Amplifier' }]
+  }),
   { mode: 'amplifier-detail', selectedJobId: 'amp-1' },
-  'A saved amplifier job must restore into its dedicated detail page.'
+  'A saved amplifier repair bench must remain open after refresh.'
+);
+assert.deepEqual(
+  resolveStoredWorkspaceState({
+    workspaceState: { mode: 'detail', selectedJobId: 'keyboard-1' },
+    jobs: [{ id: 'keyboard-1', instrumentType: 'Keyboard' }]
+  }),
+  { mode: 'detail', selectedJobId: 'keyboard-1' },
+  'A keyboard commercial work order must remain open after refresh.'
+);
+assert.deepEqual(
+  resolveStoredWorkspaceState({
+    workspaceState: { mode: 'keyboard-detail', selectedJobId: 'keyboard-1' },
+    jobs: [{ id: 'keyboard-1', instrumentType: 'Keyboard' }]
+  }),
+  { mode: 'keyboard-detail', selectedJobId: 'keyboard-1' },
+  'A saved keyboard repair bench must remain open after refresh.'
 );
 assert.deepEqual(
   resolveStoredWorkspaceState({

@@ -18,12 +18,15 @@ Keyboard Repair is a Pro and Enterprise feature. Shop-plan users can open the mo
 - Paste raw MIDI monitor output, preview unmatched zero-velocity triggers and missing note-off events on the keybed, and deliberately apply those findings without treating a normal velocity-zero note-off as a defect.
 - Follow instrument-family diagnostic paths for pianos, synths/workstations, MIDI controllers, organs, and uncommon keyboards, including ribbon-cable and diode-matrix checks.
 - Cross-reference failed contacts, sensors, springs, keytops, and related faults against active shop inventory, then turn a request into an ordinary FretTrack job part through the existing stock transaction.
+- Switch the same saved job between Keyboard Bench and Work Order, Parts & Payments to add inventory/manual parts, labor, tax, discounts, payments, balances, invoice email, print documents, photos, scheduling, messages, and timeline history.
 - Review keyboard workload, average completed repair time, most-serviced model, and most common logged key fault on the module dashboard.
 - Send a customer diagnostic email assembled from the saved profile, fault map, diagnosis, requested parts, and current job costs through the existing consent, quota, history, and provider workflow.
 
 ## Persistence and access
 
 A keyboard remains a normal job with `instrumentType: "Keyboard"`. Keyboard-specific fields are stored below `techDetails.keyboard` in the existing JSON technical-details record, so the module does not duplicate customers, work-order numbering, status history, or billing data.
+
+The Work Order, Parts & Payments view reuses the existing Job Detail commercial controls and opens directly on Parts & Billing. It persists across refresh until the technician returns to Keyboard Bench, and both directions retain the established unsaved-change guard.
 
 Migration `20260817003514_pro_keyboard_repair_foundation.sql` adds the `keyboard_repair` plan entitlement and a server-side job trigger. The trigger checks both the old and new instrument type, preventing a downgraded shop from editing historical keyboard work or evading the gate by converting the record to another type. The helper is `SECURITY INVOKER`, uses an empty search path, and is not directly executable by application roles.
 

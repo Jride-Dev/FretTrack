@@ -25,6 +25,38 @@ test('Pro owner creates a keyboard work order and persists bench details through
   await expect(page.getByLabel('Affected Keys')).toHaveValue('C3');
   await expect(page.getByLabel('Diagnosis')).toHaveValue(diagnosis);
   await expect(page.getByRole('group', { name: 'Final function test' }).getByLabel('Velocity response')).toHaveValue('Passed');
+
+  const partName = `Keyboard contact strip ${Date.now()}`;
+  const paymentNote = `Keyboard deposit ${Date.now()}`;
+  await page.getByRole('button', { name: 'Work Order, Parts & Payments' }).click();
+  await expect(page.getByRole('tab', { name: 'Parts & Billing' })).toHaveAttribute('aria-selected', 'true');
+  const partForm = page.getByPlaceholder('Part name or description').locator('..');
+  await partForm.getByPlaceholder('Part name or description').fill(partName);
+  await partForm.getByPlaceholder('Qty', { exact: true }).fill('1');
+  await partForm.getByPlaceholder('Unit cost').fill('12.00');
+  await partForm.getByPlaceholder('Unit price').fill('28.00');
+  await partForm.getByRole('button', { name: 'Add Part' }).click();
+  await page.locator('header').getByRole('button', { name: 'Save Job', exact: true }).click();
+  await expect(page.getByText(/Saved job .* successfully\./)).toBeVisible();
+
+  await page.getByPlaceholder('Payment amount').fill('15.00');
+  await page.locator('.payment-form select').selectOption('Cash');
+  await page.getByPlaceholder('Payment note').fill(paymentNote);
+  const paymentSaved = page.waitForResponse((response) => (
+    response.url().includes('/rest/v1/work_logs')
+    && response.request().method() === 'DELETE'
+    && response.ok()
+  ));
+  await page.getByRole('button', { name: 'Add Payment' }).click();
+  await paymentSaved;
+  await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(paymentNote);
+
+  await page.reload();
+  await expect(page.getByRole('tab', { name: 'Parts & Billing' })).toHaveAttribute('aria-selected', 'true');
+  await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(partName);
+  await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(paymentNote);
+  await page.getByRole('button', { name: 'Keyboard Bench' }).click();
+  await expect(page.getByLabel('Diagnosis')).toHaveValue(diagnosis);
 });
 
 test('rapid duplicate activation creates exactly one keyboard work order', async ({ page }) => {

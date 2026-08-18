@@ -1463,6 +1463,7 @@ export default function App() {
               onOpenCurrentJobsForAssignee: openCurrentJobsForAssignee,
               onRefreshJobs: refreshJobs,
               onSelectJob: handleSelectJob,
+              onSelectJobMode: selectWorkspaceJob,
               onSelectOfflineDraft: setSelectedOfflineDraftId,
               onShopSettingsSave: (settings) => {
                 setShopProfile(settings);

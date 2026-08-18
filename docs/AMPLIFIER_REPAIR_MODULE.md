@@ -11,6 +11,8 @@ Amplifier Repair is a Pro feature. Shop-plan users see the upgrade surface but c
 - Record amplifier make, model, year, serial number, format, and technology.
 - Search active amplifier work and optionally include closed work orders.
 - Open a dedicated amplifier detail page from either Amplifier Repair or Current Jobs.
+- Switch the same saved job between Amplifier Bench and Work Order, Parts & Payments without duplicating customer, repair, or billing data.
+- Use the established inventory/manual parts, services, tax, discount, payment, balance, invoice email, print, photo, scheduling, message, and timeline workflows for amplifier work.
 - Record rated power, channels, speaker configuration and impedance, mains voltage, and tube complement.
 - Record separate baseline and final AC mains, B+, plate, bias, dissipation, transformer, speaker, load, signal-level, output-power, continuity, and signal-tracing measurements.
 - Record reported symptoms, safety notes, diagnosis, repair performed, parts replaced, bench-test notes, and final-test status.
@@ -30,4 +32,4 @@ Migration `20260814215521_amplifier_job_evidence.sql` adds the Pro entitlement a
 
 Tube-amplifier voltages can be lethal. FretTrack only records technician-entered values and displays a qualified-technician warning; it does not provide measurement procedures.
 
-This is deliberately a focused operational foundation. Shared job billing, parts, work logs, photos, documents, and scheduling remain in their established modules and can be connected to the amplifier workspace in later slices without copying their persistence logic. A separately labeled diagnostic-evidence allowance remains a future product option; the current foundation conservatively counts evidence uploads and bytes through the established media limits.
+The amplifier bench remains focused on safe diagnostic documentation, while an explicit Work Order, Parts & Payments view opens the same job in FretTrack's established commercial workspace. The commercial view starts on Parts & Billing and preserves the selected view through refresh. Switching either direction uses the normal dirty-state guard, so unsaved amplifier readings or unsaved billing edits cannot be discarded silently. A separately labeled diagnostic-evidence allowance remains a future product option; the current foundation conservatively counts evidence uploads and bytes through the established media limits.

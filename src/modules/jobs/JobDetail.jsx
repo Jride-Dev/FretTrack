@@ -76,6 +76,7 @@ const intakeTypes = JOB_SOURCE_OPTIONS;
 export default function JobDetail({
   job,
   jobs = [],
+  initialTab = 'overview',
   onUpdate,
   onImageUpload,
   onImageDelete,
@@ -1291,6 +1292,7 @@ export default function JobDetail({
       draftJob={draftJob}
       entitlementSnapshot={entitlementSnapshot}
       imagesSection={imagesSection}
+      initialTab={initialTab}
       inspectionSections={inspectionSections}
       intakeSection={intakeSection}
       isDirty={hasUnsavedChanges}

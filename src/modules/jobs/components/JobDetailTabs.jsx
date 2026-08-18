@@ -26,6 +26,7 @@ export default function JobDetailTabs({
   canWrite = true,
   draftJob,
   imagesSection,
+  initialTab = 'overview',
   intakeSection,
   inspectionSections,
   isDirty,
@@ -36,7 +37,7 @@ export default function JobDetailTabs({
   updateField,
   workSections
 }) {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   return (
     <div className="job-workspace">
