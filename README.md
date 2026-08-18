@@ -40,7 +40,7 @@ This includes:
 - Jobs, photos, damage map, work logs, accounting foundation, auth/RLS, and multi-shop architecture
 - Pro Team Assignment Foundation with same-shop technician assignment, Current Jobs filtering, workload visibility, audit history, and role-safe self-assignment
 - Server-enforced monthly email-recipient, source-photo upload, and current photo-storage caps with Shop Settings usage warnings
-- Pro-gated Amplifier Repair intake, active-work queue, bench diagnostics, and private evidence capture
+- Pro-gated Amplifier and Keyboard Repair workspaces with specialist diagnostics plus the complete parts, services, payments, invoice, print, messaging, scheduling, and history workflow
 - Pro Scheduled Email with provider-managed delivery, cancellation, consent enforcement, and immutable message snapshots
 - Hardened Stripe lifecycle ordering, retry safety, and current subscription-period synchronization
 

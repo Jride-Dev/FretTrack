@@ -4040,6 +4040,31 @@ th.internal-only {
   flex: 0 0 auto;
 }
 
+.specialist-workspace-nav {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.specialist-workspace-nav .eyebrow {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+
+.specialist-workspace-nav .muted-text {
+  margin: 4px 0 0;
+}
+
+.specialist-workspace-actions {
+  flex: 0 0 auto;
+}
+
 .amplifier-bench-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -4499,6 +4524,16 @@ th.internal-only {
 
   .amplifier-detail-actions,
   .amplifier-detail-actions button {
+    width: 100%;
+  }
+
+  .specialist-workspace-nav {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .specialist-workspace-actions,
+  .specialist-workspace-actions button {
     width: 100%;
   }
 

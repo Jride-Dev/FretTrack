@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import { canAccessOperatorDashboard } from '../modules/auth/permissionService.js';
+import SpecialistJobWorkspaceNav, { getSpecialistRepairMode } from './SpecialistJobWorkspaceNav.jsx';
 
 const AccountingReports = lazy(() => import('../modules/accounting/AccountingReports.jsx'));
 const AmplifierJobDetail = lazy(() => import('../modules/amplifiers/AmplifierJobDetail.jsx'));
@@ -244,36 +245,44 @@ function WorkspacePage({
   if (mode === 'detail') {
     return selectedJob
       ? (
-        <JobDetail
-          job={selectedJob}
-          jobs={jobs}
-          onUpdate={actions.onUpdateJob}
-          onImageUpload={actions.onImageUpload}
-          onImageDelete={actions.onImageDelete}
-          onRefresh={actions.onRefreshJobs}
-          onClose={actions.onCloseJobDetail}
-          onNotice={actions.onNotice}
-          canWrite={access.canEditJobs}
-          amplifierRepairEnabled={access.amplifierRepairEnabled}
-          keyboardRepairEnabled={access.keyboardRepairEnabled}
-          canUploadPhotos={access.canUploadPhotos}
-          canEditPhotos={access.canEditPhotos}
-          canOverwritePhotos={access.canOverwritePhotos}
-          canDeletePhotos={access.canDeletePhotos}
-          canSendEmail={access.canSendEmail}
-          canScheduleEmail={access.canScheduleEmail}
-          canSendSms={access.canSendSms}
-          entitlementMessage={access.entitlementMessage}
-          shopProfile={shopProfile}
-          membership={membership}
-          entitlementSnapshot={billingAccess}
-          betaApproved={betaApproved}
-          assignableMembers={assignableMembers}
-          assignableMembersLoading={assignableMembersLoading}
-          assignableMembersError={assignableMembersError}
-          onAssignmentChanged={actions.onAssignmentChanged}
-          onDirtyChange={actions.onDirtyChange}
-        />
+        <>
+          <SpecialistJobWorkspaceNav
+            activeMode={mode}
+            job={selectedJob}
+            onSelectMode={actions.onSelectJobMode}
+          />
+          <JobDetail
+            job={selectedJob}
+            jobs={jobs}
+            initialTab={getSpecialistRepairMode(selectedJob) ? 'billing' : 'overview'}
+            onUpdate={actions.onUpdateJob}
+            onImageUpload={actions.onImageUpload}
+            onImageDelete={actions.onImageDelete}
+            onRefresh={actions.onRefreshJobs}
+            onClose={actions.onCloseJobDetail}
+            onNotice={actions.onNotice}
+            canWrite={access.canEditJobs}
+            amplifierRepairEnabled={access.amplifierRepairEnabled}
+            keyboardRepairEnabled={access.keyboardRepairEnabled}
+            canUploadPhotos={access.canUploadPhotos}
+            canEditPhotos={access.canEditPhotos}
+            canOverwritePhotos={access.canOverwritePhotos}
+            canDeletePhotos={access.canDeletePhotos}
+            canSendEmail={access.canSendEmail}
+            canScheduleEmail={access.canScheduleEmail}
+            canSendSms={access.canSendSms}
+            entitlementMessage={access.entitlementMessage}
+            shopProfile={shopProfile}
+            membership={membership}
+            entitlementSnapshot={billingAccess}
+            betaApproved={betaApproved}
+            assignableMembers={assignableMembers}
+            assignableMembersLoading={assignableMembersLoading}
+            assignableMembersError={assignableMembersError}
+            onAssignmentChanged={actions.onAssignmentChanged}
+            onDirtyChange={actions.onDirtyChange}
+          />
+        </>
       )
       : <section className="panel empty-state">Select a saved job from the list.</section>;
   }
@@ -281,15 +290,22 @@ function WorkspacePage({
   if (mode === 'amplifier-detail') {
     return selectedJob
       ? (
-        <AmplifierJobDetail
-          job={selectedJob}
-          canWrite={access.canEditAmplifierRepair}
-          dateOptions={dateOptions}
-          onUpdate={actions.onUpdateJob}
-          onClose={actions.onCloseJobDetail}
-          onDirtyChange={actions.onDirtyChange}
-          onNotice={actions.onNotice}
-        />
+        <>
+          <SpecialistJobWorkspaceNav
+            activeMode={mode}
+            job={selectedJob}
+            onSelectMode={actions.onSelectJobMode}
+          />
+          <AmplifierJobDetail
+            job={selectedJob}
+            canWrite={access.canEditAmplifierRepair}
+            dateOptions={dateOptions}
+            onUpdate={actions.onUpdateJob}
+            onClose={actions.onCloseJobDetail}
+            onDirtyChange={actions.onDirtyChange}
+            onNotice={actions.onNotice}
+          />
+        </>
       )
       : <section className="panel empty-state">Select an amplifier work order from the list.</section>;
   }
@@ -297,19 +313,26 @@ function WorkspacePage({
   if (mode === 'keyboard-detail') {
     return selectedJob
       ? (
-        <KeyboardJobDetail
-          job={selectedJob}
-          canWrite={access.canEditKeyboardRepair}
-          dateOptions={dateOptions}
-          onUpdate={actions.onUpdateJob}
-          onRefresh={actions.onRefreshJobs}
-          onClose={actions.onCloseJobDetail}
-          onDirtyChange={actions.onDirtyChange}
-          onNotice={actions.onNotice}
-          canSendEmail={access.canSendEmail}
-          entitlementMessage={access.entitlementMessage}
-          shopProfile={shopProfile}
-        />
+        <>
+          <SpecialistJobWorkspaceNav
+            activeMode={mode}
+            job={selectedJob}
+            onSelectMode={actions.onSelectJobMode}
+          />
+          <KeyboardJobDetail
+            job={selectedJob}
+            canWrite={access.canEditKeyboardRepair}
+            dateOptions={dateOptions}
+            onUpdate={actions.onUpdateJob}
+            onRefresh={actions.onRefreshJobs}
+            onClose={actions.onCloseJobDetail}
+            onDirtyChange={actions.onDirtyChange}
+            onNotice={actions.onNotice}
+            canSendEmail={access.canSendEmail}
+            entitlementMessage={access.entitlementMessage}
+            shopProfile={shopProfile}
+          />
+        </>
       )
       : <section className="panel empty-state">Select a keyboard work order from the list.</section>;
   }

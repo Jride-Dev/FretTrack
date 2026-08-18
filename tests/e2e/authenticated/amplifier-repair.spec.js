@@ -21,6 +21,38 @@ test('Pro owner creates an amplifier work order and persists bench details throu
 
   await page.reload();
   await expect(page.getByLabel('Diagnosis')).toHaveValue(diagnosis);
+
+  const partName = `Amplifier bench resistor ${Date.now()}`;
+  const paymentNote = `Amplifier deposit ${Date.now()}`;
+  await page.getByRole('button', { name: 'Work Order, Parts & Payments' }).click();
+  await expect(page.getByRole('tab', { name: 'Parts & Billing' })).toHaveAttribute('aria-selected', 'true');
+  const partForm = page.getByPlaceholder('Part name or description').locator('..');
+  await partForm.getByPlaceholder('Part name or description').fill(partName);
+  await partForm.getByPlaceholder('Qty', { exact: true }).fill('2');
+  await partForm.getByPlaceholder('Unit cost').fill('3.50');
+  await partForm.getByPlaceholder('Unit price').fill('8.00');
+  await partForm.getByRole('button', { name: 'Add Part' }).click();
+  await page.locator('header').getByRole('button', { name: 'Save Job', exact: true }).click();
+  await expect(page.getByText(/Saved job .* successfully\./)).toBeVisible();
+
+  await page.getByPlaceholder('Payment amount').fill('10.00');
+  await page.locator('.payment-form select').selectOption('Card');
+  await page.getByPlaceholder('Payment note').fill(paymentNote);
+  const paymentSaved = page.waitForResponse((response) => (
+    response.url().includes('/rest/v1/work_logs')
+    && response.request().method() === 'DELETE'
+    && response.ok()
+  ));
+  await page.getByRole('button', { name: 'Add Payment' }).click();
+  await paymentSaved;
+  await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(paymentNote);
+
+  await page.reload();
+  await expect(page.getByRole('tab', { name: 'Parts & Billing' })).toHaveAttribute('aria-selected', 'true');
+  await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(partName);
+  await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(paymentNote);
+  await page.getByRole('button', { name: 'Amplifier Bench' }).click();
+  await expect(page.getByLabel('Diagnosis')).toHaveValue(diagnosis);
 });
 
 test('rejects a stale amplifier save instead of erasing another session', async ({ context, page }) => {

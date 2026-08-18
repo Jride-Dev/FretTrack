@@ -8,12 +8,13 @@ export function resolveStoredWorkspaceState({
   const selectedJob = jobs.find((job) => job.id === workspaceState.selectedJobId);
   if (isDetailMode && selectedJob) {
     const instrumentType = String(selectedJob.instrumentType || selectedJob.techDetails?.instrumentType || '').trim().toLowerCase();
+    const specialistMode = instrumentType === 'amplifier'
+      ? 'amplifier-detail'
+      : instrumentType === 'keyboard'
+        ? 'keyboard-detail'
+        : 'detail';
     return {
-      mode: instrumentType === 'amplifier'
-        ? 'amplifier-detail'
-        : instrumentType === 'keyboard'
-          ? 'keyboard-detail'
-          : 'detail',
+      mode: workspaceState.mode === 'detail' ? 'detail' : specialistMode,
       selectedJobId: workspaceState.selectedJobId
     };
   }

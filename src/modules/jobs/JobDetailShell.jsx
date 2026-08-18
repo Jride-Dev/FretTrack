@@ -15,6 +15,7 @@ export default function JobDetailShell({
   draftJob,
   entitlementSnapshot,
   imagesSection,
+  initialTab,
   inspectionSections,
   intakeSection,
   isDirty,
@@ -79,6 +80,7 @@ export default function JobDetailShell({
         canWrite={canWrite}
         draftJob={draftJob}
         imagesSection={imagesSection}
+        initialTab={initialTab}
         intakeSection={intakeSection}
         inspectionSections={inspectionSections}
         isDirty={isDirty}
