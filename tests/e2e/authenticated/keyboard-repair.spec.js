@@ -28,8 +28,17 @@ test('Pro owner creates a keyboard work order and persists bench details through
 
   const partName = `Keyboard contact strip ${Date.now()}`;
   const paymentNote = `Keyboard deposit ${Date.now()}`;
+  const inspectionNote = `Keyboard contact inspection ${Date.now()}`;
   await page.getByRole('button', { name: 'Work Order, Parts & Payments' }).click();
   await expect(page.getByRole('tab', { name: 'Parts & Billing' })).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('tab', { name: 'Keyboard Inspection' }).click();
+  await expect(page.getByRole('heading', { name: 'Keyboard Inspection' })).toBeVisible();
+  await expect(page.getByText('Neck Inspection', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Damage Map', { exact: true })).toHaveCount(0);
+  await page.getByLabel('Keybed / Contact Inspection').fill(inspectionNote);
+  await page.locator('header').getByRole('button', { name: 'Save Job', exact: true }).click();
+  await expect(page.getByText(/Saved job .* successfully\./)).toBeVisible();
+  await page.getByRole('tab', { name: 'Parts & Billing' }).click();
   const partForm = page.getByPlaceholder('Part name or description').locator('..');
   await partForm.getByPlaceholder('Part name or description').fill(partName);
   await partForm.getByPlaceholder('Qty', { exact: true }).fill('1');
@@ -55,6 +64,8 @@ test('Pro owner creates a keyboard work order and persists bench details through
   await expect(page.getByRole('tab', { name: 'Parts & Billing' })).toHaveAttribute('aria-selected', 'true');
   await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(partName);
   await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(paymentNote);
+  await page.getByRole('tab', { name: 'Keyboard Inspection' }).click();
+  await expect(page.getByLabel('Keybed / Contact Inspection')).toHaveValue(inspectionNote);
   await page.getByRole('button', { name: 'Keyboard Bench' }).click();
   await expect(page.getByLabel('Diagnosis')).toHaveValue(diagnosis);
 });

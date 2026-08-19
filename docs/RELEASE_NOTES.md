@@ -1,5 +1,7 @@
 # Release Notes
 
+Amplifier and keyboard work orders now use instrument-specific Inspection tabs in the shared work-order workspace. Amplifier inspection records safety and visual condition, diagnosis, bench observations, baseline/final electrical measurements, digital diagnostics, and final test status. Keyboard inspection records affected keys, keybed/contact findings, power readings, MIDI notes, initial/final functional tests, guided diagnostics, and final verification. Guitar neck, string, setup-measurement, and Damage Map controls remain available only to the established stringed-instrument workflow.
+
 Billing saves now fail visibly when Supabase cannot persist job parts or services. FretTrack writes the current billing children before removing stale rows, preserving previously saved parts when a replacement write fails, and propagates both save and cleanup errors so Job Detail remains dirty instead of displaying a false success message.
 
 Amplifier and Keyboard Repair work orders now expose the complete FretTrack shop workflow instead of stopping at specialist diagnostics. A shared workspace switch moves the same job between its Repair Bench and Work Order, Parts & Payments, opening directly on the existing Parts & Billing tab. Shops can add inventory or manual parts, labor/services, tax, discounts, payments, balances, invoice email, print documents, photos, scheduling, messages, and history without duplicating the specialist record. The chosen commercial view survives refresh, and normal dirty-state protection applies in both directions.
