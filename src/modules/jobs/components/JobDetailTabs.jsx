@@ -20,6 +20,17 @@ const tabs = [
   { key: 'timeline', label: 'Timeline' }
 ];
 
+function getInspectionLabel(job = {}) {
+  const instrumentType = String(job.instrumentType || job.techDetails?.instrumentType || '').trim().toLowerCase();
+  if (instrumentType === 'amplifier') {
+    return 'Amplifier Inspection';
+  }
+  if (instrumentType === 'keyboard') {
+    return 'Keyboard Inspection';
+  }
+  return 'Inspection';
+}
+
 export default function JobDetailTabs({
   activityTimeline,
   billingSections,
@@ -38,11 +49,14 @@ export default function JobDetailTabs({
   workSections
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
+  const visibleTabs = tabs.map((tab) => (
+    tab.key === 'inspection' ? { ...tab, label: getInspectionLabel(draftJob) } : tab
+  ));
 
   return (
     <div className="job-workspace">
       <div className="job-tab-bar no-print" role="tablist" aria-label="Job workspace tabs">
-        {tabs.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab.key}
             type="button"

@@ -11,6 +11,7 @@ const navigation = read('src/app/SpecialistJobWorkspaceNav.jsx');
 const detail = read('src/modules/jobs/JobDetail.jsx');
 const shell = read('src/modules/jobs/JobDetailShell.jsx');
 const tabs = read('src/modules/jobs/components/JobDetailTabs.jsx');
+const inspection = read('src/modules/jobs/JobInspectionSections.jsx');
 const billing = read('src/modules/jobs/JobBillingSections.jsx');
 const workspaceState = read('src/app/workspaceState.js');
 const styles = read('src/styles.css');
@@ -32,6 +33,11 @@ assert.match(workspaceState, /workspaceState\.mode === 'detail' \? 'detail' : sp
 assert.match(detail, /initialTab = 'overview'[\s\S]*?initialTab=\{initialTab\}/, 'Job Detail must accept a safe initial tab without changing normal jobs.');
 assert.match(shell, /initialTab=\{initialTab\}/, 'Job Detail shell must forward the initial tab.');
 assert.match(tabs, /useState\(initialTab\)/, 'Job Detail tabs must honor the requested specialist billing entry point.');
+assert.match(tabs, /amplifier[\s\S]*?Amplifier Inspection[\s\S]*?keyboard[\s\S]*?Keyboard Inspection/, 'Specialist work orders must use instrument-specific inspection tab labels.');
+assert.match(inspection, /instrumentType === 'Amplifier'[\s\S]*?<AmplifierElectricalMeasurements/, 'Amplifier inspection must render amplifier electrical and digital fields instead of guitar controls.');
+assert.match(inspection, /instrumentType === 'Keyboard'[\s\S]*?<KeyboardFunctionalTests[\s\S]*?<KeyboardDiagnosticChecklist/, 'Keyboard inspection must render keyboard functional and diagnostic fields instead of guitar controls.');
+assert.match(inspection, /if \(instrumentType === 'Keyboard'\)[\s\S]*?return \([\s\S]*?Keyboard Inspection/, 'Keyboard inspection must have its own terminology.');
+assert.match(inspection, /return \([\s\S]*?<TechDetailsSection[\s\S]*?<DamageMapSection/, 'Guitar work orders must retain the established neck and Damage Map inspection.');
 assert.match(billing, /<PartsList[\s\S]*?<ServicesList[\s\S]*?<TotalsSection/, 'Specialist commerce must reuse the complete parts, services, totals, and payments workflow.');
 assert.match(styles, /\.specialist-workspace-nav[\s\S]*?@media \(max-width: 768px\)[\s\S]*?\.specialist-workspace-actions button/, 'Specialist workspace navigation must remain usable on mobile.');
 

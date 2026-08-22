@@ -24,8 +24,17 @@ test('Pro owner creates an amplifier work order and persists bench details throu
 
   const partName = `Amplifier bench resistor ${Date.now()}`;
   const paymentNote = `Amplifier deposit ${Date.now()}`;
+  const inspectionNote = `Amplifier safety inspection ${Date.now()}`;
   await page.getByRole('button', { name: 'Work Order, Parts & Payments' }).click();
   await expect(page.getByRole('tab', { name: 'Parts & Billing' })).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('tab', { name: 'Amplifier Inspection' }).click();
+  await expect(page.getByRole('heading', { name: 'Amplifier Inspection' })).toBeVisible();
+  await expect(page.getByText('Neck Inspection', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Damage Map', { exact: true })).toHaveCount(0);
+  await page.getByLabel('Safety / Visual Condition').fill(inspectionNote);
+  await page.locator('header').getByRole('button', { name: 'Save Job', exact: true }).click();
+  await expect(page.getByText(/Saved job .* successfully\./)).toBeVisible();
+  await page.getByRole('tab', { name: 'Parts & Billing' }).click();
   const partForm = page.getByPlaceholder('Part name or description').locator('..');
   await partForm.getByPlaceholder('Part name or description').fill(partName);
   await partForm.getByPlaceholder('Qty', { exact: true }).fill('2');
@@ -51,6 +60,8 @@ test('Pro owner creates an amplifier work order and persists bench details throu
   await expect(page.getByRole('tab', { name: 'Parts & Billing' })).toHaveAttribute('aria-selected', 'true');
   await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(partName);
   await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(paymentNote);
+  await page.getByRole('tab', { name: 'Amplifier Inspection' }).click();
+  await expect(page.getByLabel('Safety / Visual Condition')).toHaveValue(inspectionNote);
   await page.getByRole('button', { name: 'Amplifier Bench' }).click();
   await expect(page.getByLabel('Diagnosis')).toHaveValue(diagnosis);
 });

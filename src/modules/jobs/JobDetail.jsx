@@ -276,6 +276,26 @@ export default function JobDetail({
     setDraftJob((current) => buildTechFieldPatch(current, name, value));
   }
 
+  function updateSpecialistInspection(path, value) {
+    if (!canWrite) {
+      return;
+    }
+    setIsDirty(true);
+    setDraftJob((current) => {
+      const techDetails = { ...(current.techDetails || {}) };
+      let cursor = techDetails;
+      path.forEach((segment, index) => {
+        if (index === path.length - 1) {
+          cursor[segment] = value;
+          return;
+        }
+        cursor[segment] = { ...(cursor[segment] || {}) };
+        cursor = cursor[segment];
+      });
+      return { ...current, techDetails };
+    });
+  }
+
   function updateWorkLogEntry(entryId, text) {
     patchJob(buildUpdateWorkLogEntryPatch(draftJob.workLog, entryId, text));
   }
@@ -1179,6 +1199,7 @@ export default function JobDetail({
       onNeckInspectionChange={updateNeckInspection}
       onStringGaugeChange={updateStringGauge}
       onStringGaugesChange={updateStringGauges}
+      onSpecialistFieldChange={updateSpecialistInspection}
       onTechFieldChange={updateTechField}
     />
   );

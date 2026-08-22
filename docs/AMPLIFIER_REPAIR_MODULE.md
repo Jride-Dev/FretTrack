@@ -13,6 +13,7 @@ Amplifier Repair is a Pro feature. Shop-plan users see the upgrade surface but c
 - Open a dedicated amplifier detail page from either Amplifier Repair or Current Jobs.
 - Switch the same saved job between Amplifier Bench and Work Order, Parts & Payments without duplicating customer, repair, or billing data.
 - Use the established inventory/manual parts, services, tax, discount, payment, balance, invoice email, print, photo, scheduling, message, and timeline workflows for amplifier work.
+- Use an Amplifier Inspection tab in the shared work-order workspace for safety/visual notes, diagnosis, bench observations, electrical measurements, digital diagnostics, and final verification without exposing guitar neck, string, or Damage Map fields.
 - Record rated power, channels, speaker configuration and impedance, mains voltage, and tube complement.
 - Record separate baseline and final AC mains, B+, plate, bias, dissipation, transformer, speaker, load, signal-level, output-power, continuity, and signal-tracing measurements.
 - Record reported symptoms, safety notes, diagnosis, repair performed, parts replaced, bench-test notes, and final-test status.
