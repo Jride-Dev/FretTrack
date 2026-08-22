@@ -137,6 +137,7 @@ function WorkspacePage({
         customers={customers}
         jobs={jobs}
         canWrite={access.canEditCustomers}
+        serviceRemindersEnabled={Boolean(billingAccess?.entitlements?.automated_service_reminders)}
         canPreviewCustomerImport={access.canPreviewCustomerImport}
         dateOptions={dateOptions}
         moneyOptions={moneyOptions}

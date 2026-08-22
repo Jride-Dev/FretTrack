@@ -5,6 +5,7 @@ import { getCustomerTypeLabel } from './customerTypes';
 export default function CustomerDetail({
   customer,
   canWrite = true,
+  serviceRemindersEnabled = false,
   dateOptions = {},
   moneyOptions = {},
   onCreateJob,
@@ -49,6 +50,7 @@ export default function CustomerDetail({
         <span>Display Name</span><strong>{customer.displayName || '-'}</strong>
         <span>Company</span><strong>{customer.companyName || '-'}</strong>
         <span>Email</span><strong>{customer.email || '-'}</strong>
+        {serviceRemindersEnabled && <><span>Service Reminders</span><strong>{customer.serviceReminderOptIn ? 'Opted in' : 'Not opted in'}</strong></>}
         <span>Phone</span><strong>{customer.phone || '-'}</strong>
         <span>Secondary Phone</span><strong>{customer.secondaryPhone || '-'}</strong>
         <span>Address</span><strong>{formatAddress(customer)}</strong>
