@@ -137,6 +137,7 @@ function WorkspacePage({
         customers={customers}
         jobs={jobs}
         canWrite={access.canEditCustomers}
+        loyaltyProgramEnabled={Boolean(billingAccess?.entitlements?.loyalty_program)}
         canPreviewCustomerImport={access.canPreviewCustomerImport}
         dateOptions={dateOptions}
         moneyOptions={moneyOptions}

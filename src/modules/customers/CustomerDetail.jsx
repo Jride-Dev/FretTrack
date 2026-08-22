@@ -1,14 +1,17 @@
 import { money } from '../../shared/utils/money';
 import { formatShopDate } from '../../shared/utils/dateFormat';
 import { getCustomerTypeLabel } from './customerTypes';
+import CustomerLoyaltyCard from '../loyalty/CustomerLoyaltyCard.jsx';
 
 export default function CustomerDetail({
   customer,
   canWrite = true,
+  loyaltyProgramEnabled = false,
   dateOptions = {},
   moneyOptions = {},
   onCreateJob,
-  onEditCustomer
+  onEditCustomer,
+  onNotice
 }) {
   if (!customer) {
     return (
@@ -57,6 +60,10 @@ export default function CustomerDetail({
         <span>Source</span><strong>{customer.source || '-'}</strong>
         <span>External Ref</span><strong>{customer.externalRef || '-'}</strong>
       </div>
+
+      {loyaltyProgramEnabled && (
+        <CustomerLoyaltyCard customerId={customer.id} canWrite={canWrite} dateOptions={dateOptions} onNotice={onNotice} />
+      )}
 
       <SectionTitle title="Job History" />
       {renderJobHistory(customer.jobHistory || customer.jobs, moneyOptions, dateOptions)}

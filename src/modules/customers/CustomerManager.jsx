@@ -16,6 +16,7 @@ export default function CustomerManager({
   customers = [],
   jobs = [],
   canWrite = true,
+  loyaltyProgramEnabled = false,
   canPreviewCustomerImport = false,
   dateOptions = {},
   moneyOptions = {},
@@ -220,10 +221,12 @@ export default function CustomerManager({
         <CustomerDetail
           customer={selectedCustomer}
           canWrite={canWrite}
+          loyaltyProgramEnabled={loyaltyProgramEnabled}
           dateOptions={dateOptions}
           moneyOptions={moneyOptions}
           onCreateJob={handleCreateJob}
           onEditCustomer={canWrite ? openEditCustomerModal : null}
+          onNotice={onNotice}
         />
       </div>
 
