@@ -56,6 +56,9 @@ includes(settings, 'service-reminder-email-preview', 'Reminder settings must lea
 includes(settings, 'Edit subject and message', 'Raw template editing must be kept behind an explicit editor control.');
 includes(settings, 'service-reminder-field-chip', 'Template fields must use human-readable insertion controls.');
 assert.ok(!settings.includes('Template fields:'), 'Reminder settings must not dump raw template syntax below the form.');
+includes(settings, "'{{booking_url}}': rule.bookingUrl", 'The preview must use the configured booking URL without a fake fallback.');
+assert.ok(!settings.includes("rule.bookingUrl || 'https://yourshop.example/book'"), 'An empty booking URL must not become a usable-looking sample link.');
+includes(settings, 'Booking link is blank.', 'The preview must clearly warn when a used booking field has no configured value.');
 includes(service, 'normalizeServiceReminderTemplate(row.body_template', 'Existing literal newline escapes must be normalized when loaded.');
 includes(service, 'body_template: normalizeServiceReminderTemplate', 'Saved templates must persist real line breaks.');
 includes(styles, '.service-reminder-template-builder', 'Reminder template builder needs focused presentation styles.');
@@ -80,6 +83,11 @@ assert.equal(
   }),
   'Hi Jordan, your setup is due.',
   'The preview renderer must replace personalization fields without exposing raw tokens.'
+);
+assert.equal(
+  renderServiceReminderTemplate('Book here: {{booking_url}}', { '{{booking_url}}': '' }),
+  'Book here: ',
+  'An unconfigured booking URL must render exactly as the sender receives it.'
 );
 
 console.log('Automated service reminder checks passed.');

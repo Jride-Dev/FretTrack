@@ -10,7 +10,7 @@ When a work order reaches Completed or Picked Up, FretTrack keeps the first dura
 
 This feature does not use Resend scheduling. FretTrack keeps long-horizon due dates in Supabase and a single nightly Cron worker sends only reminders that are due. That avoids Resend’s 30-day scheduling limit and avoids creating one Cron job per customer.
 
-Shop Settings leads with a customer-style sample preview rather than raw merge-tag syntax. Owners/admins open **Edit subject and message** only when they want to customize the copy, then insert customer, service, shop, month, or booking-link values through labeled personalization chips. Existing templates containing literal `\\n` sequences are normalized into real paragraph breaks when loaded and saved, so the editor, preview, Message History, and delivered plain-text email retain readable spacing.
+Shop Settings leads with a customer-style sample preview rather than raw merge-tag syntax. Owners/admins open **Edit subject and message** only when they want to customize the copy, then insert customer, service, shop, month, or booking-link values through labeled personalization chips. Existing templates containing literal `\\n` sequences are normalized into real paragraph breaks when loaded and saved, so the editor, preview, Message History, and delivered plain-text email retain readable spacing. The preview uses the configured booking URL exactly; when the template includes the booking-link field but the URL is empty, it leaves the value blank and shows a setup warning instead of inventing a link customers would not receive.
 
 ## Safety boundaries
 

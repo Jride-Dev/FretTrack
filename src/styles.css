@@ -2042,6 +2042,20 @@ form.panel button {
   white-space: pre-wrap;
 }
 
+.service-reminder-preview-warning {
+  background: color-mix(in srgb, var(--warning) 16%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--warning) 58%, var(--border));
+  border-radius: 8px;
+  color: var(--text);
+  line-height: 1.45;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.service-reminder-preview-warning strong {
+  color: inherit;
+}
+
 .service-reminder-template-editor {
   border-top: 1px solid var(--border);
   padding-top: 12px;
