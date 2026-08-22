@@ -1461,6 +1461,7 @@ export default function App() {
               onImageUpload: handleImageUpload,
               onNotice: setNotice,
               onOpenCurrentJobsForAssignee: openCurrentJobsForAssignee,
+              onOpenInventory: () => navigateTo('inventory'),
               onRefreshJobs: refreshJobs,
               onSelectJob: handleSelectJob,
               onSelectJobMode: selectWorkspaceJob,

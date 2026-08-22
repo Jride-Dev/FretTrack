@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatShopDate } from '../../shared/utils/dateFormat.js';
 import JobStatusSelect from '../jobs/JobStatusSelect.jsx';
 import { JOB_PRIORITY_OPTIONS } from '../jobs/jobPriority.js';
+import SpecialistPurchasingPanel from '../inventory/SpecialistPurchasingPanel.jsx';
 import AmplifierElectricalMeasurements from './AmplifierElectricalMeasurements.jsx';
 import AmplifierEvidenceSection from './AmplifierEvidenceSection.jsx';
 import AmplifierMakeModelFields from './AmplifierMakeModelFields.jsx';
@@ -25,6 +26,13 @@ function buildDraft(job) {
   };
 }
 
+function mergeJobPart(job, jobPart) {
+  return {
+    ...job,
+    parts: [...(job.parts || []).filter((part) => part.id !== jobPart.id), jobPart]
+  };
+}
+
 export default function AmplifierJobDetail({
   job,
   canWrite = true,
@@ -32,7 +40,10 @@ export default function AmplifierJobDetail({
   onUpdate,
   onClose,
   onDirtyChange,
-  onNotice
+  onNotice,
+  onRefresh,
+  onOpenInventory,
+  shopProfile = null
 }) {
   const [draft, setDraft] = useState(() => buildDraft(job));
   const [baseline, setBaseline] = useState(() => JSON.stringify(buildDraft(job)));
@@ -135,6 +146,12 @@ export default function AmplifierJobDetail({
         }
       }
     }));
+  }
+
+  async function addInventoryPartToDraft(jobPart) {
+    setDraft((current) => mergeJobPart(current, jobPart));
+    setBaseline((current) => JSON.stringify(mergeJobPart(JSON.parse(current), jobPart)));
+    await onRefresh?.();
   }
 
   function closeDetail() {
@@ -267,6 +284,15 @@ export default function AmplifierJobDetail({
         canWrite={canWrite}
         onMeasurementChange={updateMeasurementField}
         onDigitalChange={updateDigitalField}
+      />
+
+      <SpecialistPurchasingPanel
+        job={draft}
+        canWrite={canWrite}
+        shopProfile={shopProfile}
+        onInventoryPartAdded={addInventoryPartToDraft}
+        onOpenInventory={onOpenInventory}
+        onNotice={onNotice}
       />
 
       <section className="panel">

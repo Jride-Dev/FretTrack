@@ -176,6 +176,10 @@ function fromDbPurchaseOrderItem(row = {}) {
     shopId: row.shop_id || '',
     purchaseOrderId: row.purchase_order_id || '',
     partId: row.part_id || '',
+    jobId: row.job_id || '',
+    jobQuantity: integerNumber(row.job_quantity),
+    jobPartId: row.job_part_id || '',
+    specialistRequestKey: row.specialist_request_key || '',
     description: row.description || '',
     vendorSku: row.vendor_sku || '',
     quantityOrdered: integerNumber(row.quantity_ordered),
@@ -650,6 +654,93 @@ export async function listPurchaseOrders(shopId = getCurrentShopId()) {
       items: itemsByOrderId.get(order.id) || []
     };
   });
+}
+
+export async function listJobPurchaseOrders(jobId) {
+  if (!hasSupabaseConfig || !supabase || !jobId) {
+    return [];
+  }
+
+  const { data: items, error: itemsError } = await supabase
+    .from('purchase_order_items')
+    .select('*')
+    .eq('job_id', jobId)
+    .order('created_at', { ascending: false });
+
+  if (itemsError) {
+    throw itemsError;
+  }
+
+  const mappedItems = (items || []).map(fromDbPurchaseOrderItem);
+  const orderIds = [...new Set(mappedItems.map((item) => item.purchaseOrderId).filter(Boolean))];
+  if (!orderIds.length) {
+    return [];
+  }
+
+  const { data: orders, error: ordersError } = await supabase
+    .from('purchase_orders')
+    .select('*')
+    .in('id', orderIds)
+    .order('created_at', { ascending: false });
+
+  if (ordersError) {
+    throw ordersError;
+  }
+
+  return (orders || []).map((row) => ({
+    ...fromDbPurchaseOrder(row),
+    items: mappedItems.filter((item) => item.purchaseOrderId === row.id)
+  }));
+}
+
+export async function createSpecialistPurchaseOrder(jobId, payload = {}) {
+  requireInventoryConfigured();
+  const requestKey = cleanText(payload.requestKey || payload.request_key);
+  if (!requestKey) {
+    throw new Error('A purchase request key is required.');
+  }
+
+  const { data, error } = await supabase.rpc('create_specialist_purchase_order', {
+    p_job_id: jobId,
+    p_request_key: requestKey,
+    p_vendor_id: cleanText(payload.vendorId || payload.vendor_id) || null,
+    p_part_id: cleanText(payload.partId || payload.part_id) || null,
+    p_keyboard_part_request_id: cleanText(payload.keyboardPartRequestId || payload.keyboard_part_request_id) || null,
+    p_description: cleanText(payload.description),
+    p_vendor_sku: cleanText(payload.vendorSku || payload.vendor_sku),
+    p_quantity_ordered: Math.max(integerNumber(payload.quantityOrdered ?? payload.quantity_ordered, 1), 1),
+    p_job_quantity: Math.max(integerNumber(payload.jobQuantity ?? payload.job_quantity, 1), 1),
+    p_purchase_unit: normalizePurchaseUnit(payload.purchaseUnit || payload.purchase_unit),
+    p_units_per_purchase_unit: Number(payload.unitsPerPurchaseUnit ?? payload.units_per_purchase_unit ?? 1),
+    p_unit_cost: moneyNumber(payload.unitCost ?? payload.unit_cost),
+    p_retail_price: moneyNumber(payload.retailPrice ?? payload.retail_price),
+    p_expected_at: cleanText(payload.expectedAt || payload.expected_at) || null,
+    p_notes: cleanText(payload.notes)
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const purchaseOrder = fromDbPurchaseOrder(data?.purchaseOrder || data?.purchase_order || {});
+  const item = fromDbPurchaseOrderItem(data?.item || {});
+  return {
+    purchaseOrder: { ...purchaseOrder, items: item.id ? [item] : [] },
+    item,
+    replayed: data?.replayed === true
+  };
+}
+
+export async function fulfillSpecialistPurchaseOrderItem(purchaseOrderItemId) {
+  requireInventoryConfigured();
+  const { data, error } = await supabase.rpc('fulfill_specialist_purchase_order_item', {
+    p_purchase_order_item_id: purchaseOrderItemId
+  });
+
+  if (error) {
+    throw error;
+  }
+  return fromDbJobPart(Array.isArray(data) ? data[0] : data);
 }
 
 export async function createPurchaseOrder(shopId = getCurrentShopId(), payload = {}) {
