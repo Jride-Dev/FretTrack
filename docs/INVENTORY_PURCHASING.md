@@ -146,6 +146,14 @@ Receiving the PO increases the linked part quantity, updates cost fields, writes
 
 Older PO items that were created before this rule may still have `part_id = null`. The receive RPC repairs those rows by creating and linking a part during receive when the PO item has enough description data. If it cannot safely create or link a part, receiving fails with a clear error instead of silently skipping inventory stock.
 
+## Specialist Work Order Purchasing Bridge
+
+Pro amplifier and keyboard benches can create an ordered vendor purchase order that is linked to the source work order. The line may reuse an active shop inventory part or create an active special-order part with zero stock. Keyboard lines can also bind one open keyboard parts request to the purchase-order item.
+
+Vendor purchasing quantity is deliberately separate from customer-job quantity. For example, one vendor Set may receive two inventory units while the linked repair bills one unit. Inventory receiving handles the full purchased package and ordinary stock/cost history; **Add to Parts & Payments** transfers only the saved `job_quantity` to the linked work order.
+
+Migration `20260822033718_specialist_purchasing_bridge.sql` adds the job, job quantity, fulfillment part, keyboard request, and idempotency links plus guarded creation and fulfillment RPCs. Purchase creation serializes calls sharing the same request key and returns the already-created order to a concurrent retry. Fulfillment requires a received item and returns the existing `job_parts` row on retry. The application refreshes the app-level selected job after fulfillment so the part and billing totals are visible immediately in the shared commercial workspace.
+
 ## Future Shipping Scope
 
 Inbound purchase-order shipping cost and landed-cost allocation are implemented for vendor purchase orders.

@@ -18,6 +18,7 @@ Keyboard Repair is a Pro and Enterprise feature. Shop-plan users can open the mo
 - Paste raw MIDI monitor output, preview unmatched zero-velocity triggers and missing note-off events on the keybed, and deliberately apply those findings without treating a normal velocity-zero note-off as a defect.
 - Follow instrument-family diagnostic paths for pianos, synths/workstations, MIDI controllers, organs, and uncommon keyboards, including ribbon-cable and diode-matrix checks.
 - Cross-reference failed contacts, sensors, springs, keytops, and related faults against active shop inventory, then turn a request into an ordinary FretTrack job part through the existing stock transaction.
+- Create a vendor purchase order from the keyboard bench for a saved parts request or an unlinked repair part, receive it through Inventory, and explicitly add only the required work-order quantity to Parts & Payments.
 - Switch the same saved job between Keyboard Bench and Work Order, Parts & Payments to add inventory/manual parts, labor, tax, discounts, payments, balances, invoice email, print documents, photos, scheduling, messages, and timeline history.
 - Use a Keyboard Inspection tab in the shared work-order workspace for keybed/contact findings, power readings, MIDI notes, functional tests, guided diagnostics, and final verification without exposing guitar neck, string, or Damage Map fields.
 - Review keyboard workload, average completed repair time, most-serviced model, and most common logged key fault on the module dashboard.
@@ -38,6 +39,8 @@ The parts matcher ranks explicit compatibility rows first, then uses fault keywo
 Migration `20260817011009_keyboard_part_request_fulfillment.sql` makes inventory fulfillment atomic and idempotent. It locks the request, creates the existing inventory-backed job part, decrements stock, records the inventory movement, and marks the request installed in one database transaction. Retrying or double-clicking an already fulfilled request returns the same job part instead of consuming stock twice.
 
 Migration `20260817011534_harden_keyboard_repair_workflow.sql` makes key and request identity fields immutable, prevents installed requests from being reopened, and removes direct client access to the fulfillment-link column. Only the checked atomic fulfillment function can attach a job part to a request.
+
+Migration `20260822033718_specialist_purchasing_bridge.sql` adds the vendor-purchasing bridge around those requests. It can link an open keyboard request to one job-scoped purchase-order line, preserves vendor package quantity separately from the inventory units needed by the job, and releases the request link if the purchase order is canceled. Creation is idempotent even when two same-key calls overlap. After Inventory receiving, fulfillment reuses the existing atomic keyboard request path and refreshes the parent work order so the billing row appears immediately without a manual reload.
 
 The module does not add a media bucket or a browser MIDI-device connection. Ordinary job photos remain available through the established photo workflow, while MIDI evidence is deliberately captured and parsed from pasted diagnostic text. Real-time MIDI hardware acquisition can be considered later without coupling core CRM records to browser or device availability.
 

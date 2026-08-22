@@ -1,6 +1,6 @@
 # Pro Scheduled Email
 
-FretTrack's initial Pro Scheduled Email feature schedules an already-composed transactional job email for delivery up to 30 days ahead. It does not implement recurring marketing campaigns or the separate six-/twelve-month service-reminder roadmap item.
+FretTrack's initial Pro Scheduled Email feature schedules an already-composed transactional job email for delivery up to 30 days ahead. It does not implement recurring marketing campaigns. Long-horizon service follow-up is handled by the separately gated Automated Service Reminders workflow rather than by stretching provider scheduling.
 
 ## Workflow
 
@@ -34,7 +34,7 @@ The **Drop Off Scheduled** template uses the job's stored drop-off appointment a
 
 Resend owns the delivery clock for this slice. FretTrack displays **Scheduled with provider** before the delivery time and briefly displays **Provider schedule elapsed** if the local clock advances before reconciliation completes. When a scheduled time elapses—or a cancellation is uncertain—the authenticated message view reconciles elapsed schedules against Resend's retrieve-email endpoint and records `sent`, `failed`, or `canceled` on the existing row. Explicit `canceled` and `cancel_accepted` provider results finalize the cancellation timestamp; sent or delivered results always remain sent. While the message view remains open, unresolved provider states are checked again every 30 seconds until they become terminal. This is authenticated, on-demand polling rather than a real-time delivery webhook.
 
-Provider scheduling is limited to 30 days. The roadmap's six-/twelve-month customer service reminders will need Supabase Cron (or another long-horizon dispatcher) plus explicit consent/unsubscribe behavior; they should not be built by stretching this transactional feature.
+Provider scheduling is limited to 30 days. FretTrack's shipped Automated Service Reminders feature keeps longer due dates in Supabase, requires separate affirmative consent, and uses a single nightly Cron dispatcher. The two features intentionally retain separate entitlements, consent fields, queues, and operational purposes.
 
 ## Database and Deployment
 

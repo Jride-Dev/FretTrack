@@ -28,7 +28,9 @@ Award and redemption tables have RLS and explicit Data API grants. Authenticated
 
 Migration `20260822041624_pro_loyalty_program.sql` creates the entitlement, configuration, reconciled work-order awards, redemption audit ledger, billing-state triggers, RLS policies, and RPCs. No Edge Function, provider account, Cron job, or new secret is required.
 
-No remote migration or app deployment is performed merely by merging this source. Production changes require explicit deployment approval.
+No remote migration or app deployment is performed merely by merging this source. Production changes always require explicit deployment approval.
+
+The production rollout completed on 2026-08-22. Migration `20260822041624_pro_loyalty_program.sql` is recorded remotely and the matching `0.2.9-beta.6` Cloudflare Pages build is live. The migration does not enable a shop's loyalty rule, award historical work predating the configured start boundary, or create a reward redemption automatically.
 
 ```powershell
 npm run check:loyalty-program

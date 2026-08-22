@@ -5,22 +5,24 @@ Review this file before every production deploy and after every manual database/
 ## Current Deployment Status
 
 - Current branch checked during this review: `main`.
-- `v0.2.9-beta.6` release foundations and scheduled-email consistency hardening were merged through PRs `#185`-`#188` on 2026-08-15. PR `#189` fixed empty Storage-bucket inventories before the production backup was accepted.
-- App domain returned `200 OK` with the beta.6 bundle on 2026-08-15: https://app.frettrack-app.com/. Its JavaScript asset matched guarded build `assets/index-D7CbFlkS.js` and Cloudflare Pages deployment `94ed126c.frettrack.pages.dev`.
-- The release deployed the Amplifier Repair, Stripe event-ordering, Scheduled Email, and provider-consistency migrations through `20260816004706`.
-- Supabase Edge Functions are active at `stripe-webhook` version 14 and `send-email` version 36. An unauthenticated `send-email` request returned `401` after deployment.
+- PR `#201` added the amplifier/keyboard purchasing bridge, PR `#202` added Pro Automated Service Reminders, and PR `#203` added the Pro Loyalty Program. All three merged to `main` on 2026-08-22 after their combined regression/build, audit, database/browser, focused checker, and production-build gates passed.
+- App domain returned `200 OK` with the current beta.6 bundle on 2026-08-22: https://app.frettrack-app.com/. Its JavaScript asset matched guarded build `assets/index-D7iGJXxo.js` and Cloudflare Pages deployment `36d6f1f7.frettrack.pages.dev`.
+- The public landing/docs Worker deployed eight updated documentation assets on 2026-08-22 as version `c5b50ed3-a77c-4142-8414-55b9223c9320`. The live docs hub, complete guide, customer, inventory, jobs, billing, shop/account, and beta-tester pages all returned `200 OK` with the new specialist purchasing, Automated Service Reminder, and Loyalty content; docs responses retained CSP, `nosniff`, strict referrer policy, and `no-store` caching.
+- Production migration history matches the repository through `20260822041624_pro_loyalty_program.sql`.
+- Supabase Edge Functions are active at `stripe-webhook` version 14, `send-email` version 38, and JWT-protected `send-service-reminders` version 1. The reminder endpoint rejected an unauthenticated request with `401` and returned `200` with zero work during an authenticated smoke test.
+- Supabase Vault contains the three named Cron inputs, and active job `frettrack-service-reminders-nightly` runs at `17 3 * * *` (03:17 UTC). The six initial shop rules are disabled, so deployment did not opt customers in or send reminders.
 - Cloudflare Pages production HTML matched the guarded production build and returned the expected CSP, Permissions Policy, Referrer Policy, and content-type protection headers.
-- Pre-migration snapshot `backups/hosted-supabase-20260815-183640` passed the full restore validator, including manifest hashes and inventories for all four Storage buckets. Its compare report found no schema, migration-history, or row-count drift from the immediately preceding snapshot.
+- Pre-migration snapshot `backups/hosted-supabase-20260822-000443` completed with database, migration-history, Storage, manifest, checksums, row counts, comparison report, and local Docker-volume archive. The compare report found no schema or migration-history drift from the immediately preceding snapshot.
 
 ## Current Migration Note
 
-Remote migration history matched the repository through `20260816004706_harden_email_provider_consistency.sql` after the beta.6 hardening rollout. The original release applied these reviewed migrations in order:
+The 2026-08-22 production dry run contained exactly these reviewed migrations, which were applied in order:
 
-- `20260814215521_amplifier_job_evidence.sql`
-- `20260815051722_stripe_event_ordering_hardening.sql`
-- `20260815095604_pro_email_scheduling_foundation.sql`
+- `20260822033718_specialist_purchasing_bridge.sql`
+- `20260822035953_pro_automated_service_reminders.sql`
+- `20260822041624_pro_loyalty_program.sql`
 
-The follow-up production dry run contained only `20260816004706_harden_email_provider_consistency.sql`; it was applied before deploying `send-email` version 36 and the guarded Cloudflare Pages bundle.
+The post-deployment migration list aligned local and remote history, and a second `supabase db push --linked --dry-run` reported the database up to date with no pending migrations.
 
 Continue using `supabase migration list --linked`, `supabase db push --dry-run`, and `npm run check:migrations` before future production schema changes. Do not use a blanket push when unrelated migrations are pending.
 
@@ -34,6 +36,9 @@ Continue using `supabase migration list --linked`, `supabase db push --dry-run`,
 ## Recent Deployed Systems
 
 - Inventory purchasing foundation: parts, vendors, purchase orders, receiving, purchase history, barcode labels, and transactional receiving RPCs
+- Amplifier/keyboard specialist purchasing bridge with job-linked purchase lines, package/job quantity separation, Inventory receiving, and idempotent Parts & Payments fulfillment
+- Pro Automated Service Reminders with independent consent, durable queueing, nightly Cron dispatch, quota integration, and Message History
+- Pro Loyalty Program with paid/completed-work-order award reconciliation and audited redemption
 - Scheduling / Calendar Phase 1
 - Premium entitlement foundation
 - Advanced Reporting Phase 1
