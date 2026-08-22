@@ -41,6 +41,7 @@ export default function AmplifierJobDetail({
   onClose,
   onDirtyChange,
   onNotice,
+  onRefresh,
   onOpenInventory,
   shopProfile = null
 }) {
@@ -147,9 +148,10 @@ export default function AmplifierJobDetail({
     }));
   }
 
-  function addInventoryPartToDraft(jobPart) {
+  async function addInventoryPartToDraft(jobPart) {
     setDraft((current) => mergeJobPart(current, jobPart));
     setBaseline((current) => JSON.stringify(mergeJobPart(JSON.parse(current), jobPart)));
+    await onRefresh?.();
   }
 
   function closeDetail() {

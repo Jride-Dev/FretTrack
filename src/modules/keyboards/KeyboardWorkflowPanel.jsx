@@ -245,9 +245,8 @@ export default function KeyboardWorkflowPanel({
     setIsWorking(true);
     try {
       const { jobPart, partRequests } = await fulfillKeyboardPartRequest(request);
-      onInventoryPartAdded?.(jobPart);
+      await onInventoryPartAdded?.(jobPart);
       setWorkflow((current) => ({ ...current, partRequests }));
-      await onRefresh?.();
       onNotice?.({ type: 'success', message: `${request.requestedPart} was added to the work order and inventory was adjusted.` });
     } catch (error) {
       onNotice?.({ type: 'error', message: error.message || 'Unable to add the inventory part.' });

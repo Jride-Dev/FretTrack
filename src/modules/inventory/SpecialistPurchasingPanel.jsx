@@ -158,7 +158,7 @@ export default function SpecialistPurchasingPanel({
     setIsSaving(true);
     try {
       const jobPart = await fulfillSpecialistPurchaseOrderItem(item.id);
-      onInventoryPartAdded?.(jobPart);
+      await onInventoryPartAdded?.(jobPart);
       await Promise.all([load(), onPurchasingChanged?.()]);
       onNotice?.({ type: 'success', message: `${item.description} was added to Parts & Payments.` });
     } catch (error) {

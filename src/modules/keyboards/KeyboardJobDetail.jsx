@@ -146,9 +146,10 @@ export default function KeyboardJobDetail({
     }));
   }
 
-  function addInventoryPartToDraft(jobPart) {
+  async function addInventoryPartToDraft(jobPart) {
     setDraft((current) => mergeJobPart(current, jobPart));
     setBaseline((current) => JSON.stringify(mergeJobPart(JSON.parse(current), jobPart)));
+    await onRefresh?.();
   }
 
   function closeDetail() {

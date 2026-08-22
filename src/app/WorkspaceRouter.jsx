@@ -304,6 +304,7 @@ function WorkspacePage({
             onClose={actions.onCloseJobDetail}
             onDirtyChange={actions.onDirtyChange}
             onNotice={actions.onNotice}
+            onRefresh={actions.onRefreshJobs}
             onOpenInventory={actions.onOpenInventory}
             shopProfile={shopProfile}
           />
