@@ -1,7 +1,7 @@
 export function validateJobForSave(job) {
   const errors = [];
 
-  if (!String(job.customerName || '').trim()) {
+  if (!String(job.customerName || '').trim() && job.techDetails?.customerUnlinked !== true) {
     errors.push('Customer name is required.');
   }
 

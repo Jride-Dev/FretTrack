@@ -218,7 +218,10 @@ begin
         total_due_snapshot = calculated_total,
         paid_total_snapshot = calculated_paid,
         reversed_at = coalesce(reversed_at, now()),
-        reversal_reason = 'Work order customer or shop changed after loyalty qualification.'
+        reversal_reason = case
+          when target_job.customer_id is null then 'Work order has no linked customer.'
+          else 'Work order customer or shop changed after loyalty qualification.'
+        end
     where id = existing_award.id and active;
     return;
   end if;

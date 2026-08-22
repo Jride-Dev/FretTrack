@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(43);
+select plan(45);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -143,6 +143,10 @@ select ok((select not active from public.loyalty_job_awards where source_job_id 
 select is((select count(*)::integer from public.loyalty_job_awards where customer_id = '63000000-0000-4000-a000-000000000002' and active), 0, 'an earned stamp cannot move to another customer and be redeemed twice');
 update public.jobs set customer_id = '63000000-0000-4000-a000-000000000001', customer_name = 'Morgan Loyalty' where id = '73000000-0000-4000-a000-000000000002';
 select ok((select active from public.loyalty_job_awards where source_job_id = '73000000-0000-4000-a000-000000000002'), 'restoring the original customer restores the original award');
+update public.jobs set customer_id = null, customer_name = '' where id = '73000000-0000-4000-a000-000000000002';
+select ok((select not active from public.loyalty_job_awards where source_job_id = '73000000-0000-4000-a000-000000000002'), 'unlinking the customer reverses an existing work-order award');
+select is((select reversal_reason from public.loyalty_job_awards where source_job_id = '73000000-0000-4000-a000-000000000002'), 'Work order has no linked customer.', 'an unlinked work order records the specific loyalty reversal reason');
+update public.jobs set customer_id = '63000000-0000-4000-a000-000000000001', customer_name = 'Morgan Loyalty' where id = '73000000-0000-4000-a000-000000000002';
 
 set local role authenticated;
 set local "request.jwt.claim.sub" = '53000000-0000-4000-a000-000000000001';

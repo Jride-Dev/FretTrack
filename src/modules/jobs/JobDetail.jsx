@@ -56,6 +56,7 @@ import {
   buildStringGaugesPatch,
   buildTaxFieldPatch,
   buildTechFieldPatch,
+  buildUnlinkCustomerPatch,
   buildUpdateInventoryPartQuantityJob,
   buildUpdateManualPartPatch,
   buildUpdatePaymentJob,
@@ -243,6 +244,19 @@ export default function JobDetail({
   function updateField(event) {
     const { name, value } = event.target;
     patchJob(buildJobFieldPatch(draftJob, name, value, jobs));
+  }
+
+  function unlinkCustomer() {
+    if (!canWrite || !draftJob.customerId) {
+      return;
+    }
+    const confirmed = window.confirm(
+      'Unlink this customer from the work order? The copied name, contact details, and messaging consent will be cleared when you save.'
+    );
+    if (!confirmed) {
+      return;
+    }
+    patchJob(buildUnlinkCustomerPatch(draftJob));
   }
 
   function updateDiscountField(event) {
@@ -1184,6 +1198,7 @@ export default function JobDetail({
       onInstrumentTypeChange={setInstrumentType}
       onStringCountChange={updateStringCount}
       onTechFieldChange={updateTechField}
+      onUnlinkCustomer={unlinkCustomer}
     />
   );
 

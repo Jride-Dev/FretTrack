@@ -13,6 +13,11 @@ const customerCard = read('src/modules/loyalty/CustomerLoyaltyCard.jsx');
 const service = read('src/modules/loyalty/loyaltyService.js');
 const router = read('src/app/WorkspaceRouter.jsx');
 const documentation = read('docs/PRO_LOYALTY_PROGRAM.md');
+const jobDetail = read('src/modules/jobs/JobDetail.jsx');
+const jobInfo = read('src/modules/jobs/JobInfoSection.js');
+const jobFormatting = read('src/modules/jobs/jobDetailFormatting.js');
+const customerService = read('src/modules/customers/customerService.js');
+const jobValidation = read('src/modules/jobs/jobValidation.js');
 
 for (const plan of ['free', 'solo', 'shop', 'pro', 'enterprise', 'trial']) {
   includes(migration, `('${plan}', 'loyalty_program'`, `Migration must seed loyalty_program for ${plan}.`);
@@ -31,6 +36,7 @@ includes(migration, 'unique (source_job_id)', 'One work order must have at most 
 includes(migration, 'unique (shop_id, idempotency_key)', 'Redemption retries must be idempotent per shop.');
 includes(migration, 'reversed_at = coalesce(reversed_at, now())', 'Refunded, reopened, or otherwise ineligible work must reverse its stamp.');
 includes(migration, 'Work order customer or shop changed after loyalty qualification.', 'An earned award must never move between customer balances.');
+includes(migration, "when target_job.customer_id is null then 'Work order has no linked customer.'", 'Unlinking a customer must record the specific loyalty reversal reason.');
 includes(migration, 'for update;', 'Redemption must lock the customer before checking and spending points.');
 includes(migration, 'earned - redeemed < target_rule.reward_threshold', 'Redemption must reject overspending.');
 includes(migration, "private.shop_has_entitlement(target_customer.shop_id, 'loyalty_program')", 'Database RPCs must enforce the Pro entitlement.');
@@ -40,6 +46,21 @@ includes(settings, 'completed and fully paid', 'Shop Settings must explain the e
 includes(settings, 'does not silently change an invoice', 'Shop Settings must preserve explicit invoice accounting.');
 includes(customerCard, 'does not alter an invoice', 'Redemption confirmation must warn that the invoice remains explicit.');
 includes(service, "supabase.rpc('redeem_customer_loyalty_reward'", 'The client must use the guarded redemption RPC.');
+
+includes(jobDetail, 'patchJob(buildUnlinkCustomerPatch(draftJob))', 'The work order must expose an explicit customer unlink action.');
+includes(jobInfo, 'Unlink Customer', 'The Intake UI must clearly label customer unlinking.');
+includes(jobFormatting, 'export function buildUnlinkCustomerPatch(currentJob)', 'Customer unlinking must use a dedicated ownership patch.');
+includes(jobFormatting, 'customerId: null', 'Explicit unlink must clear the persisted customer relationship.');
+includes(jobFormatting, "customerName: ''", 'Explicit unlink must prevent the save path from silently relinking by name.');
+includes(jobFormatting, 'emailOptIn: false', 'Explicit unlink must clear copied email consent.');
+includes(jobFormatting, 'customerUnlinked: true', 'Explicit unlink must retain durable unlink intent through normalization and saving.');
+includes(customerService, 'job.techDetails?.customerUnlinked === true', 'The customer save bridge must honor explicit unlink intent.');
+includes(jobValidation, 'job.techDetails?.customerUnlinked !== true', 'An explicitly unlinked existing work order must remain saveable without a customer name.');
+const fieldPatchSource = jobFormatting.slice(
+  jobFormatting.indexOf('export function buildJobFieldPatch'),
+  jobFormatting.indexOf('export function buildUnlinkCustomerPatch')
+);
+assert.ok(!fieldPatchSource.includes('customerId'), 'Ordinary name edits must not silently change ownership.');
 
 includes(documentation, 'does not create store credit', 'Documentation must keep loyalty outside the accounting ledger.');
 includes(documentation, 'work orders opened after the program starts', 'Documentation must describe the non-retroactive boundary.');
