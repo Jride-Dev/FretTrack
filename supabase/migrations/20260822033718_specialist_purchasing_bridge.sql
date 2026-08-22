@@ -226,6 +226,14 @@ begin
     raise exception 'A request key is required.' using errcode = '22023';
   end if;
 
+  -- The unique index is the final integrity guard, but it cannot make the
+  -- lookup-then-insert sequence return a useful replay to a concurrent caller.
+  -- Serialize only requests sharing this idempotency key so the loser observes
+  -- the committed winner below instead of leaking SQLSTATE 23505.
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(p_request_key::text, 0)
+  );
+
   select * into existing_item
   from public.purchase_order_items
   where specialist_request_key = p_request_key;

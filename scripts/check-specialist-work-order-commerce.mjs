@@ -58,6 +58,7 @@ assert.match(purchasingPanel, /Open Inventory & Receiving/, 'Specialist benches 
 assert.match(inventoryService, /rpc\('create_specialist_purchase_order'/, 'Specialist PO creation must use the atomic database operation.');
 assert.match(inventoryService, /rpc\('fulfill_specialist_purchase_order_item'/, 'Specialist fulfillment must use the idempotent database operation.');
 assert.match(purchasingMigration, /specialist_request_key[\s\S]*?create unique index purchase_order_items_specialist_request_key_uidx/, 'Database idempotency must be enforced by a unique request key.');
+assert.match(purchasingMigration, /pg_advisory_xact_lock[\s\S]*?hashtextextended\(p_request_key::text, 0\)[\s\S]*?where specialist_request_key = p_request_key/, 'Concurrent retries must serialize by request key before the replay lookup.');
 assert.match(purchasingMigration, /private\.can_write_job[\s\S]*?private\.shop_has_entitlement/, 'The database bridge must recheck job write access and the Pro specialist entitlement.');
 assert.match(purchasingMigration, /sync_keyboard_request_from_purchase_item[\s\S]*?quantity_received > 0[\s\S]*?'received'/, 'Keyboard requests must become received only from a real PO receipt.');
 assert.match(purchasingMigration, /fulfill_specialist_purchase_order_item[\s\S]*?job_part_id is not null[\s\S]*?return fulfilled_part/, 'Specialist billing fulfillment must be retry-safe.');
