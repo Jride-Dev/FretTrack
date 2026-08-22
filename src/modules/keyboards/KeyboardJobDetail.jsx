@@ -46,7 +46,8 @@ export default function KeyboardJobDetail({
   onNotice,
   canSendEmail = false,
   entitlementMessage = '',
-  shopProfile = null
+  shopProfile = null,
+  onOpenInventory
 }) {
   const [draft, setDraft] = useState(() => buildDraft(job));
   const [baseline, setBaseline] = useState(() => JSON.stringify(buildDraft(job)));
@@ -145,9 +146,10 @@ export default function KeyboardJobDetail({
     }));
   }
 
-  function addInventoryPartToDraft(jobPart) {
+  async function addInventoryPartToDraft(jobPart) {
     setDraft((current) => mergeJobPart(current, jobPart));
     setBaseline((current) => JSON.stringify(mergeJobPart(JSON.parse(current), jobPart)));
+    await onRefresh?.();
   }
 
   function closeDetail() {
@@ -318,6 +320,7 @@ export default function KeyboardJobDetail({
         onRefresh={onRefresh}
         onSaveJob={save}
         onInventoryPartAdded={addInventoryPartToDraft}
+        onOpenInventory={onOpenInventory}
         onNotice={onNotice}
       />
 

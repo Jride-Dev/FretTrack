@@ -4367,6 +4367,53 @@ th.internal-only {
   padding: 10px;
 }
 
+.specialist-purchasing-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.keyboard-workflow-panel > .specialist-purchasing-panel {
+  border: 0;
+  border-top: 1px solid var(--border-soft);
+  border-radius: 0;
+  box-shadow: none;
+  margin-top: 8px;
+  padding: 16px 0 0;
+}
+
+.specialist-purchasing-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.specialist-purchase-orders {
+  display: grid;
+  gap: 10px;
+}
+
+.specialist-purchase-orders h4 {
+  margin: 0;
+}
+
+.specialist-purchase-order {
+  align-items: center;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.specialist-purchase-order > div {
+  display: grid;
+  gap: 3px;
+}
+
+.specialist-purchase-order span {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
 .keyboard-checklist-item {
   align-items: center;
   border: 1px solid var(--border-soft);
@@ -4597,8 +4644,14 @@ th.internal-only {
   .keyboard-analytics-grid,
   .keyboard-parts-matches,
   .keyboard-parts-request,
-  .keyboard-checklist-item {
+  .keyboard-checklist-item,
+  .specialist-purchasing-grid {
     grid-template-columns: 1fr;
+  }
+
+  .specialist-purchase-order {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .keyboard-checklist-number {
