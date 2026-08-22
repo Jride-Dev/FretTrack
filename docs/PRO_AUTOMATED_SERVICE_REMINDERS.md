@@ -10,6 +10,8 @@ When a work order reaches Completed or Picked Up, FretTrack keeps the first dura
 
 This feature does not use Resend scheduling. FretTrack keeps long-horizon due dates in Supabase and a single nightly Cron worker sends only reminders that are due. That avoids Resend’s 30-day scheduling limit and avoids creating one Cron job per customer.
 
+Shop Settings leads with a customer-style sample preview rather than raw merge-tag syntax. Owners/admins open **Edit subject and message** only when they want to customize the copy, then insert customer, service, shop, month, or booking-link values through labeled personalization chips. Existing templates containing literal `\\n` sequences are normalized into real paragraph breaks when loaded and saved, so the editor, preview, Message History, and delivered plain-text email retain readable spacing.
+
 ## Safety boundaries
 
 The UI is gated by `automated_service_reminders`, and the database independently grants it only to Pro and Enterprise shops. Owners and admins can manage the rule; shop members can inspect the queue; non-Pro shops cannot read or enable the rule. Claiming, validating, and finalizing deliveries are service-role-only database operations.

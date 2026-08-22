@@ -1,4 +1,5 @@
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient.js';
+import { normalizeServiceReminderTemplate } from './serviceReminderTemplates.js';
 
 export const DEFAULT_SERVICE_REMINDER_RULE = {
   shopId: '',
@@ -18,8 +19,8 @@ function fromDbRule(row = {}) {
     enabled: row.enabled === true,
     intervalMonths: Number(row.interval_months || 6),
     eligibleServiceKeywords: row.eligible_service_keywords || ['setup'],
-    subjectTemplate: row.subject_template || DEFAULT_SERVICE_REMINDER_RULE.subjectTemplate,
-    bodyTemplate: row.body_template || DEFAULT_SERVICE_REMINDER_RULE.bodyTemplate,
+    subjectTemplate: normalizeServiceReminderTemplate(row.subject_template || DEFAULT_SERVICE_REMINDER_RULE.subjectTemplate),
+    bodyTemplate: normalizeServiceReminderTemplate(row.body_template || DEFAULT_SERVICE_REMINDER_RULE.bodyTemplate),
     bookingUrl: row.booking_url || '',
     updatedAt: row.updated_at || ''
   };
@@ -41,8 +42,8 @@ export async function saveServiceReminderRule(shopId, rule) {
     enabled: rule.enabled === true,
     interval_months: Math.min(60, Math.max(1, Number(rule.intervalMonths || 6))),
     eligible_service_keywords: keywords,
-    subject_template: String(rule.subjectTemplate || '').trim(),
-    body_template: String(rule.bodyTemplate || '').trim(),
+    subject_template: normalizeServiceReminderTemplate(rule.subjectTemplate).trim(),
+    body_template: normalizeServiceReminderTemplate(rule.bodyTemplate).trim(),
     booking_url: String(rule.bookingUrl || '').trim()
   }, { onConflict: 'shop_id' }).select().single();
   if (error) throw error;
