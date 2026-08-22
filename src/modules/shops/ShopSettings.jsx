@@ -11,6 +11,7 @@ import {
 import ShopMembersPanel from './ShopMembersPanel.jsx';
 import SubscriptionSettingsSection from './SubscriptionSettingsSection.jsx';
 import TeamWorkloadSummary from './TeamWorkloadSummary.jsx';
+import LoyaltyProgramSettings from './LoyaltyProgramSettings.jsx';
 import ServiceReminderSettings from './ServiceReminderSettings.jsx';
 
 const SHIPPING_LABEL_PRESETS = [
@@ -324,6 +325,14 @@ export default function ShopSettings({
           <button type="submit" disabled={!canManageShop || isSaving}>{isSaving ? 'Saving...' : requireCompletion ? 'Finish Shop Setup' : 'Save Shop Settings'}</button>
         </form>
       </section>
+      {!requireCompletion && (
+        <LoyaltyProgramSettings
+          shopId={settings.shopId}
+          canManageShop={canManageShop}
+          entitlementSnapshot={entitlementSnapshot}
+          onNotice={onNotice}
+        />
+      )}
       {!requireCompletion && (
         <ServiceReminderSettings
           shopId={settings.shopId}

@@ -39,7 +39,15 @@ export function buildJobFieldPatch(currentJob, fieldName, value, jobs = []) {
       customerName: combineCustomerName(
         fieldName === 'customerFirstName' ? value : currentJob.customerFirstName,
         fieldName === 'customerLastName' ? value : currentJob.customerLastName
-      )
+      ),
+      ...(currentJob.techDetails?.customerUnlinked && String(value || '').trim()
+        ? {
+            techDetails: {
+              ...currentJob.techDetails,
+              customerUnlinked: false
+            }
+          }
+        : {})
     };
   }
   if (fieldName === 'dateReceived') {
@@ -58,6 +66,40 @@ export function buildJobFieldPatch(currentJob, fieldName, value, jobs = []) {
     return buildInstrumentTypePatch(currentJob, value);
   }
   return { [fieldName]: value };
+}
+
+export function buildUnlinkCustomerPatch(currentJob) {
+  return {
+    customerId: null,
+    customerFirstName: '',
+    customerLastName: '',
+    customerName: '',
+    phone: '',
+    email: '',
+    emailOptIn: false,
+    smsOptIn: false,
+    preferredContactMethod: 'none',
+    addressLine1: '',
+    city: '',
+    region: '',
+    postalCode: '',
+    techDetails: {
+      ...currentJob.techDetails,
+      customerUnlinked: true,
+      contact: {
+        ...(currentJob.techDetails?.contact || {}),
+        phone: '',
+        email: '',
+        emailOptIn: false,
+        smsOptIn: false,
+        preferredContactMethod: 'none',
+        addressLine1: '',
+        city: '',
+        region: '',
+        postalCode: ''
+      }
+    }
+  };
 }
 
 export function buildInstrumentTypePatch(currentJob, instrumentType) {

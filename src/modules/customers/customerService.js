@@ -95,6 +95,9 @@ export async function addCustomer(customer, options = {}) {
 }
 
 export async function ensureCustomerForJob(job, options = {}) {
+  if (job.techDetails?.customerUnlinked === true) {
+    return null;
+  }
   const activeShopId = getActiveShopId(options);
   const customer = normalizeCustomer({
     id: job.customerId || job.customer_id || undefined,

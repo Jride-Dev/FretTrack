@@ -24,7 +24,8 @@ export default function JobInfoSection({
   updateStringCount,
   updateContactPreference,
   updateField,
-  updateTechField
+  updateTechField,
+  unlinkCustomer
 }) {
   const instrumentType = normalizeInstrumentType(draftJob.instrumentType);
   const stringCount = normalizeStringCount(draftJob.techDetails.stringCount || draftJob.techDetails.stringGauges?.length, instrumentType);
@@ -52,6 +53,17 @@ export default function JobInfoSection({
       </datalist>
       <h3>Job Info</h3>
       <div className="form-grid">
+        <div className="customer-link-control wide">
+          <div>
+            <strong>{draftJob.customerId ? 'Linked customer record' : 'No linked customer record'}</strong>
+            <small>Editing the copied name and contact fields does not change work-order ownership.</small>
+          </div>
+          {draftJob.customerId && (
+            <button type="button" className="button-tertiary" onClick={unlinkCustomer} disabled={!canWrite}>
+              Unlink Customer
+            </button>
+          )}
+        </div>
         <label>
           First Name
           <input name="customerFirstName" value={draftJob.customerFirstName || ''} onChange={updateField} disabled={!canWrite} />

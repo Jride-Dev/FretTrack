@@ -11,7 +11,8 @@ export default function JobIntakeSections({
   onFieldChange,
   onInstrumentTypeChange,
   onStringCountChange,
-  onTechFieldChange
+  onTechFieldChange,
+  onUnlinkCustomer
 }) {
   return (
     <JobInfoSection
@@ -26,6 +27,7 @@ export default function JobIntakeSections({
       updateContactPreference={onContactPreferenceChange}
       updateField={onFieldChange}
       updateTechField={onTechFieldChange}
+      unlinkCustomer={onUnlinkCustomer}
     />
   );
 }
