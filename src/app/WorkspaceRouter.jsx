@@ -304,6 +304,8 @@ function WorkspacePage({
             onClose={actions.onCloseJobDetail}
             onDirtyChange={actions.onDirtyChange}
             onNotice={actions.onNotice}
+            onOpenInventory={actions.onOpenInventory}
+            shopProfile={shopProfile}
           />
         </>
       )
@@ -331,6 +333,7 @@ function WorkspacePage({
             canSendEmail={access.canSendEmail}
             entitlementMessage={access.entitlementMessage}
             shopProfile={shopProfile}
+            onOpenInventory={actions.onOpenInventory}
           />
         </>
       )

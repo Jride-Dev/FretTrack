@@ -46,7 +46,8 @@ export default function KeyboardJobDetail({
   onNotice,
   canSendEmail = false,
   entitlementMessage = '',
-  shopProfile = null
+  shopProfile = null,
+  onOpenInventory
 }) {
   const [draft, setDraft] = useState(() => buildDraft(job));
   const [baseline, setBaseline] = useState(() => JSON.stringify(buildDraft(job)));
@@ -318,6 +319,7 @@ export default function KeyboardJobDetail({
         onRefresh={onRefresh}
         onSaveJob={save}
         onInventoryPartAdded={addInventoryPartToDraft}
+        onOpenInventory={onOpenInventory}
         onNotice={onNotice}
       />
 

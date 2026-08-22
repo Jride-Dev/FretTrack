@@ -14,6 +14,11 @@ const tabs = read('src/modules/jobs/components/JobDetailTabs.jsx');
 const inspection = read('src/modules/jobs/JobInspectionSections.jsx');
 const billing = read('src/modules/jobs/JobBillingSections.jsx');
 const workspaceState = read('src/app/workspaceState.js');
+const amplifierDetail = read('src/modules/amplifiers/AmplifierJobDetail.jsx');
+const keyboardWorkflow = read('src/modules/keyboards/KeyboardWorkflowPanel.jsx');
+const purchasingPanel = read('src/modules/inventory/SpecialistPurchasingPanel.jsx');
+const inventoryService = read('src/modules/inventory/inventoryService.js');
+const purchasingMigration = read('supabase/migrations/20260822033718_specialist_purchasing_bridge.sql');
 const styles = read('src/styles.css');
 
 assert.match(navigation, /isAmplifierJob\(job\)[\s\S]*?'amplifier-detail'/, 'Amplifier jobs must map to the amplifier repair bench.');
@@ -39,6 +44,19 @@ assert.match(inspection, /instrumentType === 'Keyboard'[\s\S]*?<KeyboardFunction
 assert.match(inspection, /if \(instrumentType === 'Keyboard'\)[\s\S]*?return \([\s\S]*?Keyboard Inspection/, 'Keyboard inspection must have its own terminology.');
 assert.match(inspection, /return \([\s\S]*?<TechDetailsSection[\s\S]*?<DamageMapSection/, 'Guitar work orders must retain the established neck and Damage Map inspection.');
 assert.match(billing, /<PartsList[\s\S]*?<ServicesList[\s\S]*?<TotalsSection/, 'Specialist commerce must reuse the complete parts, services, totals, and payments workflow.');
+assert.match(amplifierDetail, /<SpecialistPurchasingPanel[\s\S]*?onInventoryPartAdded=\{addInventoryPartToDraft\}/, 'Amplifier bench must expose job-linked purchasing and merge fulfilled parts into billing.');
+assert.match(keyboardWorkflow, /<SpecialistPurchasingPanel[\s\S]*?keyboardPartRequests=\{workflow\.partRequests\}/, 'Keyboard fault requests must flow into job-linked purchasing.');
+assert.match(keyboardWorkflow, /\['installed', 'ordered', 'received'\][\s\S]*?requestStatus/, 'Ordered and received keyboard states must be driven by purchasing instead of a manual status selector.');
+assert.match(purchasingPanel, /submitLockRef\.current[\s\S]*?requestKeyRef\.current/, 'Specialist PO submission must have both a synchronous lock and a durable idempotency key.');
+assert.match(purchasingPanel, /createSpecialistPurchaseOrder[\s\S]*?fulfillSpecialistPurchaseOrderItem/, 'Specialist purchasing must separate ordering from explicit billing fulfillment.');
+assert.match(purchasingPanel, /Open Inventory & Receiving/, 'Specialist benches must retain a clear route into normal receiving.');
+assert.match(inventoryService, /rpc\('create_specialist_purchase_order'/, 'Specialist PO creation must use the atomic database operation.');
+assert.match(inventoryService, /rpc\('fulfill_specialist_purchase_order_item'/, 'Specialist fulfillment must use the idempotent database operation.');
+assert.match(purchasingMigration, /specialist_request_key[\s\S]*?create unique index purchase_order_items_specialist_request_key_uidx/, 'Database idempotency must be enforced by a unique request key.');
+assert.match(purchasingMigration, /private\.can_write_job[\s\S]*?private\.shop_has_entitlement/, 'The database bridge must recheck job write access and the Pro specialist entitlement.');
+assert.match(purchasingMigration, /sync_keyboard_request_from_purchase_item[\s\S]*?quantity_received > 0[\s\S]*?'received'/, 'Keyboard requests must become received only from a real PO receipt.');
+assert.match(purchasingMigration, /fulfill_specialist_purchase_order_item[\s\S]*?job_part_id is not null[\s\S]*?return fulfilled_part/, 'Specialist billing fulfillment must be retry-safe.');
 assert.match(styles, /\.specialist-workspace-nav[\s\S]*?@media \(max-width: 768px\)[\s\S]*?\.specialist-workspace-actions button/, 'Specialist workspace navigation must remain usable on mobile.');
+assert.match(styles, /\.specialist-purchasing-grid[\s\S]*?@media \(max-width: 768px\)[\s\S]*?\.specialist-purchasing-grid/, 'Specialist purchasing controls must collapse for mobile.');
 
 console.log('Specialist work-order commerce checks passed.');

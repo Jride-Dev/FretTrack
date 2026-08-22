@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { sendCustomerMessage } from '../../data/messagesRepository.js';
 import { buildShopSignature } from '../messaging/messageTemplates.js';
+import SpecialistPurchasingPanel from '../inventory/SpecialistPurchasingPanel.jsx';
 import { getShopMoneyOptions } from '../shops/shopConfig.js';
 import {
   KEYBOARD_FAULTS,
@@ -53,6 +54,7 @@ export default function KeyboardWorkflowPanel({
   onRefresh,
   onSaveJob,
   onInventoryPartAdded,
+  onOpenInventory,
   onNotice
 }) {
   const keyRange = useMemo(() => keyboardMidiRange(keyboard.keyCount, keyboard.lowestMidiNote), [keyboard.keyCount, keyboard.lowestMidiNote]);
@@ -394,21 +396,30 @@ export default function KeyboardWorkflowPanel({
           {workflow.partRequests.map((request) => (
             <div className="keyboard-parts-request" key={request.id}>
               <span><strong>{request.requestedPart}</strong> × {request.quantity}</span>
-              {request.requestStatus === 'installed' ? <span>installed</span> : (
+              {['installed', 'ordered', 'received'].includes(request.requestStatus) ? <span>{request.requestStatus.replace('_', ' ')}</span> : (
                 <select aria-label={`${request.requestedPart} request status`} value={request.requestStatus} onChange={(event) => changeRequestStatus(request, event.target.value)} disabled={!canWrite || isWorking}>
                   <option value="requested">Requested</option>
-                  <option value="ordered">Ordered</option>
-                  <option value="received">Received</option>
                   <option value="not_needed">Not needed</option>
                 </select>
               )}
-              {request.inventoryPartId && request.requestStatus !== 'installed' && (
+              {request.inventoryPartId && ['requested', 'received'].includes(request.requestStatus) && (
                 <button type="button" className="button-tertiary" onClick={() => addRequestedPart(request)} disabled={!canWrite || isWorking}>Add to Work Order</button>
               )}
             </div>
           ))}
         </div>
       </section>
+
+      <SpecialistPurchasingPanel
+        job={job}
+        canWrite={canWrite}
+        keyboardPartRequests={workflow.partRequests}
+        shopProfile={shopProfile}
+        onInventoryPartAdded={onInventoryPartAdded}
+        onPurchasingChanged={load}
+        onOpenInventory={onOpenInventory}
+        onNotice={onNotice}
+      />
 
       <section className="keyboard-customer-report">
         <h4>Customer Diagnostic Report</h4>
