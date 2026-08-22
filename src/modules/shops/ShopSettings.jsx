@@ -336,6 +336,7 @@ export default function ShopSettings({
       {!requireCompletion && (
         <ServiceReminderSettings
           shopId={settings.shopId}
+          shopName={settings.shopName}
           canManageShop={canManageShop}
           entitlementSnapshot={entitlementSnapshot}
           onNotice={onNotice}

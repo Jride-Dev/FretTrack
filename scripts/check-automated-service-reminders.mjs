@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  normalizeServiceReminderTemplate,
+  renderServiceReminderTemplate
+} from '../src/modules/messaging/serviceReminderTemplates.js';
 
 const root = process.cwd();
 const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
@@ -9,6 +13,8 @@ const includes = (source, expected, message) => assert.ok(source.includes(expect
 const migration = read('supabase/migrations/20260822035953_pro_automated_service_reminders.sql');
 const edge = read('supabase/functions/send-service-reminders/index.ts');
 const settings = read('src/modules/shops/ServiceReminderSettings.jsx');
+const service = read('src/modules/messaging/serviceReminderService.js');
+const styles = read('src/styles.css');
 const customerForm = read('src/modules/customers/CustomerForm.jsx');
 const customerService = read('src/modules/customers/customerService.js');
 const router = read('src/app/WorkspaceRouter.jsx');
@@ -46,6 +52,14 @@ includes(edge, 'safeFinalizeQueue', 'A failed finalization must not abort the re
 
 includes(settings, 'Automated Service Reminders', 'Shop Settings must expose the Pro reminder configuration.');
 includes(settings, 'Resend’s 30-day scheduling limit does not apply', 'The UI must explain database-backed long-horizon scheduling.');
+includes(settings, 'service-reminder-email-preview', 'Reminder settings must lead with a customer-readable email preview.');
+includes(settings, 'Edit subject and message', 'Raw template editing must be kept behind an explicit editor control.');
+includes(settings, 'service-reminder-field-chip', 'Template fields must use human-readable insertion controls.');
+assert.ok(!settings.includes('Template fields:'), 'Reminder settings must not dump raw template syntax below the form.');
+includes(service, 'normalizeServiceReminderTemplate(row.body_template', 'Existing literal newline escapes must be normalized when loaded.');
+includes(service, 'body_template: normalizeServiceReminderTemplate', 'Saved templates must persist real line breaks.');
+includes(styles, '.service-reminder-template-builder', 'Reminder template builder needs focused presentation styles.');
+includes(styles, 'white-space: pre-wrap', 'The customer preview must preserve readable paragraph breaks.');
 includes(customerForm, 'Customer consents to automated service reminder emails', 'Customer profiles must record explicit reminder consent.');
 includes(customerService, 'hasReminderConsent', 'Removing the customer email must also clear persisted reminder consent.');
 includes(router, 'serviceRemindersEnabled={Boolean(billingAccess?.entitlements?.automated_service_reminders)}', 'Customer reminder controls must use the Pro entitlement gate.');
@@ -53,5 +67,19 @@ includes(router, 'serviceRemindersEnabled={Boolean(billingAccess?.entitlements?.
 includes(documentation, 'does not use Resend scheduling', 'Documentation must distinguish nightly dispatch from provider scheduling.');
 includes(documentation, 'separate affirmative consent', 'Documentation must describe the consent boundary.');
 includes(documentation, 'No remote migration, function deployment, Vault secret, or Cron change', 'Documentation must preserve the approval boundary.');
+
+assert.equal(
+  normalizeServiceReminderTemplate('Hi {{customer_first_name}}\\n\\nReady when you are.'),
+  'Hi {{customer_first_name}}\n\nReady when you are.',
+  'Legacy literal newline escapes must become real paragraphs.'
+);
+assert.equal(
+  renderServiceReminderTemplate('Hi {{customer_first_name}}, your {{service_name}} is due.', {
+    '{{customer_first_name}}': 'Jordan',
+    '{{service_name}}': 'setup'
+  }),
+  'Hi Jordan, your setup is due.',
+  'The preview renderer must replace personalization fields without exposing raw tokens.'
+);
 
 console.log('Automated service reminder checks passed.');

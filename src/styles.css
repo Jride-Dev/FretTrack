@@ -1924,17 +1924,223 @@ form.panel button {
 }
 
 .service-reminder-settings {
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--surface) 94%, var(--accent) 6%), var(--surface));
+  border-radius: 12px;
   display: grid;
   gap: 16px;
   margin-top: 18px;
 }
 
+.service-reminder-intro {
+  line-height: 1.55;
+  max-width: 900px;
+}
+
+.service-reminder-form {
+  display: grid;
+  gap: 16px;
+}
+
+.service-reminder-toggle-card {
+  align-items: center;
+  background: color-mix(in srgb, var(--surface-2) 82%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.service-reminder-toggle-card input[type='checkbox'] {
+  flex: 0 0 auto;
+  margin: 0;
+  width: auto;
+}
+
+.service-reminder-toggle-card > span {
+  display: grid;
+  gap: 2px;
+}
+
+.service-reminder-toggle-card small {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 .service-reminder-settings-grid {
+  grid-template-columns: minmax(160px, 0.55fr) minmax(280px, 1.45fr);
   margin-top: 14px;
 }
 
 .service-reminder-settings-grid .wide {
   grid-column: 1 / -1;
+}
+
+.service-reminder-template-builder {
+  background: color-mix(in srgb, var(--surface-2) 64%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.service-reminder-template-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.service-reminder-template-heading h4,
+.service-reminder-template-heading p {
+  margin: 0;
+}
+
+.service-reminder-template-heading > div {
+  display: grid;
+  gap: 4px;
+}
+
+.service-reminder-email-preview {
+  background: #ffffff;
+  border: 1px solid #d8dee8;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+  color: #1f2937;
+  display: grid;
+  overflow: hidden;
+}
+
+.service-reminder-preview-row {
+  align-items: baseline;
+  border-bottom: 1px solid #e5e7eb;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 64px minmax(0, 1fr);
+  padding: 10px 14px;
+}
+
+.service-reminder-preview-row span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.service-reminder-preview-row strong {
+  overflow-wrap: anywhere;
+}
+
+.service-reminder-preview-body {
+  line-height: 1.65;
+  min-height: 150px;
+  overflow-wrap: anywhere;
+  padding: 18px 20px 22px;
+  white-space: pre-wrap;
+}
+
+.service-reminder-template-editor {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.service-reminder-template-editor summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 10px 20px;
+  justify-content: space-between;
+  list-style: none;
+  padding: 4px 0;
+}
+
+.service-reminder-template-editor summary::-webkit-details-marker {
+  display: none;
+}
+
+.service-reminder-template-editor summary::after {
+  color: var(--accent);
+  content: 'Edit';
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.service-reminder-template-editor[open] summary::after {
+  content: 'Close';
+}
+
+.service-reminder-template-editor summary > span {
+  font-weight: 800;
+}
+
+.service-reminder-template-editor summary small {
+  color: var(--text-muted);
+  flex: 1;
+  font-weight: 500;
+}
+
+.service-reminder-template-editor-content {
+  display: grid;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+.service-reminder-template-field {
+  display: grid;
+  gap: 8px;
+}
+
+.service-reminder-template-field > label {
+  font-weight: 800;
+}
+
+.service-reminder-field-picker {
+  display: grid;
+  gap: 7px;
+}
+
+.service-reminder-field-picker > span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.service-reminder-field-picker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+button.service-reminder-field-chip {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+  border-radius: 999px;
+  box-shadow: none;
+  color: var(--text);
+  font-size: 0.78rem;
+  min-height: 30px;
+  padding: 5px 10px;
+}
+
+button.service-reminder-field-chip:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface));
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+.service-reminder-field-chip span {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.service-reminder-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .service-reminder-queue-preview {
@@ -1945,6 +2151,15 @@ form.panel button {
 }
 
 .service-reminder-queue-preview h4 {
+  margin: 0;
+}
+
+.service-reminder-queue-preview > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.service-reminder-queue-preview > div:first-child p {
   margin: 0;
 }
 
@@ -1970,6 +2185,34 @@ form.panel button {
 }
 
 @media (max-width: 640px) {
+  .service-reminder-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .service-reminder-settings-grid .wide {
+    grid-column: auto;
+  }
+
+  .service-reminder-template-heading,
+  .service-reminder-template-editor summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .service-reminder-preview-row {
+    gap: 3px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .service-reminder-preview-body {
+    min-height: 120px;
+    padding: 16px;
+  }
+
+  .service-reminder-actions button {
+    width: 100%;
+  }
+
   .loyalty-activity-row,
   .service-reminder-queue-row {
     align-items: flex-start;
