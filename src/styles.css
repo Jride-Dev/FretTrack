@@ -1923,8 +1923,55 @@ form.panel button {
   font-size: 0.85rem;
 }
 
+.service-reminder-settings {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.service-reminder-settings-grid {
+  margin-top: 14px;
+}
+
+.service-reminder-settings-grid .wide {
+  grid-column: 1 / -1;
+}
+
+.service-reminder-queue-preview {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 8px;
+  padding-top: 14px;
+}
+
+.service-reminder-queue-preview h4 {
+  margin: 0;
+}
+
+.service-reminder-queue-row {
+  align-items: center;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.service-reminder-queue-row > span:first-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.service-reminder-queue-row small {
+  color: var(--text-muted);
+}
+
 @media (max-width: 640px) {
-  .loyalty-activity-row {
+  .loyalty-activity-row,
+  .service-reminder-queue-row {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -4397,6 +4444,53 @@ th.internal-only {
   padding: 10px;
 }
 
+.specialist-purchasing-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.keyboard-workflow-panel > .specialist-purchasing-panel {
+  border: 0;
+  border-top: 1px solid var(--border-soft);
+  border-radius: 0;
+  box-shadow: none;
+  margin-top: 8px;
+  padding: 16px 0 0;
+}
+
+.specialist-purchasing-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.specialist-purchase-orders {
+  display: grid;
+  gap: 10px;
+}
+
+.specialist-purchase-orders h4 {
+  margin: 0;
+}
+
+.specialist-purchase-order {
+  align-items: center;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.specialist-purchase-order > div {
+  display: grid;
+  gap: 3px;
+}
+
+.specialist-purchase-order span {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
 .keyboard-checklist-item {
   align-items: center;
   border: 1px solid var(--border-soft);
@@ -4627,8 +4721,14 @@ th.internal-only {
   .keyboard-analytics-grid,
   .keyboard-parts-matches,
   .keyboard-parts-request,
-  .keyboard-checklist-item {
+  .keyboard-checklist-item,
+  .specialist-purchasing-grid {
     grid-template-columns: 1fr;
+  }
+
+  .specialist-purchase-order {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .keyboard-checklist-number {

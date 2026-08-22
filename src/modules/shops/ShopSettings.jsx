@@ -12,6 +12,7 @@ import ShopMembersPanel from './ShopMembersPanel.jsx';
 import SubscriptionSettingsSection from './SubscriptionSettingsSection.jsx';
 import TeamWorkloadSummary from './TeamWorkloadSummary.jsx';
 import LoyaltyProgramSettings from './LoyaltyProgramSettings.jsx';
+import ServiceReminderSettings from './ServiceReminderSettings.jsx';
 
 const SHIPPING_LABEL_PRESETS = [
   { value: 'parts_bin_2_25x1_25', label: '2.25 x 1.25 parts/bin label' },
@@ -326,6 +327,14 @@ export default function ShopSettings({
       </section>
       {!requireCompletion && (
         <LoyaltyProgramSettings
+          shopId={settings.shopId}
+          canManageShop={canManageShop}
+          entitlementSnapshot={entitlementSnapshot}
+          onNotice={onNotice}
+        />
+      )}
+      {!requireCompletion && (
+        <ServiceReminderSettings
           shopId={settings.shopId}
           canManageShop={canManageShop}
           entitlementSnapshot={entitlementSnapshot}

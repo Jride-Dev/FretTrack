@@ -29,6 +29,7 @@ function fromDbPartRequest(row = {}) {
     keyDamageId: row.key_damage_id || '',
     inventoryPartId: row.inventory_part_id || '',
     jobPartId: row.job_part_id || '',
+    purchaseOrderItemId: row.purchase_order_item_id || '',
     requestedPart: row.requested_part || '',
     quantity: Number(row.quantity || 1),
     requestStatus: row.request_status || 'requested',

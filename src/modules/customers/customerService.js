@@ -151,6 +151,8 @@ function getActiveShopId(options = {}) {
 }
 
 function toDbCustomer(customer, shopId = getActiveShopId()) {
+  const hasReminderConsent = Boolean((customer.emailNormalized || customer.email || '').trim())
+    && customer.serviceReminderOptIn === true;
   return {
     id: customer.id,
     shop_id: customer.shopId || shopId,
@@ -163,6 +165,13 @@ function toDbCustomer(customer, shopId = getActiveShopId()) {
     tax_id: customer.taxId || null,
     email: customer.email || null,
     email_normalized: customer.emailNormalized || null,
+    service_reminder_opt_in: hasReminderConsent,
+    service_reminder_consent_at: hasReminderConsent
+      ? customer.serviceReminderConsentAt || new Date().toISOString()
+      : null,
+    service_reminder_consent_source: hasReminderConsent
+      ? customer.serviceReminderConsentSource || 'staff_recorded'
+      : '',
     phone: customer.phone || null,
     phone_normalized: customer.phoneNormalized || null,
     secondary_phone: customer.secondaryPhone || null,

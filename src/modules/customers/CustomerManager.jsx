@@ -17,6 +17,7 @@ export default function CustomerManager({
   jobs = [],
   canWrite = true,
   loyaltyProgramEnabled = false,
+  serviceRemindersEnabled = false,
   canPreviewCustomerImport = false,
   dateOptions = {},
   moneyOptions = {},
@@ -222,6 +223,7 @@ export default function CustomerManager({
           customer={selectedCustomer}
           canWrite={canWrite}
           loyaltyProgramEnabled={loyaltyProgramEnabled}
+          serviceRemindersEnabled={serviceRemindersEnabled}
           dateOptions={dateOptions}
           moneyOptions={moneyOptions}
           onCreateJob={handleCreateJob}
@@ -250,6 +252,7 @@ export default function CustomerManager({
               customer={modalCustomer}
               customers={directoryCustomers}
               canWrite={canWrite}
+              serviceRemindersEnabled={serviceRemindersEnabled}
               onCustomerSaved={handleCustomerSaved}
               onNotice={onNotice}
               onDirtyChange={(isDirty) => {

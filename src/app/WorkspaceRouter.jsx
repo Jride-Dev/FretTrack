@@ -138,6 +138,7 @@ function WorkspacePage({
         jobs={jobs}
         canWrite={access.canEditCustomers}
         loyaltyProgramEnabled={Boolean(billingAccess?.entitlements?.loyalty_program)}
+        serviceRemindersEnabled={Boolean(billingAccess?.entitlements?.automated_service_reminders)}
         canPreviewCustomerImport={access.canPreviewCustomerImport}
         dateOptions={dateOptions}
         moneyOptions={moneyOptions}
@@ -305,6 +306,9 @@ function WorkspacePage({
             onClose={actions.onCloseJobDetail}
             onDirtyChange={actions.onDirtyChange}
             onNotice={actions.onNotice}
+            onRefresh={actions.onRefreshJobs}
+            onOpenInventory={actions.onOpenInventory}
+            shopProfile={shopProfile}
           />
         </>
       )
@@ -332,6 +336,7 @@ function WorkspacePage({
             canSendEmail={access.canSendEmail}
             entitlementMessage={access.entitlementMessage}
             shopProfile={shopProfile}
+            onOpenInventory={actions.onOpenInventory}
           />
         </>
       )
