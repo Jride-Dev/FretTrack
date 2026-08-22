@@ -93,6 +93,8 @@ Pro is the advanced reporting and automation tier. Phase 1 currently unlocks:
 - Amplifier Repair
 - Keyboard Repair
 - Scheduled Email for transactional job messages up to 30 days ahead
+- Automated Service Reminders with separate customer consent, shop-configurable timing/template, and nightly long-horizon delivery
+- Loyalty Program with qualifying-work-order stamps and staff-recorded reward redemption
 
 Pro subscriptions and Pro trials use the FretTrack Pro emblem and labels such as `Trial: Pro`, `Pro Monthly`, `Pro Yearly`, or `Pro, canceling`. Trial Pro access keeps Advanced Reporting unlocked through the existing entitlement snapshot; non-Pro shops continue to see the Pro locked state.
 
@@ -104,7 +106,11 @@ The current Pro reporting dashboard includes operational tables for shop overvie
 
 The 0.2.9-D Reports hardening pass adds Pro report browser printing, per-section CSV exports, a summary CSV export, simple job-status/date filters, 25-row previews, 250-row show-all safety, 1,000-row export caps, and section-level error containment. Browser print / Save as PDF is the current printable output path; direct PDF generation and server-side report aggregation remain future work.
 
-The Pro Scheduled Email foundation schedules already-composed transactional job emails through Resend for delivery up to 30 days ahead. It snapshots the recipient and message, requires email opt-in, supports provider cancellation before delivery, and continues to count recipients against the existing monthly email cap. Six-/twelve-month service reminders and other recurring marketing automation remain separate future work because they require long-horizon scheduling plus consent and unsubscribe policy.
+The Pro Scheduled Email foundation schedules already-composed transactional job emails through Resend for delivery up to 30 days ahead. It snapshots the recipient and message, requires transactional email opt-in, supports provider cancellation before delivery, and continues to count recipients against the existing monthly email cap.
+
+Automated Service Reminders are a separate Pro/Enterprise workflow for long-horizon follow-up after a completed recurring service. They use an independent customer opt-in, a shop-configurable month interval and template, a durable Supabase queue, and one nightly dispatcher rather than stretching Resend scheduling beyond 30 days. Reminder recipients use the same monthly email quota and Message History foundation. The initial release is one rule per shop, not a general marketing-campaign system.
+
+The Pro/Enterprise Loyalty Program is a stamp and redemption ledger tied to linked, fully paid, completed work orders. It does not automatically discount invoices, create store credit, or take payment. Staff deliberately apply any promised service or discount through the existing work-order billing controls after recording a redemption.
 
 Future Pro candidates are documented only and are not implemented in this phase:
 
@@ -113,7 +119,7 @@ Future Pro candidates are documented only and are not implemented in this phase:
 - inventory alerts and forecasting
 - scheduling reminders
 - message templates
-- long-horizon and recurring email automation
+- multi-rule marketing campaigns and broader recurring-email automation beyond the shipped service-reminder workflow
 - SMS messaging
 - larger photo storage
 

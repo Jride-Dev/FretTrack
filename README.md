@@ -41,14 +41,17 @@ This includes:
 - Pro Team Assignment Foundation with same-shop technician assignment, Current Jobs filtering, workload visibility, audit history, and role-safe self-assignment
 - Server-enforced monthly email-recipient, source-photo upload, and current photo-storage caps with Shop Settings usage warnings
 - Pro-gated Amplifier and Keyboard Repair workspaces with specialist diagnostics plus the complete parts, services, payments, invoice, print, messaging, scheduling, and history workflow
+- Job-linked amplifier and keyboard purchasing with vendor purchase orders, Inventory receiving, package-to-job quantity conversion, and explicit transfer into Parts & Payments
 - Pro Scheduled Email with provider-managed delivery, cancellation, consent enforcement, and immutable message snapshots
+- Pro Automated Service Reminders with separate customer consent, shop-editable service timing and email copy, a durable Supabase queue, and a nightly dispatcher
+- Pro Loyalty Program with paid/completed-work-order stamp awards, reversible eligibility, and an auditable staff redemption ledger
 - Hardened Stripe lifecycle ordering, retry safety, and current subscription-period synchronization
 
 ### beta.6 paid-launch and Pro workflow update
 
-Beta.6 combines the production-hardened Stripe lifecycle and recovery work with two Pro shop workflows: a dedicated Amplifier Repair workspace and transactional Scheduled Email. The release preserves existing guitar repair and immediate-email behavior while adding server-authoritative entitlements, shop isolation, consent and quota enforcement, and focused database/browser coverage.
+Beta.6 combines the production-hardened Stripe lifecycle and recovery work with Pro Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, and Loyalty workflows. Amplifier and keyboard work orders retain the complete FretTrack commercial workflow and can create job-linked vendor purchase orders, receive parts through Inventory, and move only the required quantity into customer billing. The release preserves existing guitar repair and immediate-email behavior while adding server-authoritative entitlements, shop isolation, consent and quota enforcement, idempotent purchasing and messaging, and focused database/browser coverage.
 
-The matching database migrations, `stripe-webhook` and `send-email` functions, and Cloudflare Pages app build were deployed together on 2026-08-15.
+The production database is current through `20260822041624_pro_loyalty_program.sql`. The `send-service-reminders` Edge Function, nightly `frettrack-service-reminders-nightly` Cron job, required Vault configuration, and matching Cloudflare Pages app build were deployed on 2026-08-22. Automated reminder rules default to disabled until a Pro/Enterprise shop explicitly configures and enables one.
 
 ### beta.4 architecture and reliability upgrade
 

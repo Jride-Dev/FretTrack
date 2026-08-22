@@ -4,7 +4,7 @@ FretTrack is moving from the old `v0.2.6-beta.14` live baseline into product mil
 
 ## Current Product State
 
-The current release candidate is `v0.2.9-beta.6`. It builds toward the `v0.3.0` Operational Shop Release with the existing inventory, scheduling, reporting, trial, photo, shop, and Stripe self-service foundations plus Pro Amplifier Repair, Scheduled Email, and safer workspace, Inventory, and Job Detail module boundaries.
+The current release candidate is `v0.2.9-beta.6`. It builds toward the `v0.3.0` Operational Shop Release with the existing inventory, scheduling, reporting, trial, photo, shop, and Stripe self-service foundations plus Pro Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, Loyalty, specialist purchasing, and safer workspace, Inventory, and Job Detail module boundaries.
 
 Shipped or current-branch foundations:
 
@@ -37,7 +37,12 @@ Shipped or current-branch foundations:
 - local-development protection against accidental hosted Supabase mutations
 - active-shop business address included consistently in generated invoice email and printable invoice-style Job Sheet output
 - separate Amplifier Repair module foundation with shared make/model presets, intake, work queue, before/after electrical diagnostics, private audio/waveform/spectrum evidence, and existing job permissions
+- separate Keyboard Repair module with keybed profiles, interactive per-key fault mapping, MIDI-log assistance, guided diagnostics, parts requests, analytics, and existing job permissions
+- complete commercial work-order views for amplifier and keyboard jobs, with instrument-specific Inspection terminology instead of guitar-only fields
+- job-linked specialist purchasing for amplifier and keyboard work, including vendor packages, Inventory receiving, and explicit transfer of the required quantity into Parts & Payments
 - Pro Scheduled Email foundation for provider-managed transactional job emails up to 30 days ahead, including cancellation and a Drop Off Scheduled template
+- Pro Automated Service Reminders with independent consent, configurable service timing/template, durable long-horizon queueing, nightly dispatch, quota accounting, and Message History
+- Pro Loyalty Program with paid/completed-work-order stamp reconciliation and explicit audited redemption
 
 Known weak spots:
 
@@ -122,8 +127,8 @@ This series deepens back-office and repeat-workflow tools after the core operati
 - reporting
 - vendor import/export
 - low stock management
-- configurable customer service reminders based on the last completed setup/job, supporting 6-month or 12-month timing and shop-editable email wording for seasonal setup advice and returning-customer offers
-- lower-priority customer loyalty tracking based on completed-job history, with shop-defined rewards such as a complimentary restring and clear reward redemption history
+- deeper multi-rule reminder campaigns, seasonal segmentation, and unsubscribe-management tooling beyond the shipped single-rule service-reminder workflow
+- optional loyalty-to-invoice assistance beyond the shipped stamp and redemption ledger, without turning loyalty into an implicit payment or store-credit system
 - supplier integrations
 - vendor returns
 - inventory forecasting

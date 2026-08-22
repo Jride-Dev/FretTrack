@@ -11,7 +11,7 @@ FretTrack's historical pre-milestone baseline was `v0.2.6-beta.14`. Current bran
 - `v0.2.63 beta`: Scheduling complete
 - `v0.3.0 beta`: Operational Shop Release
 
-Current release candidate: `v0.2.9-beta.6`. This candidate adds the Pro-gated Amplifier Repair and Scheduled Email workflows, hardens Stripe lifecycle ordering and retry safety, and carries the existing architecture, recovery, permission, and shop-isolation work through a coordinated production rollout.
+Current release candidate: `v0.2.9-beta.6`. This candidate includes Pro-gated Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, and Loyalty workflows; restores the complete commercial and purchasing lifecycle for specialist jobs; hardens Stripe lifecycle ordering and retry safety; and carries the existing architecture, recovery, permission, quota, and shop-isolation work through a coordinated production rollout.
 
 Start here for the current product path:
 
@@ -19,6 +19,11 @@ Start here for the current product path:
 - [System status and uptime](SYSTEM_STATUS_AND_UPTIME.md)
 - [Shop localization and Current Jobs](SHOP_LOCALIZATION_AND_CURRENT_JOBS.md)
 - [Pro Team Assignment Foundation](PRO_TEAM_ASSIGNMENT_FOUNDATION.md)
+- [Amplifier Repair](AMPLIFIER_REPAIR_MODULE.md)
+- [Keyboard Repair](KEYBOARD_REPAIR_MODULE.md)
+- [Pro Scheduled Email](PRO_EMAIL_SCHEDULING.md)
+- [Pro Automated Service Reminders](PRO_AUTOMATED_SERVICE_REMINDERS.md)
+- [Pro Loyalty Program](PRO_LOYALTY_PROGRAM.md)
 - [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md)
 - [Roadmap](../ROADMAP.md)
 - [Deployment notes](DEPLOYMENT_NOTES.md)
@@ -54,8 +59,11 @@ Core shipped beta areas now include:
 - offline new-job draft queue with 0.2.8 scope audit
 - editable job-level parts and services
 - inventory purchasing foundation with parts, vendors, purchase orders, receiving, purchase history, barcode labels, inventory Location/Category presets, UPC-facing labels, Special Order Part behavior, small part images, inbound PO shipping, landed-cost allocation, and transactional receiving RPCs
+- amplifier and keyboard job-linked purchasing with idempotent vendor order creation, Inventory receiving, purchase-unit conversion, and explicit transfer into customer billing
 - shipping / receiving / chain-of-custody foundation with `job_shipments`, `shipping_items`, custody events, manual carrier/tracking and label-reference fields, a grouped Shipping dashboard, and reuse of inventory Location/Category presets; carrier APIs, label/rate purchasing, and automatic shipment notifications are still future work
 - Scheduling / Calendar Phase 1
+- Pro Automated Service Reminders with independent consent, a durable long-horizon queue, shop-controlled templates, and nightly Cron dispatch
+- Pro Loyalty Program with reconciled work-order stamps and an auditable redemption ledger
 - persistent per-shop country, measurement, currency, and tax terminology defaults plus a full Current Jobs workspace
 - Pro primary-technician assignment, Current Jobs assignee filtering, role-safe self-assignment, assignment audit history, and non-scoring workload visibility
 - unsaved-changes protection foundation

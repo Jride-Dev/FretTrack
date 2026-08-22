@@ -19,7 +19,7 @@
       <header class="hero">
         <p class="doc-meta">Complete user manual with screenshots</p>
         <h1>How to use FretTrack</h1>
-        <p class="lede">This guide walks through FretTrack from shop setup and intake through jobs, photos, work logs, inventory, purchase orders, receiving, barcode labels, shipping, scheduling, reports, roles, and troubleshooting. It is written for testers, shop owners, technicians, and staff who need to use the app in a real repair shop.</p>
+        <p class="lede">This guide walks through FretTrack from shop setup and intake through guitar, amplifier, and keyboard jobs, customer communication and loyalty, photos, work logs, inventory, purchase orders, receiving, barcode labels, shipping, scheduling, reports, roles, and troubleshooting. It is written for testers, shop owners, technicians, and staff who need to use the app in a real repair shop.</p>
         <div class="actions">
           <a class="button" href="https://app.frettrack-app.com/">Open FretTrack</a>
           <a class="button secondary" href="/docs/beta-tester-guide">Beta tester guide</a>
@@ -35,9 +35,11 @@
           <a href="#new-job">Create a new job</a>
           <a href="#instrument">Instrument details</a>
           <a href="#jobs">Manage jobs</a>
+          <a href="#specialist-repairs">Amplifier and keyboard repair</a>
           <a href="#work-logs">Work logs</a>
           <a href="#photos">Photos and damage maps</a>
           <a href="#customers">Customers</a>
+          <a href="#communication-loyalty">Communication and loyalty</a>
           <a href="#inventory">Inventory and parts</a>
           <a href="#vendors">Vendors</a>
           <a href="#purchase-orders">Purchase orders</a>
@@ -182,6 +184,29 @@
             <p class="muted">A job should be complete enough that another technician can understand what happened without asking around the shop.</p>
           </section>
 
+          <section id="specialist-repairs" class="manual-section">
+            <h2>Amplifier and keyboard repair</h2>
+            <p>Pro shops can open dedicated repair benches for amplifiers and musical keyboards. These benches keep instrument-specific diagnostics separate from guitar setup fields while preserving one customer, work-order number, billing record, schedule, message history, and timeline.</p>
+            <div class="split">
+              <div>
+                <h3>Repair Bench</h3>
+                <ul class="check-list">
+                  <li>Amplifier jobs record safety findings, diagnosis, electrical measurements, digital diagnostics, evidence, and final verification.</li>
+                  <li>Keyboard jobs record keybed profiles, per-key faults, power and MIDI findings, guided diagnostics, parts requests, and functional tests.</li>
+                  <li>Use the instrument-specific Inspection tab; guitar neck, string, setup-measurement, and Damage Map fields stay with stringed-instrument jobs.</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Work Order, Parts &amp; Payments</h3>
+                <ul class="check-list">
+                  <li>Switch to the shared commercial view for parts, services, tax, discounts, payments, balances, invoice email, printing, photos, scheduling, messages, and history.</li>
+                  <li>Create a vendor purchase order from the specialist bench when a repair part must be ordered.</li>
+                  <li>Receive the vendor quantity in Inventory, then explicitly add only the quantity required by the job to Parts &amp; Payments.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
           <section id="work-logs" class="manual-section">
             <h2>Work logs and job history</h2>
             <p>Work logs are the repair timeline. They should explain diagnosis, approval, repair progress, installed parts, customer communication, final setup, and handoff notes.</p>
@@ -255,6 +280,31 @@
                   <li>Respect SMS and email preferences.</li>
                   <li>Check job history before quoting or recommending work.</li>
                   <li>Merge or clean up duplicates through the safest available shop workflow.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="communication-loyalty" class="manual-section">
+            <h2>Customer communication and loyalty</h2>
+            <p>Transactional email, scheduled job email, automated service reminders, and loyalty serve different purposes. Record consent honestly and do not use one permission as a substitute for another.</p>
+            <div class="split">
+              <div>
+                <h3>Scheduled email and service reminders</h3>
+                <ul class="check-list">
+                  <li>Pro Scheduled Email sends an already-composed job message between two minutes and 30 days ahead and can be canceled before provider delivery.</li>
+                  <li>Automated Service Reminders use a separate customer opt-in and a shop rule based on a completed recurring service, such as a setup.</li>
+                  <li>Owners or admins configure the reminder interval, matching service words, subject, message, and optional booking link in Shop Settings.</li>
+                  <li>Reminder rules begin disabled. Enabling the shop rule does not opt customers in; each customer must still consent.</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Loyalty</h3>
+                <ul class="check-list">
+                  <li>Pro Loyalty awards stamps only for qualifying linked work orders that are completed, positive-total, and fully paid after the program starts.</li>
+                  <li>Customer profiles show current progress and redemption history.</li>
+                  <li>Staff explicitly record a redemption, then deliberately add the promised service or discount to the work order.</li>
+                  <li>Loyalty does not automatically take payment, create store credit, or alter an invoice.</li>
                 </ul>
               </div>
             </div>
@@ -480,7 +530,7 @@
               </div>
               <div>
                 <h3>Pro</h3>
-                <p>Pro includes Shop workflow and adds upgraded tools such as Advanced Reporting and other higher-end shop features where available.</p>
+                <p>Pro includes Shop workflow and adds Advanced Reporting, team workflow, Photo Editor, Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, and Loyalty.</p>
               </div>
             </div>
             <p>Expired access should preserve data and allow safe viewing, but write actions or upgraded features may be locked until access is restored.</p>

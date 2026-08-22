@@ -24,7 +24,9 @@ Migration `20260822035953_pro_automated_service_reminders.sql` creates the entit
 
 The existing Edge Function secrets `RESEND_API_KEY`, `SHOP_EMAIL_FROM`, and `FRETTRACK_FUNCTION_KEY` are required. Supabase Vault must contain `frettrack_project_url`, `frettrack_anon_key`, and `frettrack_function_key`; the migration stores only their names. The named Cron job runs daily at 03:17 UTC and safely does nothing until those Vault values exist.
 
-No remote migration, function deployment, Vault secret, or Cron change is performed merely by merging this source. Those production actions require explicit deployment approval.
+No remote migration, function deployment, Vault secret, or Cron change is performed merely by merging this source. Those production actions always require explicit deployment approval.
+
+The production rollout completed on 2026-08-22. The migration is recorded remotely, all three named Vault entries are configured, `frettrack-service-reminders-nightly` is active at `17 3 * * *`, and `send-service-reminders` version 1 is active with JWT verification. An unauthenticated request returned `401`; an authenticated zero-work smoke returned `200` with no claimed or sent rows. Six shop rules were created disabled, so deployment did not opt customers in or send reminder email.
 
 ## Validation
 
