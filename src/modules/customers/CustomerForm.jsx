@@ -18,6 +18,9 @@ const initialForm = {
   isActive: true,
   taxId: '',
   email: '',
+  serviceReminderOptIn: false,
+  serviceReminderConsentAt: '',
+  serviceReminderConsentSource: '',
   phone: '',
   secondaryPhone: '',
   addressLine1: '',
@@ -34,6 +37,7 @@ const initialForm = {
 export default function CustomerForm({
   customers = [],
   canWrite = true,
+  serviceRemindersEnabled = false,
   customer = null,
   onCustomerSaved,
   onNotice,
@@ -76,16 +80,24 @@ export default function CustomerForm({
   const buttonLabel = submitLabel || (isEditing ? 'Save Changes' : 'Save Customer');
 
   function handleChange(event) {
-    const { name, value } = event.target;
+    const { name, type, checked, value } = event.target;
     if (errorMessage) {
       setErrorMessage('');
     }
     markDirty();
     setSaveStatus('unsaved');
-    setForm((current) => ({
-      ...current,
-      [name]: name === 'isActive' ? value === 'active' : value
-    }));
+    setForm((current) => {
+      const next = {
+        ...current,
+        [name]: name === 'isActive' ? value === 'active' : type === 'checkbox' ? checked : value
+      };
+      if (name === 'email' && !value.trim()) {
+        next.serviceReminderOptIn = false;
+        next.serviceReminderConsentAt = '';
+        next.serviceReminderConsentSource = '';
+      }
+      return next;
+    });
   }
 
   async function handleSubmit(event) {
@@ -176,6 +188,19 @@ export default function CustomerForm({
           Email
           <input type="email" name="email" value={form.email} onChange={handleChange} disabled={!canWrite} />
         </label>
+        {serviceRemindersEnabled && (
+          <label className="wide table-checkbox">
+            <input
+              type="checkbox"
+              name="serviceReminderOptIn"
+              checked={form.serviceReminderOptIn === true}
+              onChange={handleChange}
+              disabled={!canWrite || !form.email.trim()}
+            />
+            Customer consents to automated service reminder emails
+            <small>This is separate from work-order email permission and can be withdrawn at any time.</small>
+          </label>
+        )}
         <label>
           Tax / VAT / Resale ID
           <input name="taxId" value={form.taxId} onChange={handleChange} placeholder="Optional tax-exempt or resale identifier" disabled={!canWrite} />

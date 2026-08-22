@@ -11,6 +11,7 @@ import {
 import ShopMembersPanel from './ShopMembersPanel.jsx';
 import SubscriptionSettingsSection from './SubscriptionSettingsSection.jsx';
 import TeamWorkloadSummary from './TeamWorkloadSummary.jsx';
+import ServiceReminderSettings from './ServiceReminderSettings.jsx';
 
 const SHIPPING_LABEL_PRESETS = [
   { value: 'parts_bin_2_25x1_25', label: '2.25 x 1.25 parts/bin label' },
@@ -323,6 +324,14 @@ export default function ShopSettings({
           <button type="submit" disabled={!canManageShop || isSaving}>{isSaving ? 'Saving...' : requireCompletion ? 'Finish Shop Setup' : 'Save Shop Settings'}</button>
         </form>
       </section>
+      {!requireCompletion && (
+        <ServiceReminderSettings
+          shopId={settings.shopId}
+          canManageShop={canManageShop}
+          entitlementSnapshot={entitlementSnapshot}
+          onNotice={onNotice}
+        />
+      )}
       {!requireCompletion && (
         <SubscriptionSettingsSection
           entitlementSnapshot={entitlementSnapshot}
