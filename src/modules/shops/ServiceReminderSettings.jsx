@@ -52,10 +52,12 @@ export default function ServiceReminderSettings({ shopId, shopName = '', canMana
     '{{service_name}}': keywordText.split('\n').map((value) => value.trim()).find(Boolean) || 'setup',
     '{{shop_name}}': shopName || 'Your Shop',
     '{{months}}': String(rule.intervalMonths || 6),
-    '{{booking_url}}': rule.bookingUrl || 'https://yourshop.example/book'
+    '{{booking_url}}': rule.bookingUrl
   }), [keywordText, rule.intervalMonths, rule.bookingUrl, shopName]);
   const previewSubject = renderServiceReminderTemplate(rule.subjectTemplate, previewValues);
   const previewBody = renderServiceReminderTemplate(rule.bodyTemplate, previewValues);
+  const bookingFieldUsed = `${rule.subjectTemplate}\n${rule.bodyTemplate}`.includes('{{booking_url}}');
+  const bookingUrlMissing = bookingFieldUsed && !String(rule.bookingUrl || '').trim();
 
   async function load() {
     if (!shopId || !entitled) {
@@ -179,6 +181,12 @@ export default function ServiceReminderSettings({ shopId, shopName = '', canMana
             </div>
             <div className="service-reminder-preview-body">{previewBody || 'Add a customer message.'}</div>
           </article>
+
+          {bookingUrlMissing && (
+            <p className="service-reminder-preview-warning" role="status">
+              <strong>Booking link is blank.</strong> Add a Booking URL above or remove the Booking link field before enabling this reminder.
+            </p>
+          )}
 
           <details className="service-reminder-template-editor">
             <summary>
