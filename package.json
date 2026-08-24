@@ -15,6 +15,7 @@
     "test:browserbase:smoke": "node scripts/smoke-browserbase.mjs",
     "test:db": "supabase test db --local",
     "test:amplifier-evidence:local": "node scripts/test-local-amplifier-evidence.mjs",
+    "test:stripe-sandbox": "node scripts/validate-stripe-sandbox.mjs",
     "build": "vite build",
     "check:job-photo-persistence": "node scripts/check-job-photo-persistence.mjs",
     "check:photo-navigation-persistence": "node scripts/check-photo-navigation-persistence.mjs",

@@ -1,13 +1,23 @@
 # Paid Launch Readiness: 30-Day Plan
 
 Date: 2026-08-11
-Last updated: 2026-08-14
+Last updated: 2026-08-24
 
 ## Current Verdict
 
 FretTrack's paid launch target is Stripe-powered self-serve billing, not a controlled manual paid beta.
 
-The core repair workflow, guarded production deploy path, migration drift checks, data-integrity checks, Stripe self-service foundation, and a full local database-and-Storage restore drill are in place. The remaining paid-launch risks are operational: completing backup reliability evidence, handling the remaining Auth/security settings, and validating real Stripe lifecycle events end to end.
+The core repair workflow, guarded production deploy path, migration drift checks, data-integrity checks, Stripe self-service foundation, a full local database-and-Storage restore drill, three consecutive unattended backups, and the annual Stripe sandbox lifecycle are in place. Real payments remain closed: the hosted Stripe secrets do not match the currently validated sandbox account, and the current Stripe CLI session has no live-mode API key. Production Checkout must stay disabled until the intended live Stripe account, four live prices, and live webhook endpoint are configured and verified.
+
+## Verified on 2026-08-24
+
+- `npm run test:stripe-sandbox` passed against the isolated Stripe sandbox and local Supabase fixtures.
+- The server-authoritative launch switch allowed the exact pilot shop, denied a non-pilot owner, and created a Pro yearly Checkout session without opening production enrollment.
+- Signed Stripe events activated an annual Shop subscription, synchronized an annual Shop-to-Pro change, preserved access during period-end cancellation, and removed access after final cancellation.
+- The connected owner opened a Stripe Billing Portal session; all recorded lifecycle events were sandbox-only and none failed.
+- The validator cleaned up its temporary Stripe customer/subscription and function secret file. No Stripe API key or webhook signing secret was written to the repository or test reports.
+- The sandbox products have active Shop/Pro monthly and yearly USD prices. The Shop product label was normalized to `FretTrack Shop` so yearly Checkout does not display a monthly-only product name.
+- Sandbox validation exposed a missing PostgreSQL table-grant prerequisite for the service-role Edge Function client. Migration `20260824020500_stripe_service_role_grants.sql` adds only the required read and webhook-event privileges; it remains pending production deployment with this change set.
 
 ## Verified on 2026-08-11
 
@@ -41,7 +51,7 @@ Scheduled-backup status:
 
 Paid-launch requirement:
 
-- Record three consecutive successful daily scheduled backup runs, or move daily production backups to a reliable always-on machine/runner.
+- Three consecutive successful daily scheduled backup runs were recorded for 2026-08-22 through 2026-08-24. Continue monitoring the unattended task and investigate any nonzero result immediately.
 - Repeat the local restore drill after material schema/Auth/Storage version changes; the `2026-08-11` baseline drill is recorded in `docs/test-reports/paid-launch-restore-drill-2026-08-11.md`.
 
 ## Restore Drill
@@ -106,7 +116,7 @@ Implemented foundation:
 - Write access is gated by active paid/trial/read-only state.
 - Usage caps exist for email recipients and photos.
 
-Stripe-ready implementation now deployed:
+Stripe-ready foundation already deployed:
 
 - `create-checkout-session` creates authenticated Stripe Checkout subscription sessions for Shop and Pro monthly/yearly prices.
 - `create-billing-portal-session` opens the Stripe Billing Portal for an existing shop Stripe customer.
@@ -118,11 +128,18 @@ Stripe-ready implementation now deployed:
 - The Billing page now exposes Stripe Checkout and Billing Portal actions to shop owners/admins.
 - Stripe webhook events are source-controlled through `stripe_webhook_events` for idempotency and operational review.
 - Shop-scoped synchronization generations and atomic service-role-only subscription/profile writes prevent older or late-finishing webhook handlers from overwriting newer billing state.
+Pending review/deployment in the current launch-switch change set:
 
-Launch gaps still requiring real Stripe account data and live validation:
+- The Billing page reads authenticated launch status and disables all new-subscription buttons unless the server permits that shop.
+- Checkout defaults closed, supports an exact pilot allowlist, and rejects a closed/non-pilot request before the Stripe side effect.
+- Migration `20260824020500_stripe_service_role_grants.sql` supplies the narrow table privileges required by Checkout, Portal, and webhook service-role clients.
+- `npm run test:stripe-sandbox` provides repeatable annual Checkout, signed-webhook, Portal, plan-change, and cancellation evidence without changing hosted secrets.
+
+Launch gaps still requiring the intended live Stripe account and production validation:
 
 - Confirm the configured production Stripe prices and webhook endpoint again immediately before paid launch.
-- Automated subscription creation, renewal, cancellation, past-due, failed-payment, payment recovery, and trial-ended handling must be verified end to end from Stripe events.
+- Install the intended live Stripe API key, four live Price IDs, and the signing secret from a webhook endpoint created in that same live account; the current hosted values do not match the validated sandbox.
+- Run a low-risk live annual pilot purchase and verify Checkout completion, Portal access, renewal/invoice handling, cancellation, failed-payment, payment recovery, and trial-ended events before opening enrollment beyond the pilot shop.
 - The current function-key gate for document email is browser-facing build configuration and should be treated as a weak gate, not a paid-launch security boundary. Server-side authenticated membership checks should remain the real authority.
 
 Required Supabase secrets:
@@ -135,6 +152,8 @@ supabase secrets set STRIPE_PRICE_SHOP_YEARLY=price_...
 supabase secrets set STRIPE_PRICE_PRO_MONTHLY=price_...
 supabase secrets set STRIPE_PRICE_PRO_YEARLY=price_...
 supabase secrets set FRETTRACK_APP_URL=https://app.frettrack-app.com
+supabase secrets set STRIPE_BILLING_ENABLED=false
+supabase secrets set STRIPE_BILLING_PILOT_SHOP_IDS=
 ```
 
 Do not paste real Stripe secrets into committed files or screenshots. The functions also accept `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` aliases, but the current hosted project already uses `STRIPE_API_KEY` and `STRIPE_WEBHOOK_SIGNING_SECRET`.
@@ -158,6 +177,7 @@ Do not paste real Stripe secrets into committed files or screenshots. The functi
 - Set the Stripe webhook signing secret as a Supabase secret.
 - Configure Stripe webhook delivery to the deployed `stripe-webhook` Edge Function URL.
 - Confirm support escalation path for billing problems.
+- Keep `STRIPE_BILLING_ENABLED=false` until the sandbox matrix passes, then enable only the reviewed pilot shop ID before any broad launch.
 
 ### Days 8-14: Stripe Billing Validation
 

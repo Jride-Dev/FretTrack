@@ -1,5 +1,34 @@
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 
+export async function getCheckoutAvailability({ shopId }) {
+  if (!hasSupabaseConfig || !supabase) {
+    return {
+      enabled: false,
+      code: 'STRIPE_BILLING_UNAVAILABLE',
+      message: 'Stripe subscriptions are unavailable in local fallback mode.',
+      pilotRestricted: false
+    };
+  }
+
+  const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+    body: { shopId, action: 'status' }
+  });
+
+  if (error) {
+    throw new Error(error.message || 'Unable to verify Stripe billing availability.');
+  }
+  if (!data?.success || typeof data?.billingEnabled !== 'boolean') {
+    throw new Error(data?.error || 'Stripe billing availability returned an invalid response.');
+  }
+
+  return {
+    enabled: data.billingEnabled,
+    code: data.code || '',
+    message: data.message || '',
+    pilotRestricted: data.pilotRestricted === true
+  };
+}
+
 export async function createCheckoutSession({ shopId, plan, interval }) {
   if (!hasSupabaseConfig || !supabase) {
     throw new Error('Stripe Checkout is unavailable in local fallback mode.');

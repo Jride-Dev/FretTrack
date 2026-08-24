@@ -1,5 +1,6 @@
 # Changelog
 
+- Added a fail-closed, server-authoritative Stripe Checkout launch switch with an exact shop-ID pilot allowlist, authenticated UI status, narrow Stripe Edge Function service-role grants, and uninterrupted Billing Portal access for existing subscribers.
 - Polished Pro Automated Service Reminder settings with a customer-style email preview, a collapsed advanced editor, labeled personalization-field insertion controls, responsive theme-aware styling, normalization of legacy literal newline escapes into real email paragraphs, and an accurate missing-booking-link warning instead of a fake preview URL.
 - Added a Pro/Enterprise Loyalty Program with configurable stamp rules, one reconciled award per eligible paid/completed work order, reversible eligibility when billing or ownership changes, customer progress, and an idempotent staff redemption ledger that deliberately remains separate from invoice payment and store credit.
 - Added Pro/Enterprise Automated Service Reminders with separate customer consent, shop-configurable service keywords/month interval/template/booking URL, a durable long-horizon Supabase queue, nightly Cron dispatch, final pre-send entitlement and consent checks, stable provider idempotency, existing recipient-quota accounting, and Message History records.

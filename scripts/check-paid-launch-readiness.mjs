@@ -58,6 +58,10 @@ for (const required of [
   'signature-verified Stripe webhook',
   'stripe-webhook --no-verify-jwt',
   'Do not use `--no-verify-jwt` for the Checkout or Portal functions.',
+  'STRIPE_BILLING_ENABLED',
+  'STRIPE_BILLING_PILOT_SHOP_IDS',
+  'defaults closed',
+  'npm run test:stripe-sandbox',
 ]) {
   assert.ok(stripeDoc.includes(required), `Stripe billing docs must mention "${required}".`);
 }
@@ -70,6 +74,10 @@ assert.ok(!checkoutFunction.includes(".eq('status', 'active')"), 'Checkout funct
 assert.ok(checkoutFunction.includes('getPriceId(plan, interval)'), 'Checkout function must use configured Stripe price IDs.');
 assert.ok(checkoutFunction.includes('Deno.env.get(key)'), 'Checkout function must read Stripe price IDs from Supabase secrets.');
 assert.ok(checkoutFunction.includes('STRIPE_API_KEY'), 'Checkout function must support the existing Stripe API key secret name.');
+assert.ok(checkoutFunction.includes('getStripeBillingLaunchAccess'), 'Checkout must enforce the server-authoritative billing launch gate.');
+assert.ok(checkoutFunction.includes("Deno.env.get('STRIPE_BILLING_ENABLED')"), 'Checkout must default to the hosted billing launch secret.');
+assert.ok(checkoutFunction.includes("normalizeText(payload.action).toLowerCase() === 'status'"), 'Checkout must expose authenticated gate status without creating a Stripe side effect.');
+assert.ok(/if \(!launchAccess\.allowed\)[\s\S]*?503/.test(checkoutFunction), 'Closed or non-pilot Checkout must fail before contacting Stripe.');
 assert.ok(checkoutFunction.includes('client_reference_id: shopId'), 'Checkout function must bind Checkout sessions to a shop id.');
 assert.ok(checkoutFunction.includes('customer_email'), 'Checkout must let Stripe create a customer only as part of confirmed subscription Checkout.');
 assert.ok(checkoutFunction.includes('hasBlockingStripeSubscription'), 'Checkout must block duplicate subscriptions for a shop with a non-terminal Stripe subscription.');
@@ -159,6 +167,14 @@ assert.ok(billingPage.includes('Manage Billing Portal'), 'Billing page must expo
 assert.ok(!billingPage.includes('Plan changes are handled by FretTrack support during beta.'), 'Billing page must not keep the manual beta billing placeholder.');
 assert.ok(billingPage.includes('hasManagedStripeSubscription'), 'Billing page must suppress new Checkout actions for an existing managed subscription.');
 assert.ok(billingPage.includes('Use the Billing Portal to change plans'), 'Existing subscribers must be directed to the Billing Portal.');
+assert.ok(billingPage.includes('getCheckoutAvailability'), 'Billing UI must load the server-authoritative Checkout gate state.');
+assert.ok(billingPage.includes('!checkoutAvailability.enabled'), 'New subscription buttons must fail closed until the server enables Checkout.');
+assert.ok(billingPage.includes('Manage Billing Portal'), 'The Checkout launch gate must not remove existing-subscriber portal access.');
+
+const stripeLaunch = read('supabase/functions/_shared/stripeBillingLaunch.ts');
+assert.ok(stripeLaunch.includes('STRIPE_BILLING_CLOSED'), 'Stripe launch access must have an explicit closed state.');
+assert.ok(stripeLaunch.includes('STRIPE_BILLING_PILOT_ONLY'), 'Stripe launch access must support pilot-only enrollment.');
+assert.ok(stripeLaunch.includes('pilotShopIds.size && !pilotShopIds.has(normalizedShopId)'), 'Pilot access must compare exact normalized shop IDs.');
 
 const migration = read('supabase/migrations/20260811200225_stripe_self_serve_billing_readiness.sql');
 for (const required of [
@@ -178,6 +194,33 @@ assert.ok(!migration.includes("and status = 'active';"), 'Entitlement usage coun
 assert.ok(migration.includes('from public, anon, authenticated'), 'Webhook event table must revoke default authenticated mutations before granting operator read access.');
 assert.ok(migration.includes('if trial_expired then\n    effective_entitlements := entitlement_values;'), 'Expired trials must continue ignoring entitlement overrides.');
 assert.ok(migration.includes("'profileStatus', coalesce(profile_row.subscription_status, 'active')"), 'Existing entitlement snapshot compatibility fields must remain present.');
+
+const stripeServiceRoleMigration = read('supabase/migrations/20260824020500_stripe_service_role_grants.sql');
+assert.ok(
+  stripeServiceRoleMigration.includes('grant select on table public.shop_profiles to service_role;'),
+  'Stripe Edge Functions must be able to load the authoritative shop profile.',
+);
+assert.ok(
+  stripeServiceRoleMigration.includes('revoke insert, update, delete on table public.shop_subscriptions from service_role;') &&
+  stripeServiceRoleMigration.includes('grant select on table public.shop_subscriptions to service_role;'),
+  'Stripe Edge Functions must have read-only table access to the authoritative subscription.',
+);
+assert.ok(
+  stripeServiceRoleMigration.includes('grant select, insert, update on table public.stripe_webhook_events to service_role;'),
+  'Stripe webhooks must be able to claim and finalize their idempotency records.',
+);
+
+const stripeSandboxValidator = read('scripts/validate-stripe-sandbox.mjs');
+for (const required of [
+  'assertLocalUrl',
+  'STRIPE_BILLING_PILOT_SHOP_IDS',
+  'create-checkout-session',
+  'create-billing-portal-session',
+  'customer.subscription.updated',
+  "eventSummary.live_count, 0",
+]) {
+  assert.ok(stripeSandboxValidator.includes(required), `Stripe sandbox validator must include "${required}".`);
+}
 
 const concurrencyMigration = read('supabase/migrations/20260814041144_stripe_billing_concurrency_guards.sql');
 for (const required of [
@@ -248,6 +291,8 @@ for (const required of [
   'STRIPE_PRICE_PRO_MONTHLY=',
   'STRIPE_PRICE_PRO_YEARLY=',
   'FRETTRACK_APP_URL=',
+  'STRIPE_BILLING_ENABLED=false',
+  'STRIPE_BILLING_PILOT_SHOP_IDS=',
 ]) {
   assert.ok(functionEnvExample.includes(required), `Function env example must include "${required}".`);
 }

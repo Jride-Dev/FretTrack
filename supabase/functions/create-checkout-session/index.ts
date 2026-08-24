@@ -7,6 +7,7 @@ import {
   isStripeIdempotencyConflict,
   isTerminalStripeSubscriptionStatus,
 } from '../_shared/stripeSubscriptionState.ts';
+import { getStripeBillingLaunchAccess } from '../_shared/stripeBillingLaunch.ts';
 
 type SupabaseAnyClient = ReturnType<typeof createClient<any, 'public', any>>;
 
@@ -30,13 +31,32 @@ Deno.serve(async (request) => {
 
     const payload = await request.json().catch(() => ({}));
     const shopId = normalizeText(payload.shopId || payload.shop_id);
-    const plan = normalizePlan(payload.plan);
-    const interval = normalizeInterval(payload.interval);
     if (!shopId) return json({ success: false, error: 'Missing shop.' }, 400);
-    if (!plan) return json({ success: false, error: 'Choose Shop or Pro.' }, 400);
 
     const membership = await getBillingMembership(userClient, shopId, userResult.user.id);
     if (!membership.allowed) return json({ success: false, error: membership.error }, 403);
+
+    const launchAccess = getStripeBillingLaunchAccess(
+      shopId,
+      Deno.env.get('STRIPE_BILLING_ENABLED'),
+      Deno.env.get('STRIPE_BILLING_PILOT_SHOP_IDS'),
+    );
+    if (normalizeText(payload.action).toLowerCase() === 'status') {
+      return json({
+        success: true,
+        billingEnabled: launchAccess.allowed,
+        code: launchAccess.code,
+        message: launchAccess.message,
+        pilotRestricted: launchAccess.pilotRestricted,
+      });
+    }
+    if (!launchAccess.allowed) {
+      return json({ success: false, code: launchAccess.code, error: launchAccess.message }, 503);
+    }
+
+    const plan = normalizePlan(payload.plan);
+    const interval = normalizeInterval(payload.interval);
+    if (!plan) return json({ success: false, error: 'Choose Shop or Pro.' }, 400);
 
     const priceId = getPriceId(plan, interval);
     if (!priceId) return json({ success: false, error: `Stripe price is not configured for ${plan} ${interval}.` }, 500);
