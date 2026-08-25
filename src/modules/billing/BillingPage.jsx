@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formatShopDate } from '../../shared/utils/dateFormat';
 import {
   formatStorage,
@@ -7,20 +7,21 @@ import {
   getEntitlement
 } from './entitlementService';
 import { getPlanStatus } from './planStatus';
-import { createBillingPortalSession, createCheckoutSession } from './stripeBillingService';
+import {
+  createBillingPortalSession,
+  createCheckoutSession,
+  getCheckoutAvailability
+} from './stripeBillingService';
 
 export default function BillingPage({ canManageShop = false, entitlementSnapshot, shopProfile = null }) {
   const [billingAction, setBillingAction] = useState('');
   const [billingError, setBillingError] = useState('');
-
-  if (!canManageShop) {
-    return (
-      <section className="panel billing-page">
-        <h2>Billing</h2>
-        <p className="muted-text">Only shop owners and admins can view billing details.</p>
-      </section>
-    );
-  }
+  const [checkoutAvailability, setCheckoutAvailability] = useState({
+    loading: true,
+    enabled: false,
+    message: 'Checking Stripe subscription availability…',
+    pilotRestricted: false
+  });
 
   const snapshot = entitlementSnapshot || {};
   const subscription = snapshot.subscription || {};
@@ -35,6 +36,41 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
   const stripeSubscriptionId = subscription.stripeSubscriptionId || subscription.stripe_subscription_id || '';
   const providerStatus = String(subscription.providerStatus || subscription.provider_status || subscription.status || '').toLowerCase();
   const hasManagedStripeSubscription = Boolean(stripeSubscriptionId) && !['canceled', 'cancelled', 'incomplete_expired'].includes(providerStatus);
+
+  useEffect(() => {
+    let active = true;
+    if (!canManageShop || !shopId) {
+      setCheckoutAvailability({ loading: false, enabled: false, message: 'Choose a shop before managing its subscription.', pilotRestricted: false });
+      return () => { active = false; };
+    }
+
+    setCheckoutAvailability({ loading: true, enabled: false, message: 'Checking Stripe subscription availability…', pilotRestricted: false });
+    getCheckoutAvailability({ shopId })
+      .then((availability) => {
+        if (active) setCheckoutAvailability({ loading: false, ...availability });
+      })
+      .catch(() => {
+        if (active) {
+          setCheckoutAvailability({
+            loading: false,
+            enabled: false,
+            message: 'New subscriptions are temporarily unavailable. Existing subscribers can still manage billing.',
+            pilotRestricted: false
+          });
+        }
+      });
+
+    return () => { active = false; };
+  }, [canManageShop, shopId]);
+
+  if (!canManageShop) {
+    return (
+      <section className="panel billing-page">
+        <h2>Billing</h2>
+        <p className="muted-text">Only shop owners and admins can view billing details.</p>
+      </section>
+    );
+  }
 
   async function redirectToCheckout(plan, interval = 'monthly') {
     setBillingError('');
@@ -102,18 +138,23 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
         {hasManagedStripeSubscription && (
           <p className="muted-text">This shop already has a Stripe subscription. Use the Billing Portal to change plans, update payment details, or cancel.</p>
         )}
+        {!hasManagedStripeSubscription && (
+          <p className={`billing-launch-status ${checkoutAvailability.enabled ? 'enabled' : ''}`} role="status">
+            {checkoutAvailability.message}
+          </p>
+        )}
         <div className="billing-plan-actions">
           {!hasManagedStripeSubscription && <>
-            <button type="button" className="primary" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('shop', 'monthly')}>
+            <button type="button" className="primary" disabled={!shopId || Boolean(billingAction) || !checkoutAvailability.enabled} onClick={() => redirectToCheckout('shop', 'monthly')}>
               {billingAction === 'shop-monthly' ? 'Opening…' : 'Start Shop Monthly'}
             </button>
-            <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('pro', 'monthly')}>
+            <button type="button" disabled={!shopId || Boolean(billingAction) || !checkoutAvailability.enabled} onClick={() => redirectToCheckout('pro', 'monthly')}>
               {billingAction === 'pro-monthly' ? 'Opening…' : 'Start Pro Monthly'}
             </button>
-            <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('shop', 'yearly')}>
+            <button type="button" disabled={!shopId || Boolean(billingAction) || !checkoutAvailability.enabled} onClick={() => redirectToCheckout('shop', 'yearly')}>
               {billingAction === 'shop-yearly' ? 'Opening…' : 'Start Shop Yearly'}
             </button>
-            <button type="button" disabled={!shopId || Boolean(billingAction)} onClick={() => redirectToCheckout('pro', 'yearly')}>
+            <button type="button" disabled={!shopId || Boolean(billingAction) || !checkoutAvailability.enabled} onClick={() => redirectToCheckout('pro', 'yearly')}>
               {billingAction === 'pro-yearly' ? 'Opening…' : 'Start Pro Yearly'}
             </button>
           </>}

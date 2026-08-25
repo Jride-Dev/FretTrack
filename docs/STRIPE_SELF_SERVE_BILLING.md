@@ -24,6 +24,21 @@ Checkout creation also uses one deterministic idempotency key per shop and subsc
 
 For an existing Stripe customer, FretTrack checks every page of that customer's subscriptions before creating Checkout. An open subscription linked to the shop therefore blocks another Checkout even when it appears beyond Stripe's first 100 records.
 
+## Launch Switch and Pilot Access
+
+New Checkout sessions are protected by a server-authoritative Edge Function gate that defaults closed. The Billing page requests the authenticated gate status so its subscription buttons match the server, but browser state is never the authority. Existing subscribers retain Billing Portal access while new enrollment is closed.
+
+Migration `20260824020500_stripe_service_role_grants.sql` supplies the narrow table privileges required by the Checkout, Billing Portal, and webhook Edge Functions. A service-role JWT bypasses RLS, but PostgreSQL still requires explicit table privileges; do not replace these grants with broad schema-wide access.
+
+Set both hosted secrets deliberately:
+
+```powershell
+supabase secrets set STRIPE_BILLING_ENABLED=false
+supabase secrets set STRIPE_BILLING_PILOT_SHOP_IDS=
+```
+
+For a controlled pilot, set `STRIPE_BILLING_ENABLED=true` and set `STRIPE_BILLING_PILOT_SHOP_IDS` to the exact comma-separated shop IDs allowed to open Checkout. An empty pilot list with billing enabled opens Checkout to every eligible owner/admin, so do not leave it empty during pilot validation. Closing the switch blocks only new Checkout creation; it does not block existing customers from opening Stripe's Billing Portal.
+
 ## Required Supabase Secrets
 
 Set these in the production Supabase project:
@@ -38,6 +53,8 @@ supabase secrets set STRIPE_PRICE_SHOP_YEARLY=price_...
 supabase secrets set STRIPE_PRICE_PRO_MONTHLY=price_...
 supabase secrets set STRIPE_PRICE_PRO_YEARLY=price_...
 supabase secrets set FRETTRACK_APP_URL=https://app.frettrack-app.com
+supabase secrets set STRIPE_BILLING_ENABLED=false
+supabase secrets set STRIPE_BILLING_PILOT_SHOP_IDS=
 ```
 
 Never commit real Stripe secrets or price IDs.
@@ -63,6 +80,10 @@ npm run dev -- --host 127.0.0.1
 
 The listener prints its own `whsec_...` secret. Save that exact value as `STRIPE_WEBHOOK_SIGNING_SECRET` before starting Functions. If the environment file changes, restart `supabase functions serve`; the running Edge Runtime does not reload secret values from the file. A healthy signed delivery returns HTTP `200`. Repeated `400` responses on every event indicate signature verification failed before subscription processing.
 
+The sandbox environment must set `STRIPE_BILLING_ENABLED=true` and restrict `STRIPE_BILLING_PILOT_SHOP_IDS` to the disposable local fixture shop. The production switch remains closed throughout local validation.
+
+With local Supabase and the Stripe CLI running, `npm run test:stripe-sandbox` discovers the active FretTrack sandbox prices and performs the repeatable pilot lifecycle: gate denial outside the allowlist, annual Checkout creation, signed webhook activation, Billing Portal creation, annual Shop-to-Pro change, period-end cancellation, final cancellation, signed duplicate and older-event replay, and sandbox-only event verification. Command discovery supports Windows and Unix-like systems and reports a controlled missing-CLI error. The validator creates no report containing secrets and cleans up the temporary Stripe customer and subscription.
+
 ## Edge Function Deployment
 
 Checkout and Portal must retain Supabase JWT verification. Stripe cannot provide a Supabase JWT when delivering a webhook, so only the webhook is deployed with gateway JWT verification disabled; its Stripe signature verification is the authentication boundary.
@@ -77,14 +98,15 @@ Do not use `--no-verify-jwt` for the Checkout or Portal functions.
 
 ## Production Rollout Evidence
 
-As of 2026-08-14:
+As of 2026-08-24:
 
 - migration `20260814041144_stripe_billing_concurrency_guards.sql` is recorded in the linked production migration history;
 - `stripe-webhook` version 12 is active with gateway JWT verification disabled only for Stripe delivery;
 - an authenticated-anon probe receives HTTP 401 from both the synchronization cursor table and `begin_stripe_subscription_sync`;
 - a webhook request without `stripe-signature` reaches the function and fails closed with HTTP 400;
-- `npm run check:stripe-edge-functions` passes all 9 executable lifecycle/concurrency tests; and
-- full subscription creation, renewal, cancellation, failed-payment, recovery, and trial-ended flows still require real Stripe end-to-end smoke evidence before paid launch.
+- `npm run check:stripe-edge-functions` passes all 13 executable lifecycle/concurrency/launch-gate tests;
+- `npm run test:stripe-sandbox` passes annual Checkout, signed subscription activation, Billing Portal, Shop-to-Pro, period-end cancellation, final cancellation, and signed duplicate/out-of-order replay against local Supabase; and
+- production enrollment remains closed until the intended live account is configured and a low-risk live pilot validates payment, invoice renewal/recovery, and production webhook delivery.
 
 ## Webhook Events to Enable
 

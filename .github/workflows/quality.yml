@@ -47,6 +47,7 @@ jobs:
           npm run check:specialist-work-order-commerce
           npm run check:permissions
           npm run check:backup-restore-snapshot-safety
+          node --test scripts/resolve-command.test.mjs
 
       - name: Build production bundle
         run: npm run build

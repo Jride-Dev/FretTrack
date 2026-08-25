@@ -15,6 +15,24 @@ import {
   isStripeIdempotencyConflict,
   shouldApplyStripeSubscriptionEvent,
 } from "../_shared/stripeSubscriptionState.ts";
+import { getStripeBillingLaunchAccess } from "../_shared/stripeBillingLaunch.ts";
+
+Deno.test("Stripe billing launch access fails closed and supports a pilot allowlist", () => {
+  deepStrictEqual(getStripeBillingLaunchAccess("shop-one", "", ""), {
+    allowed: false,
+    code: "STRIPE_BILLING_CLOSED",
+    message: "New Stripe subscriptions are not open yet. Existing subscribers can still manage billing.",
+    pilotRestricted: false,
+  });
+  strictEqual(getStripeBillingLaunchAccess("shop-one", "true", "shop-one,shop-two").allowed, true);
+  deepStrictEqual(getStripeBillingLaunchAccess("shop-three", "true", "shop-one,shop-two"), {
+    allowed: false,
+    code: "STRIPE_BILLING_PILOT_ONLY",
+    message: "New Stripe subscriptions are currently limited to approved pilot shops.",
+    pilotRestricted: true,
+  });
+  strictEqual(getStripeBillingLaunchAccess("any-shop", "yes", "").allowed, true);
+});
 
 Deno.test("invoice subscription lookup supports the current Stripe parent schema", () => {
   strictEqual(
