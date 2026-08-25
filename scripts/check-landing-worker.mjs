@@ -148,7 +148,7 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /Review FretTrack on Product Hunt/);
   assert.match(response.headers.get('content-security-policy') || '', /img-src[^;]*https:\/\/api\.producthunt\.com/);
   assert.match(html, /href="\/docs"/);
-  assert.match(html, /href="https:\/\/discord\.gg\/PaEhWTfz9e" target="_blank" rel="noopener">Discord<\/a>/);
+  assert.match(html, /href="https:\/\/discord\.gg\/3ppvjkYwYR" target="_blank" rel="noopener">Discord<\/a>/);
   assert.match(html, /href="https:\/\/github\.com\/Jride-Dev\/FretTrack" target="_blank" rel="noopener">GitHub<\/a>/);
   assert.match(html, /href="https:\/\/www\.reddit\.com\/r\/FretTrack\/" target="_blank" rel="noopener">Reddit<\/a>/);
   assert.match(html, /href="https:\/\/torranceguitarrepair\.com\/" target="_blank" rel="noopener">Torrance Guitar Repair<\/a>/);

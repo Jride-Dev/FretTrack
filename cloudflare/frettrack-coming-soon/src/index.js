@@ -1350,7 +1350,7 @@ function landingPage() {
           <h2>News, shop talk, and the work behind FretTrack.</h2>
           <p class="section-lede">Get release news, help shape the beta, follow development, and connect with the repair-shop community.</p>
 
-          <a class="discord-spotlight" href="https://discord.gg/PaEhWTfz9e" target="_blank" rel="noopener">
+          <a class="discord-spotlight" href="https://discord.gg/3ppvjkYwYR" target="_blank" rel="noopener">
             <div class="discord-copy">
               <span class="discord-label">FretTrack community</span>
               <h3>Join our Discord for news and updates!</h3>
@@ -1401,7 +1401,7 @@ function landingPage() {
         <div class="footer-links">
           <a href="${APP_URL}">App Login</a>
           <a href="/docs">Docs</a>
-          <a href="https://discord.gg/PaEhWTfz9e" target="_blank" rel="noopener">Discord</a>
+          <a href="https://discord.gg/3ppvjkYwYR" target="_blank" rel="noopener">Discord</a>
           <a href="https://github.com/Jride-Dev/FretTrack" target="_blank" rel="noopener">GitHub</a>
           <a href="https://www.reddit.com/r/FretTrack/" target="_blank" rel="noopener">Reddit</a>
           <a href="https://torranceguitarrepair.com/" target="_blank" rel="noopener">Torrance Guitar Repair</a>
