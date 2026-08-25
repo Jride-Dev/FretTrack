@@ -82,7 +82,7 @@ The listener prints its own `whsec_...` secret. Save that exact value as `STRIPE
 
 The sandbox environment must set `STRIPE_BILLING_ENABLED=true` and restrict `STRIPE_BILLING_PILOT_SHOP_IDS` to the disposable local fixture shop. The production switch remains closed throughout local validation.
 
-With local Supabase and the Stripe CLI running, `npm run test:stripe-sandbox` discovers the active FretTrack sandbox prices and performs the repeatable pilot lifecycle: gate denial outside the allowlist, annual Checkout creation, signed webhook activation, Billing Portal creation, annual Shop-to-Pro change, period-end cancellation, final cancellation, and sandbox-only event verification. It creates no report containing secrets and cleans up the temporary Stripe customer and subscription.
+With local Supabase and the Stripe CLI running, `npm run test:stripe-sandbox` discovers the active FretTrack sandbox prices and performs the repeatable pilot lifecycle: gate denial outside the allowlist, annual Checkout creation, signed webhook activation, Billing Portal creation, annual Shop-to-Pro change, period-end cancellation, final cancellation, signed duplicate and older-event replay, and sandbox-only event verification. Command discovery supports Windows and Unix-like systems and reports a controlled missing-CLI error. The validator creates no report containing secrets and cleans up the temporary Stripe customer and subscription.
 
 ## Edge Function Deployment
 
@@ -105,7 +105,7 @@ As of 2026-08-24:
 - an authenticated-anon probe receives HTTP 401 from both the synchronization cursor table and `begin_stripe_subscription_sync`;
 - a webhook request without `stripe-signature` reaches the function and fails closed with HTTP 400;
 - `npm run check:stripe-edge-functions` passes all 13 executable lifecycle/concurrency/launch-gate tests;
-- `npm run test:stripe-sandbox` passes annual Checkout, signed subscription activation, Billing Portal, Shop-to-Pro, period-end cancellation, and final cancellation against local Supabase; and
+- `npm run test:stripe-sandbox` passes annual Checkout, signed subscription activation, Billing Portal, Shop-to-Pro, period-end cancellation, final cancellation, and signed duplicate/out-of-order replay against local Supabase; and
 - production enrollment remains closed until the intended live account is configured and a low-risk live pilot validates payment, invoice renewal/recovery, and production webhook delivery.
 
 ## Webhook Events to Enable

@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
+import { createHmac, randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import postgres from 'postgres';
+import { resolveCommand } from './resolve-command.mjs';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const fixturePassword = 'FretTrackTest123!';
@@ -128,6 +130,9 @@ try {
     where shop_id = ${pilotShop.id}
   `;
   assert.ok(['canceled', 'cancelled', 'read_only'].includes(String(profile?.subscription_status || '').toLowerCase()));
+
+  await validateSignedEventReplay(supabase, webhookSecret);
+  console.log('PASS: signed duplicate and older-event replays were idempotent');
 
   const [eventSummary] = await sql`
     select
@@ -299,7 +304,7 @@ async function signIn(supabase, email) {
 }
 
 async function invokeFunction(supabase, functionName, token, payload) {
-  const response = await fetch(`${supabase.FUNCTIONS_URL}/${functionName}`, {
+  const response = await fetch(`${getFunctionsUrl(supabase)}/${functionName}`, {
     method: 'POST',
     headers: {
       apikey: supabase.ANON_KEY,
@@ -313,17 +318,90 @@ async function invokeFunction(supabase, functionName, token, payload) {
 }
 
 async function stripeRequest(method, endpoint, parameters = {}) {
+  const hasBody = !['DELETE', 'GET', 'HEAD'].includes(method);
   const response = await fetch(`https://api.stripe.com${endpoint}`, {
     method,
     headers: {
       Authorization: `Bearer ${stripeApiKey}`,
-      ...(method === 'DELETE' ? {} : { 'Content-Type': 'application/x-www-form-urlencoded' })
+      ...(hasBody ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {})
     },
-    ...(method === 'DELETE' ? {} : { body: new URLSearchParams(parameters) })
+    ...(hasBody ? { body: new URLSearchParams(parameters) } : {})
   });
   const body = await response.json();
   if (!response.ok) throw new Error(body?.error?.message || `Stripe ${method} ${endpoint} failed.`);
   return body;
+}
+
+async function validateSignedEventReplay(supabase, webhookSecret) {
+  const [sourceEventRow] = await sql`
+    select stripe_event_id
+    from stripe_webhook_events
+    where stripe_subscription_id = ${stripeSubscriptionId}
+      and event_type = 'customer.subscription.updated'
+      and status = 'processed'
+    order by stripe_event_created_at asc
+    limit 1
+  `;
+  assert.ok(sourceEventRow?.stripe_event_id, 'No processed subscription update event was available for replay.');
+
+  const sourceEvent = await stripeRequest('GET', `/v1/events/${sourceEventRow.stripe_event_id}`);
+  const duplicate = await postSignedWebhook(supabase, webhookSecret, sourceEvent);
+  assert.equal(duplicate.response.status, 200, 'Signed duplicate event replay failed.');
+  assert.equal(duplicate.body.duplicate, true, 'Signed duplicate event was not recognized as a replay.');
+
+  const [beforeReplay] = await sql`
+    select plan_id, status, provider_status, billing_interval, stripe_subscription_id,
+           cancel_at_period_end, canceled_at
+    from shop_subscriptions
+    where shop_id = ${pilotShop.id}
+  `;
+  const olderEvent = {
+    ...sourceEvent,
+    id: `evt_frettrack_${randomUUID().replaceAll('-', '')}`,
+    created: 1
+  };
+  const olderReplay = await postSignedWebhook(supabase, webhookSecret, olderEvent);
+  assert.equal(olderReplay.response.status, 200, 'Signed older-event replay failed.');
+  await waitUntil(async () => {
+    const [row] = await sql`
+      select status
+      from stripe_webhook_events
+      where stripe_event_id = ${olderEvent.id}
+    `;
+    return row?.status === 'ignored';
+  }, 15_000, 'Older signed Stripe event was not recorded as ignored.');
+
+  const [afterReplay] = await sql`
+    select plan_id, status, provider_status, billing_interval, stripe_subscription_id,
+           cancel_at_period_end, canceled_at
+    from shop_subscriptions
+    where shop_id = ${pilotShop.id}
+  `;
+  assert.deepEqual(afterReplay, beforeReplay, 'Older signed Stripe event changed current subscription state.');
+}
+
+async function postSignedWebhook(supabase, webhookSecret, event) {
+  const payload = JSON.stringify(event);
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = createHmac('sha256', webhookSecret)
+    .update(`${timestamp}.${payload}`)
+    .digest('hex');
+  const response = await fetch(`${getFunctionsUrl(supabase)}/stripe-webhook`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'stripe-signature': `t=${timestamp},v1=${signature}`
+    },
+    body: payload
+  });
+  const body = await response.json().catch(() => ({}));
+  return { response, body };
+}
+
+function getFunctionsUrl(supabase) {
+  const configured = String(supabase.FUNCTIONS_URL || '').replace(/\/+$/, '');
+  if (configured) return configured;
+  return `${String(supabase.API_URL || '').replace(/\/+$/, '')}/functions/v1`;
 }
 
 async function waitForSubscriptionState(predicate) {
@@ -350,13 +428,6 @@ async function waitUntil(check, timeoutMs, message) {
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   throw lastError || new Error(message);
-}
-
-function resolveCommand(name) {
-  const result = spawnSync('where.exe', [name], { encoding: 'utf8', windowsHide: true });
-  const command = result.stdout.split(/\r?\n/).find(Boolean);
-  if (!command) throw new Error(`${name} CLI was not found on PATH.`);
-  return command.trim();
 }
 
 function stopProcess(child) {

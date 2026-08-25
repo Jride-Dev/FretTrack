@@ -133,7 +133,7 @@ Pending review/deployment in the current launch-switch change set:
 - The Billing page reads authenticated launch status and disables all new-subscription buttons unless the server permits that shop.
 - Checkout defaults closed, supports an exact pilot allowlist, and rejects a closed/non-pilot request before the Stripe side effect.
 - Migration `20260824020500_stripe_service_role_grants.sql` supplies the narrow table privileges required by Checkout, Portal, and webhook service-role clients.
-- `npm run test:stripe-sandbox` provides repeatable annual Checkout, signed-webhook, Portal, plan-change, and cancellation evidence without changing hosted secrets.
+- `npm run test:stripe-sandbox` provides repeatable cross-platform annual Checkout, signed-webhook, Portal, plan-change, cancellation, duplicate replay, and older-event rejection evidence without changing hosted secrets.
 
 Launch gaps still requiring the intended live Stripe account and production validation:
 

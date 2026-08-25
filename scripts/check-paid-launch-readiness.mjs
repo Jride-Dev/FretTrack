@@ -218,9 +218,25 @@ for (const required of [
   'create-billing-portal-session',
   'customer.subscription.updated',
   "eventSummary.live_count, 0",
+  'validateSignedEventReplay',
+  'getFunctionsUrl',
 ]) {
   assert.ok(stripeSandboxValidator.includes(required), `Stripe sandbox validator must include "${required}".`);
 }
+assert.ok(
+  stripeSandboxValidator.includes("import { resolveCommand } from './resolve-command.mjs';"),
+  'Stripe sandbox validation must use the cross-platform command resolver.',
+);
+
+const commandResolver = read('scripts/resolve-command.mjs');
+assert.ok(commandResolver.includes("platform === 'win32'"), 'Command lookup must retain Windows support.');
+assert.ok(commandResolver.includes("command -v \"$1\""), 'Command lookup must use POSIX command discovery outside Windows.');
+assert.ok(commandResolver.includes("typeof result?.stdout === 'string'"), 'Command lookup must validate output before splitting it.');
+
+const commandResolverTest = read('scripts/resolve-command.test.mjs');
+assert.ok(commandResolverTest.includes("platform: 'linux'"), 'Command resolver tests must execute the Linux lookup path.');
+assert.ok(commandResolverTest.includes("platform: 'win32'"), 'Command resolver tests must execute the Windows lookup path.');
+assert.ok(commandResolverTest.includes('stdout: undefined'), 'Command resolver tests must cover a failed lookup without stdout.');
 
 const concurrencyMigration = read('supabase/migrations/20260814041144_stripe_billing_concurrency_guards.sql');
 for (const required of [
