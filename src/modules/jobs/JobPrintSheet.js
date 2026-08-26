@@ -41,7 +41,7 @@ export default function JobPrintSheet({
   return (
     <section className="print-sheet job-sheet-print">
       <div className="print-invoice-header print-section">
-        <img src={shopSettings.logoUrl || '/frettrack-wordmark.jpg'} alt={shopSettings.shopName || 'FretTrack Systems'} />
+        <img src={shopSettings.logoUrl || '/frettrack-wordmark.jpg'} alt={shopSettings.shopName || 'FretTrack'} />
         <div>
           <h2>Job Sheet</h2>
           <p>{shopSettings.shopName}</p>

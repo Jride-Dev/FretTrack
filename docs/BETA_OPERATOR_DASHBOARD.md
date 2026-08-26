@@ -57,4 +57,4 @@ Beta-bypass and status actions call `public.update_beta_shop_subscription`. Prem
 - Operator notes are planned but not implemented.
 - Failed/oversized upload visibility depends on upload failure events being logged.
 - Storage usage uses stored image metadata and latest usage snapshots, not a server image pipeline.
-- Stripe, billing webhooks, and customer self-service subscription controls are not implemented.
+- Stripe Checkout, signed billing webhooks, and the customer Billing Portal are implemented behind the server-authoritative launch switch. Operator trial controls remain separate from Stripe subscription management.

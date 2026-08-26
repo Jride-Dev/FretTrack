@@ -10,13 +10,30 @@ FretTrack is also not enterprise CRM bloat. The product should stay practical, f
 
 The core repair workflow should remain generous. Pricing should mostly gate infrastructure cost and operational scale, not the basic ability to run a repair shop. A paying shop should not feel punished for creating jobs, serving customers, printing paperwork, or accessing its own records.
 
+FretTrack is a business-use software service operated by Jeffrey Russell d/b/a Torrance Guitar Repair.
+
+## Approved Launch Pricing and Commercial Policy
+
+| Plan | Monthly | Yearly | Annual savings |
+| --- | ---: | ---: | ---: |
+| Shop | $29.99 | $299.99 | $59.89 |
+| Pro | $39.99 | $399.99 | $79.89 |
+
+Prices are in United States dollars. Applicable taxes, if any, are determined from billing details and shown at Stripe Checkout.
+
+The standard evaluation is a 14-day Pro trial. It requires no card and does not automatically convert. A paid period begins only after an authorized shop owner/admin completes Checkout. Operator-granted extensions remain available for controlled beta support.
+
+Subscriptions renew for their selected interval until canceled. Cancellation is available through the Stripe Billing Portal, has no cancellation fee, and takes effect at the end of the current paid period. Annual subscribers should receive a renewal notice approximately 30 days before renewal.
+
+The first annual subscription purchase has a 14-calendar-day full-refund window. Monthly payments, annual renewals, partial periods, and unused time are otherwise non-refundable except for duplicate charges, confirmed billing errors, or when required by law.
+
 ## Current Beta Status
 
 FretTrack is in a controlled beta rollout.
 
 During beta, beta access approval and premium trial access are separate systems. Beta approval controls whether a tester can enter the product. Premium trial state controls premium feature access for an approved shop.
 
-Operators can currently manage Shop and Pro trials manually:
+The standard onboarding path creates a 14-day Pro trial. Operators can additionally manage controlled trial exceptions:
 
 - Start a 7-day, 14-day, or 30-day Shop or Pro trial.
 - Extend an active Shop or Pro trial by 7, 14, or 30 days.
@@ -24,25 +41,23 @@ Operators can currently manage Shop and Pro trials manually:
 
 When an unpaid trial expires, login and safe viewing remain available, but writes, uploads, customer messages, member management, and premium features are blocked until access is restored. Explicit administrative read-only/canceled states remain available when intentionally configured.
 
-Billing during beta can still be handled manually while real subscription automation is planned and tested.
-
-Stripe and automated subscription management are planned later. The current goal is to validate the product, pricing assumptions, storage behavior, reporting needs, and real shop workflows before locking in automated billing.
+Stripe Checkout, signed billing webhooks, and the Stripe Billing Portal implement paid enrollment, lifecycle synchronization, payment recovery, plan changes, invoices, and period-end cancellation. A server-authoritative launch switch can limit new Checkout sessions to approved pilot shops while existing subscribers retain portal access.
 
 Beta tester feedback should directly shape pricing, included features, limits, and the order of future modules.
 
-The 0.2.9-B0 plan-status UI foundation adds plan-aware branding and display. FretTrack can show Trial / Shop / Pro / Expired labels, Pro emblem branding for Pro-enabled shops, trial and renewal countdowns, and a Shop Settings Plan / Subscription panel. Pro and Trial Pro accounts must use the Pro emblem and Pro labels as their primary identity; they must not display the regular Shop identity except in comparison copy. Stripe Checkout, Customer Portal, webhooks, automated renewals, payment collection, and customer self-service billing remain future work.
+The plan-status UI shows Trial / Shop / Pro / Expired labels, Pro emblem branding for Pro-enabled shops, trial and renewal countdowns, and Shop Settings and Billing status. Pro and Trial Pro accounts use the Pro emblem and Pro labels as their primary identity; they do not display the regular Shop identity except in comparison copy.
 
-The `0.2.9-beta.3` usage-cap foundation now server-enforces 1,000 email recipients, 2,000 source-photo uploads, and 5 GiB repair-photo storage for Shop; Pro receives 5,000 recipients, 10,000 uploads, and 25 GiB. Shop and Pro trials inherit the selected tier. See [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md). These are included infrastructure allowances, not finalized prices: no paid overages, Stripe products, or automatic billing exist.
+The `0.2.9-beta.3` usage-cap foundation server-enforces 1,000 email recipients, 2,000 source-photo uploads, and 5 GiB repair-photo storage for Shop; Pro receives 5,000 recipients, 10,000 uploads, and 25 GiB. Shop and Pro trials inherit the selected tier. See [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md). No paid overages exist at launch.
 
 The 0.2.9-F customer import work is parser/template foundation only. It prepares CSV mapping, preview validation, duplicate warnings, and skipped/error CSV output, but does not expose an import UI or write customer records yet. Owner/Admin import UI, write-enabled import, XLSX support, vendor import, and inventory import remain later work.
 
 ## Current Trial / Shop / Pro Split
 
-The product boundary does not add finalized pricing, Stripe, billing webhooks, payment forms, SMS limits, or multi-shop restrictions. Email-recipient and repair-photo caps are now the limited server-enforced exceptions documented above.
+The launch boundary includes the approved prices, Stripe Checkout, Billing Portal, signed webhook lifecycle, email-recipient limits, and repair-photo limits. SMS and multi-shop subscriptions remain outside the launch scope.
 
 ### Trial
 
-Trial is a lifecycle state, not a permanent public plan. An active unpaid trial is assigned either Shop or Pro entitlements by an operator:
+Trial is a lifecycle state, not a permanent public plan. New approved shops receive the standard 14-day Pro trial; operators may grant Shop/Pro trial exceptions:
 
 - Active Shop trial: paid core workflow is writable.
 - Active Pro trial: everything in Shop plus Photo Editor, Team Members, and Advanced Reporting.
@@ -78,7 +93,7 @@ Shop is the normal paid operating plan for repair shops. Phase 1 currently unloc
 - inventory purchasing basics
 - scheduling
 
-Shop subscriptions and Shop trials use the original FretTrack emblem with labels such as `Trial: Shop`, `Shop Monthly`, or `Shop Yearly`. When a period-end timestamp is available later from Stripe sync, the UI can show renewal or access-ending countdowns without assuming a fixed month length.
+Shop subscriptions and Shop trials use the original FretTrack emblem with labels such as `Trial: Shop`, `Shop Monthly`, or `Shop Yearly`. Stripe synchronization supplies authoritative period timestamps for renewal or access-ending countdowns without assuming a fixed month length.
 
 Shop is currently single-user in the entitlement snapshot. Existing staff memberships are preserved when trial access expires, but non-owner staff access and member changes remain inactive until Pro access is restored.
 
@@ -158,7 +173,7 @@ Beta should not be treated as a permanent unpaid production plan. It exists to i
 
 ### Solo Shop
 
-Older planning used a Solo Shop tier. The active Phase 1 product model is now Trial, Shop, Pro, and deferred Business; keep this section as historical pricing research until pricing is finalized.
+Older planning used a Solo Shop tier. The active product model is now Trial, Shop, Pro, and deferred Business; the remainder of this section is historical pricing research and does not override the approved launch pricing above.
 
 Included:
 

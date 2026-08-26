@@ -7,7 +7,7 @@ Last updated: 2026-08-24
 
 FretTrack's paid launch target is Stripe-powered self-serve billing, not a controlled manual paid beta.
 
-The core repair workflow, guarded production deploy path, migration drift checks, data-integrity checks, Stripe self-service foundation, a full local database-and-Storage restore drill, three consecutive unattended backups, and the annual Stripe sandbox lifecycle are in place. Real payments remain closed: the hosted Stripe secrets do not match the currently validated sandbox account, and the current Stripe CLI session has no live-mode API key. Production Checkout must stay disabled until the intended live Stripe account, four live prices, and live webhook endpoint are configured and verified.
+The core repair workflow, guarded production deploy path, migration drift checks, data-integrity checks, Stripe self-service foundation, a full local database-and-Storage restore drill, three consecutive unattended backups, and the annual Stripe sandbox lifecycle are in place. Hosted billing remains gated deliberately. The live Stripe catalog could not be re-read during the latest audit because the Stripe CLI live-mode session required reauthentication; this is not evidence that the configured hosted secrets are wrong. Production Checkout should remain pilot-restricted until the intended live account, four approved live prices, terms/privacy URLs, renewal-email settings, and webhook endpoint are verified together.
 
 ## Verified on 2026-08-24
 

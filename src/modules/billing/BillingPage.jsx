@@ -12,6 +12,13 @@ import {
   createCheckoutSession,
   getCheckoutAvailability
 } from './stripeBillingService';
+import {
+  FRETTRACK_LEGAL_SELLER,
+  FRETTRACK_PLANS,
+  FRETTRACK_STANDARD_TRIAL_DAYS,
+  FRETTRACK_SUBSCRIPTION_POLICY,
+  formatUsd
+} from './commercialTerms';
 
 export default function BillingPage({ canManageShop = false, entitlementSnapshot, shopProfile = null }) {
   const [billingAction, setBillingAction] = useState('');
@@ -134,6 +141,24 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
       <section className="billing-self-serve">
         <h3>Manage Plan</h3>
         <p>Choose a Stripe-powered FretTrack plan or open the secure billing portal for payment, renewal, cancellation, and invoice settings.</p>
+        <div className="billing-summary-grid" aria-label="FretTrack subscription prices">
+          <BillingCard
+            label="Shop"
+            value={`${formatUsd(FRETTRACK_PLANS.shop.monthlyCents)} / month`}
+            detail={`${formatUsd(FRETTRACK_PLANS.shop.yearlyCents)} yearly · save ${formatUsd(FRETTRACK_PLANS.shop.annualSavingsCents)}`}
+          />
+          <BillingCard
+            label="Pro"
+            value={`${formatUsd(FRETTRACK_PLANS.pro.monthlyCents)} / month`}
+            detail={`${formatUsd(FRETTRACK_PLANS.pro.yearlyCents)} yearly · save ${formatUsd(FRETTRACK_PLANS.pro.annualSavingsCents)}`}
+          />
+        </div>
+        <p className="muted-text">
+          The standard {FRETTRACK_STANDARD_TRIAL_DAYS}-day Pro trial requires no card and does not automatically convert. Starting a paid plan begins its billing period immediately.
+        </p>
+        <p className="muted-text">
+          Cancel anytime through the Billing Portal; paid access continues through the current billing period. The first annual subscription purchase may be refunded within {FRETTRACK_SUBSCRIPTION_POLICY.firstAnnualPurchaseRefundDays} days. Monthly payments and renewals are non-refundable except for billing errors or when required by law.
+        </p>
         {billingError && <p className="error-text" role="alert">{billingError}</p>}
         {hasManagedStripeSubscription && (
           <p className="muted-text">This shop already has a Stripe subscription. Use the Billing Portal to change plans, update payment details, or cancel.</p>
@@ -146,16 +171,16 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
         <div className="billing-plan-actions">
           {!hasManagedStripeSubscription && <>
             <button type="button" className="primary" disabled={!shopId || Boolean(billingAction) || !checkoutAvailability.enabled} onClick={() => redirectToCheckout('shop', 'monthly')}>
-              {billingAction === 'shop-monthly' ? 'Opening…' : 'Start Shop Monthly'}
+              {billingAction === 'shop-monthly' ? 'Opening…' : `Start Shop · ${formatUsd(FRETTRACK_PLANS.shop.monthlyCents)}/month`}
             </button>
             <button type="button" disabled={!shopId || Boolean(billingAction) || !checkoutAvailability.enabled} onClick={() => redirectToCheckout('pro', 'monthly')}>
-              {billingAction === 'pro-monthly' ? 'Opening…' : 'Start Pro Monthly'}
+              {billingAction === 'pro-monthly' ? 'Opening…' : `Start Pro · ${formatUsd(FRETTRACK_PLANS.pro.monthlyCents)}/month`}
             </button>
             <button type="button" disabled={!shopId || Boolean(billingAction) || !checkoutAvailability.enabled} onClick={() => redirectToCheckout('shop', 'yearly')}>
-              {billingAction === 'shop-yearly' ? 'Opening…' : 'Start Shop Yearly'}
+              {billingAction === 'shop-yearly' ? 'Opening…' : `Start Shop · ${formatUsd(FRETTRACK_PLANS.shop.yearlyCents)}/year`}
             </button>
             <button type="button" disabled={!shopId || Boolean(billingAction) || !checkoutAvailability.enabled} onClick={() => redirectToCheckout('pro', 'yearly')}>
-              {billingAction === 'pro-yearly' ? 'Opening…' : 'Start Pro Yearly'}
+              {billingAction === 'pro-yearly' ? 'Opening…' : `Start Pro · ${formatUsd(FRETTRACK_PLANS.pro.yearlyCents)}/year`}
             </button>
           </>}
           <button type="button" disabled={!hasStripeCustomer || Boolean(billingAction)} onClick={redirectToPortal}>
@@ -165,6 +190,7 @@ export default function BillingPage({ canManageShop = false, entitlementSnapshot
         {!hasStripeCustomer && (
           <p className="muted-text">The Billing Portal appears after the shop has a connected Stripe customer.</p>
         )}
+        <p className="muted-text">FretTrack is sold for business use by {FRETTRACK_LEGAL_SELLER}. Prices are USD; applicable taxes, if any, are determined from the billing information collected at Checkout.</p>
         <a href="mailto:support@frettrack-app.com">Contact support@frettrack-app.com</a>
       </section>
     </section>

@@ -4,15 +4,15 @@ Date: 2026-05-25
 
 Scope: audit and planning only. No billing implementation is included here.
 
-Current note, 2026-06-21: this audit is historical planning context. Paid Access Lifecycle Phase 1 supersedes the earlier unpaid fallback recommendation. Beta access approval and paid trial access are separate systems; expired trials preserve data and memberships, block writes, and require restored access. Later 0.2.8 inventory work also supersedes the old no-inventory-module gap statements: the current foundation covers parts, vendors, purchase orders, receiving, barcode labels, purchase history, inbound PO shipping, and landed-cost allocation, while deeper inventory automation remains future work. Pro Reports Dashboard Phase 2 now expands Advanced Reporting with operational job, inventory, purchase-order, landed-cost, work-log, and scheduling tables, but Stripe, Checkout, Billing Portal, payment links, billing webhooks, charts, exports, and PDF reports remain separate future work.
+Current note, 2026-08-26: this audit is retained as historical planning context. Paid Access Lifecycle, server-enforced entitlements, usage caps, Billing UI, Stripe Checkout, Billing Portal, signed webhook synchronization, annual sandbox validation, and the server-authoritative launch switch now supersede the earlier gaps. The approved launch catalog is Shop at $29.99 monthly / $299.99 yearly and Pro at $39.99 monthly / $399.99 yearly, with a non-converting 14-day Pro trial. Deeper inventory automation, SMS, multi-shop subscriptions, and broader accounting remain future work.
 
 ## Executive Summary
 
 FretTrack is strong enough to support a paid private beta or early Solo Shop tier for a small guitar repair shop that understands it is buying a focused repair workflow, not a mature accounting suite. The core value is real: authenticated shop workspaces, customer records, job tracking, inspection notes, damage/photo documentation, parts/services, payments, print sheets, reports, shop profile settings, and CSV/job exports are already present.
 
-The app is not yet ready for broad self-serve paid SaaS launch. The biggest blockers are not Stripe itself; they are subscription state, entitlement enforcement, billing/admin UX, formal export/deletion policies, storage quotas, and money/audit hardening. The current multi-tenant and RLS foundation is a good starting point, but paid-tier access must be enforced in the database and Edge Functions, not just hidden in React.
+This section describes the risk assessment at the time of the original May 2026 audit. The referenced entitlement, billing/admin, quota, and Stripe foundations have since been implemented; remaining launch decisions and operational checks are tracked in the current paid-launch documentation.
 
-Recommended path: launch a controlled paid beta with manual billing or Stripe links only after adding subscription/entitlement tables, expired-trial read-only lifecycle behavior, an admin billing/settings page, storage/member quota decisions, and a clean support/export story. Keep the repair workflow generous for active paid access; gate higher-cost or premium features such as additional users, storage, exports, reports, SMS, inventory, advanced branding, and future API access.
+The implemented path is a controlled Stripe paid pilot with database-owned subscription state, expired-trial read-only behavior, owner/admin billing controls, server-enforced limits, and Pro feature gates. The historical recommendations below remain useful design context but are not the current implementation status.
 
 ## Current Strengths
 

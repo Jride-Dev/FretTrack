@@ -26,8 +26,10 @@ try {
 
   stripeApiKey = await loadStripeSandboxKey();
   const prices = await discoverFretTrackPrices(stripeApiKey);
-  validateAnnualPrice(prices.shop.yearly, 29_999, 'Shop');
-  validateAnnualPrice(prices.pro.yearly, 39_999, 'Pro');
+  validatePrice(prices.shop.monthly, 2_999, 'month', 'Shop monthly');
+  validatePrice(prices.shop.yearly, 29_999, 'year', 'Shop yearly');
+  validatePrice(prices.pro.monthly, 3_999, 'month', 'Pro monthly');
+  validatePrice(prices.pro.yearly, 39_999, 'year', 'Pro yearly');
 
   const webhookSecretPromise = startStripeListener();
   const webhookSecret = await webhookSecretPromise;
@@ -213,9 +215,9 @@ async function discoverFretTrackPrices(apiKey) {
   return result;
 }
 
-function validateAnnualPrice(price, expectedAmount, label) {
-  assert.equal(price.unit_amount, expectedAmount, `${label} yearly sandbox price is not the approved amount.`);
-  assert.equal(price.recurring?.interval, 'year');
+function validatePrice(price, expectedAmount, expectedInterval, label) {
+  assert.equal(price.unit_amount, expectedAmount, `${label} sandbox price is not the approved amount.`);
+  assert.equal(price.recurring?.interval, expectedInterval, `${label} uses the wrong recurring interval.`);
 }
 
 function startStripeListener() {
