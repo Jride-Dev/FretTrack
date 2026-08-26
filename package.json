@@ -61,6 +61,8 @@
     "check:pro-email-scheduling": "node scripts/check-pro-email-scheduling.mjs",
     "check:loyalty-program": "node scripts/check-loyalty-program.mjs",
     "check:automated-service-reminders": "node scripts/check-automated-service-reminders.mjs",
+    "check:customer-correspondence": "node --test scripts/customer-correspondence.test.mjs",
+    "check:commercial-launch-terms": "node scripts/check-commercial-launch-terms.mjs",
     "check:work-log-draft-safety": "node scripts/check-work-log-draft-safety.mjs",
     "check:purchase-unit-conversion": "node scripts/check-purchase-unit-conversion.mjs",
     "check:invoice-email-modal": "node scripts/check-invoice-email-modal.mjs",

@@ -161,8 +161,8 @@ assert.ok(webhookLifecycleTest.includes('existing Stripe subscription lookup che
 assert.ok(webhookLifecycleTest.includes('itemless subscription payloads are handled without dereferencing missing data'), 'Stripe lifecycle tests must cover itemless subscription payloads.');
 
 const billingPage = read('src/modules/billing/BillingPage.jsx');
-assert.ok(billingPage.includes('Start Shop Monthly'), 'Billing page must expose Shop Checkout.');
-assert.ok(billingPage.includes('Start Pro Monthly'), 'Billing page must expose Pro Checkout.');
+assert.ok(billingPage.includes("redirectToCheckout('shop', 'monthly')"), 'Billing page must expose Shop Checkout.');
+assert.ok(billingPage.includes("redirectToCheckout('pro', 'monthly')"), 'Billing page must expose Pro Checkout.');
 assert.ok(billingPage.includes('Manage Billing Portal'), 'Billing page must expose the Stripe Billing Portal.');
 assert.ok(!billingPage.includes('Plan changes are handled by FretTrack support during beta.'), 'Billing page must not keep the manual beta billing placeholder.');
 assert.ok(billingPage.includes('hasManagedStripeSubscription'), 'Billing page must suppress new Checkout actions for an existing managed subscription.');

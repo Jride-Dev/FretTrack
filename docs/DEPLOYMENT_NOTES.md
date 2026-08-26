@@ -5,15 +5,18 @@ Review this file before every production deploy and after every manual database/
 ## Current Deployment Status
 
 - Current branch checked during this review: `main`.
+- The commercial launch package was deployed on 2026-08-26. It standardizes Shop at $29.99 monthly/$299.99 yearly and Pro at $39.99 monthly/$399.99 yearly; changes newly created approved workspaces to a 14-day Pro trial with no automatic paid conversion; updates Checkout billing-address, tax-ID, and optional terms-consent controls; and publishes the approved seller, cancellation, annual refund, renewal-notice, and tax language.
+- Production Stripe uses the new FretTrack account `acct_1U8kPt2mvRJalgin`. Its live webhook `we_1U8lOW2mvRJalgincc2N7SPn` targets the hosted `stripe-webhook` function and subscribes to the seven reviewed Checkout, subscription, and invoice events. The customer portal configuration `bpc_1U8lui2mvRJalgineCPlaGoc` is live with payment-method updates, invoice history, the four reviewed Shop/Pro prices, period-end cancellation, cancellation reasons, and the public Terms/Privacy URLs.
+- New Checkout remains closed with `STRIPE_BILLING_ENABLED=false`; `STRIPE_BILLING_PILOT_SHOP_IDS` contains only `sell-us-your-guitar`. Before enabling the pilot, configure Stripe Public details with `https://frettrack-app.com/terms` and `https://frettrack-app.com/privacy`, then set `STRIPE_REQUIRE_TERMS_ACCEPTANCE=true` and repeat the no-charge live Checkout preflight. The 2026-08-26 preflight correctly failed closed because Stripe Public details did not yet contain the Terms URL. Configure Stripe's upcoming-renewal customer email for approximately 30 days. Automatic tax remains disabled until the business's registration and tax obligations are confirmed.
 - PR `#201` added the amplifier/keyboard purchasing bridge, PR `#202` added Pro Automated Service Reminders, and PR `#203` added the Pro Loyalty Program. All three merged to `main` on 2026-08-22 after their combined regression/build, audit, database/browser, focused checker, and production-build gates passed.
 - PR `#205` polished Automated Service Reminder templates with a customer-style preview, labeled personalization controls, and legacy newline normalization. It merged to `main` on 2026-08-22 after the audit, regression/build, pgTAP/RLS, and Playwright gates passed.
-- App domain returned `200 OK` with the current beta.6 bundle on 2026-08-22: https://app.frettrack-app.com/. Its JavaScript and CSS assets matched guarded build `assets/index-Bn5PE5oe.js` and `assets/index-BfaViKk2.css` from Cloudflare Pages deployment `055eea3f.frettrack.pages.dev`.
-- The public landing/docs Worker deployed the matching reminder-preview guide update on 2026-08-22 as version `471af80f-f101-48f7-a9fc-4ed9d2a9e97c`. The live complete guide returned `200 OK` with the customer-preview and labeled-personalization guidance.
-- Production migration history matches the repository through `20260822041624_pro_loyalty_program.sql`.
-- Supabase Edge Functions are active at `stripe-webhook` version 14, `send-email` version 38, and JWT-protected `send-service-reminders` version 1. The reminder endpoint rejected an unauthenticated request with `401` and returned `200` with zero work during an authenticated smoke test.
+- App domain returned `200 OK` with the guarded beta.6 commercial build on 2026-08-26. Cloudflare Pages deployment `93459fdd.frettrack.pages.dev` contains `assets/index-yH08_Fhg.js` and `assets/index-CCSjcyBA.css`.
+- The public landing/docs Worker deployed the commercial pricing, annual-savings, support, Terms, Privacy, and operator documentation on 2026-08-26 as version `cbdabbe1-2df1-4993-b63d-034855f3dc87`. The live Terms, Privacy, and billing guide routes returned `200 OK`.
+- Production migration history matches the repository through `20260826054954_standard_pro_trial_launch_terms.sql`.
+- Supabase Edge Functions are active at `stripe-webhook` version 19, `create-checkout-session` version 9, `create-billing-portal-session` version 7, `send-email` version 42, and JWT-protected `send-service-reminders` version 5. The billing endpoints retain their reviewed JWT/signature boundaries.
 - Supabase Vault contains the three named Cron inputs, and active job `frettrack-service-reminders-nightly` runs at `17 3 * * *` (03:17 UTC). The six initial shop rules are disabled, so deployment did not opt customers in or send reminders.
 - Cloudflare Pages production HTML matched the guarded production build and returned the expected CSP, Permissions Policy, Referrer Policy, and content-type protection headers.
-- Pre-migration snapshot `backups/hosted-supabase-20260822-000443` completed with database, migration-history, Storage, manifest, checksums, row counts, comparison report, and local Docker-volume archive. The compare report found no schema or migration-history drift from the immediately preceding snapshot.
+- Pre-migration snapshot `backups/hosted-supabase-20260826-111909` completed with database, migration history, 4,911 checksummed Storage files, row counts, and comparison report. It contains no failure marker; the comparison reported no schema or migration-history drift.
 
 ## Current Migration Note
 
@@ -24,6 +27,8 @@ The 2026-08-22 production dry run contained exactly these reviewed migrations, w
 - `20260822041624_pro_loyalty_program.sql`
 
 The post-deployment migration list aligned local and remote history, and a second `supabase db push --linked --dry-run` reported the database up to date with no pending migrations.
+
+On 2026-08-26, migration `20260826054954_standard_pro_trial_launch_terms.sql` was backed up, applied, recorded remotely, and verified for its 14-day Pro trial trigger/bootstrap behavior and authenticated-only bootstrap access.
 
 Continue using `supabase migration list --linked`, `supabase db push --dry-run`, and `npm run check:migrations` before future production schema changes. Do not use a blanket push when unrelated migrations are pending.
 
@@ -118,7 +123,7 @@ The wrapper forces the production Supabase URL, forces the production FretTrack 
 - Beta access approval and premium trial state are separate. Do not use premium trial expiry as a reason to remove beta approval.
 - Trial expiry should preserve shop data and memberships, block writes, and require restored access before core operations continue.
 - Free owner access must remain active after downgrade. Existing non-owner staff memberships should be preserved but inactive while `team_members` is false, then restored when Shop entitlement returns.
-- Stripe, billing webhooks, and payment collection are still not connected.
+- Historical note superseded on 2026-08-24: Stripe Checkout, Billing Portal, signed webhooks, and server-authoritative launch gating are implemented. Production enrollment still requires an intentional live-account configuration check before the launch switch opens.
 - If a migration is manually applied with `supabase db query --linked --file`, confirm the schema change and then align remote migration history intentionally.
 - Confirm Supabase Edge Function secrets by name only; never print secret values.
 - Confirm Cloudflare Worker secrets by name only; never print secret values.

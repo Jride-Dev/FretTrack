@@ -4,6 +4,15 @@ Date: 2026-08-11
 
 FretTrack's paid launch uses Stripe Checkout, Stripe Billing Portal, and a signed Stripe webhook.
 
+FretTrack is sold for business use by Jeffrey Russell d/b/a Torrance Guitar Repair. The approved USD catalog is:
+
+- Shop monthly: $29.99
+- Shop yearly: $299.99 (saves $59.89 compared with twelve monthly payments)
+- Pro monthly: $39.99
+- Pro yearly: $399.99 (saves $79.89 compared with twelve monthly payments)
+
+The standard 14-day Pro trial is an application-managed evaluation without a card and does not automatically convert. Checkout starts a paid billing period immediately only after an owner/admin deliberately selects a paid plan.
+
 ## Source-Controlled Functions
 
 - `supabase/functions/create-checkout-session/index.ts`
@@ -22,6 +31,10 @@ An abandoned, canceled, expired, or failed Checkout Session therefore leaves the
 
 Checkout creation also uses one deterministic idempotency key per shop and subscription generation. Simultaneous tabs requesting the same Checkout either replay the single Stripe Session or receive a safe in-progress conflict; a different plan request is rejected instead of opening a second subscription path. A terminal subscription ID starts a new generation so a genuinely canceled subscriber can later purchase again.
 
+Checkout always collects a billing address and enables business tax-ID collection. Automatic tax remains disabled until FretTrack has the applicable tax registrations and an accountant-confirmed product tax treatment. Checkout displays the business-use, period-end cancellation, and first-annual-purchase refund summary beside the subscribe button.
+
+Before setting `STRIPE_REQUIRE_TERMS_ACCEPTANCE=true`, configure the live and sandbox Stripe account Public details with `https://frettrack-app.com/terms` and `https://frettrack-app.com/privacy`. When enabled, Checkout requires affirmative acceptance of those Terms. The environment switch prevents a missing Stripe Dashboard URL from breaking Checkout during local development.
+
 For an existing Stripe customer, FretTrack checks every page of that customer's subscriptions before creating Checkout. An open subscription linked to the shop therefore blocks another Checkout even when it appears beyond Stripe's first 100 records.
 
 ## Launch Switch and Pilot Access
@@ -35,6 +48,7 @@ Set both hosted secrets deliberately:
 ```powershell
 supabase secrets set STRIPE_BILLING_ENABLED=false
 supabase secrets set STRIPE_BILLING_PILOT_SHOP_IDS=
+supabase secrets set STRIPE_REQUIRE_TERMS_ACCEPTANCE=true
 ```
 
 For a controlled pilot, set `STRIPE_BILLING_ENABLED=true` and set `STRIPE_BILLING_PILOT_SHOP_IDS` to the exact comma-separated shop IDs allowed to open Checkout. An empty pilot list with billing enabled opens Checkout to every eligible owner/admin, so do not leave it empty during pilot validation. Closing the switch blocks only new Checkout creation; it does not block existing customers from opening Stripe's Billing Portal.
@@ -82,6 +96,8 @@ The listener prints its own `whsec_...` secret. Save that exact value as `STRIPE
 
 The sandbox environment must set `STRIPE_BILLING_ENABLED=true` and restrict `STRIPE_BILLING_PILOT_SHOP_IDS` to the disposable local fixture shop. The production switch remains closed throughout local validation.
 
+The validator asserts all four approved sandbox amounts and recurring intervals before it creates any Checkout session.
+
 With local Supabase and the Stripe CLI running, `npm run test:stripe-sandbox` discovers the active FretTrack sandbox prices and performs the repeatable pilot lifecycle: gate denial outside the allowlist, annual Checkout creation, signed webhook activation, Billing Portal creation, annual Shop-to-Pro change, period-end cancellation, final cancellation, signed duplicate and older-event replay, and sandbox-only event verification. Command discovery supports Windows and Unix-like systems and reports a controlled missing-CLI error. The validator creates no report containing secrets and cleans up the temporary Stripe customer and subscription.
 
 ## Edge Function Deployment
@@ -118,6 +134,20 @@ At minimum:
 - `customer.subscription.deleted`
 - `invoice.payment_succeeded`
 - `invoice.payment_failed`
+
+## Customer Billing Emails and Annual Renewal Notice
+
+In Stripe Dashboard, open **Settings → Billing → Subscriptions and emails**. Enable **Send emails about upcoming renewals**, route subscription-management links to the Stripe-hosted Customer Portal, and set **Prevent failed payments → Upcoming renewal events** to **30 days**. Stripe uses that interval for the renewal email and the `invoice.upcoming` event. Keep successful-payment receipts and failed-payment emails enabled as well.
+
+This Dashboard configuration is required before opening annual subscriptions broadly. Sandbox email delivery is limited by Stripe to verified-domain or team-member addresses, so validate the setting with an eligible sandbox address and confirm the message in Stripe's customer email log.
+
+## Commercial Policy
+
+- Subscriptions are for business use.
+- Cancel anytime through the Billing Portal; cancellation takes effect at the end of the paid period and does not remove access early.
+- The first annual subscription purchase may be refunded within 14 calendar days.
+- Monthly payments and annual renewals are otherwise non-refundable except for duplicate charges, confirmed billing errors, or when required by law.
+- Prices exclude applicable taxes unless Checkout states otherwise.
 
 ## Subscription Mapping
 

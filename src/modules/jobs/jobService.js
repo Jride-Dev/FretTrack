@@ -15,6 +15,10 @@ import {
 } from '../photos/photoUrls';
 import { normalizeJobPriority } from './jobPriority';
 import { normalizeJobSource } from './jobSources';
+import {
+  fromDbCorrespondenceMessage as fromDbCustomerMessage,
+  normalizeCorrespondenceMessage as normalizeCustomerMessage
+} from '../messaging/customerCorrespondence';
 
 const STORAGE_KEY = 'guitar_checkin_jobs';
 const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
@@ -1417,82 +1421,6 @@ function fromDbJobEvent(event) {
     eventData: event.event_data || {},
     createdAt: event.created_at,
     createdBy: event.created_by || ''
-  };
-}
-
-function normalizeCustomerMessage(message) {
-  const allowedStatuses = new Set(['pending', 'sent', 'failed', 'scheduled', 'canceling', 'canceled']);
-  return {
-    id: message.id || crypto.randomUUID(),
-    jobId: message.jobId || message.job_id || '',
-    customerId: message.customerId || message.customer_id || '',
-    channel: message.channel || 'email',
-    recipient: message.recipient || '',
-    subject: message.subject || '',
-    body: message.body || '',
-    templateKey: message.templateKey || message.template_key || '',
-    status: allowedStatuses.has(message.status) ? message.status : 'failed',
-    provider: message.provider || '',
-    providerMessageId: message.providerMessageId || message.provider_message_id || '',
-    requestId: message.requestId || message.request_id || '',
-    errorMessage: message.errorMessage || message.error_message || '',
-    scheduledAt: message.scheduledAt || message.scheduled_at || '',
-    canceledAt: message.canceledAt || message.canceled_at || '',
-    cancelRequestedAt: message.cancelRequestedAt || message.cancel_requested_at || '',
-    providerLastEvent: message.providerLastEvent || message.provider_last_event || '',
-    providerEventAt: message.providerEventAt || message.provider_event_at || '',
-    sentAt: message.sentAt || message.sent_at || '',
-    createdAt: message.createdAt || message.created_at || new Date().toISOString()
-  };
-}
-
-function toDbCustomerMessage(message) {
-  return {
-    id: message.id,
-    job_id: message.jobId,
-    customer_id: message.customerId || null,
-    channel: message.channel,
-    recipient: message.recipient,
-    subject: message.subject || null,
-    body: message.body,
-    template_key: message.templateKey,
-    status: message.status,
-    provider: message.provider,
-    provider_message_id: message.providerMessageId,
-    request_id: message.requestId || null,
-    error_message: message.errorMessage,
-    scheduled_at: message.scheduledAt || null,
-    canceled_at: message.canceledAt || null,
-    cancel_requested_at: message.cancelRequestedAt || null,
-    provider_last_event: message.providerLastEvent || null,
-    provider_event_at: message.providerEventAt || null,
-    sent_at: message.sentAt || null,
-    created_at: message.createdAt
-  };
-}
-
-function fromDbCustomerMessage(message) {
-  return {
-    id: message.id,
-    jobId: message.job_id,
-    customerId: message.customer_id,
-    channel: message.channel,
-    recipient: message.recipient,
-    subject: message.subject,
-    body: message.body,
-    templateKey: message.template_key,
-    status: message.status,
-    provider: message.provider,
-    providerMessageId: message.provider_message_id,
-    requestId: message.request_id,
-    errorMessage: message.error_message,
-    scheduledAt: message.scheduled_at,
-    canceledAt: message.canceled_at,
-    cancelRequestedAt: message.cancel_requested_at,
-    providerLastEvent: message.provider_last_event,
-    providerEventAt: message.provider_event_at,
-    sentAt: message.sent_at,
-    createdAt: message.created_at
   };
 }
 

@@ -140,7 +140,10 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png">/);
   assert.match(html, /Request Beta Access/);
   assert.match(html, /\/landing\/overview\.jpg/);
-  assert.match(html, /Stripe-powered account management planned/);
+  assert.match(html, /Stripe Checkout and self-service billing management/);
+  assert.match(html, /\$29\.99 monthly/);
+  assert.match(html, /\$39\.99 monthly/);
+  assert.match(html, /Jeffrey Russell d\/b\/a Torrance Guitar Repair/);
   assert.match(html, /https:\/\/devglobe\.app\/projects\/frettrack\?utm_source=badge&utm_medium=embed/);
   assert.match(html, /Launched on DevGlobe/);
   assert.match(html, /https:\/\/www\.producthunt\.com\/products\/frettrack\/reviews\/new\?utm_source=badge-product_review&utm_medium=badge&utm_source=badge-frettrack/);

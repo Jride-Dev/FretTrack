@@ -46,12 +46,13 @@ This includes:
 - Pro Automated Service Reminders with separate customer consent, shop-editable service timing and email copy, a durable Supabase queue, and a nightly dispatcher
 - Pro Loyalty Program with paid/completed-work-order stamp awards, reversible eligibility, and an auditable staff redemption ledger
 - Hardened Stripe lifecycle ordering, retry safety, and current subscription-period synchronization
+- Approved business-use subscription terms: 14-day non-converting Pro trial, Shop at $29.99 monthly / $299.99 yearly, and Pro at $39.99 monthly / $399.99 yearly
 
 ### beta.6 paid-launch and Pro workflow update
 
-Beta.6 combines the production-hardened Stripe lifecycle and recovery work with Pro Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, and Loyalty workflows. Amplifier and keyboard work orders retain the complete FretTrack commercial workflow and can create job-linked vendor purchase orders, receive parts through Inventory, and move only the required quantity into customer billing. The release preserves existing guitar repair and immediate-email behavior while adding server-authoritative entitlements, shop isolation, consent and quota enforcement, idempotent purchasing and messaging, and focused database/browser coverage.
+Beta.6 combines the production-hardened Stripe lifecycle and recovery work with Pro Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, and Loyalty workflows. Amplifier and keyboard work orders retain the complete FretTrack commercial workflow and can create job-linked vendor purchase orders, receive parts through Inventory, and move only the required quantity into customer billing. The release preserves existing guitar repair and immediate-email behavior while adding server-authoritative entitlements, shop isolation, consent and quota enforcement, idempotent purchasing and messaging, and focused database/browser coverage. FretTrack is a business-use software service operated by Jeffrey Russell d/b/a Torrance Guitar Repair.
 
-The production database is current through `20260822041624_pro_loyalty_program.sql`. The `send-service-reminders` Edge Function, nightly `frettrack-service-reminders-nightly` Cron job, required Vault configuration, and matching Cloudflare Pages app build were deployed on 2026-08-22. Automated reminder rules default to disabled until a Pro/Enterprise shop explicitly configures and enables one.
+The production database is current through `20260826054954_standard_pro_trial_launch_terms.sql`. The commercial beta.6 app, public pricing/legal documentation, Stripe billing Edge Functions, live webhook, and customer portal were deployed or configured on 2026-08-26. New Checkout remains restricted to the `sell-us-your-guitar` pilot and disabled until Stripe Public details contains the live Terms and Privacy URLs and the final no-charge Checkout preflight passes. Automated reminder rules remain disabled until a Pro/Enterprise shop explicitly configures and enables one.
 
 ### beta.4 architecture and reliability upgrade
 
@@ -106,15 +107,13 @@ Legacy device note: older iPadOS/iOS browser versions can be useful for shop-flo
 
 ## Not Included Yet
 
-- Stripe billing or live payment automation.
-- Customer self-service subscription management or Stripe-powered billing portal.
 - Vendor import/export, external supplier integrations, vendor returns, inventory forecasting, outbound/customer shipping, carrier labels, and tracking numbers.
 - Full offline mode for existing job edits, queued photo uploads, inventory receiving, purchase orders, or cached authenticated Supabase data.
 - Production SMS messaging.
 - Public invoice or work-order links.
 - Customer-facing appointment confirmations and external calendar sync.
 - AI background removal or third-party image cutout APIs.
-- Automated billing, paid overages, or customer self-service plan changes for the Trial/Shop/Pro model.
+- Paid usage overages, public self-service account deletion, or multi-shop subscription management.
 
 ## Screenshots
 

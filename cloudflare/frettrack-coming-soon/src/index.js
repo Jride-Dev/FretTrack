@@ -1171,7 +1171,7 @@ function landingPage() {
             <a class="button primary" href="#application-modal" id="open-application">Request Beta Access</a>
             <a class="button secondary" href="${APP_URL}">Open App Login</a>
           </div>
-          <p class="hero-note">Targeting a July 1, 2026 launch path with invite-only beta access, Shop and Pro tiers, and Stripe-powered account management planned for the paid release.</p>
+          <p class="hero-note">Invite-only beta access is open. Shop and Pro subscriptions use secure Stripe Checkout and self-service billing management.</p>
         </div>
 
         <div class="product-frame" aria-label="FretTrack app preview">
@@ -1295,40 +1295,41 @@ function landingPage() {
       </section>
 
       <section class="section" id="pricing">
-        <h2>Trial, Shop, and Pro are the public product path.</h2>
-        <p class="section-lede">Public Free is not the long-term product model. Unpaid access is a trial lifecycle. Shop covers the real repair workflow; Pro adds advanced reporting and future higher-end tools.</p>
+        <h2>Start with Pro, then choose the plan that fits the shop.</h2>
+        <p class="section-lede">Every approved shop receives a 14-day Pro trial with no card required and no automatic conversion. Paid subscriptions are for business use and renew until canceled.</p>
         <div class="plan-grid">
           <div class="plan">
             <strong>Trial</strong>
-            <h3>Evaluate FretTrack with approval</h3>
-            <p>Invite-only beta access while the launch workflow is tightened.</p>
+            <h3>14 days · $0</h3>
+            <p>Evaluate the complete Pro workflow after beta approval.</p>
             <ul>
-              <li>Approved tester login</li>
-              <li>Real shop workflow testing</li>
-              <li>Feedback-driven polish</li>
+              <li>No card required</li>
+              <li>Does not automatically convert</li>
+              <li>Existing data remains available if the trial expires</li>
             </ul>
           </div>
           <div class="plan">
             <strong>Shop</strong>
-            <h3>Core repair operations</h3>
-            <p>The main tier for running a guitar repair shop day to day.</p>
+            <h3>$29.99 monthly</h3>
+            <p>$299.99 yearly · save $59.89 compared with twelve monthly payments.</p>
             <ul>
               <li>Jobs, customers, photos, and work logs</li>
-              <li>Inventory basics and scheduling</li>
-              <li>Team members and photo editor</li>
+              <li>Inventory, purchasing, scheduling, and billing</li>
+              <li>Single-user core repair-shop operation</li>
             </ul>
           </div>
           <div class="plan">
             <strong>Pro</strong>
-            <h3>Advanced operations</h3>
-            <p>For shops that want deeper reporting and future automation.</p>
+            <h3>$39.99 monthly</h3>
+            <p>$399.99 yearly · save $79.89 compared with twelve monthly payments.</p>
             <ul>
-              <li>Advanced reporting</li>
-              <li>Premium operational tools</li>
-              <li>More integrations planned after launch</li>
+              <li>Everything in Shop</li>
+              <li>Team Members, Photo Editor, and Advanced Reporting</li>
+              <li>Amplifier Repair, Keyboard Repair, Scheduled Email, service reminders, and Loyalty</li>
             </ul>
           </div>
         </div>
+        <p class="section-lede">Cancel anytime through the Stripe Billing Portal; access continues through the current paid period. The first annual subscription purchase has a 14-day refund window. Monthly payments and renewals are non-refundable except for billing errors or when required by law. Prices are USD; applicable taxes, if any, are shown at Checkout.</p>
       </section>
 
       <section class="section" id="beta">
@@ -1389,7 +1390,7 @@ function landingPage() {
 
     <footer>
       <div class="footer-inner">
-        <span>FretTrack Systems</span>
+        <span>FretTrack · operated by Jeffrey Russell d/b/a Torrance Guitar Repair</span>
         <div class="footer-badges">
           <a class="footer-badge" href="https://devglobe.app/projects/frettrack?utm_source=badge&utm_medium=embed" target="_blank" rel="noopener">
             <img src="https://devglobe.app/badges/launched-on-devglobe-dark.svg" alt="Launched on DevGlobe" width="250" height="54">

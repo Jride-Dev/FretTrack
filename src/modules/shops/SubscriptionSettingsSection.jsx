@@ -56,11 +56,7 @@ export default function SubscriptionSettingsSection({ entitlementSnapshot = null
 
       <div className="billing-placeholder subscription-billing-actions">
         <h4>Billing Management</h4>
-        <p className="muted-text">Plan changes are handled by FretTrack support during beta.</p>
-        <div className="mode-actions">
-          <button type="button" disabled>Manage billing</button>
-          <button type="button" disabled>Upgrade plan</button>
-        </div>
+        <p className="muted-text">Open Billing from the main navigation to choose Shop or Pro, start Stripe Checkout, update payment details, view invoices, or cancel at the end of the current paid period.</p>
       </div>
 
       <UsageSection usage={snapshot.usage || {}} />

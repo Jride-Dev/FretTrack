@@ -92,6 +92,13 @@ Deno.serve(async (request) => {
       success_url: `${appUrl}/?billing=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/?billing=cancelled`,
       allow_promotion_codes: true,
+      billing_address_collection: 'required',
+      tax_id_collection: { enabled: true },
+      custom_text: {
+        submit: {
+          message: 'FretTrack subscriptions are sold for business use by Jeffrey Russell d/b/a Torrance Guitar Repair. Cancel anytime through the Billing Portal; cancellation takes effect at the end of the paid period. The first annual subscription purchase has a 14-day refund window.'
+        }
+      },
       client_reference_id: shopId,
       subscription_data: {
         metadata: { shop_id: shopId, plan_id: plan, billing_interval: interval }
@@ -99,8 +106,13 @@ Deno.serve(async (request) => {
       metadata: { shop_id: shopId, plan_id: plan, billing_interval: interval }
     };
 
+    if (isEnabled(Deno.env.get('STRIPE_REQUIRE_TERMS_ACCEPTANCE'))) {
+      checkoutParameters.consent_collection = { terms_of_service: 'required' };
+    }
+
     if (customerId) {
       checkoutParameters.customer = customerId;
+      checkoutParameters.customer_update = { address: 'auto', name: 'auto' };
     } else if (billingEmail) {
       checkoutParameters.customer_email = billingEmail;
     }
@@ -196,6 +208,10 @@ function normalizeInterval(value: unknown) {
 
 function normalizeText(value: unknown) {
   return String(value || '').trim();
+}
+
+function isEnabled(value: unknown) {
+  return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
 }
 
 function getErrorMessage(error: unknown) {
