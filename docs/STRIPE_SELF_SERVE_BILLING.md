@@ -21,7 +21,7 @@ The standard 14-day Pro trial is an application-managed evaluation without a car
 
 Checkout and Portal functions require a signed-in Supabase user and verify that user's exact owner/admin membership for the requested shop before creating a Stripe session.
 
-The webhook uses Stripe signature verification against the raw request body and records processed event IDs in `public.stripe_webhook_events` before returning success for duplicate deliveries. Because Stripe does not guarantee event delivery order, each state-changing delivery claims a shop-scoped synchronization generation, reloads the current subscription from Stripe, and applies subscription plus mirrored profile access state in one guarded database transaction. A late-finishing older handler cannot overwrite the newest in-flight sync.
+The webhook uses Stripe signature verification against the raw request body and atomically claims each event ID in `public.stripe_webhook_events` before event processing begins. A concurrent delivery of the same signed event returns `duplicate=true` without entering the handler. Failed attempts remain retryable, while claim tokens prevent a stale attempt from finalizing a newer retry. Because Stripe does not guarantee event delivery order, each state-changing delivery also claims a shop-scoped synchronization generation, reloads the current subscription from Stripe, and applies subscription plus mirrored profile access state in one guarded database transaction. A late-finishing older handler cannot overwrite the newest in-flight sync.
 
 ## Checkout Security Boundary
 
