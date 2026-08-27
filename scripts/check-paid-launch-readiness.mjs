@@ -220,12 +220,18 @@ for (const required of [
   "eventSummary.live_count, 0",
   'validateSignedEventReplay',
   'getFunctionsUrl',
+  'STRIPE_SANDBOX_API_KEY',
+  'STRIPE_API_KEY: apiKey',
 ]) {
   assert.ok(stripeSandboxValidator.includes(required), `Stripe sandbox validator must include "${required}".`);
 }
 assert.ok(
   stripeSandboxValidator.includes("import { resolveCommand } from './resolve-command.mjs';"),
   'Stripe sandbox validation must use the cross-platform command resolver.',
+);
+assert.ok(
+  stripeSandboxValidator.includes('startStripeListener(supabase, stripeApiKey)'),
+  'Stripe sandbox validation must bind API requests and webhook listening to the same sandbox key.',
 );
 
 const commandResolver = read('scripts/resolve-command.mjs');
