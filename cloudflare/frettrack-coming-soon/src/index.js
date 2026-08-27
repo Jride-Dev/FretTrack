@@ -35,11 +35,13 @@ const BUNDLED_ASSET_PATHS = new Set([
 ]);
 const STATIC_PAGE_ROUTES = new Map([
   ['/beta-tester', '/beta-tester.html'],
+  ['/testing-checklist', '/beta-tester.html'],
   ['/docs', '/docs.html'],
   ['/docs/', '/docs.html'],
   ['/docs/how-to-use-frettrack', '/docs/how-to-use-frettrack.html'],
   ['/docs/getting-started', '/docs/getting-started.html'],
   ['/docs/beta-tester-guide', '/docs/beta-tester-guide.html'],
+  ['/docs/workflow-testing', '/docs/beta-tester-guide.html'],
   ['/docs/shops-and-accounts', '/docs/shops-and-accounts.html'],
   ['/docs/customers', '/docs/customers.html'],
   ['/docs/jobs', '/docs/jobs.html'],
@@ -1152,12 +1154,12 @@ function landingPage() {
           <a href="#product">Product</a>
           <a href="#security">Security</a>
           <a href="#pricing">Pricing</a>
-          <a href="#beta">Beta</a>
+          <a href="#access">Access</a>
           <a href="#community">Community</a>
           <a href="/docs">Docs</a>
           <a href="/support">Support</a>
           <a href="/terms">Terms</a>
-          <a href="/beta-tester">Tester Checklist</a>
+          <a href="/testing-checklist">Testing Checklist</a>
           <a class="login" href="${APP_URL}">Login</a>
         </div>
       </nav>
@@ -1168,10 +1170,10 @@ function landingPage() {
           <p class="hero-subtitle">Repair shop workflow from intake to pickup.</p>
           <p class="hero-copy">A focused operations workspace for guitar and bass repair shops: customers, work orders, photos, damage maps, inventory, scheduling, email documents, and job history.</p>
           <div class="hero-actions">
-            <a class="button primary" href="#application-modal" id="open-application">Request Beta Access</a>
+            <a class="button primary" href="#application-modal" id="open-application">Request Access</a>
             <a class="button secondary" href="${APP_URL}">Open App Login</a>
           </div>
-          <p class="hero-note">Invite-only beta access is open. Shop and Pro subscriptions use secure Stripe Checkout and self-service billing management.</p>
+          <p class="hero-note">Controlled workspace access is open. Shop and Pro subscriptions use secure Stripe Checkout and self-service billing management.</p>
         </div>
 
         <div class="product-frame" aria-label="FretTrack app preview">
@@ -1192,7 +1194,7 @@ function landingPage() {
               <span>Auth, roles, and row-level access are part of the foundation.</span>
             </div>
             <div class="proof-item">
-              <strong>Beta tested</strong>
+              <strong>Shop tested</strong>
               <span>Built from real repair-shop feedback, not generic ticketing.</span>
             </div>
           </div>
@@ -1254,7 +1256,7 @@ function landingPage() {
               </div>
               <div class="feature">
                 <h3>Parts, inventory, and purchasing foundation</h3>
-                <p>Inventory counts, movements, low stock, barcode identity, vendors, purchase orders, barcode labels, and receiving history are part of the 0.2.8 beta.</p>
+                <p>Inventory counts, movements, low stock, barcode identity, vendors, purchase orders, barcode labels, and receiving history are part of FretTrack.</p>
               </div>
               <div class="feature">
                 <h3>Scheduling and customer records</h3>
@@ -1277,7 +1279,7 @@ function landingPage() {
 
       <section class="section" id="security">
         <h2>Built for real shop data, not throwaway demo records.</h2>
-        <p class="section-lede">FretTrack is being prepared for paid customer use with invite-only access, verified accounts, shop-scoped data, role-aware UI, and explicit deployment checks before production changes.</p>
+        <p class="section-lede">FretTrack is built for paid business use with controlled access, verified accounts, shop-scoped data, role-aware UI, and explicit deployment checks before production changes.</p>
         <div class="trust-grid">
           <div class="trust-item">
             <strong>Auth and shop isolation</strong>
@@ -1285,7 +1287,7 @@ function landingPage() {
           </div>
           <div class="trust-item">
             <strong>Operator approval</strong>
-            <p>Beta applications create auditable requests and notify operators before workspace access is granted.</p>
+            <p>Access applications create auditable requests and notify operators before workspace access is granted.</p>
           </div>
           <div class="trust-item">
             <strong>Deployment discipline</strong>
@@ -1301,7 +1303,7 @@ function landingPage() {
           <div class="plan">
             <strong>Trial</strong>
             <h3>14 days · $0</h3>
-            <p>Evaluate the complete Pro workflow after beta approval.</p>
+            <p>Evaluate the complete Pro workflow after account approval.</p>
             <ul>
               <li>No card required</li>
               <li>Does not automatically convert</li>
@@ -1332,15 +1334,15 @@ function landingPage() {
         <p class="section-lede">Cancel anytime through the Stripe Billing Portal; access continues through the current paid period. The first annual subscription purchase has a 14-day refund window. Monthly payments and renewals are non-refundable except for billing errors or when required by law. Prices are USD; applicable taxes, if any, are shown at Checkout.</p>
       </section>
 
-      <section class="section" id="beta">
+      <section class="section" id="access">
         <div class="launch-panel">
           <div>
-            <h2>Shop owners wanted for beta testing.</h2>
-            <p>Apply for invite-only access, then watch your email for the confirmation and approval messages. If you do not see a reply, check spam or junk mail; domain authentication is being tightened as launch approaches.</p>
+            <h2>Bring your repair shop to FretTrack.</h2>
+            <p>Request controlled workspace access, then watch your email for confirmation and approval messages. If you do not see a reply, check spam or junk mail.</p>
           </div>
           <div class="hero-actions">
-            <a class="button" href="#application-modal">Apply for Beta</a>
-            <a class="button secondary" href="/beta-tester">Beta Tester Checklist</a>
+            <a class="button" href="#application-modal">Request Access</a>
+            <a class="button secondary" href="/testing-checklist">Workflow Testing Checklist</a>
           </div>
         </div>
       </section>
@@ -1349,13 +1351,13 @@ function landingPage() {
         <div class="section">
           <span class="community-kicker">Follow the build</span>
           <h2>News, shop talk, and the work behind FretTrack.</h2>
-          <p class="section-lede">Get release news, help shape the beta, follow development, and connect with the repair-shop community.</p>
+          <p class="section-lede">Get release news, help shape FretTrack, follow development, and connect with the repair-shop community.</p>
 
           <a class="discord-spotlight" href="https://discord.gg/3ppvjkYwYR" target="_blank" rel="noopener">
             <div class="discord-copy">
               <span class="discord-label">FretTrack community</span>
               <h3>Join our Discord for news and updates!</h3>
-              <p>Get beta announcements, release notes, feature previews, support, and honest shop-floor conversation directly from the people building and testing FretTrack.</p>
+              <p>Get product announcements, release notes, feature previews, support, and honest shop-floor conversation directly from the people building and testing FretTrack.</p>
               <span class="discord-cta">Join the FretTrack Discord <span aria-hidden="true">→</span></span>
             </div>
             <div class="discord-visual" aria-hidden="true">
@@ -1409,7 +1411,7 @@ function landingPage() {
           <a href="/terms">Terms</a>
           <a href="/support">Support</a>
           <a href="/privacy">Privacy</a>
-          <a href="/beta-tester">Beta Tester Checklist</a>
+          <a href="/testing-checklist">Workflow Testing Checklist</a>
           <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
         </div>
       </div>
@@ -1419,8 +1421,8 @@ function landingPage() {
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="application-title">
         <div class="modal-header">
           <div>
-            <h2 id="application-title">Beta tester application</h2>
-            <p>Tell us a little about your shop so beta access stays useful and controlled.</p>
+            <h2 id="application-title">FretTrack access application</h2>
+            <p>Tell us a little about your shop so onboarding stays useful and controlled.</p>
           </div>
           <a class="modal-close" href="#" id="close-application" aria-label="Close application">X</a>
         </div>
@@ -1449,7 +1451,7 @@ function landingPage() {
             Email address
             <input name="email" type="email" autocomplete="email" required>
           </label>
-          <p class="form-note">After submitting, check your inbox and spam or junk folder for FretTrack beta email.</p>
+          <p class="form-note">After submitting, check your inbox and spam or junk folder for FretTrack email.</p>
           <button class="button" type="submit">Submit Application</button>
           <p class="form-status" id="application-status" aria-live="polite"></p>
         </form>
@@ -1787,7 +1789,7 @@ async function submitBetaAccessRequest(application, env) {
   const supabaseAnonKey = cleanText(env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || '', 1000);
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Beta application service is not configured.');
+    throw new Error('Access application service is not configured.');
   }
 
   const notes = [
@@ -1862,7 +1864,7 @@ async function sendBetaApplicationEmails(application, env) {
   const applicantEmail = buildApplicantConfirmationEmail(application, details);
 
   const operatorText = [
-    'New FretTrack beta application received.',
+    'New FretTrack access application received.',
     '',
     details
   ].join('\n');
@@ -1871,14 +1873,14 @@ async function sendBetaApplicationEmails(application, env) {
     {
       kind: 'applicant',
       to: application.email,
-      subject: 'Thank you for signing up for the FretTrack Beta',
+      subject: 'Thank you for requesting FretTrack access',
       text: applicantEmail.text,
       html: applicantEmail.html
     },
     ...notifyRecipients.map((recipient) => ({
       kind: 'operator',
       to: recipient,
-      subject: `New FretTrack beta application: ${application.shopName || application.email}`,
+      subject: `New FretTrack access application: ${application.shopName || application.email}`,
       text: operatorText
     }))
   ];
@@ -1946,11 +1948,11 @@ function buildApplicantConfirmationEmail(application, details) {
   const safeDetails = escapeHtml(details);
 
   const text = [
-    'Thank you for signing up for the FretTrack Beta!',
+    'Thank you for requesting FretTrack access!',
     '',
     `Hi ${application.name || 'there'},`,
     '',
-    'We received your FretTrack beta access application and it is now waiting for operator review.',
+    'We received your FretTrack access application and it is now waiting for operator review.',
     '',
     'You do not need to submit another application. If approved, you will receive a follow-up email with access instructions.',
     'If you do not see the confirmation or approval emails, please check your spam or junk folder.',
@@ -1958,10 +1960,10 @@ function buildApplicantConfirmationEmail(application, details) {
     'Application summary:',
     details,
     '',
-    'FretTrack beta login:',
+    'FretTrack login:',
     APP_URL,
     '',
-    'Thanks for your patience while we review beta access requests.',
+    'Thanks for your patience while we review access requests.',
     '',
     'Best regards,',
     'Jeffrey Russell',
@@ -1974,12 +1976,12 @@ function buildApplicantConfirmationEmail(application, details) {
   <body style="margin:0;background:#f4f1ea;color:#111827;font-family:Arial,sans-serif;line-height:1.5;">
     <div style="max-width:640px;margin:0 auto;padding:28px 18px;">
       <div style="background:#ffffff;border:1px solid #d9d1c2;border-radius:8px;padding:24px;">
-        <h1 style="font-size:24px;line-height:1.2;margin:0 0 14px;">Thank you for signing up for the FretTrack Beta!</h1>
+        <h1 style="font-size:24px;line-height:1.2;margin:0 0 14px;">Thank you for requesting FretTrack access!</h1>
         <p style="margin:0 0 14px;">Hi ${safeName},</p>
-        <p style="margin:0 0 14px;">We received your beta access application for <strong>${safeShopName}</strong>, and it is now waiting for operator review.</p>
+        <p style="margin:0 0 14px;">We received your access application for <strong>${safeShopName}</strong>, and it is now waiting for operator review.</p>
         <p style="margin:0 0 14px;">You do not need to submit another application. If approved, you will receive a follow-up email with access instructions.</p>
-        <p style="margin:0 0 14px;"><strong>Please check your spam or junk folder</strong> if you do not see FretTrack beta emails in your inbox.</p>
-        <p style="margin:0 0 14px;"><a href="${APP_URL}" style="color:#9a4d14;font-weight:700;">FretTrack beta login</a></p>
+        <p style="margin:0 0 14px;"><strong>Please check your spam or junk folder</strong> if you do not see FretTrack emails in your inbox.</p>
+        <p style="margin:0 0 14px;"><a href="${APP_URL}" style="color:#9a4d14;font-weight:700;">FretTrack login</a></p>
         <h2 style="font-size:16px;margin:22px 0 8px;">Application summary</h2>
         <pre style="white-space:pre-wrap;background:#f8f6f1;border:1px solid #d9d1c2;border-radius:6px;color:#374151;font-family:Arial,sans-serif;font-size:14px;margin:0 0 18px;padding:12px;">${safeDetails}</pre>
         <p style="color:#4b5563;font-size:13px;margin:0 0 18px;">Submitted as ${safeEmail} on ${safeSubmittedAt}.</p>

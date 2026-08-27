@@ -8,21 +8,21 @@
 
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
-Current version: `0.2.9-beta.6`
+Current version: `0.2.9`
 
 FretTrack is a guitar and bass repair shop check-in and work order system for real bench workflow: customer intake, instrument details, inspection notes, damage photos, parts and services, payments, customer messages, print paperwork, and job history from drop-off to pickup.
 
-## Try Out FretTrack Beta
+## Try FretTrack
 
-[Try Out FretTrack Beta](https://frettrack-app.com)
+[Request FretTrack Access](https://frettrack-app.com)
 
-The beta is invite-only. Applications are handled on the live FretTrack site.
+New workspaces use controlled approval while onboarding capacity is limited. Applications are handled on the live FretTrack site.
 
-Public tester/customer docs are available at [frettrack-app.com/docs](https://frettrack-app.com/docs) so users do not need GitHub Wiki access for the beta workbook, support, privacy, or terms pages.
+Public customer and workflow-testing docs are available at [frettrack-app.com/docs](https://frettrack-app.com/docs), together with support, privacy, and terms pages.
 
 ## Current Status
 
-Current release candidate: `v0.2.9-beta.6`
+Current stable release: `v0.2.9`
 
 This includes:
 
@@ -33,10 +33,10 @@ This includes:
 - Permission hardening with centralized role checks and granular photo controls
 - Operator-managed Shop and Pro trials for 7, 14, or 30 days
 - Paid Access Lifecycle Phase 1 with Trial, Shop, and Pro public product boundaries
-- Supabase SECURITY DEFINER RPC hardening for beta intake, operator, inventory, accounting, and membership RPCs
+- Supabase SECURITY DEFINER RPC hardening for account intake, operator, inventory, accounting, and membership RPCs
 - Offline mode audit for the current new-job draft-only continuity scope
 - Photo Editor Phase 1 for job-photo markup and manual background cleanup
-- Beta approval applicant email notifications
+- Account approval applicant email notifications
 - Jobs, photos, damage map, work logs, accounting foundation, auth/RLS, and multi-shop architecture
 - Pro Team Assignment Foundation with same-shop technician assignment, Current Jobs filtering, workload visibility, audit history, and role-safe self-assignment
 - Server-enforced monthly email-recipient, source-photo upload, and current photo-storage caps with Shop Settings usage warnings
@@ -48,11 +48,11 @@ This includes:
 - Hardened Stripe lifecycle ordering, retry safety, and current subscription-period synchronization
 - Approved business-use subscription terms: 14-day non-converting Pro trial, Shop at $29.99 monthly / $299.99 yearly, and Pro at $39.99 monthly / $399.99 yearly
 
-### beta.6 paid-launch and Pro workflow update
+### 0.2.9 commercial launch and Pro workflow update
 
-Beta.6 combines the production-hardened Stripe lifecycle and recovery work with Pro Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, and Loyalty workflows. Amplifier and keyboard work orders retain the complete FretTrack commercial workflow and can create job-linked vendor purchase orders, receive parts through Inventory, and move only the required quantity into customer billing. The release preserves existing guitar repair and immediate-email behavior while adding server-authoritative entitlements, shop isolation, consent and quota enforcement, idempotent purchasing and messaging, and focused database/browser coverage. FretTrack is a business-use software service operated by Jeffrey Russell d/b/a Torrance Guitar Repair.
+FretTrack 0.2.9 combines the production-hardened Stripe lifecycle and recovery work with Pro Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, and Loyalty workflows. Amplifier and keyboard work orders retain the complete FretTrack commercial workflow and can create job-linked vendor purchase orders, receive parts through Inventory, and move only the required quantity into customer billing. The release preserves existing guitar repair and immediate-email behavior while adding server-authoritative entitlements, shop isolation, consent and quota enforcement, idempotent purchasing and messaging, and focused database/browser coverage. FretTrack is a business-use software service operated by Jeffrey Russell d/b/a Torrance Guitar Repair.
 
-The production database is current through `20260826054954_standard_pro_trial_launch_terms.sql`. The commercial beta.6 app, public pricing/legal documentation, Stripe billing Edge Functions, live webhook, and customer portal were deployed or configured on 2026-08-26. New Checkout remains restricted to the `sell-us-your-guitar` pilot and disabled until Stripe Public details contains the live Terms and Privacy URLs and the final no-charge Checkout preflight passes. Automated reminder rules remain disabled until a Pro/Enterprise shop explicitly configures and enables one.
+The production database is current through `20260827181934_stripe_webhook_atomic_event_claim.sql`. The commercial app, public pricing/legal documentation, Stripe billing Edge Functions, live webhook, and customer portal are deployed. New Checkout uses the reviewed launch gate and required Terms acceptance; Automated Reminder rules remain disabled until a Pro/Enterprise shop explicitly configures and enables one.
 
 ### beta.4 architecture and reliability upgrade
 
@@ -73,14 +73,14 @@ Product milestone ladder:
 - `v0.2.63 beta`: Scheduling complete
 - `v0.3.0 beta`: Operational Shop Release
 
-## Recent Beta Updates Since beta6
+## Recent Product Updates
 
-- Beta access now uses a public application and operator approval flow.
+- Account access uses a public application and operator approval flow.
 - The public `frettrack-app.com` landing page has been redesigned for launch readiness with a product screenshot hero,
-workflow, security, pricing, and beta application sections.
+workflow, security, pricing, and access application sections.
 - The landing Worker now includes the FretTrack favicon package and product screenshots as bundled static assets so the
 browser tab icon and landing imagery do not depend on manual local files.
-- Approved beta users can now receive an access-approved email with the app login URL through the `notify-beta-approval` Supabase Edge Function.
+- Approved users can receive an access-approved email with the app login URL through the existing access-notification Supabase Edge Function.
 - Customer and subcontractor records are now first-class workflows, not just fields on work orders.
 - Work orders and invoices can now be emailed from inside the app.
 - Existing work orders now support editable job-level parts and services.
@@ -93,15 +93,15 @@ browser tab icon and landing imagery do not depend on manual local files.
 - Premium entitlement checks now centralize future paid-feature gating without blocking core shop workflow.
 - Permission checks now centralize operator, owner/admin, tech, viewer, inventory, customer, scheduling, photo, and premium-reporting behavior.
 - Photo controls now separate upload, edit, overwrite, delete, and customer-report selection permissions.
-- Operators can start, extend, and end 7/14/30-day Shop or Pro trials while beta approval remains separate from paid access.
+- Operators can start, extend, and end 7/14/30-day Shop or Pro trials while account approval remains separate from paid access.
 - Expired trials preserve shop data and memberships, allow login/view access where safe, block writes, and lock premium entitlements.
 - Paid Access Lifecycle Phase 1 removes permanent public unpaid-plan wording. Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration.
 - Shop access keeps the paid core workflow active. Pro access unlocks Photo Editor, Team Members, and Advanced Reporting.
 - Pro Reports Dashboard Phase 2 adds Pro-gated operational reporting for shop overview, job status, priority, overdue promise dates, pickup readiness, waiting-on-parts work, job aging, work-log activity, low stock, purchase order status, landed-cost purchase history, and upcoming schedule workload.
 - Pro plan branding/status UI now keeps Trial Pro and Pro shops on the FretTrack Pro emblem and Pro labels, including monthly/yearly, canceling, renewal, access-ending, and expired countdown states.
-- Beta tester workbook/checklist downloads and public Terms, Privacy, and Support pages are available from the public site.
+- Workflow-testing workbook/checklist downloads and public Terms, Privacy, and Support pages are available from the public site.
 - Photo Editor Phase 1 adds repair-shop photo markup, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup.
-- Print output has been improved for beta use, with a dedicated print renderer rebuild still planned for the Customer Damage Report and damage-map output.
+- Print output has been improved for shop use, with a dedicated print renderer rebuild still planned for the Customer Damage Report and damage-map output.
 
 Legacy device note: older iPadOS/iOS browser versions can be useful for shop-floor testing and light bench workflows, but unsupported operating systems and browsers may no longer receive vendor security patches. Keep devices updated when possible, avoid using unpatched legacy devices for owner/operator administration, and treat them as convenience clients rather than primary security-sensitive workstations.
 
@@ -159,7 +159,7 @@ Short version:
 
 - Keep environment files and service credentials private.
 - Rotate any exposed Supabase service role key, Resend key, Twilio token, database URL password, JWT secret, or FretTrack function key immediately.
-- Treat beta data carefully and keep Supabase Row Level Security enabled for shop-scoped tables.
+- Treat production customer data carefully and keep Supabase Row Level Security enabled for shop-scoped tables.
 
 ## License
 

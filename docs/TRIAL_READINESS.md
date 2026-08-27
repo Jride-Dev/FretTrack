@@ -1,4 +1,4 @@
-# FretTrack v0.2.9-beta.6 Trial Readiness Checklist
+# FretTrack v0.2.9 Trial Readiness Checklist
 
 Use this checklist before handing a build to a real trial shop.
 
@@ -76,7 +76,7 @@ Apply all current schema changes, including:
 
 ## Paid Access Trial Test
 
-Beta access approval is separate from paid access trial state. A user may be approved for the beta and still have an expired or inactive shop trial.
+Account approval is separate from paid access trial state. A user may be approved for FretTrack and still have an expired or inactive shop trial.
 
 1. Sign in as a platform operator.
 2. Open the internal Operator Dashboard.
@@ -120,7 +120,7 @@ Beta access approval is separate from paid access trial state. A user may be app
 19. Confirm the Pro emblem appears only for Pro subscriptions or Pro trials.
 20. Open Shop Settings and confirm the Plan / Subscription panel shows current plan, billing interval, subscription status, trial end, current period end, countdown, Advanced Reporting availability, and locked premium feature count.
 21. Confirm Upgrade opens authenticated Stripe Checkout and Manage billing opens the Stripe Portal only when the shop already has a synchronized Stripe customer.
-22. Confirm approved beta users in a writable beta shop can exercise Team Assignment under the current beta lifecycle without Stripe.
+22. Confirm approved users in a writable trial shop can exercise Team Assignment under the current access lifecycle without Stripe.
 23. Confirm an expired/read-only shop can still read historical assignees but cannot assign, reassign, clear, or self-claim jobs.
 24. Confirm Shop/non-Pro behavior leaves existing Team Members behavior unchanged and hides only the advanced assignment/workload controls.
 
@@ -170,7 +170,7 @@ Beta access approval is separate from paid access trial state. A user may be app
 
 Before real shop testing, confirm the Supabase project has a backup plan and that the operator can export data if a trial shop needs support.
 
-See [Beta Operations](BETA_OPERATIONS.md) for backup awareness, export paths, recovery notes, and current beta limitations.
+See [Operations](BETA_OPERATIONS.md) for backup awareness, export paths, recovery notes, and current operational limitations. The filename is retained for historical link compatibility.
 
 For single-job debugging, use `Export Job JSON` from Job Detail.
 

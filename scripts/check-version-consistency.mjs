@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
-const expectedVersion = '0.2.9-beta.6';
+const expectedVersion = '0.2.9';
 const source = (path) => readFileSync(join(root, path), 'utf8');
 const packageJson = JSON.parse(source('package.json'));
 const packageLock = JSON.parse(source('package-lock.json'));
@@ -21,13 +21,13 @@ assert.equal(packageLock.version, expectedVersion);
 assert.equal(packageLock.packages[''].version, expectedVersion);
 assert.ok(app.includes(`const APP_VERSION = '${expectedVersion}';`), 'In-app visible version must match package metadata.');
 assert.ok(changelog.includes(`Current version: \`${expectedVersion}\``), 'Changelog current-version marker must match.');
-assert.ok(changelog.includes(`## v${expectedVersion} - Current Beta Candidate`), 'Current changelog heading must match.');
+assert.ok(changelog.includes(`## v${expectedVersion} - Current Stable Release`), 'Current changelog heading must match.');
 assert.ok(releaseNotes.includes(`## GitHub Release Summary: v${expectedVersion}`), 'Release-note heading must match.');
 assert.ok(readme.includes(`Current version: \`${expectedVersion}\``), 'README current-version marker must match.');
-assert.ok(docsReadme.includes(`Current release candidate: \`v${expectedVersion}\``), 'Docs README release candidate must match.');
-assert.ok(roadmap.includes(`The current release candidate is \`v${expectedVersion}\``), 'Roadmap release candidate must match.');
+assert.ok(docsReadme.includes(`Current stable release: \`v${expectedVersion}\``), 'Docs README stable release must match.');
+assert.ok(roadmap.includes(`The current stable release is \`v${expectedVersion}\``), 'Roadmap stable release must match.');
 assert.ok(trialReadiness.startsWith(`# FretTrack v${expectedVersion} Trial Readiness Checklist`), 'Trial readiness heading must match.');
-assert.ok(publicDocs.includes(`Current beta update: v${expectedVersion}`), 'Public docs release marker must match.');
+assert.ok(publicDocs.includes(`Current release: v${expectedVersion}`), 'Public docs release marker must match.');
 
 for (const [label, value] of [
   ['package.json', source('package.json')],
@@ -37,7 +37,7 @@ for (const [label, value] of [
   ['RELEASE_NOTES current header', releaseNotes.slice(0, releaseNotes.indexOf('## Role And Permission Audit'))],
   ['README current header', readme.slice(0, 600)]
 ]) {
-  assert.ok(!value.includes('0.2.9-beta.0'), `${label} still contains the superseded authoritative current version.`);
+  assert.ok(!value.includes('0.2.9-beta.6'), `${label} still contains the superseded beta release version.`);
 }
 
 console.log('Version consistency checks passed.');

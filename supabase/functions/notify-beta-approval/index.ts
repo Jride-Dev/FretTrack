@@ -60,7 +60,7 @@ Deno.serve(async (request) => {
   const body = await request.json().catch(() => ({}));
   const requestId = String(body.requestId || '').trim();
   if (!requestId) {
-    return json({ ok: false, error: 'Missing beta access request.' }, 400);
+    return json({ ok: false, error: 'Missing access request.' }, 400);
   }
 
   const { data: requestRow, error: requestError } = await supabase
@@ -71,15 +71,15 @@ Deno.serve(async (request) => {
 
   if (requestError) {
     console.error('beta approval request lookup failed', { error: requestError.message });
-    return json({ ok: false, error: 'Unable to load beta access request.' });
+    return json({ ok: false, error: 'Unable to load access request.' });
   }
 
   if (!requestRow) {
-    return json({ ok: false, error: 'Beta access request not found.' }, 404);
+    return json({ ok: false, error: 'Access request not found.' }, 404);
   }
 
   if (requestRow.status !== 'approved') {
-    return json({ ok: true, skipped: true, reason: 'Beta access request is not approved.' });
+    return json({ ok: true, skipped: true, reason: 'Access request is not approved.' });
   }
 
   if (requestRow.approved_notified_at) {
@@ -105,15 +105,15 @@ Deno.serve(async (request) => {
       apiKey: resendApiKey,
       from: fromEmail,
       to: applicantEmail,
-      subject: 'Your FretTrack beta access is approved',
+      subject: 'Your FretTrack access is approved',
       text: [
-        'Welcome to the FretTrack beta.',
+        'Welcome to FretTrack.',
         '',
-        'Your beta access has been approved. You can now sign in and start setting up your shop workspace.',
+        'Your account access has been approved. You can now sign in and start setting up your shop workspace.',
         '',
         `Login: ${loginUrl}`,
         '',
-        'Thanks for helping shape FretTrack.'
+        'Thanks for choosing FretTrack.'
       ].join('\n')
     });
 

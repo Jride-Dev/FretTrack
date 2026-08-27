@@ -35,6 +35,10 @@ jobs:
 
       - name: Run regression checks
         run: |
+          npm run check:version-consistency
+          npm run check:stable-release
+          npm run check:landing-worker
+          npm run check:commercial-launch-terms
           npm run check:photo-navigation-persistence
           npm run check:job-photo-persistence
           npm run check:legacy-damage-map-photos
