@@ -1,14 +1,14 @@
 # Roadmap
 
-FretTrack is moving from the old `v0.2.6-beta.14` live baseline into product milestone beta releases. Version bumps should be intentional: if a task does not explicitly ask for a version bump, ask first before changing package, app, or docs version numbers.
+The current stable release is `v0.2.9`. Historical beta milestones remain below as a record of how the product reached this release. Future version bumps should be intentional and keep package, app, public site, and current documentation aligned.
 
 ## Current Product State
 
-The current release candidate is `v0.2.9-beta.6`. It builds toward the `v0.3.0` Operational Shop Release with the existing inventory, scheduling, reporting, trial, photo, shop, and Stripe self-service foundations plus Pro Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, Loyalty, specialist purchasing, and safer workspace, Inventory, and Job Detail module boundaries.
+The current stable release is `v0.2.9`. It includes the existing inventory, scheduling, reporting, trial, photo, shop, and Stripe self-service foundations plus Pro Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, Loyalty, specialist purchasing, and safer workspace, Inventory, and Job Detail module boundaries.
 
 Shipped or current-branch foundations:
 
-- beta access approval gate
+- controlled account approval gate
 - operator dashboard
 - Stripe self-service billing foundation with authenticated Checkout and Portal sessions, signature-verified webhook synchronization, and webhook idempotency records
 - customer and subcontractor management

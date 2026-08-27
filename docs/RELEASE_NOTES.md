@@ -34,9 +34,9 @@ Local test-shop fixture setup can now be retried after a partial shop failure wi
 
 Rapid repeated Work Note submissions now coalesce onto one in-flight save. The Save and Discard controls remain unavailable until persistence finishes, preventing concurrent stale snapshots from deleting the note that another request just created.
 
-## GitHub Release Summary: v0.2.9-beta.6
+## GitHub Release Summary: v0.2.9
 
-FretTrack `0.2.9-beta.6` is a paid-launch hardening and Pro workflow release candidate. It includes dedicated Amplifier and Keyboard Repair, job-linked specialist purchasing, Scheduled Email, Automated Service Reminders, and Loyalty while preserving the existing guitar-repair, immediate-email, permission, shop-isolation, billing, inventory, and quota behavior.
+FretTrack `0.2.9` is the first stable commercial release. It includes dedicated Amplifier and Keyboard Repair, job-linked specialist purchasing, Scheduled Email, Automated Service Reminders, and Loyalty while preserving the existing guitar-repair, immediate-email, permission, shop-isolation, billing, inventory, and quota behavior. Signed Stripe webhooks now atomically claim event IDs before processing, preventing concurrent duplicate deliveries from both entering billing lifecycle handling.
 
 Pro Scheduled Email foundation: Pro shops can schedule an already-composed transactional job email from Work Order Messages up to 30 days ahead, review its provider-scheduled time, and cancel it before delivery. FretTrack snapshots the recipient, subject, body, template, and scheduled time; requires customer email opt-in; retains existing role, shop-isolation, message-history, immediate-send, and recipient-quota behavior; and adds the requested Drop Off Scheduled template using the job's appointment time. Migration `20260815095604_pro_email_scheduling_foundation.sql`, `send-email` version 35, and the matching app build were deployed on 2026-08-15.
 

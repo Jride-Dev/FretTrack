@@ -120,7 +120,7 @@ export default function ShopSettings({
     }
 
     if (requireCompletion && !settings.taxState.trim()) {
-      onNotice?.({ type: 'error', message: 'Tax jurisdiction is required before beta use.' });
+      onNotice?.({ type: 'error', message: 'Tax jurisdiction is required before using FretTrack.' });
       return;
     }
 

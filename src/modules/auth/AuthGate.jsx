@@ -174,7 +174,7 @@ export default function AuthGate({ initialMode = 'sign-in', onAuthCompleted, onP
               className="button-tertiary auth-mode-toggle"
             onClick={() => switchMode('sign-up')}
           >
-              Create beta login account
+              Create login account
           </button>
           </>
         )}
@@ -237,7 +237,7 @@ function copyForMode(mode) {
 
   if (mode === 'sign-up') {
     return {
-      description: 'Create a beta login account. Shop workspace access starts after FretTrack approval.',
+      description: 'Create a login account. Shop workspace access starts after FretTrack approval.',
       submit: 'Create Login Account'
     };
   }

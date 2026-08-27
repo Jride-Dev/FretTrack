@@ -49,11 +49,11 @@ Deno.serve(async (request) => {
 
   if (requestError) {
     console.error('beta access notification request lookup failed', { error: requestError.message });
-    return json({ ok: false, error: 'Unable to load beta access request.' });
+    return json({ ok: false, error: 'Unable to load access request.' });
   }
 
   if (!requestRow || requestRow.status !== 'pending') {
-    return json({ ok: true, skipped: true, reason: 'No pending beta access request.' });
+    return json({ ok: true, skipped: true, reason: 'No pending access request.' });
   }
 
   if (requestRow.operator_notified_at) {
@@ -71,15 +71,15 @@ Deno.serve(async (request) => {
 
   const applicantEmail = requestRow.email || user.email || '';
   const requestedAt = requestRow.requested_at || new Date().toISOString();
-  const subject = `New FretTrack beta access request: ${applicantEmail || user.id}`;
+  const subject = `New FretTrack access request: ${applicantEmail || user.id}`;
   const text = [
-    'New FretTrack beta access request received from the app signup flow.',
+    'New FretTrack access request received from the app signup flow.',
     '',
     `Email: ${applicantEmail || 'Not available'}`,
     `User ID: ${user.id}`,
     `Requested: ${requestedAt}`,
     '',
-    'Review this request in the Operator Dashboard beta access tab.'
+    'Review this request in the Operator Dashboard account access tab.'
   ].join('\n');
 
   try {
@@ -93,16 +93,9 @@ Deno.serve(async (request) => {
       })
     )));
 
-    const failed = results.find((result) => {
-      if (result.status === 'rejected') {
-        return true;
-      }
-      return result.value?.ok === false;
-    });
+    const failed = results.find((result) => result.status === 'rejected');
     if (failed) {
-      const message = failed.status === 'rejected'
-        ? failed.reason?.message || 'Resend send failed.'
-        : failed.value?.error || 'Resend send failed.';
+      const message = failed.reason?.message || 'Resend send failed.';
       console.error('beta access operator notification failed', { error: message });
       return json({ ok: false, error: 'Operator notification email failed.' });
     }

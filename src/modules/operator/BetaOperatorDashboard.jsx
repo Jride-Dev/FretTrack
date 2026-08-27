@@ -121,12 +121,12 @@ export default function BetaOperatorDashboard({ onNotice }) {
     try {
       await updateBetaAccessRequest(accessRequest, status, accessRequest.notes || null);
       await loadDashboard();
-      onNotice?.({ type: 'success', message: `${accessRequest.email || accessRequest.userId || accessRequest.id} beta access updated.` });
+      onNotice?.({ type: 'success', message: `${accessRequest.email || accessRequest.userId || accessRequest.id} account access updated.` });
     } catch (error) {
-      console.error('Operator beta access update failed.', error);
+      console.error('Operator account access update failed.', error);
       onNotice?.({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Beta access update failed.'
+        message: error instanceof Error ? error.message : 'Account access update failed.'
       });
     } finally {
       setIsSavingAccessUserId('');
@@ -173,13 +173,13 @@ export default function BetaOperatorDashboard({ onNotice }) {
   }, [dashboard?.betaAccessRequests, query]);
 
   if (isLoading && !dashboard) {
-    return <section className="panel operator-dashboard">Loading beta operator dashboard...</section>;
+    return <section className="panel operator-dashboard">Loading operator dashboard...</section>;
   }
 
   if (!dashboard) {
     return (
       <section className="panel operator-dashboard">
-        <h2>Beta Operator Dashboard</h2>
+        <h2>Operator Dashboard</h2>
         <p className="muted-text">Operator data is unavailable.</p>
         <button type="button" onClick={loadDashboard}>Retry</button>
       </section>
@@ -190,8 +190,8 @@ export default function BetaOperatorDashboard({ onNotice }) {
     <section className="panel operator-dashboard">
       <div className="operator-header">
         <div>
-          <h2>Beta Operator Dashboard</h2>
-          <p className="muted-text">Review beta access, shop status, trial access, and support activity.</p>
+          <h2>Operator Dashboard</h2>
+          <p className="muted-text">Review account access, shop status, trial access, and support activity.</p>
         </div>
         <button type="button" onClick={loadDashboard} disabled={isLoading}>
           {isLoading ? 'Refreshing...' : 'Refresh'}
@@ -221,7 +221,7 @@ export default function BetaOperatorDashboard({ onNotice }) {
               className={activeView === view ? 'active' : ''}
               onClick={() => setActiveView(view)}
             >
-              {view === 'betaAccess' ? 'beta access' : view}
+              {view === 'betaAccess' ? 'account access' : view}
             </button>
           ))}
         </div>
@@ -263,10 +263,10 @@ export default function BetaOperatorDashboard({ onNotice }) {
 
 function SummaryCards({ summary }) {
   const cards = [
-    ['Beta shops', summary.totalBetaShops],
+    ['Approved shops', summary.totalBetaShops],
     ['Active users', summary.activeUsers],
     ['Trialing', summary.trialingShops],
-    ['Beta bypass', summary.betaBypassShops],
+    ['Legacy access', summary.betaBypassShops],
     ['Grace/read-only', summary.graceOrReadOnlyShops],
     ['Storage', formatStorage(summary.totalStorageBytes)],
     ['Jobs', summary.totalJobs],
@@ -345,7 +345,7 @@ function BetaAccessTable({ requests, isSavingAccessUserId, onUpdateAccess }) {
           ))}
           {!requests.length && (
             <tr>
-              <td colSpan="7">No beta access requests found.</td>
+              <td colSpan="7">No account access requests found.</td>
             </tr>
           )}
         </tbody>
@@ -411,7 +411,7 @@ function ShopsTable({
                     disabled={isSavingShopId === shop.shopId}
                     onClick={() => onUpdateShop(shop, { betaBypass: shop.subscriptionStatus !== 'beta_bypass' })}
                   >
-                    {shop.subscriptionStatus === 'beta_bypass' ? 'Unset beta' : 'Beta bypass'}
+                    {shop.subscriptionStatus === 'beta_bypass' ? 'Remove legacy access' : 'Grant legacy access'}
                   </button>
                   {['shop', 'pro'].flatMap((tier) => [7, 14, 30].map((days) => (
                     <button

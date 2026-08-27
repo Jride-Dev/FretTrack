@@ -190,7 +190,7 @@ export function getDefaultEntitlementSnapshot(shopId = '') {
     shopId,
     plan: {
       id: hasSupabaseConfig ? 'trial' : 'local',
-      name: hasSupabaseConfig ? 'Beta / Trial' : 'Local Development',
+      name: hasSupabaseConfig ? 'Trial Access' : 'Local Development',
       status: 'active'
     },
     subscription: {
@@ -486,7 +486,7 @@ export function getBillingStatusLabel(status) {
     [BILLING_STATUSES.CANCELED]: 'Canceled',
     [BILLING_STATUSES.CANCELLED]: 'Cancelled',
     [BILLING_STATUSES.EXPIRED]: 'Expired',
-    [BILLING_STATUSES.BETA_BYPASS]: 'Beta bypass',
+    [BILLING_STATUSES.BETA_BYPASS]: 'Legacy access',
     inactive: 'Inactive',
     past_due: 'Past due',
     unknown: 'Unknown'

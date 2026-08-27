@@ -44,7 +44,7 @@ import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pw
 import { isAmplifierJob } from '../modules/amplifiers/amplifierRepair.js';
 import { isKeyboardJob } from '../modules/keyboards/keyboardRepair.js';
 
-const APP_VERSION = '0.2.9-beta.6';
+const APP_VERSION = '0.2.9';
 const APP_NAME = 'FretTrack';
 const APP_TAGLINE = 'Modern workflow for guitar repair';
 const PWA_INSTALL_HELP_DISMISSED_KEY = 'frettrack_pwa_install_help_dismissed';
@@ -390,12 +390,12 @@ export default function App() {
       setSupabaseStatus('auth-required');
       clearSelectedShop();
     } catch (error) {
-      console.error('Beta access check failed.', error);
+      console.error('Access approval check failed.', error);
       setIsOperator(false);
       setBetaAccess({ status: 'pending' });
       setNotice({
         type: 'error',
-        message: getErrorMessage(error, 'Unable to check beta access.')
+        message: getErrorMessage(error, 'Unable to check account access.')
       });
     } finally {
       setIsOperatorLoading(false);
@@ -582,7 +582,7 @@ export default function App() {
     }
 
     if (hasSupabaseConfig && !isOperator && betaAccess?.status !== 'approved') {
-      setNotice({ type: 'error', message: 'FretTrack must approve your beta access before you can create a shop.' });
+      setNotice({ type: 'error', message: 'FretTrack must approve your account access before you can create a shop.' });
       return;
     }
 
@@ -1039,7 +1039,7 @@ export default function App() {
   if (hasSupabaseConfig && session && !isOperator && isBetaAccessLoading) {
     return (
       <main className="app auth-shell">
-        <section className="panel auth-panel">Checking beta access...</section>
+        <section className="panel auth-panel">Checking account access...</section>
       </main>
     );
   }
@@ -1536,13 +1536,13 @@ function slugifyShopId(shopName) {
 function PendingApprovalScreen({ betaAccess, email, onRetry, onSignOut }) {
   const isRejected = betaAccess?.status === 'rejected';
   const message = isRejected
-    ? 'Your FretTrack beta access request is not active. Contact support if you believe this is a mistake.'
-    : 'Your FretTrack beta access request has been received. Approval is required before shop setup unlocks.';
+    ? 'Your FretTrack access request is not active. Contact support if you believe this is a mistake.'
+    : 'Your FretTrack access request has been received. Approval is required before shop setup unlocks.';
 
   return (
     <main className="app auth-shell">
       <section className="panel auth-panel">
-        <h1>{isRejected ? 'Beta Access Not Active' : 'Pending Approval'}</h1>
+        <h1>{isRejected ? 'Account Access Not Active' : 'Pending Approval'}</h1>
         <p>{message}</p>
         {!isRejected && (
           <p className="muted-text">
@@ -1596,7 +1596,7 @@ function InternalCurrentAccessPanel({ betaAccess, canWrite, entitlementSnapshot,
           <dd>{canAccessShopAsMember({ role: membership?.role, entitlementSnapshot }) ? 'Yes' : 'No'}</dd>
         </div>
         <div>
-          <dt>Beta Access</dt>
+          <dt>Access Approval</dt>
           <dd>{betaAccess?.status || '-'}</dd>
         </div>
         <div>

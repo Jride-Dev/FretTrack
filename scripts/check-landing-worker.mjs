@@ -15,7 +15,7 @@ const VALID_BODY = {
 const PUBLIC_DOC_ROUTES = [
   { route: '/docs/how-to-use-frettrack', assetPath: '/docs/how-to-use-frettrack.html', title: 'How to use FretTrack' },
   { route: '/docs/getting-started', assetPath: '/docs/getting-started.html', title: 'Start using FretTrack' },
-  { route: '/docs/beta-tester-guide', assetPath: '/docs/beta-tester-guide.html', title: 'How to test FretTrack' },
+  { route: '/docs/workflow-testing', assetPath: '/docs/beta-tester-guide.html', title: 'How to test FretTrack' },
   { route: '/docs/shops-and-accounts', assetPath: '/docs/shops-and-accounts.html', title: 'Manage shop access' },
   { route: '/docs/customers', assetPath: '/docs/customers.html', title: 'Manage customer records' },
   { route: '/docs/jobs', assetPath: '/docs/jobs.html', title: 'Create and manage jobs' },
@@ -138,7 +138,7 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.match(html, /<link rel="icon" href="\/favicon\.ico" sizes="any">/);
   assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png">/);
-  assert.match(html, /Request Beta Access/);
+  assert.match(html, /Request Access/);
   assert.match(html, /\/landing\/overview\.jpg/);
   assert.match(html, /Stripe Checkout and self-service billing management/);
   assert.match(html, /\$29\.99 monthly/);
@@ -166,11 +166,11 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.doesNotMatch(html, /community-card-mark[\s\S]*>TGR</);
   assert.match(html, /View FretTrack on GitHub/);
   assert.match(html, /Visit Torrance Guitar Repair/);
-  assert.match(html, /href="\/beta-tester"/);
+  assert.match(html, /href="\/testing-checklist"/);
   assert.match(html, /href="\/support"/);
   assert.match(html, /href="\/privacy"/);
   assert.match(html, /href="\/terms"/);
-  assert.match(html, /Beta Tester Checklist/);
+  assert.match(html, /Workflow Testing Checklist/);
 }
 
 async function testBundledFaviconAssetRoute() {
@@ -236,12 +236,12 @@ async function testBetaTesterChecklistRoutes() {
         const pathname = new URL(request.url).pathname;
         assetCalls.push(pathname);
         if (pathname === '/beta-tester.html') {
-          return new Response('<!doctype html><title>FretTrack Beta Testing Checklist</title><a href="/downloads/frettrack-beta-tester-workbook.xlsx">Download workbook</a><a href="/downloads/frettrack-beta-tester-checklist.csv">CSV fallback</a>', {
+          return new Response('<!doctype html><title>FretTrack Workflow Testing Checklist</title><a href="/downloads/frettrack-beta-tester-workbook.xlsx">Download workbook</a><a href="/downloads/frettrack-beta-tester-checklist.csv">CSV fallback</a>', {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
         if (pathname === '/docs.html') {
-          return new Response('<!doctype html><title>Docs | FretTrack</title><h1>FretTrack Docs</h1><a href="/docs/how-to-use-frettrack">Complete how-to guide</a><a href="/support">Support</a><a href="/beta-tester">Beta Tester Checklist</a>', {
+          return new Response('<!doctype html><title>Docs | FretTrack</title><h1>FretTrack Docs</h1><a href="/docs/how-to-use-frettrack">Complete how-to guide</a><a href="/support">Support</a><a href="/testing-checklist">Workflow Testing Checklist</a>', {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
@@ -286,11 +286,11 @@ async function testBetaTesterChecklistRoutes() {
     }
   };
 
-  const pageResponse = await worker.fetch(new Request('https://frettrack-app.com/beta-tester'), env);
+  const pageResponse = await worker.fetch(new Request('https://frettrack-app.com/testing-checklist'), env);
   const pageHtml = await pageResponse.text();
   assert.equal(pageResponse.status, 200);
   assert.match(pageResponse.headers.get('content-type') || '', /text\/html/);
-  assert.match(pageHtml, /FretTrack Beta Testing Checklist/);
+  assert.match(pageHtml, /FretTrack Workflow Testing Checklist/);
   assert.match(pageHtml, /frettrack-beta-tester-workbook\.xlsx/);
   assert.match(pageHtml, /frettrack-beta-tester-checklist\.csv/);
 
@@ -302,7 +302,7 @@ async function testBetaTesterChecklistRoutes() {
   assertRequiredDocSecurityHeaders(docsResponse, '/docs');
   assert.match(docsHtml, /FretTrack Docs/);
   assert.match(docsHtml, /Complete how-to guide/);
-  assert.match(docsHtml, /Beta Tester Checklist/);
+  assert.match(docsHtml, /Workflow Testing Checklist/);
 
   const docsHtmlResponse = await worker.fetch(new Request('https://frettrack-app.com/docs.html'), env);
   assert.equal(docsHtmlResponse.status, 200);
@@ -567,13 +567,13 @@ function assertApplicantConfirmationEmail(calls) {
   ));
 
   assert.ok(applicantCall, 'Expected applicant confirmation email call.');
-  assert.equal(applicantCall.body.subject, 'Thank you for signing up for the FretTrack Beta');
-  assert.match(applicantCall.body.text, /Thank you for signing up for the FretTrack Beta!/);
+  assert.equal(applicantCall.body.subject, 'Thank you for requesting FretTrack access');
+  assert.match(applicantCall.body.text, /Thank you for requesting FretTrack access!/);
   assert.match(applicantCall.body.text, /waiting for operator review/i);
   assert.match(applicantCall.body.text, /You do not need to submit another application/i);
   assert.match(applicantCall.body.text, /spam or junk folder/i);
-  assert.match(applicantCall.body.html, /Thank you for signing up for the FretTrack Beta!/);
-  assert.match(applicantCall.body.html, /FretTrack beta login/);
+  assert.match(applicantCall.body.html, /Thank you for requesting FretTrack access!/);
+  assert.match(applicantCall.body.html, /FretTrack login/);
   assert.match(applicantCall.body.html, /spam or junk folder/i);
 }
 

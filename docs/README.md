@@ -2,7 +2,7 @@
 
 This folder is the home for product and technical documentation that does not belong in the root README.
 
-Customer-facing and tester-facing docs should also be reachable from the public FretTrack site at `https://frettrack-app.com/docs`. The public docs hub now hosts a complete screenshot-backed how-to manual at `https://frettrack-app.com/docs/how-to-use-frettrack`, plus shorter topic guides for getting started, beta testing, shops/accounts, customers, jobs, estimates, photos/damage maps, inventory, shipping/custody, scheduling, reports, billing basics, roles, troubleshooting, and FAQ. GitHub Wiki can still be useful for project/developer notes, but beta testers and repair shops should not need GitHub access to read support, legal, checklist, or day-to-day user-guide material.
+Customer-facing and workflow-testing docs should also be reachable from the public FretTrack site at `https://frettrack-app.com/docs`. The public docs hub hosts a complete screenshot-backed how-to manual at `https://frettrack-app.com/docs/how-to-use-frettrack`, plus shorter topic guides for getting started, workflow testing, shops/accounts, customers, jobs, estimates, photos/damage maps, inventory, shipping/custody, scheduling, reports, billing basics, roles, troubleshooting, and FAQ. GitHub Wiki can still be useful for project/developer notes, but repair shops should not need GitHub access to read support, legal, checklist, or day-to-day user-guide material.
 
 FretTrack's historical pre-milestone baseline was `v0.2.6-beta.14`. Current branch planning uses product milestone versions:
 
@@ -11,7 +11,7 @@ FretTrack's historical pre-milestone baseline was `v0.2.6-beta.14`. Current bran
 - `v0.2.63 beta`: Scheduling complete
 - `v0.3.0 beta`: Operational Shop Release
 
-Current release candidate: `v0.2.9-beta.6`. This candidate includes Pro-gated Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, and Loyalty workflows; restores the complete commercial and purchasing lifecycle for specialist jobs; hardens Stripe lifecycle ordering and retry safety; and carries the existing architecture, recovery, permission, quota, and shop-isolation work through a coordinated production rollout.
+Current stable release: `v0.2.9`. This release includes Pro-gated Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, and Loyalty workflows; restores the complete commercial and purchasing lifecycle for specialist jobs; hardens Stripe lifecycle ordering and retry safety; and carries the existing architecture, recovery, permission, quota, and shop-isolation work through a coordinated production rollout.
 
 Start here for the current product path:
 
@@ -47,11 +47,11 @@ Start here for the current product path:
 - [Beta operator dashboard](BETA_OPERATOR_DASHBOARD.md)
 - [Trial readiness checklist](TRIAL_READINESS.md)
 
-Core shipped beta areas now include:
+Core shipped product areas now include:
 
 - customer and subcontractor management
 - public launch landing page refresh with bundled favicon and product screenshot assets
-- public docs hub at `https://frettrack-app.com/docs` with a complete screenshot-backed how-to manual and customer-facing topic pages adapted from FretTrack Wiki/user-guide material for beta tester and shop resources when GitHub Wiki is blocked or inconvenient
+- public docs hub at `https://frettrack-app.com/docs` with a complete screenshot-backed how-to manual and customer-facing topic pages adapted from FretTrack Wiki/user-guide material for workflow testing and shop resources when GitHub Wiki is blocked or inconvenient
 - public Terms of Service, Privacy Policy, and Support / FAQ pages on the landing site
 - work-order and invoice email flow
 - mobile and PWA readiness
@@ -76,13 +76,13 @@ Core shipped beta areas now include:
 - Advanced Reporting Phase 1
 - Pro Reports export, print, row-cap, and large-dataset safety behavior
 - first-shop bootstrap reliability: approved/confirmed users create shop profile, owner membership, and default trial subscription together before the app loads real shop access
-- beta approval applicant notifications
+- account approval applicant notifications
 - Photo Editor Phase 1
 
 Current permission and premium-trial behavior:
 
-- Beta access approval and paid trial access are separate systems.
-- New shop bootstrap requires confirmed email plus approved beta access or operator access; it creates the shop profile, owner membership, and default trial subscription atomically.
+- Account approval and paid trial access are separate systems.
+- New shop bootstrap requires confirmed email plus approved account access or operator access; it creates the shop profile, owner membership, and default trial subscription atomically.
 - Operators can start, extend, and end 7/14/30-day Shop or Pro trials.
 - Expired trials preserve data and memberships, allow safe viewing, block writes, and lock premium entitlements.
 - Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration and should not be marketed as public plans.
