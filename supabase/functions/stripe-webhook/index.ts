@@ -25,6 +25,10 @@ type StripeSyncContext = {
   generation: number;
   eventId: string;
 };
+type StripeWebhookClaim = {
+  claimed: boolean;
+  processingToken: string;
+};
 
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
@@ -47,22 +51,31 @@ Deno.serve(async (request) => {
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '');
 
-  const existing = await supabase
-    .from('stripe_webhook_events')
-    .select('stripe_event_id, status')
-    .eq('stripe_event_id', event.id)
-    .maybeSingle();
-  if (existing.data && existing.data.status !== 'failed') {
+  let claim: StripeWebhookClaim;
+  try {
+    claim = await claimEvent(supabase as SupabaseAnyClient, event);
+  } catch (error) {
+    console.error('stripe-webhook claim failed', error);
+    return new Response(JSON.stringify({ error: getErrorMessage(error) }), { status: 500 });
+  }
+  if (!claim.claimed) {
     return new Response(JSON.stringify({ received: true, duplicate: true }), { status: 200 });
   }
 
   try {
     const result = await handleStripeEvent(supabase as SupabaseAnyClient, event);
-    await recordEvent(supabase, event, result);
+    await finalizeEvent(supabase as SupabaseAnyClient, event.id, claim.processingToken, result);
     return new Response(JSON.stringify({ received: true }), { status: 200 });
   } catch (error) {
     console.error('stripe-webhook failed', error);
-    await recordEvent(supabase as SupabaseAnyClient, event, { status: 'failed', errorMessage: getErrorMessage(error) });
+    try {
+      await finalizeEvent(supabase as SupabaseAnyClient, event.id, claim.processingToken, {
+        status: 'failed',
+        errorMessage: getErrorMessage(error),
+      });
+    } catch (finalizeError) {
+      console.error('stripe-webhook failure finalization failed', finalizeError);
+    }
     return new Response(JSON.stringify({ error: getErrorMessage(error) }), { status: 500 });
   }
 });
@@ -267,19 +280,37 @@ async function getCustomerEmail(customerId: string) {
   return customer.email || '';
 }
 
-async function recordEvent(supabase: SupabaseAnyClient, event: Stripe.Event, result: StripeEventResult) {
-  const { error } = await supabase.from('stripe_webhook_events').upsert({
-    stripe_event_id: event.id,
-    event_type: event.type,
-    stripe_event_created_at: timestampToIso(event.created),
-    livemode: event.livemode,
-    shop_id: result.shopId || null,
-    stripe_customer_id: result.customerId || null,
-    stripe_subscription_id: result.subscriptionId || null,
-    status: result.status || 'processed',
-    error_message: result.errorMessage || ''
-  }, { onConflict: 'stripe_event_id' });
+async function claimEvent(supabase: SupabaseAnyClient, event: Stripe.Event): Promise<StripeWebhookClaim> {
+  const processingToken = crypto.randomUUID();
+  const { data, error } = await supabase.rpc('claim_stripe_webhook_event', {
+    p_stripe_event_id: event.id,
+    p_event_type: event.type,
+    p_stripe_event_created_at: timestampToIso(event.created),
+    p_livemode: event.livemode,
+    p_processing_token: processingToken,
+  });
   if (error) throw error;
+  if (typeof data !== 'boolean') throw new Error('Stripe webhook claim returned an invalid result.');
+  return { claimed: data, processingToken };
+}
+
+async function finalizeEvent(
+  supabase: SupabaseAnyClient,
+  eventId: string,
+  processingToken: string,
+  result: StripeEventResult,
+) {
+  const { data, error } = await supabase.rpc('finalize_stripe_webhook_event', {
+    p_stripe_event_id: eventId,
+    p_processing_token: processingToken,
+    p_status: result.status || 'processed',
+    p_shop_id: result.shopId || '',
+    p_stripe_customer_id: result.customerId || '',
+    p_stripe_subscription_id: result.subscriptionId || '',
+    p_error_message: result.errorMessage || '',
+  });
+  if (error) throw error;
+  if (data !== true) throw new Error('Stripe webhook event claim could not be finalized.');
 }
 
 function planFromPriceId(priceId: string) {

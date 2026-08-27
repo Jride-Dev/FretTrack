@@ -103,9 +103,22 @@ assert.ok(portalFunction.includes(".eq('user_id', userId)"), 'Portal function mu
 assert.ok(!portalFunction.includes(".eq('status', 'active')"), 'Portal function must use the actual shop_members schema.');
 
 const webhookFunction = read('supabase/functions/stripe-webhook/index.ts');
+const stripeWebhookClaimMigration = read('supabase/migrations/20260827181934_stripe_webhook_atomic_event_claim.sql');
 assert.ok(webhookFunction.includes('constructEventAsync'), 'Stripe webhook must verify signatures from the raw body.');
 assert.ok(webhookFunction.includes('STRIPE_WEBHOOK_SIGNING_SECRET'), 'Stripe webhook must support the existing webhook signing secret name.');
-assert.ok(webhookFunction.includes('stripe_webhook_events'), 'Stripe webhook must record processed event ids.');
+assert.ok(
+  webhookFunction.includes("rpc('claim_stripe_webhook_event'") &&
+  webhookFunction.includes("rpc('finalize_stripe_webhook_event'"),
+  'Stripe webhook must atomically claim event ids before processing and finalize the winning claim.',
+);
+assert.ok(
+  webhookFunction.indexOf('claim = await claimEvent(') < webhookFunction.indexOf('const result = await handleStripeEvent('),
+  'Stripe webhook must claim an event before entering its event handler.',
+);
+assert.ok(
+  !/from\(['"]stripe_webhook_events['"]\)\s*\.select/s.test(webhookFunction),
+  'Stripe webhook duplicate protection must not use a race-prone select-before-process check.',
+);
 assert.ok(webhookFunction.includes('checkout.session.completed'), 'Stripe webhook must process completed Checkout sessions.');
 assert.ok(webhookFunction.includes('customer.subscription.updated'), 'Stripe webhook must process subscription updates.');
 assert.ok(webhookFunction.includes('invoice.payment_failed'), 'Stripe webhook must process failed payments.');
@@ -129,8 +142,17 @@ assert.ok(
   /const generation = await beginSubscriptionSync\([\s\S]*?const currentSubscription = await stripe\.subscriptions\.retrieve\(subscriptionId\)/.test(webhookFunction),
   'Webhook must claim a sync generation before reloading current subscription state from Stripe.',
 );
-assert.ok(webhookFunction.includes("existing.data.status !== 'failed'"), 'Failed webhook events must remain retryable.');
-assert.ok(webhookFunction.includes("onConflict: 'stripe_event_id'"), 'Webhook event retries must update the existing idempotency record.');
+assert.ok(
+  stripeWebhookClaimMigration.includes("status = 'failed'") &&
+  stripeWebhookClaimMigration.includes('attempt_count = attempt_count + 1'),
+  'Failed webhook events must remain retryable through a new claimed attempt.',
+);
+assert.ok(
+  stripeWebhookClaimMigration.includes('on conflict (stripe_event_id) do nothing') &&
+  stripeWebhookClaimMigration.includes("status = 'processing'") &&
+  stripeWebhookClaimMigration.includes('processing_token = p_processing_token'),
+  'Webhook event retries must use an atomic unique claim and token-guarded finalization.',
+);
 assert.ok(
   !/from\(['"]shop_subscriptions['"]\)\.(?:upsert|update|insert)/s.test(webhookFunction),
   'The webhook must not bypass the atomic subscription-state RPC with direct table writes.',
