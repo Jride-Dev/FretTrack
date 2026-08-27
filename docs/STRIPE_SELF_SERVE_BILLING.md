@@ -96,9 +96,19 @@ The listener prints its own `whsec_...` secret. Save that exact value as `STRIPE
 
 The sandbox environment must set `STRIPE_BILLING_ENABLED=true` and restrict `STRIPE_BILLING_PILOT_SHOP_IDS` to the disposable local fixture shop. The production switch remains closed throughout local validation.
 
-The validator asserts all four approved sandbox amounts and recurring intervals before it creates any Checkout session.
+The validator asserts all four approved sandbox amounts and recurring intervals before it creates any Checkout session. Set `STRIPE_SANDBOX_API_KEY` to the secret key for the exact sandbox being validated, or store it in the dedicated `frettrack-sandbox` Stripe CLI profile. Stripe Dashboard/CLI OAuth context selection does not expose a server-side `sk_test_` key to Edge Functions, and an older CLI TOML profile may belong to a different sandbox.
 
-With local Supabase and the Stripe CLI running, `npm run test:stripe-sandbox` discovers the active FretTrack sandbox prices and performs the repeatable pilot lifecycle: gate denial outside the allowlist, annual Checkout creation, signed webhook activation, Billing Portal creation, annual Shop-to-Pro change, period-end cancellation, final cancellation, signed duplicate and older-event replay, and sandbox-only event verification. Command discovery supports Windows and Unix-like systems and reports a controlled missing-CLI error. The validator creates no report containing secrets and cleans up the temporary Stripe customer and subscription.
+```powershell
+$env:STRIPE_SANDBOX_API_KEY = 'sk_test_...'
+$env:STRIPE_ALLOW_EVENT_REPLAY = 'true'
+npm run test:stripe-sandbox
+```
+
+For an interactive local profile instead, run `stripe login --interactive --new-session --project-name frettrack-sandbox` in a normal terminal and paste the sandbox secret key only when Stripe CLI prompts for it. The validator prefers that profile automatically; `STRIPE_CLI_PROFILE` can select another named profile when needed.
+
+Keep that value in the local shell or an approved secret manager only. Do not paste it into documentation, commit it, or replace the hosted live `STRIPE_API_KEY`. If the explicit environment variable is absent, the validator retains the legacy Stripe CLI TOML fallback for existing development profiles.
+
+With local Supabase and the Stripe CLI running, `npm run test:stripe-sandbox` discovers the FretTrack prices belonging to that key and performs the repeatable pilot lifecycle: gate denial outside the allowlist, annual Checkout creation, signed webhook activation, Billing Portal creation, annual Shop-to-Pro change, period-end cancellation, final cancellation, signed duplicate and older-event replay, and sandbox-only event verification. It prints the sandbox account ID before creating test data and passes the same key to the Stripe listener, preventing API calls and webhook listening from silently targeting different sandboxes. Command discovery supports Windows and Unix-like systems and reports a controlled missing-CLI error. The validator creates no report containing secrets and cleans up the temporary Stripe customer and subscription.
 
 ## Edge Function Deployment
 

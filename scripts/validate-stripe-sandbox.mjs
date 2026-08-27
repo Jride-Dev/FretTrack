@@ -25,13 +25,15 @@ try {
   assertLocalUrl(supabase.DB_URL, 'Supabase database');
 
   stripeApiKey = await loadStripeSandboxKey();
+  const stripeAccount = await stripeRequest('GET', '/v1/account');
+  console.log(`Stripe sandbox account: ${stripeAccount.id}`);
   const prices = await discoverFretTrackPrices(stripeApiKey);
   validatePrice(prices.shop.monthly, 2_999, 'month', 'Shop monthly');
   validatePrice(prices.shop.yearly, 29_999, 'year', 'Shop yearly');
   validatePrice(prices.pro.monthly, 3_999, 'month', 'Pro monthly');
   validatePrice(prices.pro.yearly, 39_999, 'year', 'Pro yearly');
 
-  const webhookSecretPromise = startStripeListener();
+  const webhookSecretPromise = startStripeListener(supabase, stripeApiKey);
   const webhookSecret = await webhookSecretPromise;
   temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'frettrack-stripe-sandbox-'));
   const envPath = path.join(temporaryDirectory, 'functions.env');
@@ -180,11 +182,37 @@ function assertLocalUrl(value, label) {
 }
 
 async function loadStripeSandboxKey() {
+  const environmentKey = String(process.env.STRIPE_SANDBOX_API_KEY || '').trim();
+  if (environmentKey) {
+    assert.ok(environmentKey.startsWith('sk_test_'), 'STRIPE_SANDBOX_API_KEY must be a Stripe sandbox secret key.');
+    return environmentKey;
+  }
   const configPath = path.join(process.env.USERPROFILE || os.homedir(), '.config', 'stripe', 'config.toml');
   const config = await fs.readFile(configPath, 'utf8');
+  const profileName = String(process.env.STRIPE_CLI_PROFILE || 'frettrack-sandbox').trim();
+  const profileKey = readStripeConfigProfileValue(config, profileName, 'test_mode_api_key');
+  if (profileKey) {
+    assert.ok(profileKey.startsWith('sk_test_'), `Stripe CLI profile ${profileName} does not contain a sandbox secret key.`);
+    return profileKey;
+  }
   const match = config.match(/^test_mode_api_key\s*=\s*["']([^"']+)["']/m);
-  assert.ok(match?.[1]?.startsWith('sk_test_'), 'Stripe CLI sandbox API key was not found. Run `stripe login`.');
+  assert.ok(match?.[1]?.startsWith('sk_test_'), 'Stripe sandbox API key was not found. Set STRIPE_SANDBOX_API_KEY or create the frettrack-sandbox Stripe CLI profile.');
   return match[1];
+}
+
+function readStripeConfigProfileValue(config, profileName, keyName) {
+  let currentProfile = '';
+  for (const line of config.split(/\r?\n/)) {
+    const section = line.match(/^\s*\[\s*(?:"([^"]+)"|'([^']+)'|([^\]]+))\s*\]\s*$/);
+    if (section) {
+      currentProfile = String(section[1] || section[2] || section[3] || '').trim();
+      continue;
+    }
+    if (currentProfile !== profileName) continue;
+    const value = line.match(new RegExp(`^\\s*${keyName}\\s*=\\s*["']([^"']+)["']\\s*$`));
+    if (value) return value[1].trim();
+  }
+  return '';
 }
 
 async function discoverFretTrackPrices(apiKey) {
@@ -220,13 +248,17 @@ function validatePrice(price, expectedAmount, expectedInterval, label) {
   assert.equal(price.recurring?.interval, expectedInterval, `${label} uses the wrong recurring interval.`);
 }
 
-function startStripeListener() {
+function startStripeListener(supabase, apiKey) {
   return new Promise((resolve, reject) => {
     const child = spawn(resolveCommand('stripe'), [
       'listen',
-      '--forward-to', 'http://127.0.0.1:54321/functions/v1/stripe-webhook',
+      '--forward-to', `${getFunctionsUrl(supabase)}/stripe-webhook`,
       '--events', 'checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.paid,invoice.payment_succeeded,invoice.payment_failed'
-    ], { cwd: repoRoot, windowsHide: true });
+    ], {
+      cwd: repoRoot,
+      env: { ...process.env, STRIPE_API_KEY: apiKey },
+      windowsHide: true
+    });
     spawnedProcesses.push(child);
     let settled = false;
     let output = '';
