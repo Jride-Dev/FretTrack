@@ -27,7 +27,7 @@ The webhook uses Stripe signature verification against the raw request body and 
 
 Creating or opening a Checkout Session does not change the shop's FretTrack plan, subscription status, entitlements, or connected Stripe customer ID. Existing Stripe customers are reused when already connected. For a shop without a connected customer, Stripe creates the customer as part of confirming subscription Checkout.
 
-An abandoned, canceled, expired, or failed Checkout Session therefore leaves the existing beta or paid access state unchanged. FretTrack persists Stripe customer/subscription identifiers and changes plan access only after a signature-verified Stripe webhook reports the subscription state. The success-page redirect is not treated as proof of payment.
+An abandoned, canceled, expired, or failed Checkout Session therefore leaves the existing trial or paid access state unchanged. FretTrack persists Stripe customer/subscription identifiers and changes plan access only after a signature-verified Stripe webhook reports the subscription state. The success-page redirect is not treated as proof of payment.
 
 Checkout creation also uses one deterministic idempotency key per shop and subscription generation. Simultaneous tabs requesting the same Checkout either replay the single Stripe Session or receive a safe in-progress conflict; a different plan request is rejected instead of opening a second subscription path. A terminal subscription ID starts a new generation so a genuinely canceled subscriber can later purchase again.
 
@@ -37,9 +37,9 @@ Before setting `STRIPE_REQUIRE_TERMS_ACCEPTANCE=true`, configure the live and sa
 
 For an existing Stripe customer, FretTrack checks every page of that customer's subscriptions before creating Checkout. An open subscription linked to the shop therefore blocks another Checkout even when it appears beyond Stripe's first 100 records.
 
-## Launch Switch and Pilot Access
+## Launch Switch and Enrollment Access
 
-New Checkout sessions are protected by a server-authoritative Edge Function gate that defaults closed. The Billing page requests the authenticated gate status so its subscription buttons match the server, but browser state is never the authority. Existing subscribers retain Billing Portal access while new enrollment is closed.
+New Checkout sessions are protected by a server-authoritative Edge Function gate that defaults closed. The Billing page requests the authenticated gate status so its subscription buttons match the server, but browser state is never the authority. Existing subscribers retain Billing Portal access even when new enrollment is closed.
 
 Migration `20260824020500_stripe_service_role_grants.sql` supplies the narrow table privileges required by the Checkout, Billing Portal, and webhook Edge Functions. A service-role JWT bypasses RLS, but PostgreSQL still requires explicit table privileges; do not replace these grants with broad schema-wide access.
 
@@ -51,7 +51,7 @@ supabase secrets set STRIPE_BILLING_PILOT_SHOP_IDS=
 supabase secrets set STRIPE_REQUIRE_TERMS_ACCEPTANCE=true
 ```
 
-For a controlled pilot, set `STRIPE_BILLING_ENABLED=true` and set `STRIPE_BILLING_PILOT_SHOP_IDS` to the exact comma-separated shop IDs allowed to open Checkout. An empty pilot list with billing enabled opens Checkout to every eligible owner/admin, so do not leave it empty during pilot validation. Closing the switch blocks only new Checkout creation; it does not block existing customers from opening Stripe's Billing Portal.
+For a controlled pilot, set `STRIPE_BILLING_ENABLED=true` and set `STRIPE_BILLING_PILOT_SHOP_IDS` to the exact comma-separated shop IDs allowed to open Checkout. An empty pilot list with billing enabled opens Checkout to every eligible owner/admin. Production has used that open-enrollment configuration since the stable `v0.2.9` release on 2026-08-27. Closing the switch blocks only new Checkout creation; it does not block existing customers from opening Stripe's Billing Portal.
 
 ## Required Supabase Secrets
 
@@ -124,15 +124,16 @@ Do not use `--no-verify-jwt` for the Checkout or Portal functions.
 
 ## Production Rollout Evidence
 
-As of 2026-08-24:
+As of 2026-08-27:
 
 - migration `20260814041144_stripe_billing_concurrency_guards.sql` is recorded in the linked production migration history;
-- `stripe-webhook` version 12 is active with gateway JWT verification disabled only for Stripe delivery;
+- `stripe-webhook` version 23 is active with gateway JWT verification disabled only for Stripe delivery;
+- `create-checkout-session` version 13 is active with gateway JWT verification retained;
 - an authenticated-anon probe receives HTTP 401 from both the synchronization cursor table and `begin_stripe_subscription_sync`;
 - a webhook request without `stripe-signature` reaches the function and fails closed with HTTP 400;
 - `npm run check:stripe-edge-functions` passes all 13 executable lifecycle/concurrency/launch-gate tests;
 - `npm run test:stripe-sandbox` passes annual Checkout, signed subscription activation, Billing Portal, Shop-to-Pro, period-end cancellation, final cancellation, and signed duplicate/out-of-order replay against local Supabase; and
-- production enrollment remains closed until the intended live account is configured and a low-risk live pilot validates payment, invoice renewal/recovery, and production webhook delivery.
+- the stable production launch has `STRIPE_BILLING_ENABLED=true`, required Terms acceptance enabled, and an empty pilot allowlist, opening Checkout to eligible owners/admins without altering the hosted live API key.
 
 ## Webhook Events to Enable
 
