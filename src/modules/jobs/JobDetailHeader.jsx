@@ -1,6 +1,7 @@
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
 import JobAssignmentControl from './JobAssignmentControl.jsx';
 import JobStatusSelect from './JobStatusSelect.jsx';
+import JobAccountingVoidControl from './JobAccountingVoidControl.jsx';
 
 export default function JobDetailHeader({
   draftJob,
@@ -15,7 +16,9 @@ export default function JobDetailHeader({
   betaApproved,
   onStatusChange,
   onAssignmentChanged,
-  onNotice
+  onNotice,
+  canManageAccountingVoid = false,
+  onAccountingVoidChange
 }) {
   return (
     <>
@@ -37,6 +40,12 @@ export default function JobDetailHeader({
         entitlementSnapshot={entitlementSnapshot}
         betaApproved={betaApproved}
         onAssignmentChanged={onAssignmentChanged}
+        onNotice={onNotice}
+      />
+      <JobAccountingVoidControl
+        job={draftJob}
+        canManage={canManageAccountingVoid}
+        onChange={onAccountingVoidChange}
         onNotice={onNotice}
       />
       {(isDirty || saveStatus === 'saving' || saveStatus === 'error') && (

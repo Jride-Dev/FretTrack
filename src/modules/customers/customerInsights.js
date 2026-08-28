@@ -1,5 +1,6 @@
-import { calculateJobTotals } from '../billing/accounting';
+import { calculateJobTotals, signedPaymentAmount } from '../billing/accounting';
 import { resolveJobTaxSettings } from '../billing/jobTaxSettings';
+import { isJobAccountingVoided } from '../jobs/jobAccountingVoid.js';
 import { normalizeCustomer, normalizePhone, normalizeText } from './customerNormalize';
 
 const CLOSED_JOB_STATUSES = new Set(['completed', 'picked up', 'closed']);
@@ -18,7 +19,8 @@ export function buildCustomerProfile(customer = {}, jobs = [], options = {}) {
     totals: calculateJobTotals(job, resolveJobTaxSettings(job, options.shopProfile || options))
   }));
   const paymentRows = collectPaymentRows(relatedJobs);
-  const summary = summarizeBalance(jobSnapshots);
+  const accountingJobSnapshots = jobSnapshots.filter(({ job }) => !isJobAccountingVoided(job));
+  const summary = summarizeBalance(accountingJobSnapshots);
   const lastJob = relatedJobs[0] || null;
   const lastPayment = paymentRows[0] || null;
   const lastActivityAt = latestIsoDate(
@@ -46,8 +48,8 @@ export function buildCustomerProfile(customer = {}, jobs = [], options = {}) {
     totalBalanceDue: summary.totalBalanceDue,
     openJobBalance: summary.openJobBalance,
     completedUnpaidBalance: summary.completedUnpaidBalance,
-    openJobCount: relatedJobs.filter((job) => !isClosedJob(job)).length,
-    completedJobCount: relatedJobs.filter((job) => isClosedJob(job)).length,
+    openJobCount: relatedJobs.filter((job) => !isJobAccountingVoided(job) && !isClosedJob(job)).length,
+    completedJobCount: relatedJobs.filter((job) => !isJobAccountingVoided(job) && isClosedJob(job)).length,
     notesIndicator: Boolean(normalizedCustomer.notes),
     hasPayments: paymentRows.length > 0
   };
@@ -114,7 +116,8 @@ export function collectPaymentRows(jobs = []) {
       jobId: job.id || '',
       jobNumber: job.jobNumber || '',
       method: payment.method || 'Other',
-      amount: Number(payment.amount) || 0,
+      amount: signedPaymentAmount(payment),
+      type: String(payment.type || payment.eventType || 'payment').toLowerCase(),
       note: payment.note || payment.memo || '',
       date: payment.date || payment.createdAt || job.updatedAt || job.createdAt || '',
       status: payment.status || 'posted'

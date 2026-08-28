@@ -72,7 +72,8 @@ export function filterAndSortCurrentJobs(jobs = [], filters = {}, now = new Date
       job.guitarBrand,
       job.model,
       job.serial,
-      job.assignedMemberDisplayName
+      job.assignedMemberDisplayName,
+      job.accountingVoidReason
     ].some((value) => cleanText(value).includes(search));
   });
 
@@ -230,7 +231,7 @@ export default function CurrentJobsPage({
               aria-label={`Open job ${job.jobNumber || ''} for ${job.customerName || 'customer'}`}
             >
               <span role="cell" data-label="Priority"><span className={`priority-badge ${priority.className}`}>{getJobPriorityShortLabel(job.priority || job.techDetails?.priority)}</span></span>
-              <span role="cell" data-label="Status">{job.status || '-'}</span>
+              <span role="cell" data-label="Status">{job.accountingVoidedAt ? 'Accounting Excluded' : job.status || '-'}</span>
               <strong role="cell" data-label="Job">#{job.jobNumber || '-'}</strong>
               <span role="cell" data-label="Customer">{job.customerName || '-'}</span>
               <span role="cell" data-label="Instrument">{[formatInstrumentLabel(job), job.guitarBrand, job.model].filter(Boolean).join(' ') || '-'}</span>

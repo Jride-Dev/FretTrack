@@ -26,6 +26,7 @@ Start here for the current product path:
 - [Pro Loyalty Program](PRO_LOYALTY_PROGRAM.md)
 - [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md)
 - [Roadmap](../ROADMAP.md)
+- [Accounting-Safe Work-Order Exclusion](ACCOUNTING_SAFE_JOB_VOID.md)
 - [Deployment notes](DEPLOYMENT_NOTES.md)
 - [Reports](REPORTS.md)
 - [Inventory purchasing notes](INVENTORY_PURCHASING.md)

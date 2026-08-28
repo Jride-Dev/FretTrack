@@ -74,7 +74,12 @@ import {
 } from './workLogDraft.js';
 
 const intakeTypes = JOB_SOURCE_OPTIONS;
-export default function JobDetail({
+export default function JobDetail(props) {
+  const canWrite = (props.canWrite ?? true) && !props.job?.accountingVoidedAt;
+  return <JobDetailWorkspace {...props} canWrite={canWrite} />;
+}
+
+function JobDetailWorkspace({
   job,
   jobs = [],
   initialTab = 'overview',
@@ -103,7 +108,9 @@ export default function JobDetail({
   assignableMembersLoading = false,
   assignableMembersError = '',
   onAssignmentChanged,
-  onDirtyChange
+  onDirtyChange,
+  canManageAccountingVoid = false,
+  onAccountingVoidChange
 }) {
   const [draftJob, setDraftJob] = useState(job);
   const { isDirty, setDirty, confirmIfDirty } = useUnsavedChanges();
@@ -112,7 +119,7 @@ export default function JobDetail({
   const [isSavingWorkLog, setIsSavingWorkLog] = useState(false);
   const [part, setPart] = useState({ name: '', quantity: '1', cost: '', retail: '' });
   const [service, setService] = useState({ description: '', quantity: '1', cost: '', retail: '' });
-  const [payment, setPayment] = useState({ amount: '', method: 'Cash', note: '', date: toIsoDateInputValue() });
+  const [payment, setPayment] = useState({ amount: '', type: 'payment', method: 'Cash', note: '', date: toIsoDateInputValue() });
   const [imageImportErrors, setImageImportErrors] = useState([]);
   const [imageOptimizationNotices, setImageOptimizationNotices] = useState([]);
   const [isImportingImages, setIsImportingImages] = useState(false);
@@ -403,7 +410,7 @@ export default function JobDetail({
     const nextJob = buildAddPaymentJob(draftJob, payment, crypto.randomUUID());
 
     savePaymentChange(nextJob, { immediate: true });
-    setPayment({ amount: '', method: 'Cash', note: '', date: toIsoDateInputValue() });
+    setPayment({ amount: '', type: 'payment', method: 'Cash', note: '', date: toIsoDateInputValue() });
   }
 
   function updatePayment(paymentId, field, value) {
@@ -1324,6 +1331,8 @@ export default function JobDetail({
       billingSections={billingSections}
       canOverwritePhotos={canOverwritePhotos}
       canWrite={canWrite}
+      canManageAccountingVoid={canManageAccountingVoid}
+      onAccountingVoidChange={onAccountingVoidChange}
       documentEmailDraft={documentEmailDraft}
       draftJob={draftJob}
       entitlementSnapshot={entitlementSnapshot}

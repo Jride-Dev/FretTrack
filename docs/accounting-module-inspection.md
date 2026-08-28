@@ -15,4 +15,11 @@ Important constraints carried into implementation:
 - Tax snapshots are built from the job's saved tax settings: rate, jurisdiction/state, taxable subtotal, non-taxable subtotal, and tax amount.
 - Parts revenue and internal part cost are tracked separately. Customer-facing exports must not include internal cost unless the export is explicitly marked internal.
 - Refunds, voids, and adjustments are represented as accounting events/rows. Existing payment or transaction history should not be deleted for reporting cleanup.
+- Accounting-excluded work orders remain stored and read-only. They are omitted from operational accounting and job metrics, while their customer, parts, services, messages, payment adjustments, and audit events remain available.
 - This remains operational tax-prep support, not payroll, reconciliation, balance sheet, depreciation, filing, or 1099 software.
+
+## Accounting-safe work-order exclusion
+
+Migration `20260828022147_accounting_safe_job_void.sql` adds the owner/admin-only `set_job_accounting_void` boundary. It locks the work order, rechecks shop lifecycle state, requires a reason, rejects a nonzero payment ledger or an erased historical payment, and records exclusion/restoration in `job_events`. Excluded work orders cannot be changed through ordinary job updates. The UI provides explicit Refund and Payment Void rows so staff can preserve the financial trail instead of deleting a payment to make totals look clean.
+
+The application excludes these records from Accounting / Reports, till summaries, advanced operational metrics, and current-job counts. Loyalty awards are deactivated and unsent service reminders are canceled while the source work order is excluded.

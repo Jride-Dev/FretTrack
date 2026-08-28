@@ -60,13 +60,15 @@ assert.ok(
   !changed.some((file) => file.startsWith('supabase/migrations/')
     && !file.endsWith('pro_team_assignment_foundation.sql')
     && !file.endsWith('email_photo_usage_caps_foundation.sql')
-    && !file.endsWith('job_dates_scheduling_sync.sql')),
+    && !file.endsWith('job_dates_scheduling_sync.sql')
+    && !file.endsWith('accounting_safe_job_void.sql')),
   'Current Jobs must not add unrelated migrations.'
 );
 assert.ok(!changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')), 'Current Jobs must not modify landing Worker files.');
 assert.ok(
   !changed.some((file) => /stripe/i.test(file)
     || (/\/billing\//i.test(file)
+      && !file.endsWith('accounting.js')
       && !file.endsWith('entitlementService.js')
       && !file.endsWith('usageCaps.js'))),
   'Current Jobs must not modify Stripe or unrelated billing files.'

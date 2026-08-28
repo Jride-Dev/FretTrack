@@ -10,6 +10,15 @@ export function sumRows(rows, key) {
   return rows.reduce((total, row) => total + ((Number(row[key]) || 0) * rowQuantity(row)), 0);
 }
 
+export function signedPaymentAmount(payment = {}) {
+  const amount = Number(payment.amount) || 0;
+  const type = String(payment.type || payment.eventType || '').trim().toLowerCase();
+  if (type === 'refund' || type === 'void') {
+    return -Math.abs(amount);
+  }
+  return amount;
+}
+
 export function calculateJobTotals(job, resolvedTaxSettings = null) {
   const parts = job.parts || [];
   const services = job.services || job.labor || [];
@@ -32,7 +41,7 @@ export function calculateJobTotals(job, resolvedTaxSettings = null) {
   const taxableAmount = (taxSettings.taxableParts ? billablePartsTotal : 0) + (taxSettings.taxableServices ? servicesTotal : 0);
   const salesTaxAmount = taxableAmount * ((Number(taxSettings.salesTaxRate) || 0) / 100);
   const totalDue = Math.max(subtotal - discountAmount, 0) + salesTaxAmount;
-  const paidTotal = payments.reduce((total, row) => total + (Number(row.amount) || 0), 0);
+  const paidTotal = payments.reduce((total, row) => total + signedPaymentAmount(row), 0);
 
   return {
     partsTotal: billablePartsTotal,

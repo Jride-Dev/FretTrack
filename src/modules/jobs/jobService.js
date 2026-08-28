@@ -502,6 +502,33 @@ export async function updateJob(updatedJob, { expectedUpdatedAt = null } = {}) {
   return job;
 }
 
+export async function setJobAccountingVoid(jobId, voided, reason) {
+  if (!jobId) {
+    throw new Error('A work order is required.');
+  }
+  if (!hasSupabaseConfig || !supabase) {
+    throw new Error('Accounting exclusion requires the secured FretTrack database.');
+  }
+
+  const { data, error } = await supabase.rpc('set_job_accounting_void', {
+    p_job_id: jobId,
+    p_void: Boolean(voided),
+    p_reason: String(reason || '').trim()
+  });
+
+  if (error) {
+    throw new Error(error.message || 'Unable to change accounting exclusion.');
+  }
+
+  const saved = Array.isArray(data) ? data[0] : data;
+  return {
+    id: saved?.id || jobId,
+    accountingVoidedAt: saved?.accounting_voided_at || null,
+    accountingVoidedBy: saved?.accounting_voided_by || '',
+    accountingVoidReason: saved?.accounting_void_reason || ''
+  };
+}
+
 export async function ensureRemoteJob(job) {
   const activeShopId = getActiveShopId(job.shopId);
   const normalizedJob = normalizeJob({
@@ -811,6 +838,9 @@ function normalizeJob(job, jobs = []) {
     assignmentUpdatedAt: job.assignmentUpdatedAt || job.assignment_updated_at || null,
     jobNumber: job.jobNumber || job.job_number || (dailySequence ? formatJobNumber(jobDayCode, dailySequence) : generateJobNumber(jobDate, jobs, job.id, shopId)),
     status: job.status || 'Checked In',
+    accountingVoidedAt: job.accountingVoidedAt || job.accounting_voided_at || null,
+    accountingVoidedBy: job.accountingVoidedBy || job.accounting_voided_by || '',
+    accountingVoidReason: job.accountingVoidReason || job.accounting_void_reason || '',
     discountType: job.discountType || techDetails.discountType || 'none',
     discountValue: job.discountValue ?? techDetails.discountValue ?? '',
     techDetails,
@@ -1039,6 +1069,9 @@ function normalizePayment(payment) {
     id: payment.id || crypto.randomUUID(),
     date: payment.date || toIsoDateInputValue(),
     amount: payment.amount ?? '',
+    type: ['refund', 'void'].includes(String(payment.type || payment.eventType || '').toLowerCase())
+      ? String(payment.type || payment.eventType).toLowerCase()
+      : 'payment',
     method: payment.method || 'Cash',
     note: payment.note || ''
   };
@@ -1278,6 +1311,9 @@ function fromDbJob(job) {
     assignmentUpdatedAt: job.assignment_updated_at || null,
     jobNumber: job.job_number || '',
     status: job.status || 'Checked In',
+    accountingVoidedAt: job.accounting_voided_at || null,
+    accountingVoidedBy: job.accounting_voided_by || '',
+    accountingVoidReason: job.accounting_void_reason || '',
     discountType: job.tech_details?.discountType || 'none',
     discountValue: job.tech_details?.discountValue ?? '',
     instrumentType: normalizeInstrumentType(job.tech_details?.instrumentType || 'Electric'),
@@ -1587,15 +1623,19 @@ function logJobUpdated(job, previousJob) {
   nextPayments
     .filter((payment) => !previousPayments.some((previousPayment) => previousPayment.id === payment.id))
     .forEach((payment) => {
+      const paymentType = String(payment.type || 'payment').toLowerCase();
+      const isRefund = paymentType === 'refund';
+      const isVoid = paymentType === 'void';
       logJobEventSafe({
         shopId: job.shopId,
         jobId: job.id,
-        eventType: 'payment_added',
-        eventLabel: 'Payment added',
+        eventType: isRefund ? 'payment_refunded' : isVoid ? 'payment_voided' : 'payment_added',
+        eventLabel: isRefund ? 'Payment refunded' : isVoid ? 'Payment voided' : 'Payment added',
         eventNote: payment.method || '',
         eventData: {
           paymentId: payment.id,
           amount: payment.amount,
+          type: paymentType,
           method: payment.method,
           date: payment.date
         }
