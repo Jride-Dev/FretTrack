@@ -6,7 +6,7 @@ const deliveryHelper = readFileSync('supabase/functions/notify-beta-approval/del
 const migration = readFileSync(
   'supabase/migrations/20260828005958_beta_approval_notification_idempotency.sql',
   'utf8'
-);
+).replace(/\r\n/g, '\n');
 
 assert.match(edgeFunction, /begin_beta_approval_notification/, 'Approval email must claim a durable delivery before provider contact.');
 assert.match(edgeFunction, /finalize_beta_approval_notification/, 'Provider acceptance must finalize the durable delivery.');
