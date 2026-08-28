@@ -1,5 +1,7 @@
 # Release Notes
 
+- Print actions now share a synchronous request sequence so the most recent document choice wins. If a Customer Service Report is still waiting for images when staff switch to Job Sheet, the delayed report cannot reopen the browser print dialog or print the wrong document.
+
 - The printable Job Sheet and its invoice summary now use a dedicated print-only renderer instead of the interactive Job Detail/global print layout. Shop identity, customer and instrument details, services, parts, tax, discounts, payments, balance, and measurement units remain intact. Amplifier and keyboard Job Sheets now use specialist service terminology and never show guitar string or neck fields. A deterministic amplifier fixture verifies the complete document as a one-page Letter PDF.
 
 - Customer Service and Condition Reports now suppress damage markers and image-backed observations when a saved condition image cannot be loaded, and clearly state that the image is unavailable.
