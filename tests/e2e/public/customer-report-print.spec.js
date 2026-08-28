@@ -30,3 +30,19 @@ test('isolated customer report keeps saved markers aligned in print media', asyn
   const overflow = await report.evaluate((element) => element.scrollWidth - element.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+test('customer report does not present marks when the condition image fails to load', async ({ page }) => {
+  await page.route('**/instruments/elec_Front.png', (route) => route.fulfill({
+    status: 404,
+    contentType: 'text/plain',
+    body: 'Condition image unavailable'
+  }));
+  await page.emulateMedia({ media: 'print' });
+  await page.goto('/tests/fixtures/customer-report-print.html');
+
+  const report = page.locator('.print-damage-report');
+  await expect(report.getByText('A condition image was recorded, but it is not currently available for this report.')).toBeVisible();
+  await expect(report.locator('.print-damage-marker')).toHaveCount(0);
+  await expect(report.locator('.print-damage-table')).toHaveCount(0);
+  await expect(report.getByText('Small finish chip at lower bout.')).toHaveCount(0);
+});

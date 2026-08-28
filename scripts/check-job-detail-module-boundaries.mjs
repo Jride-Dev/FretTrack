@@ -147,7 +147,7 @@ assert.match(auxiliarySections, /<ActivityTimeline events=\{timelineEvents\} \/>
 assert.match(detail, /<JobPhotoSections[\s\S]*?canDeletePhotos=\{canDeletePhotos\}[\s\S]*?canEditPhotos=\{canEditPhotos\}[\s\S]*?canUploadPhotos=\{canUploadPhotos\}[\s\S]*?onImageChange=\{handleImageChange\}[\s\S]*?onImageDelete=\{handleImageDelete\}[\s\S]*?onImageEdit=\{handleImageEdit\}[\s\S]*?onWorkOrderImageToggle=\{updateWorkOrderImage\}/, 'Photo presentation must retain established upload, edit, delete, and customer-report handlers.');
 assert.match(photoSections, /<ImagesSection[\s\S]*?canUploadPhotos=\{canUploadPhotos\}[\s\S]*?canEditPhotos=\{canEditPhotos\}[\s\S]*?canDeletePhotos=\{canDeletePhotos\}[\s\S]*?handleImageChange=\{onImageChange\}[\s\S]*?handleImageDelete=\{onImageDelete\}[\s\S]*?handleImageEdit=\{onImageEdit\}[\s\S]*?updateWorkOrderImage=\{onWorkOrderImageToggle\}/, 'Images section must retain photo permissions and controlled handlers.');
 assert.match(printDamageMapFigure, /if \(!hasBaseImage && marks\.length === 0\)[\s\S]*?return null/, 'Completely empty damage maps must remain omitted from reports.');
-assert.match(printDamageMapFigure, /imageUrl && marks\.length > 0/, 'Marker tables must remain tied to a visible reference image.');
+assert.match(printDamageMapFigure, /imageStatus === 'loaded' && marks\.length > 0/, 'Marker tables must remain tied to a successfully loaded reference image.');
 
 assert.deepEqual(
   ['getInstrumentSelectionPatch', 'buildMeasurementDisplay'].filter((helper) => formatting.includes(`function ${helper}`) || formatting.includes(`function ${helper}(`)),

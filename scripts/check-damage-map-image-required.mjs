@@ -42,7 +42,7 @@ assertIncludes(damageMap, '{hasBaseImage && (', 'Marker rendering must remain ti
 assertIncludes(damageMap, '{hasBaseImage && marks.length > 0 && (', 'Damage mark edit controls must remain hidden without a base image.');
 assertIncludes(styles, '.damage-canvas[aria-disabled="true"]', 'No-image damage canvas must not use the active marking cursor.');
 assertIncludes(printDamageMapFigure, 'A condition image was recorded, but it is not currently available for this report.', 'Customer-facing print report must avoid misleading no-image marker output.');
-assertMatches(printDamageMapFigure, /imageUrl && marks\.length > 0/, 'Customer-facing report marker tables must require a renderable image.');
+assertMatches(printDamageMapFigure, /imageStatus === 'loaded' && marks\.length > 0/, 'Customer-facing report marker tables must require a successfully loaded image.');
 assertIncludes(emailDocuments, 'No damage map image was attached.', 'Customer-facing email document must explain missing damage map images.');
 assertMatches(emailDocuments, /if \(!hasBaseImage\) \{[\s\S]*?return \[\];[\s\S]*?\}/, 'Email document damage rows must ignore marks without a base image.');
 assertIncludes(packageJson, '"check:damage-map-image-required": "node scripts/check-damage-map-image-required.mjs"', 'Package script must expose the Damage Map image-required check.');
