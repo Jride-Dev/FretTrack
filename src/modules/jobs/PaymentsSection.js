@@ -17,7 +17,7 @@ export default function PaymentsSection({
           <option value="void">Payment Void</option>
         </select>
         <input type="number" min="0" step="0.01" placeholder="Payment amount" value={payment.amount} onChange={(event) => setPayment((current) => ({ ...current, amount: event.target.value }))} disabled={!canWrite} />
-        <select value={payment.method} onChange={(event) => setPayment((current) => ({ ...current, method: event.target.value }))} disabled={!canWrite}>
+        <select value={payment.method} onChange={(event) => setPayment((current) => ({ ...current, method: event.target.value }))} disabled={!canWrite} aria-label="Payment method">
           <option value="Cash">Cash</option>
           <option value="Card">Card</option>
           <option value="Check">Check</option>
@@ -50,7 +50,7 @@ export default function PaymentsSection({
                   </select>
                 </td>
                 <td>
-                  <select value={row.method || 'Cash'} onChange={(event) => updatePayment(row.id, 'method', event.target.value)} disabled={!canWrite}>
+                  <select value={row.method || 'Cash'} onChange={(event) => updatePayment(row.id, 'method', event.target.value)} disabled={!canWrite} aria-label="Saved payment method">
                     <option value="Cash">Cash</option>
                     <option value="Card">Card</option>
                     <option value="Check">Check</option>
