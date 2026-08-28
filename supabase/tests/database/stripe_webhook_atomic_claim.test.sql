@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(22);
+select plan(35);
 
 select has_function(
   'public',
@@ -16,6 +16,20 @@ select has_function(
   'finalize_stripe_webhook_event',
   array['text', 'uuid', 'text', 'text', 'text', 'text', 'text'],
   'Stripe webhook event finalization function exists'
+);
+
+select has_function(
+  'public',
+  'get_stripe_webhook_event_claim_state',
+  array['text'],
+  'Stripe webhook claim-state function exists'
+);
+
+select has_function(
+  'public',
+  'release_stripe_webhook_event_claim',
+  array['text', 'uuid', 'text'],
+  'Stripe webhook emergency claim-release function exists'
 );
 
 select ok(
@@ -43,6 +57,34 @@ select ok(
     'EXECUTE'
   ),
   'the Stripe webhook service role can claim events'
+);
+
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'public.get_stripe_webhook_event_claim_state(text)',
+    'EXECUTE'
+  )
+  and not has_function_privilege(
+    'authenticated',
+    'public.release_stripe_webhook_event_claim(text, uuid, text)',
+    'EXECUTE'
+  ),
+  'authenticated users cannot inspect or release Stripe webhook claims'
+);
+
+select ok(
+  has_function_privilege(
+    'service_role',
+    'public.get_stripe_webhook_event_claim_state(text)',
+    'EXECUTE'
+  )
+  and has_function_privilege(
+    'service_role',
+    'public.release_stripe_webhook_event_claim(text, uuid, text)',
+    'EXECUTE'
+  ),
+  'the Stripe webhook service role can inspect and release event claims'
 );
 
 select ok(
@@ -236,6 +278,97 @@ select is(
   ),
   'ignored'::text,
   'the retry stores its terminal result'
+);
+
+select ok(
+  public.claim_stripe_webhook_event(
+    'evt_expired_processing',
+    'invoice.payment_succeeded',
+    '2026-08-27 12:10:00+00'::timestamptz,
+    false,
+    '66666666-6666-4666-8666-666666666666'::uuid
+  ),
+  'an event can be claimed for expired-lease recovery'
+);
+
+update public.stripe_webhook_events
+set processing_started_at = pg_catalog.now() - interval '6 minutes'
+where stripe_event_id = 'evt_expired_processing';
+
+select ok(
+  public.claim_stripe_webhook_event(
+    'evt_expired_processing',
+    'invoice.payment_succeeded',
+    '2026-08-27 12:10:00+00'::timestamptz,
+    false,
+    '77777777-7777-4777-8777-777777777777'::uuid
+  ),
+  'an abandoned processing lease can be reclaimed after the timeout'
+);
+
+select ok(
+  (
+    select status = 'processing'
+      and processing_token = '77777777-7777-4777-8777-777777777777'::uuid
+      and attempt_count = 2
+    from public.stripe_webhook_events
+    where stripe_event_id = 'evt_expired_processing'
+  ),
+  'lease recovery installs a new token and increments the attempt count'
+);
+
+select ok(
+  not public.release_stripe_webhook_event_claim(
+    'evt_expired_processing',
+    '66666666-6666-4666-8666-666666666666'::uuid,
+    'stale attempt'
+  ),
+  'a stale attempt cannot release a newer claim'
+);
+
+select is(
+  public.get_stripe_webhook_event_claim_state('evt_expired_processing'),
+  'processing'::text,
+  'claim-state lookup reports a current in-flight lease'
+);
+
+select ok(
+  public.release_stripe_webhook_event_claim(
+    'evt_expired_processing',
+    '77777777-7777-4777-8777-777777777777'::uuid,
+    'terminal finalization unavailable'
+  ),
+  'the current claim owner can release an unrecoverable finalization failure'
+);
+
+select is(
+  public.get_stripe_webhook_event_claim_state('evt_expired_processing'),
+  'failed'::text,
+  'emergency release leaves the event explicitly retryable'
+);
+
+select ok(
+  public.claim_stripe_webhook_event(
+    'evt_expired_processing',
+    'invoice.payment_succeeded',
+    '2026-08-27 12:10:00+00'::timestamptz,
+    false,
+    '88888888-8888-4888-8888-888888888888'::uuid
+  ),
+  'a delivery after emergency release can claim the event again'
+);
+
+select ok(
+  public.finalize_stripe_webhook_event(
+    'evt_expired_processing',
+    '88888888-8888-4888-8888-888888888888'::uuid,
+    'processed',
+    '',
+    '',
+    '',
+    ''
+  ),
+  'the recovered retry can finalize normally'
 );
 
 reset role;

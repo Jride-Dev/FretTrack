@@ -4,6 +4,7 @@ import {
   getFirstSubscriptionItem,
   getInvoiceSubscriptionId,
   getSubscriptionPeriod,
+  getStripeWebhookClaimDisposition,
   normalizeBillingInterval,
   normalizePlan,
   normalizeStripeStatus,
@@ -59,7 +60,21 @@ Deno.serve(async (request) => {
     return new Response(JSON.stringify({ error: getErrorMessage(error) }), { status: 500 });
   }
   if (!claim.claimed) {
-    return new Response(JSON.stringify({ received: true, duplicate: true }), { status: 200 });
+    let claimState: string;
+    try {
+      claimState = await getEventClaimState(supabase as SupabaseAnyClient, event.id);
+    } catch (error) {
+      console.error('stripe-webhook claim state lookup failed', error);
+      return new Response(JSON.stringify({ error: getErrorMessage(error) }), { status: 500 });
+    }
+    if (getStripeWebhookClaimDisposition(claimState) === 'duplicate') {
+      return new Response(JSON.stringify({ received: true, duplicate: true }), { status: 200 });
+    }
+    return new Response(JSON.stringify({
+      received: false,
+      retryable: true,
+      claimState,
+    }), { status: 409 });
   }
 
   try {
@@ -75,6 +90,16 @@ Deno.serve(async (request) => {
       });
     } catch (finalizeError) {
       console.error('stripe-webhook failure finalization failed', finalizeError);
+      try {
+        await releaseEventClaim(
+          supabase as SupabaseAnyClient,
+          event.id,
+          claim.processingToken,
+          getErrorMessage(error),
+        );
+      } catch (releaseError) {
+        console.error('stripe-webhook emergency claim release failed', releaseError);
+      }
     }
     return new Response(JSON.stringify({ error: getErrorMessage(error) }), { status: 500 });
   }
@@ -311,6 +336,33 @@ async function finalizeEvent(
   });
   if (error) throw error;
   if (data !== true) throw new Error('Stripe webhook event claim could not be finalized.');
+}
+
+async function getEventClaimState(supabase: SupabaseAnyClient, eventId: string) {
+  const { data, error } = await supabase.rpc('get_stripe_webhook_event_claim_state', {
+    p_stripe_event_id: eventId,
+  });
+  if (error) throw error;
+  const state = String(data || '').trim();
+  if (!['processing', 'processed', 'ignored', 'failed'].includes(state)) {
+    throw new Error('Stripe webhook claim state could not be determined.');
+  }
+  return state;
+}
+
+async function releaseEventClaim(
+  supabase: SupabaseAnyClient,
+  eventId: string,
+  processingToken: string,
+  errorMessage: string,
+) {
+  const { data, error } = await supabase.rpc('release_stripe_webhook_event_claim', {
+    p_stripe_event_id: eventId,
+    p_processing_token: processingToken,
+    p_error_message: errorMessage,
+  });
+  if (error) throw error;
+  if (data !== true) throw new Error('Stripe webhook event claim could not be released.');
 }
 
 function planFromPriceId(priceId: string) {

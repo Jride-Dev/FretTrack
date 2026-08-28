@@ -3,6 +3,7 @@ import {
   getFirstSubscriptionItem,
   getInvoiceSubscriptionId,
   getSubscriptionPeriod,
+  getStripeWebhookClaimDisposition,
   normalizeBillingInterval,
   normalizePlan,
   normalizeStripeStatus,
@@ -32,6 +33,14 @@ Deno.test("Stripe billing launch access fails closed and supports a pilot allowl
     pilotRestricted: true,
   });
   strictEqual(getStripeBillingLaunchAccess("any-shop", "yes", "").allowed, true);
+});
+
+Deno.test("only terminal webhook claims are acknowledged as duplicates", () => {
+  strictEqual(getStripeWebhookClaimDisposition("processed"), "duplicate");
+  strictEqual(getStripeWebhookClaimDisposition("ignored"), "duplicate");
+  strictEqual(getStripeWebhookClaimDisposition("processing"), "retry");
+  strictEqual(getStripeWebhookClaimDisposition("failed"), "retry");
+  strictEqual(getStripeWebhookClaimDisposition("missing"), "retry");
 });
 
 Deno.test("invoice subscription lookup supports the current Stripe parent schema", () => {
