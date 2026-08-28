@@ -171,7 +171,7 @@ export default function App() {
       ? 'amplifier-detail'
       : isKeyboardJob(job)
         ? 'keyboard-detail'
-        : 'detail';
+        : 'guitar-detail';
     return selectWorkspaceJob(jobId, detailMode);
   }
 
@@ -647,7 +647,7 @@ export default function App() {
       return;
     }
 
-    if (selectedJob && ['detail', 'amplifier-detail', 'keyboard-detail'].includes(mode)) {
+    if (selectedJob && ['detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(mode)) {
       if (hasSupabaseConfig && !isOnline) {
         setNotice({ type: 'error', message: 'Offline draft mode is for new job intake only. Existing job edits require an active connection.' });
         return;
@@ -1259,7 +1259,7 @@ export default function App() {
     );
   }
 
-  const isJobMode = ['new', 'detail', 'amplifier-detail', 'keyboard-detail'].includes(mode);
+  const isJobMode = ['new', 'detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(mode);
   const getHeaderNavClass = (targetMode, baseClass = '') => [
     baseClass,
     mode === targetMode ? 'header-nav-active' : ''
@@ -1388,8 +1388,8 @@ export default function App() {
         />
       )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
-      <div className={`layout app-layout${['detail', 'amplifier-detail', 'keyboard-detail'].includes(mode) && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${['list', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) ? ' full-content' : ''}`}>
-        {!['list', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) && (
+      <div className={`layout app-layout${['detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(mode) && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${['list', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) ? ' full-content' : ''}`}>
+        {!['list', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) && (
           <NewJobSidebar
             isCollapsed={isNewJobSidebarCollapsed}
             onToggle={toggleNewJobSidebar}

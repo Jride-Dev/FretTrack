@@ -76,6 +76,14 @@ assert.deepEqual(
 );
 assert.deepEqual(
   resolveStoredWorkspaceState({
+    workspaceState: { mode: 'guitar-detail', selectedJobId: 'guitar-1' },
+    jobs: [{ id: 'guitar-1', instrumentType: 'Electric' }]
+  }),
+  { mode: 'guitar-detail', selectedJobId: 'guitar-1' },
+  'A saved guitar repair bench must remain open after refresh.'
+);
+assert.deepEqual(
+  resolveStoredWorkspaceState({
     workspaceState: { mode: 'detail', selectedJobId: 'amp-1' },
     jobs: [{ id: 'amp-1', instrumentType: 'Amplifier' }]
   }),
@@ -136,6 +144,7 @@ const expectedModes = [
   'billing',
   'operator',
   'detail',
+  'guitar-detail',
   'amplifiers',
   'amplifier-detail'
 ];
@@ -160,6 +169,7 @@ const expectedPages = [
   'OfflineDraftQueue',
   'BillingPage',
   'BetaOperatorDashboard',
+  'GuitarJobDetail',
   'JobDetail'
 ];
 
@@ -177,6 +187,7 @@ for (const page of [
   'CustomerManager',
   'InventoryPage',
   'CurrentJobsPage',
+  'GuitarJobDetail',
   'JobDetail',
   'OfflineDraftQueue',
   'AdvancedReportsPage',

@@ -33,6 +33,7 @@ Shipped or current-branch foundations:
 - workspace routing and persisted-navigation boundaries with lazy-loaded top-level pages
 - focused Inventory presentation modules for parts, vendors, history, labels, purchase orders, and receiving
 - focused Job Detail presentation modules for inspection, work, billing, reports, print documents, dialogs, and header state
+- focused full-width Guitar Bench matching the amplifier/keyboard repair workspace pattern while retaining one shared Work Order, Parts & Payments system
 - authoritative Inventory editor refresh after receiving or stock adjustments
 - local-development protection against accidental hosted Supabase mutations
 - active-shop business address included consistently in generated invoice email and printable invoice-style Job Sheet output
@@ -106,6 +107,7 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - shipped: owner/admin accounting-safe job void/exclusion removes test or invalid jobs from operational accounting totals and counts without deleting customer, invoice, payment, or audit history; recorded payments must be explicitly refunded or voided first
 - shipped: the Customer Service and Condition Report now uses an isolated print-only document renderer, waits for its images before printing, keeps saved condition markers aligned, and avoids guitar inspection terms on amplifier and keyboard reports
 - shipped: the invoice-style Job Sheet now uses the same isolated print boundary, preserves parts, services, taxes, discounts, payments, and balance, and prints amplifier or keyboard service terms without guitar-only measurements
+- shipped: stringed-instrument jobs now open in a focused Guitar Bench and switch into the same shared commercial work-order workspace used by amplifier and keyboard jobs
 - known launch limitations documented clearly
 
 ## v0.3.x: Commerce Foundation

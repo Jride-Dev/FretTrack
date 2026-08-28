@@ -13,6 +13,7 @@ export async function openSeededJob(page, customerNumber = 1) {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     await sidebarJob.click();
     try {
+      await page.getByRole('button', { name: 'Work Order, Parts & Payments' }).click({ timeout: 5_000 });
       await detailHeading.waitFor({ state: 'visible', timeout: 5_000 });
       return;
     } catch (error) {

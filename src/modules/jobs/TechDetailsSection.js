@@ -3,6 +3,7 @@ import { getGaugeSlotLabel, getInstrumentStringCount, getStringGaugePresets } fr
 
 export default function TechDetailsSection({
   canWrite = true,
+  className = '',
   draftJob,
   formatMeasurementDelta,
   lengthUnit,
@@ -16,7 +17,7 @@ export default function TechDetailsSection({
   const gaugePresets = getStringGaugePresets(draftJob.instrumentType, stringCount);
 
   return (
-    <section>
+    <section className={className || undefined}>
       <h3>Tech Details</h3>
       <div className="form-grid">
         <fieldset className="wide string-gauges">

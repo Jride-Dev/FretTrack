@@ -13,6 +13,7 @@ const BillingPage = lazy(() => import('../modules/billing/BillingPage.jsx'));
 const CustomerManager = lazy(() => import('../modules/customers/CustomerManager.jsx'));
 const InventoryPage = lazy(() => import('../modules/inventory/InventoryPage.jsx'));
 const CurrentJobsPage = lazy(() => import('../modules/jobs/CurrentJobsPage.jsx'));
+const GuitarJobDetail = lazy(() => import('../modules/guitars/GuitarJobDetail.jsx'));
 const JobDetail = lazy(() => import('../modules/jobs/JobDetail.jsx'));
 const OfflineDraftQueue = lazy(() => import('../modules/jobs/OfflineDraftQueue.jsx'));
 const AdvancedReportsPage = lazy(() => import('../modules/reports/AdvancedReportsPage.jsx'));
@@ -292,6 +293,36 @@ function WorkspacePage({
         </>
       )
       : <section className="panel empty-state">Select a saved job from the list.</section>;
+  }
+
+  if (mode === 'guitar-detail') {
+    return selectedJob
+      ? (
+        <>
+          <SpecialistJobWorkspaceNav
+            activeMode={mode}
+            job={selectedJob}
+            onSelectMode={actions.onSelectJobMode}
+            canManageAccountingVoid={access.canEditShopSettings}
+            onAccountingVoidChange={actions.onAccountingVoidChange}
+            onNotice={actions.onNotice}
+          />
+          <GuitarJobDetail
+            job={selectedJob}
+            jobs={jobs}
+            canWrite={access.canEditJobs && !selectedJob.accountingVoidedAt}
+            canUploadPhotos={access.canUploadPhotos}
+            dateOptions={dateOptions}
+            onUpdate={actions.onUpdateJob}
+            onImageUpload={actions.onImageUpload}
+            onClose={actions.onCloseJobDetail}
+            onDirtyChange={actions.onDirtyChange}
+            onNotice={actions.onNotice}
+            shopProfile={shopProfile}
+          />
+        </>
+      )
+      : <section className="panel empty-state">Select a guitar work order from the list.</section>;
   }
 
   if (mode === 'amplifier-detail') {
