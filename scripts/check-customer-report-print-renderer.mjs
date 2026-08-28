@@ -23,6 +23,10 @@ assert.match(report, /instrumentType === 'Keyboard'[\s\S]*?<h3>Keyboard inspecti
 assert.match(report, /isGuitarFamily[\s\S]*?<GuitarInspection/, 'Guitar neck measurements must remain limited to guitar-family reports.');
 assert.match(mapFigure, /style=\{\{ left: `\$\{clampPercent\(mark\.x\)\}%`, top: `\$\{clampPercent\(mark\.y\)\}%` \}\}/, 'Saved marker percentages must map directly onto the isolated image stage.');
 assert.match(mapFigure, /className="print-damage-marker-layer"/, 'Markers must render in a dedicated layer over the image.');
+assert.match(mapFigure, /imageState\.url === imageUrl[\s\S]*?imageState\.status/, 'Image readiness must be tied to the current damage image URL.');
+assert.match(mapFigure, /onLoad=\{\(\) => setImageState\(\{ url: imageUrl, status: 'loaded' \}\)\}/, 'The report must confirm that the current damage image loaded before presenting image-backed evidence.');
+assert.match(mapFigure, /onError=\{\(\) => setImageState\(\{ url: imageUrl, status: 'error' \}\)\}/, 'The report must record failed damage images against the current URL.');
+assert.match(mapFigure, /imageStatus === 'loaded' && marks\.length > 0/, 'Condition observations must remain hidden unless the reference image loaded successfully.');
 assert.match(styles, /\.print-damage-map-stage > img\s*{[\s\S]*max-height:\s*4\.55in;[\s\S]*max-width:\s*100%;/, 'Damage images must remain inside the printable page frame.');
 assert.match(styles, /\.print-damage-marker\s*{[\s\S]*transform:\s*translate\(-50%, -50%\);/, 'Printed markers must stay centered on saved coordinates.');
 assert.match(styles, /\.print-document-table thead\s*{[\s\S]*display:\s*table-header-group;/, 'Multi-page tables must repeat their headers.');
