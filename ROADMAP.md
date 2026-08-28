@@ -44,10 +44,10 @@ Shipped or current-branch foundations:
 - Pro Automated Service Reminders with independent consent, configurable service timing/template, durable long-horizon queueing, nightly dispatch, quota accounting, and Message History
 - Pro Loyalty Program with paid/completed-work-order stamp reconciliation and explicit audited redemption
 - owner/admin accounting-safe work-order exclusion with immutable payment-history safeguards, explicit refund/void entries, read-only preserved records, audit reasons, and accounting/report filtering
+- isolated Customer Service and Condition Report renderer with deterministic damage-map coordinates, image-readiness gating, multi-page tables, and instrument-specific guitar, amplifier, and keyboard inspection language
 
 Known weak spots:
 
-- Customer Damage Report print rendering still needs a proper isolated rebuild
 - broad job and inventory persistence services still need later query/mutation decomposition; beta.4 deliberately changed presentation boundaries first
 - offline continuity only supports new-job drafts, not existing job edits
 - SMS remains disabled
@@ -104,6 +104,7 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - Pro entitlement boundaries are explicit for Photo Editor, Team Members, Advanced Reporting, and advanced Team Assignment/workload controls
 - practical shop settings for currency, tax labels, date formats, and measurement preferences
 - shipped: owner/admin accounting-safe job void/exclusion removes test or invalid jobs from operational accounting totals and counts without deleting customer, invoice, payment, or audit history; recorded payments must be explicitly refunded or voided first
+- shipped: the Customer Service and Condition Report now uses an isolated print-only document renderer, waits for its images before printing, keeps saved condition markers aligned, and avoids guitar inspection terms on amplifier and keyboard reports
 - known launch limitations documented clearly
 
 ## v0.3.x: Commerce Foundation

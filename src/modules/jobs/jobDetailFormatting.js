@@ -11,12 +11,6 @@ import {
 } from '../instruments/instrumentService.js';
 import { generateJobNumber } from './jobNumber.js';
 
-export function markerColorForReport(severity) {
-  if (severity === 'Critical') return '#b3261e';
-  if (severity === 'Structural') return '#a15c00';
-  return '#255f85';
-}
-
 export function getInstrumentSelectionPatch(currentJob, instrumentType) {
   const normalizedInstrumentType = normalizeInstrumentType(instrumentType);
   const shouldResetBrand = shouldResetBrandForInstrumentType(normalizedInstrumentType, currentJob.guitarBrand);

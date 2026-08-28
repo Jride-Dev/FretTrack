@@ -44,3 +44,7 @@ backups/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Generated document QA artifacts
+/output/pdf/*.pdf
+/tmp/pdfs/

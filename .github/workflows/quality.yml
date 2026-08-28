@@ -44,6 +44,7 @@ jobs:
           npm run check:job-photo-persistence
           npm run check:legacy-damage-map-photos
           npm run check:damage-map-image-required
+          npm run check:customer-report-print-renderer
           npm run check:job-detail-module-boundaries
           npm run check:billing-save-integrity
           npm run check:work-log-draft-safety
