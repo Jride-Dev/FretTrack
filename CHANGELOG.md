@@ -1,6 +1,7 @@
 # Changelog
 
 - Released FretTrack 0.2.9 as the first stable commercial build, retaining controlled account approval while removing customer-facing beta branding.
+- Made Stripe webhook claims recoverable when terminal finalization is unavailable: the current token owner can release an unfinished claim, nonterminal replays remain non-2xx so Stripe retries, and abandoned processing leases can be reclaimed after five minutes without allowing stale attempts to finalize newer work.
 - Atomically claim signed Stripe webhook event IDs before processing so concurrent duplicate deliveries cannot both enter billing lifecycle handling; failed attempts remain retryable through token-guarded finalization.
 - Added a fail-closed, server-authoritative Stripe Checkout launch switch with an exact shop-ID pilot allowlist, authenticated UI status, narrow Stripe Edge Function service-role grants, and uninterrupted Billing Portal access for existing subscribers.
 - Made the annual Stripe sandbox validator portable across Windows and Linux, added controlled missing-CLI handling, and added signed duplicate and older-event replay assertions.

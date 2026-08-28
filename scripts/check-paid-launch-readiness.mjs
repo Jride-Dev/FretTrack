@@ -104,12 +104,19 @@ assert.ok(!portalFunction.includes(".eq('status', 'active')"), 'Portal function 
 
 const webhookFunction = read('supabase/functions/stripe-webhook/index.ts');
 const stripeWebhookClaimMigration = read('supabase/migrations/20260827181934_stripe_webhook_atomic_event_claim.sql');
+const stripeWebhookRecoveryMigration = read('supabase/migrations/20260827194500_stripe_webhook_claim_lease_recovery.sql');
 assert.ok(webhookFunction.includes('constructEventAsync'), 'Stripe webhook must verify signatures from the raw body.');
 assert.ok(webhookFunction.includes('STRIPE_WEBHOOK_SIGNING_SECRET'), 'Stripe webhook must support the existing webhook signing secret name.');
 assert.ok(
   webhookFunction.includes("rpc('claim_stripe_webhook_event'") &&
   webhookFunction.includes("rpc('finalize_stripe_webhook_event'"),
   'Stripe webhook must atomically claim event ids before processing and finalize the winning claim.',
+);
+assert.ok(
+  webhookFunction.includes("rpc('get_stripe_webhook_event_claim_state'") &&
+  webhookFunction.includes("rpc('release_stripe_webhook_event_claim'") &&
+  webhookFunction.includes('retryable: true'),
+  'Unfinished webhook claims must remain visible to Stripe as retryable and support token-guarded emergency release.',
 );
 assert.ok(
   webhookFunction.indexOf('claim = await claimEvent(') < webhookFunction.indexOf('const result = await handleStripeEvent('),
@@ -152,6 +159,14 @@ assert.ok(
   stripeWebhookClaimMigration.includes("status = 'processing'") &&
   stripeWebhookClaimMigration.includes('processing_token = p_processing_token'),
   'Webhook event retries must use an atomic unique claim and token-guarded finalization.',
+);
+assert.ok(
+  stripeWebhookRecoveryMigration.includes("interval '5 minutes'") &&
+  stripeWebhookRecoveryMigration.includes("status = 'processing'") &&
+  stripeWebhookRecoveryMigration.includes('processing_token = p_processing_token') &&
+  stripeWebhookRecoveryMigration.includes("status = 'failed'") &&
+  stripeWebhookRecoveryMigration.includes('release_stripe_webhook_event_claim'),
+  'Abandoned webhook claims must expire safely, and only the current token owner may release a failed attempt.',
 );
 assert.ok(
   !/from\(['"]shop_subscriptions['"]\)\.(?:upsert|update|insert)/s.test(webhookFunction),

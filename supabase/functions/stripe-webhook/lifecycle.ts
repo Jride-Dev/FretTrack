@@ -90,6 +90,12 @@ export function normalizeBillingInterval(interval: unknown) {
   return "";
 }
 
+export function getStripeWebhookClaimDisposition(status: unknown) {
+  return ["processed", "ignored"].includes(String(status || "").trim())
+    ? "duplicate"
+    : "retry";
+}
+
 function getStripeId(value: StripeIdReference) {
   if (!value) return "";
   return typeof value === "string" ? value : String(value.id || "").trim();
