@@ -23,8 +23,16 @@ function nextPaint() {
   return new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
 }
 
-export async function waitForCustomerReportPrintReady(root = document) {
-  const images = Array.from(root.querySelectorAll('.print-damage-report img'));
+async function waitForPrintDocumentReady(selector, root = document) {
+  const images = Array.from(root.querySelectorAll(`${selector} img`));
   await Promise.all(images.map(waitForImage));
   await nextPaint();
+}
+
+export function waitForCustomerReportPrintReady(root = document) {
+  return waitForPrintDocumentReady('.print-damage-report', root);
+}
+
+export function waitForJobSheetPrintReady(root = document) {
+  return waitForPrintDocumentReady('.print-job-sheet', root);
 }

@@ -27,7 +27,7 @@ import JobIntakeSections from './JobIntakeSections.jsx';
 import JobPhotoSections from './JobPhotoSections.jsx';
 import buildJobPrintSections from './JobPrintSections.jsx';
 import JobDetailShell from './JobDetailShell.jsx';
-import { waitForCustomerReportPrintReady } from '../print/printDocumentReady.js';
+import { waitForCustomerReportPrintReady, waitForJobSheetPrintReady } from '../print/printDocumentReady.js';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import {
   buildAddPaymentJob,
@@ -912,11 +912,12 @@ function JobDetailWorkspace({
     onClose();
   }
 
-  function printJobSheet() {
+  async function printJobSheet() {
     if (!guardPendingWorkLogDocumentAction()) {
       return;
     }
     document.body.classList.remove('customer-report-printing');
+    await waitForJobSheetPrintReady();
     window.print();
   }
 

@@ -1,5 +1,5 @@
-import JobPrintSheet from './JobPrintSheet';
 import PrintDamageReport from '../print/PrintDamageReport.jsx';
+import PrintJobSheet from '../print/PrintJobSheet.jsx';
 
 export default function JobPrintDocuments({
   draftJob,
@@ -16,7 +16,7 @@ export default function JobPrintDocuments({
 }) {
   return (
     <>
-      <JobPrintSheet
+      <PrintJobSheet
         draftJob={draftJob}
         formatInstrumentLabel={formatInstrumentLabel}
         lengthUnit={lengthUnit}

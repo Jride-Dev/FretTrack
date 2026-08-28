@@ -4266,7 +4266,6 @@ th.internal-only {
 }
 
 .print-only,
-.print-sheet,
 .customer-report {
   display: none;
 }
@@ -6103,13 +6102,11 @@ th.internal-only {
   }
 
   body,
-  .print-sheet,
   .customer-report {
     background: #fff !important;
     color: #000 !important;
   }
 
-  .print-sheet *,
   .customer-report * {
     color: #000 !important;
     text-shadow: none !important;
@@ -6144,7 +6141,7 @@ th.internal-only {
 
   header,
   aside,
-  .detail > section:not(.print-sheet),
+  .detail > section,
   .job-tab-panel,
   .detail-header label,
   .actions,
@@ -6248,30 +6245,6 @@ th.internal-only {
     padding-bottom: 8px;
   }
 
-  .print-sheet {
-    display: block !important;
-    box-sizing: border-box;
-    margin: 0 auto;
-    max-width: 7.45in;
-    padding: 0.22in 0.24in 0.2in;
-    width: 100%;
-  }
-
-  .job-sheet-print {
-    background: #fff !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-    max-width: none;
-    outline: 0 !important;
-    padding: 0 !important;
-    width: 100%;
-  }
-
-  body.customer-report-printing .print-sheet {
-    display: none !important;
-  }
-
   body.customer-report-printing .customer-report {
     display: block !important;
     box-sizing: border-box;
@@ -6285,17 +6258,6 @@ th.internal-only {
   body.customer-report-printing .job-tab-panel,
   body.customer-report-printing .detail-header {
     display: none !important;
-  }
-
-  .print-sheet h2 {
-    margin-bottom: 4px;
-  }
-
-  .print-sheet h3 {
-    border-bottom: 1px solid #9a9a9a;
-    color: #000 !important;
-    margin-top: 18px;
-    padding-bottom: 4px;
   }
 
   .print-invoice-header {
@@ -6316,18 +6278,15 @@ th.internal-only {
     page-break-inside: avoid;
   }
 
-  .print-sheet table,
   .customer-report table {
     border-collapse: collapse;
     margin-bottom: 0;
   }
 
-  .print-sheet thead,
   .customer-report thead {
     display: table-header-group;
   }
 
-  .print-sheet tbody,
   .customer-report tbody {
     display: table-row-group;
   }
@@ -6342,11 +6301,6 @@ th.internal-only {
   .customer-report th,
   .customer-report span,
   .customer-report strong,
-  .print-sheet p,
-  .print-sheet td,
-  .print-sheet th,
-  .print-sheet span,
-  .print-sheet strong,
   .print-footer-text {
     color: #000 !important;
   }
@@ -6470,7 +6424,6 @@ th.internal-only {
   .job-detail,
   .job-workspace,
   .print-only,
-  .print-sheet,
   .customer-report {
     background: #fff !important;
     color: #000 !important;
@@ -6485,7 +6438,6 @@ th.internal-only {
   .job-detail,
   .job-workspace,
   .print-only,
-  .print-sheet,
   .customer-report {
     border: 0 !important;
     box-shadow: none !important;
