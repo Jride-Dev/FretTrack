@@ -49,7 +49,7 @@ test('Pro owner creates a keyboard work order and persists bench details through
   await expect(page.getByText(/Saved job .* successfully\./)).toBeVisible();
 
   await page.getByPlaceholder('Payment amount').fill('15.00');
-  await page.locator('.payment-form select').selectOption('Cash');
+  await page.getByLabel('Payment method').selectOption('Cash');
   await page.getByPlaceholder('Payment note').fill(paymentNote);
   const paymentSaved = page.waitForResponse((response) => (
     response.url().includes('/rest/v1/work_logs')

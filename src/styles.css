@@ -1672,6 +1672,56 @@ form.panel button {
   width: 220px;
 }
 
+.accounting-void-control {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.75rem 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface-2);
+}
+
+.accounting-void-control.is-voided {
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border));
+  background: color-mix(in srgb, var(--surface-2) 88%, var(--danger) 12%);
+}
+
+.accounting-void-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.accounting-void-control p {
+  margin: 0.35rem 0 0;
+}
+
+.accounting-void-control form {
+  display: grid;
+  gap: 0.65rem;
+  width: min(34rem, 100%);
+}
+
+.accounting-void-control form label,
+.accounting-void-control form textarea {
+  width: 100%;
+}
+
+.accounting-void-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+  .accounting-void-control {
+    flex-direction: column;
+  }
+}
+
 .string-gauges {
   border: 1px solid var(--border);
   display: grid;
@@ -3154,7 +3204,7 @@ th.internal-only {
 }
 
 .payment-form {
-  grid-template-columns: 150px 160px 130px 1fr 130px;
+  grid-template-columns: 150px 125px 160px 130px 1fr 130px;
   margin-bottom: 12px;
 }
 

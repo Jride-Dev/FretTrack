@@ -8,6 +8,7 @@ import {
 } from '../inventory/inventoryService';
 import { getJobPriorityLabel, normalizeJobPriority } from '../jobs/jobPriority';
 import { listScheduleEvents } from '../scheduling/schedulingService';
+import { isJobAccountingVoided } from '../jobs/jobAccountingVoid.js';
 
 const CLOSED_JOB_STATUSES = new Set(['completed', 'complete', 'picked up', 'picked-up', 'closed', 'cancelled', 'canceled']);
 const UPCOMING_SCHEDULE_DAYS = 30;
@@ -21,7 +22,7 @@ export function buildAdvancedReportMetrics({
   shopProfile = null,
   now = new Date()
 } = {}) {
-  const scopedJobs = jobs.filter((job) => matchesShop(job, shopId));
+  const scopedJobs = jobs.filter((job) => matchesShop(job, shopId) && !isJobAccountingVoided(job));
   const scopedCustomers = customers.filter((customer) => matchesShop(customer, shopId));
   const scopedParts = parts.filter((part) => matchesShop(part, shopId));
   const accountingJobs = scopedJobs.map((job) => buildJobAccountingSnapshot(job, {
@@ -117,7 +118,7 @@ export function buildAdvancedOperationalReport({
   shopId = '',
   now = new Date()
 } = {}) {
-  const scopedJobs = jobs.filter((job) => matchesShop(job, shopId));
+  const scopedJobs = jobs.filter((job) => matchesShop(job, shopId) && !isJobAccountingVoided(job));
   const openJobs = scopedJobs.filter((job) => !isClosedJob(job));
   const today = startOfDay(now);
   const jobsById = new Map(scopedJobs.map((job) => [job.id, job]));

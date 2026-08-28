@@ -11,6 +11,7 @@ export default function JobDetailShell({
   billingSections,
   canOverwritePhotos,
   canWrite,
+  canManageAccountingVoid,
   documentEmailDraft,
   draftJob,
   entitlementSnapshot,
@@ -24,6 +25,7 @@ export default function JobDetailShell({
   membership,
   messagesPanel,
   onAssignmentChanged,
+  onAccountingVoidChange,
   onCancelSubcontractorPickup,
   onCloseDocumentEmail,
   onClosePhotoEditor,
@@ -73,6 +75,8 @@ export default function JobDetailShell({
         onStatusChange={onStatusChange}
         onAssignmentChanged={onAssignmentChanged}
         onNotice={onNotice}
+        canManageAccountingVoid={canManageAccountingVoid}
+        onAccountingVoidChange={onAccountingVoidChange}
       />
       <JobDetailTabs
         activityTimeline={activityTimeline}

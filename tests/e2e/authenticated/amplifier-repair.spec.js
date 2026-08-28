@@ -45,7 +45,7 @@ test('Pro owner creates an amplifier work order and persists bench details throu
   await expect(page.getByText(/Saved job .* successfully\./)).toBeVisible();
 
   await page.getByPlaceholder('Payment amount').fill('10.00');
-  await page.locator('.payment-form select').selectOption('Card');
+  await page.getByLabel('Payment method').selectOption('Card');
   await page.getByPlaceholder('Payment note').fill(paymentNote);
   const paymentSaved = page.waitForResponse((response) => (
     response.url().includes('/rest/v1/work_logs')

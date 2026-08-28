@@ -18,7 +18,7 @@ import {
   canAccessShopAsMember,
   getCurrentAccessPermissions
 } from '../modules/auth/permissionService';
-import { addJob, findRemoteJobByNumber, getJobs, isDuplicateWorkOrderError, updateJob } from '../modules/jobs/jobService';
+import { addJob, findRemoteJobByNumber, getJobs, isDuplicateWorkOrderError, setJobAccountingVoid, updateJob } from '../modules/jobs/jobService';
 import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService';
 import { calculateTillSummary, sortNewestFirst } from '../modules/jobs/jobSelectors';
 import { deleteOfflineDraft, getOfflineDrafts, saveOfflineDraft, updateOfflineDraft } from '../modules/jobs/offlineDraftService.js';
@@ -777,6 +777,24 @@ export default function App() {
     return savedJob;
   }
 
+  async function handleAccountingVoidChange(jobId, voided, reason) {
+    if (!canEditShopSettings) {
+      throw new Error('Only a writable shop owner or admin can change accounting exclusion.');
+    }
+
+    await setJobAccountingVoid(jobId, voided, reason);
+    const loadedJobs = await refreshJobs();
+    await refreshCustomers(loadedJobs);
+    const savedJob = loadedJobs.find((item) => item.id === jobId) || null;
+    setNotice({
+      type: 'success',
+      message: voided
+        ? `Work order ${savedJob?.jobNumber || ''} excluded from accounting.`
+        : `Work order ${savedJob?.jobNumber || ''} restored to accounting.`
+    });
+    return savedJob;
+  }
+
   async function handleImageUpload(job, files, options = {}) {
     if (!canWrite) {
       setNotice({ type: 'error', message: 'Your shop role is read-only.' });
@@ -1450,6 +1468,7 @@ export default function App() {
             actions={{
               isNewJobSidebarCollapsed,
               onAssignmentChanged: handleAssignmentChanged,
+              onAccountingVoidChange: handleAccountingVoidChange,
               onCloseJobDetail: closeJobDetail,
               onCreateAmplifierJob: handleAmplifierJobCreate,
               onCreateKeyboardJob: handleKeyboardJobCreate,

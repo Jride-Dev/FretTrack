@@ -1,6 +1,7 @@
-import { calculateJobTotals, retailTotal, rowQuantity } from '../billing/accounting.js';
+import { calculateJobTotals, retailTotal, rowQuantity, signedPaymentAmount } from '../billing/accounting.js';
 import { resolveJobTaxSettings } from '../billing/jobTaxSettings.js';
 import { formatLength, normalizeLengthUnit } from '../../shared/utils/measurements.js';
+import { isJobAccountingVoided } from '../jobs/jobAccountingVoid.js';
 
 const DEFAULT_RANGE_DAYS = 30;
 const MONEY_EPSILON = 0.005;
@@ -24,6 +25,7 @@ export function buildAccountingReport(jobs = [], options = {}) {
   const lengthUnit = options.lengthUnit || options.shopProfile?.lengthUnit || (currencyCode === 'GBP' ? 'mm' : 'in');
   const range = normalizeDateRange(options);
   const scopedJobs = jobs
+    .filter((job) => !isJobAccountingVoided(job))
     .filter((job) => !shopId || job.shopId === shopId || job.shop_id === shopId)
     .map((job) => buildJobAccountingSnapshot(job, {
       currencyCode,
@@ -262,9 +264,10 @@ function groupTaxCollected(jobs) {
 }
 
 function normalizePaymentEvent(payment, job) {
-  const amount = Number(payment.amount) || 0;
+  const rawAmount = Number(payment.amount) || 0;
   const explicitType = String(payment.type || payment.eventType || '').toLowerCase();
-  const type = explicitType || (amount < 0 ? 'refund' : 'payment');
+  const type = explicitType || (rawAmount < 0 ? 'refund' : 'payment');
+  const amount = signedPaymentAmount({ ...payment, type });
   return {
     id: payment.id || `${job.id || 'job'}:${payment.date || 'payment'}:${payment.method || 'Other'}:${amount}`,
     jobId: job.id,

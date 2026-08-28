@@ -11,8 +11,13 @@ export default function PaymentsSection({
     <>
       <form className="row-form payment-form no-print" onSubmit={addPayment}>
         <input type="date" value={payment.date} onChange={(event) => setPayment((current) => ({ ...current, date: event.target.value }))} disabled={!canWrite} />
+        <select value={payment.type || 'payment'} onChange={(event) => setPayment((current) => ({ ...current, type: event.target.value }))} disabled={!canWrite} aria-label="Payment entry type">
+          <option value="payment">Payment</option>
+          <option value="refund">Refund</option>
+          <option value="void">Payment Void</option>
+        </select>
         <input type="number" min="0" step="0.01" placeholder="Payment amount" value={payment.amount} onChange={(event) => setPayment((current) => ({ ...current, amount: event.target.value }))} disabled={!canWrite} />
-        <select value={payment.method} onChange={(event) => setPayment((current) => ({ ...current, method: event.target.value }))} disabled={!canWrite}>
+        <select value={payment.method} onChange={(event) => setPayment((current) => ({ ...current, method: event.target.value }))} disabled={!canWrite} aria-label="Payment method">
           <option value="Cash">Cash</option>
           <option value="Card">Card</option>
           <option value="Check">Check</option>
@@ -26,6 +31,7 @@ export default function PaymentsSection({
           <thead>
             <tr>
               <th>Date</th>
+              <th>Type</th>
               <th>Method</th>
               <th>Note</th>
               <th>Amount</th>
@@ -37,7 +43,14 @@ export default function PaymentsSection({
               <tr key={row.id}>
                 <td><input type="date" value={row.date || ''} onChange={(event) => updatePayment(row.id, 'date', event.target.value)} disabled={!canWrite} /></td>
                 <td>
-                  <select value={row.method || 'Cash'} onChange={(event) => updatePayment(row.id, 'method', event.target.value)} disabled={!canWrite}>
+                  <select value={row.type || 'payment'} onChange={(event) => updatePayment(row.id, 'type', event.target.value)} disabled={!canWrite} aria-label="Saved payment entry type">
+                    <option value="payment">Payment</option>
+                    <option value="refund">Refund</option>
+                    <option value="void">Payment Void</option>
+                  </select>
+                </td>
+                <td>
+                  <select value={row.method || 'Cash'} onChange={(event) => updatePayment(row.id, 'method', event.target.value)} disabled={!canWrite} aria-label="Saved payment method">
                     <option value="Cash">Cash</option>
                     <option value="Card">Card</option>
                     <option value="Check">Check</option>

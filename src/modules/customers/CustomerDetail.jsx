@@ -141,6 +141,7 @@ function renderPaymentHistory(payments = [], moneyOptions = {}, dateOptions = {}
           <tr>
             <th>Date</th>
             <th>Job</th>
+            <th>Type</th>
             <th>Method</th>
             <th>Amount</th>
             <th>Note</th>
@@ -151,6 +152,7 @@ function renderPaymentHistory(payments = [], moneyOptions = {}, dateOptions = {}
             <tr key={payment.id}>
               <td>{formatShopDate(payment.date, dateOptions)}</td>
               <td>{payment.jobNumber ? `#${payment.jobNumber}` : '-'}</td>
+              <td>{payment.type === 'refund' ? 'Refund' : payment.type === 'void' ? 'Payment Void' : 'Payment'}</td>
               <td>{payment.method || '-'}</td>
               <td>{money(payment.amount || 0, moneyOptions)}</td>
               <td>{payment.note || '-'}</td>

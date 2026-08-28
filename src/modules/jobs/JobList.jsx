@@ -17,7 +17,8 @@ function searchableText(job) {
     job.model,
     job.serial,
     job.status,
-    job.priority
+    job.priority,
+    job.accountingVoidReason
   ]
     .join(' ')
     .toLowerCase();
@@ -74,7 +75,7 @@ export default function JobList({ jobs, selectedJobId, onSelect, onSelectJob, on
                   {getJobPriorityShortLabel(job.priority)}
                 </span>
               </span>
-              <span className="current-jobs-summary-status">{job.status}</span>
+              <span className="current-jobs-summary-status">{job.accountingVoidedAt ? 'Accounting Excluded' : job.status}</span>
               <span className="current-jobs-summary-description">
                 {[job.customerName, [job.guitarBrand, job.model].filter(Boolean).join(' ')].filter(Boolean).join(' | ')}
               </span>

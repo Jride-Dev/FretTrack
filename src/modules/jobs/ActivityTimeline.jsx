@@ -8,7 +8,11 @@ const VISIBLE_EVENT_TYPES = new Set([
   'image_uploaded',
   'image_deleted',
   'payment_added',
-  'work_log_added'
+  'payment_refunded',
+  'payment_voided',
+  'work_log_added',
+  'job_accounting_voided',
+  'job_accounting_restored'
 ]);
 
 export default function ActivityTimeline({ events = [] }) {

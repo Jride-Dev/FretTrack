@@ -1,5 +1,6 @@
-import { calculateJobAccounting } from '../billing/accounting.js';
+import { calculateJobAccounting, signedPaymentAmount } from '../billing/accounting.js';
 import { resolveJobTaxSettings } from '../billing/jobTaxSettings.js';
+import { isJobAccountingVoided } from './jobAccountingVoid.js';
 
 export function sortNewestFirst(jobs) {
   return [...jobs].sort((a, b) => {
@@ -8,7 +9,7 @@ export function sortNewestFirst(jobs) {
 }
 
 export function calculateTillSummary(jobs, options = {}) {
-  return jobs.reduce((summary, job) => {
+  return jobs.filter((job) => !isJobAccountingVoided(job)).reduce((summary, job) => {
     const accounting = calculateJobAccounting(
       job,
       resolveJobTaxSettings(job, options.shopProfile || options)
@@ -18,7 +19,7 @@ export function calculateTillSummary(jobs, options = {}) {
     summary.openBalance += accounting.balanceDue;
     (job.techDetails?.payments || []).forEach((payment) => {
       const method = payment.method || 'Other';
-      summary.byMethod[method] = (summary.byMethod[method] || 0) + (Number(payment.amount) || 0);
+      summary.byMethod[method] = (summary.byMethod[method] || 0) + signedPaymentAmount(payment);
     });
     return summary;
   }, { paidTotal: 0, salesTaxAccrued: 0, openBalance: 0, byMethod: {} });

@@ -252,6 +252,9 @@ function WorkspacePage({
             activeMode={mode}
             job={selectedJob}
             onSelectMode={actions.onSelectJobMode}
+            canManageAccountingVoid={access.canEditShopSettings}
+            onAccountingVoidChange={actions.onAccountingVoidChange}
+            onNotice={actions.onNotice}
           />
           <JobDetail
             job={selectedJob}
@@ -283,6 +286,8 @@ function WorkspacePage({
             assignableMembersError={assignableMembersError}
             onAssignmentChanged={actions.onAssignmentChanged}
             onDirtyChange={actions.onDirtyChange}
+            canManageAccountingVoid={access.canEditShopSettings}
+            onAccountingVoidChange={actions.onAccountingVoidChange}
           />
         </>
       )
@@ -297,10 +302,13 @@ function WorkspacePage({
             activeMode={mode}
             job={selectedJob}
             onSelectMode={actions.onSelectJobMode}
+            canManageAccountingVoid={access.canEditShopSettings}
+            onAccountingVoidChange={actions.onAccountingVoidChange}
+            onNotice={actions.onNotice}
           />
           <AmplifierJobDetail
             job={selectedJob}
-            canWrite={access.canEditAmplifierRepair}
+            canWrite={access.canEditAmplifierRepair && !selectedJob.accountingVoidedAt}
             dateOptions={dateOptions}
             onUpdate={actions.onUpdateJob}
             onClose={actions.onCloseJobDetail}
@@ -323,10 +331,13 @@ function WorkspacePage({
             activeMode={mode}
             job={selectedJob}
             onSelectMode={actions.onSelectJobMode}
+            canManageAccountingVoid={access.canEditShopSettings}
+            onAccountingVoidChange={actions.onAccountingVoidChange}
+            onNotice={actions.onNotice}
           />
           <KeyboardJobDetail
             job={selectedJob}
-            canWrite={access.canEditKeyboardRepair}
+            canWrite={access.canEditKeyboardRepair && !selectedJob.accountingVoidedAt}
             dateOptions={dateOptions}
             onUpdate={actions.onUpdateJob}
             onRefresh={actions.onRefreshJobs}

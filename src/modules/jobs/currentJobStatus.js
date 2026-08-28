@@ -5,5 +5,7 @@ function cleanStatus(value) {
 }
 
 export function isCurrentJob(job = {}) {
-  return !CLOSED_JOB_STATUSES.has(cleanStatus(job.status));
+  return !job.accountingVoidedAt
+    && !job.accounting_voided_at
+    && !CLOSED_JOB_STATUSES.has(cleanStatus(job.status));
 }
