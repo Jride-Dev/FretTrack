@@ -1,8 +1,60 @@
-.print-damage-report {
+.print-damage-report,
+.print-job-sheet {
   display: none;
 }
 
 @media print {
+  body:not(.customer-report-printing) .print-job-sheet {
+    background: #fff !important;
+    box-sizing: border-box;
+    color: #111 !important;
+    display: block !important;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8.5pt;
+    line-height: 1.25;
+    margin: 0 auto;
+    max-width: 7.5in;
+    padding: 0;
+    width: 100%;
+  }
+
+  body.customer-report-printing .print-job-sheet {
+    display: none !important;
+  }
+
+  .print-job-sheet .print-document-header {
+    margin-bottom: 0.12in;
+    padding-bottom: 0.1in;
+  }
+
+  .print-job-sheet .print-document-header h1 {
+    font-size: 17pt;
+  }
+
+  .print-job-sheet .print-document-section {
+    margin-bottom: 0.1in;
+  }
+
+  .print-job-sheet .print-document-section > h2 {
+    font-size: 10.5pt;
+    margin-bottom: 0.05in;
+    padding-bottom: 0.025in;
+  }
+
+  .print-job-sheet .print-document-fields > div {
+    min-height: 0.21in;
+    padding: 0.03in 0.05in;
+  }
+
+  .print-job-sheet .print-document-table {
+    font-size: 8pt;
+  }
+
+  .print-job-sheet .print-document-table th,
+  .print-job-sheet .print-document-table td {
+    padding: 0.035in 0.045in;
+  }
+
   body:not(.customer-report-printing) .print-damage-report {
     display: none !important;
   }
@@ -23,7 +75,10 @@
 
   .print-damage-report *,
   .print-damage-report *::before,
-  .print-damage-report *::after {
+  .print-damage-report *::after,
+  .print-job-sheet *,
+  .print-job-sheet *::before,
+  .print-job-sheet *::after {
     box-sizing: border-box;
     color: #111 !important;
     text-shadow: none !important;
@@ -57,6 +112,10 @@
   .print-document-header p,
   .print-document-kicker {
     margin: 0.02in 0;
+  }
+
+  .print-shop-address {
+    white-space: pre-line;
   }
 
   .print-document-kicker {
@@ -290,5 +349,41 @@
     margin-top: 0.18in;
     padding-top: 0.07in;
     text-align: center;
+  }
+
+  .print-job-sheet-financials {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-job-sheet-totals {
+    border: 0.75pt solid #8da0b1;
+    margin: 0 0 0 auto;
+    max-width: 3.45in;
+  }
+
+  .print-job-sheet-totals > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1.15in;
+  }
+
+  .print-job-sheet-totals dt,
+  .print-job-sheet-totals dd {
+    border-bottom: 0.5pt solid #d4dce3;
+    margin: 0;
+    padding: 0.03in 0.06in;
+  }
+
+  .print-job-sheet-totals dd {
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .print-job-sheet-totals .is-total,
+  .print-job-sheet-totals .is-balance {
+    background: #eaf0f4 !important;
+    color: #172b3f !important;
+    font-size: 10pt;
+    font-weight: 700;
   }
 }

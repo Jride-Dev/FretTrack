@@ -31,7 +31,8 @@ assert.match(styles, /\.print-damage-map-stage > img\s*{[\s\S]*max-height:\s*4\.
 assert.match(styles, /\.print-damage-marker\s*{[\s\S]*transform:\s*translate\(-50%, -50%\);/, 'Printed markers must stay centered on saved coordinates.');
 assert.match(styles, /\.print-document-table thead\s*{[\s\S]*display:\s*table-header-group;/, 'Multi-page tables must repeat their headers.');
 assert.ok(detail.includes('await waitForCustomerReportPrintReady();'), 'Customer printing must wait for document images before opening the browser print dialog.');
-assert.match(readiness, /querySelectorAll\('\.print-damage-report img'\)[\s\S]*Promise\.all\(images\.map\(waitForImage\)\)[\s\S]*nextPaint/, 'Print readiness must wait for every report image and layout paint.');
+assert.match(readiness, /querySelectorAll\(`\$\{selector\} img`\)[\s\S]*Promise\.all\(images\.map\(waitForImage\)\)[\s\S]*nextPaint/, 'Shared print readiness must wait for every selected document image and layout paint.');
+assert.ok(readiness.includes("waitForPrintDocumentReady('.print-damage-report', root)"), 'Customer report readiness must target only the isolated customer document.');
 assert.ok(!roadmap.includes('- Customer Damage Report print rendering still needs a proper isolated rebuild'), 'The completed print blocker must be removed from the active roadmap weak spots.');
 assert.ok(packageJson.includes('"check:customer-report-print-renderer": "node scripts/check-customer-report-print-renderer.mjs"'), 'Package scripts must expose the customer report print check.');
 

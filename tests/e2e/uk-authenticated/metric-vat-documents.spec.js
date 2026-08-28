@@ -15,7 +15,7 @@ test('uses UK metric and VAT settings in job detail and printable documents', as
   await expect(billingTotals).toContainText('VAT');
   await expect(billingTotals).toContainText('£');
 
-  const jobSheet = page.locator('.job-sheet-print');
+  const jobSheet = page.locator('.print-job-sheet');
   await expect(jobSheet).toContainText('VAT');
   await expect(jobSheet).toContainText('Relief (mm)');
   await expect(jobSheet).toContainText('0.15 mm');

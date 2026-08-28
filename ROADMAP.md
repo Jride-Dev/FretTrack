@@ -105,6 +105,7 @@ The Operational Shop Release should pull the core workflow into one stable beta 
 - practical shop settings for currency, tax labels, date formats, and measurement preferences
 - shipped: owner/admin accounting-safe job void/exclusion removes test or invalid jobs from operational accounting totals and counts without deleting customer, invoice, payment, or audit history; recorded payments must be explicitly refunded or voided first
 - shipped: the Customer Service and Condition Report now uses an isolated print-only document renderer, waits for its images before printing, keeps saved condition markers aligned, and avoids guitar inspection terms on amplifier and keyboard reports
+- shipped: the invoice-style Job Sheet now uses the same isolated print boundary, preserves parts, services, taxes, discounts, payments, and balance, and prints amplifier or keyboard service terms without guitar-only measurements
 - known launch limitations documented clearly
 
 ## v0.3.x: Commerce Foundation

@@ -11,8 +11,8 @@ const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
 const detail = read('src/modules/jobs/JobDetail.jsx');
 const printSections = read('src/modules/jobs/JobPrintSections.jsx');
 const printDocuments = read('src/modules/jobs/JobPrintDocuments.jsx');
-const printSheet = read('src/modules/jobs/JobPrintSheet.js');
-const styles = read('src/styles.css');
+const printSheet = read('src/modules/print/PrintJobSheet.jsx');
+const documentStyles = read('src/modules/print/PrintStyles.css');
 const packageJson = JSON.parse(read('package.json'));
 
 const shopSettings = {
@@ -58,10 +58,10 @@ assert.match(attachedJobSheet.html, /10 Workshop Lane\nSheffield S1 2AB/, 'Attac
 
 assert.match(detail, /buildJobPrintSections\(\{[\s\S]*?shopSettings,[\s\S]*?workOrderImages/, 'Job Detail must pass the active shop settings into print composition.');
 assert.match(printSections, /<JobPrintDocuments[\s\S]*?shopSettings=\{shopSettings\}/, 'Print composition must pass the active shop settings into print documents.');
-assert.match(printDocuments, /<JobPrintSheet[\s\S]*?shopSettings=\{shopSettings\}/, 'Print documents must pass the active shop settings into the Job Sheet.');
+assert.match(printDocuments, /<PrintJobSheet[\s\S]*?shopSettings=\{shopSettings\}/, 'Print documents must pass the active shop settings into the Job Sheet.');
 assert.match(printSheet, /providedShopSettings \|\| getShopSettings\(\)/, 'The printable Job Sheet must prefer explicitly scoped shop settings.');
 assert.match(printSheet, /className="print-shop-address"/, 'The printable Job Sheet must render the shop address in its header.');
-assert.match(styles, /\.print-shop-address\s*\{[\s\S]*?white-space:\s*pre-line;/, 'Multiline shop addresses must render cleanly in print output.');
+assert.match(documentStyles, /\.print-shop-address\s*\{[\s\S]*?white-space:\s*pre-line;/, 'Multiline shop addresses must render cleanly in isolated print output.');
 assert.equal(packageJson.scripts['check:invoice-business-address'], 'node scripts/check-invoice-business-address.mjs');
 
 console.log('Invoice business address checks passed.');

@@ -1,5 +1,7 @@
 # Release Notes
 
+- The printable Job Sheet and its invoice summary now use a dedicated print-only renderer instead of the interactive Job Detail/global print layout. Shop identity, customer and instrument details, services, parts, tax, discounts, payments, balance, and measurement units remain intact. Amplifier and keyboard Job Sheets now use specialist service terminology and never show guitar string or neck fields. A deterministic amplifier fixture verifies the complete document as a one-page Letter PDF.
+
 - Customer Service and Condition Reports now suppress damage markers and image-backed observations when a saved condition image cannot be loaded, and clearly state that the image is unavailable.
 
 The Customer Damage Report has been replaced by an isolated Customer Service and Condition Report renderer. Its document structure and styles no longer reuse the interactive Damage Map layout; saved markers are clamped and positioned against the printed reference image, report images finish loading before the print dialog opens, and long tables repeat headings across pages. The customer report now uses amplifier and keyboard inspection language for specialist work orders while limiting neck measurements to guitar-family instruments. The legacy `CustomerDamageReport` and `JobDamageReportView` paths were removed instead of leaving two competing print implementations.

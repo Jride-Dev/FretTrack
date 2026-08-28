@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Customer Damage Report print rendering was the highest-confidence print blocker in FretTrack. The isolated customer-report renderer is now implemented; the same pattern remains the intended direction for later work-order and invoice renderer extraction.
+Customer Damage Report print rendering was the highest-confidence print blocker in FretTrack. The Customer Service and Condition Report and invoice-style Job Sheet now use isolated document renderers under the same print boundary.
 
 The next print pass should be a deliberate renderer rebuild, not another global CSS patch cycle.
 
@@ -14,12 +14,13 @@ The next print pass should be a deliberate renderer rebuild, not another global 
 
 ## Planned Module Shape
 
-The first isolated print module now lives under:
+The isolated print module now lives under:
 
 ```text
 src/modules/print/
   PrintDamageReport.jsx
   PrintDamageMapFigure.jsx
+  PrintJobSheet.jsx
   printDocumentReady.js
   PrintStyles.css
 ```
@@ -69,7 +70,7 @@ The production swap requires these checkpoints:
 
 The Customer Service and Condition Report is no longer rendered through the interactive Job Detail or Damage Map layout. It now owns its document structure, image stage, marker layer, page sizing, tables, and instrument-specific inspection sections.
 
-Remaining print architecture work is the later extraction of the Job Sheet and invoice outputs into the same isolated module boundary. Those documents continue using their existing stable print paths for now.
+The invoice-style Job Sheet now owns its shop header, work-order summary, services, parts, totals, payments, balance, and instrument-specific service summary. The old `modules/jobs/JobPrintSheet.js` renderer has been removed. Invoice email remains a separate generated-email path and is intentionally not coupled to browser-print CSS.
 
 ## Implemented Checkpoints
 
@@ -79,3 +80,6 @@ Remaining print architecture work is the later extraction of the Job Sheet and i
 - report tables repeat headers and keep rows together across page breaks
 - customer printing waits for all report images and two layout paints before opening the browser print dialog
 - amplifier and keyboard reports use their own inspection language; neck measurements remain guitar-family only
+- Job Sheet printing waits for its logo and layout paints before opening the browser print dialog
+- invoice totals, paid amount, and balance remain visible in a dedicated print-only financial summary
+- amplifier and keyboard Job Sheets use specialist service language instead of guitar strings or neck measurements
