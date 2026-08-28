@@ -1,5 +1,6 @@
 # Changelog
 
+- Made beta approval emails idempotent across concurrent calls and post-provider database failures by claiming a durable delivery before Resend, reusing a stable provider key and message snapshot, atomically finalizing the legacy notification marker, and blocking blind retries once provider deduplication can no longer guarantee safety.
 - Released FretTrack 0.2.9 as the first stable commercial build, retaining controlled account approval while removing customer-facing beta branding.
 - Made Stripe webhook claims recoverable when terminal finalization is unavailable: the current token owner can release an unfinished claim, nonterminal replays remain non-2xx so Stripe retries, and abandoned processing leases can be reclaimed after five minutes without allowing stale attempts to finalize newer work.
 - Atomically claim signed Stripe webhook event IDs before processing so concurrent duplicate deliveries cannot both enter billing lifecycle handling; failed attempts remain retryable through token-guarded finalization.

@@ -10,6 +10,8 @@ FretTrack beta access is intentionally controlled. A Supabase Auth user may sign
 - Pending or rejected users see the Pending Approval screen before any shop bootstrap or job loading runs.
 - Operators bypass the gate and can approve or reject users from the Beta Operator Dashboard.
 - Approved users can continue into normal onboarding and create or access a shop workspace.
+- Approval email delivery is claimed before Resend is contacted. Concurrent calls and post-provider retries reuse the same stored recipient/message snapshot and provider idempotency key, while provider acceptance and `approved_notified_at` are finalized together.
+- If provider acceptance remains unresolved near Resend's 24-hour idempotency expiry, automatic sending stops for manual confirmation instead of risking a duplicate approval email.
 - First-shop creation runs through `public.bootstrap_current_user_as_owner`, which creates the shop profile, default trial subscription, and owner membership together before the app reloads real shop access.
 - If a logged-out applicant is approved before signing up, the approval links to their Auth user when they later sign in with the same email.
 - Existing shop members and active operators are backfilled as approved by the migration.
@@ -22,6 +24,7 @@ FretTrack beta access is intentionally controlled. A Supabase Auth user may sign
 - Only operators can update request status.
 - Approval uses `public.update_beta_access_request`, which verifies operator status server-side.
 - Public applications use `public.submit_beta_access_request`, which validates email and never accepts an approved status from the client.
+- Approval delivery begin/finalize/failure RPCs are service-role only; authenticated clients cannot read the private delivery ledger or mutate provider state.
 
 ## Smoke Checklist
 
@@ -32,6 +35,8 @@ FretTrack beta access is intentionally controlled. A Supabase Auth user may sign
 - Pending user cannot load jobs, reports, billing, uploads, or operator routes.
 - Operator sees the pending request in the Beta Operator Dashboard.
 - Operator approves the request.
+- Concurrent approval-notification calls produce one provider email and one finalized delivery record.
+- A retry after provider acceptance but before local finalization reuses the original provider idempotency key and repairs the notification marker.
 - Approved user can retry access and continue onboarding.
 - Existing beta shop users still load normally after migration.
 - A normal authenticated user cannot update their own status to approved.

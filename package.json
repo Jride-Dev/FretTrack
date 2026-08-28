@@ -29,6 +29,7 @@
     "check:usage-caps": "node scripts/check-usage-caps.mjs",
     "check:version-consistency": "node scripts/check-version-consistency.mjs",
     "check:stable-release": "node scripts/check-stable-release.mjs",
+    "check:beta-approval-notification": "node scripts/check-beta-approval-notification.mjs",
     "check:workspace-router-foundation": "node scripts/check-workspace-router-foundation.mjs",
     "check:local-development-isolation": "node scripts/check-local-development-isolation.mjs",
     "check:local-seed-retry-safety": "node scripts/check-local-seed-retry-safety.mjs",
