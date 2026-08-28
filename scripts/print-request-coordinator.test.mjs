@@ -57,16 +57,31 @@ test('a Job Sheet action cancels a customer report that is still waiting', async
   assert.equal(body.classList.contains('customer-report-printing'), false);
 });
 
-test('only the most recent repeated print request can finish', () => {
+test('two immediate customer-report activations complete only one print flow', async () => {
   const requestSequenceRef = { current: 0 };
   const body = createBody();
-  const firstRequest = beginPrintRequest(requestSequenceRef, CUSTOMER_REPORT_PRINT_MODE, body);
-  const secondRequest = beginPrintRequest(requestSequenceRef, CUSTOMER_REPORT_PRINT_MODE, body);
+  const printCalls = [];
+  let releaseCustomerReport;
+  const customerReportReady = new Promise((resolve) => {
+    releaseCustomerReport = resolve;
+  });
 
-  assert.equal(isCurrentPrintRequest(requestSequenceRef, firstRequest, CUSTOMER_REPORT_PRINT_MODE, body), false);
-  assert.equal(isCurrentPrintRequest(requestSequenceRef, secondRequest, CUSTOMER_REPORT_PRINT_MODE, body), true);
+  async function printCustomerReport() {
+    const requestSequence = beginPrintRequest(requestSequenceRef, CUSTOMER_REPORT_PRINT_MODE, body);
+    await customerReportReady;
+    if (!isCurrentPrintRequest(requestSequenceRef, requestSequence, CUSTOMER_REPORT_PRINT_MODE, body)) {
+      return;
+    }
+    printCalls.push('customer-report');
+  }
+
+  const firstRequest = printCustomerReport();
+  const secondRequest = printCustomerReport();
+  releaseCustomerReport();
+  await Promise.all([firstRequest, secondRequest]);
+
+  assert.deepEqual(printCalls, ['customer-report']);
 
   cancelPrintRequests(requestSequenceRef, body);
-  assert.equal(isCurrentPrintRequest(requestSequenceRef, secondRequest, CUSTOMER_REPORT_PRINT_MODE, body), false);
   assert.equal(body.classList.contains('customer-report-printing'), false);
 });
