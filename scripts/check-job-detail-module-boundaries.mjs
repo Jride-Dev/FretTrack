@@ -8,8 +8,9 @@ const detail = read('src/modules/jobs/JobDetail.jsx');
 const shell = read('src/modules/jobs/JobDetailShell.jsx');
 const header = read('src/modules/jobs/JobDetailHeader.jsx');
 const dialogs = read('src/modules/jobs/JobDetailDialogs.jsx');
-const damageReportView = read('src/modules/jobs/JobDamageReportView.jsx');
 const printDocuments = read('src/modules/jobs/JobPrintDocuments.jsx');
+const printDamageReport = read('src/modules/print/PrintDamageReport.jsx');
+const printDamageMapFigure = read('src/modules/print/PrintDamageMapFigure.jsx');
 const printSections = read('src/modules/jobs/JobPrintSections.jsx');
 const intakeSections = read('src/modules/jobs/JobIntakeSections.jsx');
 const inspectionSections = read('src/modules/jobs/JobInspectionSections.jsx');
@@ -33,7 +34,7 @@ assert.match(detail, /import buildJobAuxiliarySections from ['"]\.\/JobAuxiliary
 assert.match(detail, /import JobPhotoSections from ['"]\.\/JobPhotoSections\.jsx['"]/, 'Job Detail must use the focused photo boundary.');
 assert.doesNotMatch(detail, /className="detail-header"/, 'Header presentation must not remain duplicated in JobDetail.');
 assert.doesNotMatch(detail, /function markerColorForReport|function getInstrumentSelectionPatch|function buildMeasurementDisplay|function formatMeasurementStageForExport|combineCustomerName|generateJobNumber|shouldResetModelForBrand|stringCountForInstrument/, 'Extracted pure helpers must not remain duplicated in JobDetail.');
-for (const source of [shell, header, dialogs, damageReportView, printDocuments, printSections, intakeSections, inspectionSections, workSections, billingSections, auxiliarySections, photoSections]) {
+for (const source of [shell, header, dialogs, printDocuments, printDamageReport, printDamageMapFigure, printSections, intakeSections, inspectionSections, workSections, billingSections, auxiliarySections, photoSections]) {
   assert.doesNotMatch(source, /jobService|supabase/i, 'Job Detail presentation boundaries must not load or mutate job data directly.');
 }
 assert.doesNotMatch(detail, /<JobDetailHeader|<JobDetailDialogs|<JobDetailTabs/, 'Shell, header, dialog, and tab composition must not remain duplicated in JobDetail.');
@@ -52,8 +53,8 @@ assert.match(detail, /buildJobPrintSections\(\{[\s\S]*?lengthUnit: measurementOp
 assert.match(printSections, /<PrintActions[\s\S]*?canSendEmail=\{canSendEmail\}[\s\S]*?canWrite=\{canWrite\}[\s\S]*?closeDetail=\{onCloseDetail\}[\s\S]*?emailWorkOrder=\{onEmailWorkOrder\}[\s\S]*?finishJob=\{onFinishJob\}/, 'Print action controls must retain permissions and established handlers.');
 assert.match(printSections, /<JobPrintDocuments[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?shopSettings=\{shopSettings\}[\s\S]*?totals=\{totals\}[\s\S]*?workOrderImages=\{workOrderImages\}/, 'Print documents must retain calculated totals, active shop settings, and selected measurement unit.');
 assert.match(printDocuments, /<JobPrintSheet[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?totals=\{totals\}/, 'Job Sheet rendering must retain calculated totals and the selected measurement unit.');
-assert.match(printDocuments, /<CustomerDamageReport[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?reportDamageView=\{renderDamageView\}/, 'Customer Report rendering must retain measurement formatting and damage-map composition.');
-assert.match(printDocuments, /<JobDamageReportView damageMap=\{draftJob\.techDetails\.damageMap \|\| \{\}\} viewName=\{viewName\} \/>/, 'Customer damage report rendering must retain the active job damage map.');
+assert.match(printDocuments, /<PrintDamageReport[\s\S]*?lengthUnit=\{lengthUnit\}[\s\S]*?shopSettings=\{shopSettings\}/, 'Customer Report rendering must use the isolated document renderer with shop settings and measurement formatting.');
+assert.match(printDamageReport, /const damageMap = techDetails\.damageMap \|\| \{\}[\s\S]*?<PrintDamageMapFigure key=\{viewName\} damageMap=\{damageMap\} viewName=\{viewName\} \/>/, 'Customer damage report rendering must retain the active job damage map.');
 assert.match(detail, /patchJob\(buildJobFieldPatch\(draftJob, name, value, jobs\)\)/, 'Job field updates must use the extracted pure patch helper.');
 assert.match(detail, /patchJob\(buildTaxFieldPatch\(draftJob, name, value, type, checked\)\)/, 'Job tax updates must use the extracted pure patch helper.');
 assert.match(detail, /patchJob\(buildShopTaxRatePatch\(draftJob, getShopDefaultTaxRate\(shopSettings\)\)\)/, 'Shop tax-rate reset must use the extracted pure patch helper.');
@@ -145,17 +146,14 @@ assert.match(auxiliarySections, /<JobScheduleSection[\s\S]*?canWrite=\{canWrite\
 assert.match(auxiliarySections, /<ActivityTimeline events=\{timelineEvents\} \/>/, 'Activity timeline must retain the active timeline events.');
 assert.match(detail, /<JobPhotoSections[\s\S]*?canDeletePhotos=\{canDeletePhotos\}[\s\S]*?canEditPhotos=\{canEditPhotos\}[\s\S]*?canUploadPhotos=\{canUploadPhotos\}[\s\S]*?onImageChange=\{handleImageChange\}[\s\S]*?onImageDelete=\{handleImageDelete\}[\s\S]*?onImageEdit=\{handleImageEdit\}[\s\S]*?onWorkOrderImageToggle=\{updateWorkOrderImage\}/, 'Photo presentation must retain established upload, edit, delete, and customer-report handlers.');
 assert.match(photoSections, /<ImagesSection[\s\S]*?canUploadPhotos=\{canUploadPhotos\}[\s\S]*?canEditPhotos=\{canEditPhotos\}[\s\S]*?canDeletePhotos=\{canDeletePhotos\}[\s\S]*?handleImageChange=\{onImageChange\}[\s\S]*?handleImageDelete=\{onImageDelete\}[\s\S]*?handleImageEdit=\{onImageEdit\}[\s\S]*?updateWorkOrderImage=\{onWorkOrderImageToggle\}/, 'Images section must retain photo permissions and controlled handlers.');
-assert.match(damageReportView, /if \(!hasBaseImage && marks\.length === 0\)[\s\S]*?return null/, 'Completely empty damage maps must remain omitted from reports.');
-assert.match(damageReportView, /hasBaseImage && imageUrl && marks\.length > 0/, 'Marker tables must remain tied to a visible reference image.');
+assert.match(printDamageMapFigure, /if \(!hasBaseImage && marks\.length === 0\)[\s\S]*?return null/, 'Completely empty damage maps must remain omitted from reports.');
+assert.match(printDamageMapFigure, /imageUrl && marks\.length > 0/, 'Marker tables must remain tied to a visible reference image.');
 
 assert.deepEqual(
-  ['getInstrumentSelectionPatch', 'buildMeasurementDisplay', 'markerColorForReport'].filter((helper) => formatting.includes(`function ${helper}`) || formatting.includes(`function ${helper}(`)),
-  ['getInstrumentSelectionPatch', 'buildMeasurementDisplay', 'markerColorForReport'],
+  ['getInstrumentSelectionPatch', 'buildMeasurementDisplay'].filter((helper) => formatting.includes(`function ${helper}`) || formatting.includes(`function ${helper}(`)),
+  ['getInstrumentSelectionPatch', 'buildMeasurementDisplay'],
   'Job formatting helpers must remain in the pure formatting boundary.'
 );
-assert.match(formatting, /if \(severity === 'Critical'\) return '#b3261e'/, 'Critical damage markers must retain their report color.');
-assert.match(formatting, /if \(severity === 'Structural'\) return '#a15c00'/, 'Structural damage markers must retain their report color.');
-assert.match(formatting, /return '#255f85'/, 'Default damage markers must retain their report color.');
 assert.match(packageJson, /"check:job-detail-module-boundaries": "node scripts\/check-job-detail-module-boundaries\.mjs"/, 'The focused Job Detail boundary check must be exposed.');
 
 console.log('Job Detail module boundary checks passed.');

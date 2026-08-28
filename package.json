@@ -25,6 +25,8 @@
     "check:shop-localization": "node scripts/check-shop-localization.mjs",
     "check:vat-default-existing-jobs": "node scripts/check-vat-default-existing-jobs.mjs",
     "check:current-jobs-page": "node scripts/check-current-jobs-page.mjs",
+    "check:customer-report-print-renderer": "node scripts/check-customer-report-print-renderer.mjs",
+    "render:customer-report-pdf": "node scripts/render-customer-report-pdf.mjs",
     "check:pro-team-assignment": "node scripts/check-pro-team-assignment.mjs",
     "check:usage-caps": "node scripts/check-usage-caps.mjs",
     "check:version-consistency": "node scripts/check-version-consistency.mjs",

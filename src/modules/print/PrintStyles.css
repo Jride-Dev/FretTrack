@@ -1,0 +1,294 @@
+.print-damage-report {
+  display: none;
+}
+
+@media print {
+  body:not(.customer-report-printing) .print-damage-report {
+    display: none !important;
+  }
+
+  body.customer-report-printing .print-damage-report {
+    background: #fff !important;
+    box-sizing: border-box;
+    color: #111 !important;
+    display: block !important;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.35;
+    margin: 0 auto;
+    max-width: 7.5in;
+    padding: 0;
+    width: 100%;
+  }
+
+  .print-damage-report *,
+  .print-damage-report *::before,
+  .print-damage-report *::after {
+    box-sizing: border-box;
+    color: #111 !important;
+    text-shadow: none !important;
+  }
+
+  .print-document-header {
+    align-items: center;
+    border-bottom: 1.5pt solid #1d3348;
+    display: grid;
+    gap: 0.22in;
+    grid-template-columns: 1.15in minmax(0, 1fr);
+    margin-bottom: 0.18in;
+    padding-bottom: 0.14in;
+  }
+
+  .print-document-header img {
+    display: block;
+    height: auto;
+    max-height: 0.72in;
+    max-width: 1.15in;
+    object-fit: contain;
+  }
+
+  .print-document-header h1 {
+    color: #172b3f !important;
+    font-size: 19pt;
+    line-height: 1.05;
+    margin: 0 0 0.05in;
+  }
+
+  .print-document-header p,
+  .print-document-kicker {
+    margin: 0.02in 0;
+  }
+
+  .print-document-kicker {
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .print-document-section {
+    break-inside: auto;
+    margin: 0 0 0.17in;
+    page-break-inside: auto;
+  }
+
+  .print-document-section > h2,
+  .print-document-section > h3 {
+    break-after: avoid;
+    color: #172b3f !important;
+    page-break-after: avoid;
+  }
+
+  .print-document-section > h2 {
+    border-bottom: 0.75pt solid #8da0b1;
+    font-size: 12pt;
+    margin: 0 0 0.08in;
+    padding-bottom: 0.035in;
+  }
+
+  .print-document-section > h3,
+  .print-damage-map-section > h3 {
+    font-size: 10.5pt;
+    margin: 0.12in 0 0.06in;
+  }
+
+  .print-document-intro {
+    margin: 0 0 0.08in;
+  }
+
+  .print-document-fields {
+    display: grid;
+    gap: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .print-document-fields > div {
+    border-bottom: 0.5pt solid #d4dce3;
+    break-inside: avoid;
+    display: grid;
+    gap: 0.08in;
+    grid-template-columns: 1.18in minmax(0, 1fr);
+    min-height: 0.25in;
+    padding: 0.045in 0.06in;
+  }
+
+  .print-document-fields dt {
+    color: #40576b !important;
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  .print-document-fields dd {
+    font-weight: 600;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .print-document-table {
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin: 0;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .print-document-table thead {
+    display: table-header-group;
+  }
+
+  .print-document-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-document-table th,
+  .print-document-table td {
+    border: 0.5pt solid #9eacb8;
+    padding: 0.045in 0.055in;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  .print-document-table th {
+    background: #eaf0f4 !important;
+    color: #172b3f !important;
+    font-weight: 700;
+  }
+
+  .print-damage-map-section {
+    break-before: auto;
+    margin: 0 0 0.16in;
+  }
+
+  .print-damage-map-visual {
+    break-inside: avoid;
+    display: flex;
+    justify-content: center;
+    page-break-inside: avoid;
+    width: 100%;
+  }
+
+  .print-damage-map-stage {
+    background: #fff !important;
+    border: 0.5pt solid #8da0b1;
+    display: inline-block;
+    line-height: 0;
+    max-width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .print-damage-map-stage > img {
+    display: block;
+    height: auto;
+    max-height: 4.55in;
+    max-width: 100%;
+    object-fit: contain;
+    width: auto;
+  }
+
+  .print-damage-marker-layer {
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .print-damage-marker {
+    align-items: center;
+    background: #172b3f !important;
+    border: 1.25pt solid #fff;
+    border-radius: 50%;
+    color: #fff !important;
+    display: flex;
+    font-size: 7.5pt;
+    font-weight: 700;
+    height: 0.22in;
+    justify-content: center;
+    line-height: 1;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 0.22in;
+  }
+
+  .print-damage-marker.is-structural {
+    background: #714200 !important;
+  }
+
+  .print-damage-marker.is-critical {
+    background: #8f1d16 !important;
+  }
+
+  .print-damage-table {
+    margin-top: 0.08in;
+  }
+
+  .print-damage-table th:nth-child(1),
+  .print-damage-table td:nth-child(1) { width: 0.34in; }
+  .print-damage-table th:nth-child(2),
+  .print-damage-table td:nth-child(2) { width: 0.9in; }
+  .print-damage-table th:nth-child(3),
+  .print-damage-table td:nth-child(3) { width: 0.82in; }
+
+  .print-damage-map-missing {
+    border: 0.75pt solid #8da0b1;
+    margin: 0 0 0.08in;
+    padding: 0.08in;
+  }
+
+  .print-document-photo-grid {
+    display: grid;
+    gap: 0.12in;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .print-document-photo-grid figure {
+    break-inside: avoid;
+    margin: 0;
+    page-break-inside: avoid;
+  }
+
+  .print-document-photo-grid img {
+    border: 0.5pt solid #8da0b1;
+    display: block;
+    height: 1.9in;
+    object-fit: contain;
+    width: 100%;
+  }
+
+  .print-document-photo-grid figcaption {
+    font-size: 7.5pt;
+    margin-top: 0.03in;
+  }
+
+  .print-authorization-section,
+  .print-document-signatures,
+  .print-document-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-document-signatures {
+    display: grid;
+    gap: 0.28in;
+    grid-template-columns: minmax(0, 1fr) 1.45in;
+    margin-top: 0.38in;
+  }
+
+  .print-document-signatures span {
+    border-top: 0.75pt solid #111;
+    padding-top: 0.045in;
+  }
+
+  .print-document-footer {
+    border-top: 0.5pt solid #9eacb8;
+    font-size: 7.5pt;
+    margin-top: 0.18in;
+    padding-top: 0.07in;
+    text-align: center;
+  }
+}

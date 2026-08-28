@@ -1,6 +1,5 @@
-import CustomerDamageReport from './CustomerDamageReport';
-import JobDamageReportView from './JobDamageReportView.jsx';
 import JobPrintSheet from './JobPrintSheet';
+import PrintDamageReport from '../print/PrintDamageReport.jsx';
 
 export default function JobPrintDocuments({
   draftJob,
@@ -15,10 +14,6 @@ export default function JobPrintDocuments({
   totals,
   workOrderImages
 }) {
-  function renderDamageView(viewName) {
-    return <JobDamageReportView damageMap={draftJob.techDetails.damageMap || {}} viewName={viewName} />;
-  }
-
   return (
     <>
       <JobPrintSheet
@@ -32,7 +27,7 @@ export default function JobPrintDocuments({
         shopSettings={shopSettings}
         totals={totals}
       />
-      <CustomerDamageReport
+      <PrintDamageReport
         draftJob={draftJob}
         formatInstrumentLabel={formatInstrumentLabel}
         formatMeasurementDelta={formatMeasurementDelta}
@@ -40,8 +35,8 @@ export default function JobPrintDocuments({
         outerStringLabels={outerStringLabels}
         normalizeInstrumentType={normalizeInstrumentType}
         parts={parts}
-        reportDamageView={renderDamageView}
         services={services}
+        shopSettings={shopSettings}
         workOrderImages={workOrderImages}
       />
     </>
