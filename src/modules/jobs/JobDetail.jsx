@@ -28,6 +28,12 @@ import JobPhotoSections from './JobPhotoSections.jsx';
 import buildJobPrintSections from './JobPrintSections.jsx';
 import JobDetailShell from './JobDetailShell.jsx';
 import { waitForCustomerReportPrintReady, waitForJobSheetPrintReady } from '../print/printDocumentReady.js';
+import {
+  CUSTOMER_REPORT_PRINT_MODE,
+  beginPrintRequest,
+  cancelPrintRequests,
+  isCurrentPrintRequest
+} from '../print/printRequestCoordinator.js';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import {
   buildAddPaymentJob,
@@ -139,6 +145,7 @@ function JobDetailWorkspace({
   const hydratedJobIdRef = useRef(job.id);
   const workLogSavePromiseRef = useRef(null);
   const workLogRetrySubmissionRef = useRef(null);
+  const printRequestSequenceRef = useRef(0);
   activeJobIdRef.current = job.id;
   const hasPendingWorkLog = hasPendingWorkLogDraft(workLogText);
   const hasUnsettledWorkLog = hasPendingWorkLog || isSavingWorkLog;
@@ -160,6 +167,7 @@ function JobDetailWorkspace({
       workLogRetrySubmissionRef.current = null;
     }
     if (didSwitchJobs) {
+      cancelPrintRequests(printRequestSequenceRef, document.body);
       workLogSavePromiseRef.current = null;
       setWorkLogText('');
       setIsSavingWorkLog(false);
@@ -197,7 +205,7 @@ function JobDetailWorkspace({
 
   useEffect(() => {
     return () => {
-      document.body.classList.remove('customer-report-printing');
+      cancelPrintRequests(printRequestSequenceRef, document.body);
       window.clearTimeout(paymentAutosaveTimeoutRef.current);
     };
   }, []);
@@ -916,8 +924,11 @@ function JobDetailWorkspace({
     if (!guardPendingWorkLogDocumentAction()) {
       return;
     }
-    document.body.classList.remove('customer-report-printing');
+    const requestSequence = beginPrintRequest(printRequestSequenceRef, 'job-sheet', document.body);
     await waitForJobSheetPrintReady();
+    if (!isCurrentPrintRequest(printRequestSequenceRef, requestSequence, 'job-sheet', document.body)) {
+      return;
+    }
     window.print();
   }
 
@@ -925,8 +936,11 @@ function JobDetailWorkspace({
     if (!guardPendingWorkLogDocumentAction()) {
       return;
     }
-    document.body.classList.add('customer-report-printing');
+    const requestSequence = beginPrintRequest(printRequestSequenceRef, CUSTOMER_REPORT_PRINT_MODE, document.body);
     await waitForCustomerReportPrintReady();
+    if (!isCurrentPrintRequest(printRequestSequenceRef, requestSequence, CUSTOMER_REPORT_PRINT_MODE, document.body)) {
+      return;
+    }
     window.print();
   }
 
