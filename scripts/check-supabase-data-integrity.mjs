@@ -29,12 +29,14 @@ integrity_checks as (
   from job_orphans
   union all
   select
-    'shop_profiles_without_owner_member',
+    'operational_shop_profiles_without_owner_member',
     count(*)::bigint,
     coalesce(jsonb_agg(jsonb_build_object('shop_id', sp.shop_id, 'shop_name', sp.shop_name) order by sp.shop_id), '[]'::jsonb)
   from public.shop_profiles sp
   left join public.shop_members sm on sm.shop_id = sp.shop_id and sm.role = 'owner'
+  left join public.shop_subscriptions ss on ss.shop_id = sp.shop_id
   where sm.id is null
+    and (ss.shop_id is null or ss.status not in ('canceled', 'cancelled'))
   union all
   select
     'shop_members_without_auth_user',

@@ -10,7 +10,7 @@ Review this file before every production deploy and update it after app, public-
 - Production migration history matched the repository through `20260828022147_accounting_safe_job_void.sql` during the latest read-only comparison.
 - The public landing/docs Worker currently serves stable access, pricing, annual savings, Terms, Privacy, Support, product guides, community links, and the access-application flow. The 0.3.0 public-site deployment will replace the retired public testing package with release notes while retaining old route aliases.
 - The 0.3.0 release branch passed the exact GitHub regression/build commands, 350 local pgTAP/RLS assertions, all 29 Playwright tests, the production deploy preflight, local data-integrity checks, migration parity, and `npm audit` with zero vulnerabilities.
-- The linked-project integrity audit still reports two legacy ownerless shop profiles. One contains historical work-order/customer data and neither has an identifiable owner or matching access request, so they must not be deleted or assigned by guesswork. Resolve or formally classify those records before the final production release gate.
+- The two legacy ownerless shop profiles are formally classified as closed historical tenants because both subscriptions are canceled, neither has a Stripe customer/subscription ID, and neither has a member who could access the tenant. `B-U Music Garage` retains eight jobs and five customers for historical integrity; `Pv Music House` has no jobs or customers. The integrity gate requires an owner for every operational shop while preserving canceled historical tenants without assigning, deleting, or reactivating them.
 
 ## Commercial configuration
 
@@ -87,6 +87,7 @@ Afterward, verify `/`, `/docs`, `/docs/release-notes`, `/terms`, `/privacy`, `/s
 - Deploy database changes before dependent Edge Functions and dependent frontend code.
 - Confirm secret names or digests without printing values.
 - Apply `20260829071930_access_application_side_effect_idempotency.sql` before deploying the 0.3.0 public landing/docs Worker. No Supabase Edge Function deployment is required for this follow-up.
+- Keep canceled ownerless historical tenants inaccessible and non-billable. Do not assign or delete them without a separately reviewed recovery or retention request.
 
 ## Post-deployment verification
 
