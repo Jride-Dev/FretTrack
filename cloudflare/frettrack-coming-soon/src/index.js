@@ -25,23 +25,23 @@ const BUNDLED_ASSET_PATHS = new Set([
   '/android-chrome-192x192.png',
   '/android-chrome-512x512.png',
   '/site.webmanifest',
-  '/beta-tester.html',
   '/docs.html',
+  '/docs/release-notes.html',
   '/privacy.html',
   '/support.html',
-  '/terms.html',
-  '/downloads/frettrack-beta-tester-workbook.xlsx',
-  '/downloads/frettrack-beta-tester-checklist.csv'
+  '/terms.html'
 ]);
 const STATIC_PAGE_ROUTES = new Map([
-  ['/beta-tester', '/beta-tester.html'],
-  ['/testing-checklist', '/beta-tester.html'],
+  ['/beta-tester', '/docs/release-notes.html'],
+  ['/testing-checklist', '/docs/release-notes.html'],
+  ['/release-notes', '/docs/release-notes.html'],
   ['/docs', '/docs.html'],
   ['/docs/', '/docs.html'],
   ['/docs/how-to-use-frettrack', '/docs/how-to-use-frettrack.html'],
   ['/docs/getting-started', '/docs/getting-started.html'],
-  ['/docs/beta-tester-guide', '/docs/beta-tester-guide.html'],
-  ['/docs/workflow-testing', '/docs/beta-tester-guide.html'],
+  ['/docs/beta-tester-guide', '/docs/release-notes.html'],
+  ['/docs/workflow-testing', '/docs/release-notes.html'],
+  ['/docs/release-notes', '/docs/release-notes.html'],
   ['/docs/shops-and-accounts', '/docs/shops-and-accounts.html'],
   ['/docs/customers', '/docs/customers.html'],
   ['/docs/jobs', '/docs/jobs.html'],
@@ -66,8 +66,8 @@ function landingPage() {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>FretTrack | Guitar Repair Shop Workflow</title>
-    <meta name="description" content="FretTrack is repair shop workflow software for guitar and bass technicians: intake, jobs, photos, damage maps, inventory, scheduling, customer documents, and shop records.">
+    <title>FretTrack | Instrument Repair Shop Workflow</title>
+    <meta name="description" content="FretTrack is professional workflow software for guitar, amplifier, and keyboard repair shops: intake, bench work, photos, inventory, scheduling, customer communication, billing, and records.">
     <link rel="canonical" href="https://frettrack-app.com/">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -75,8 +75,8 @@ function landingPage() {
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <meta name="theme-color" content="#0b1118">
-    <meta property="og:title" content="FretTrack | Guitar Repair Shop Workflow">
-    <meta property="og:description" content="Run intake, repair jobs, photos, inventory, scheduling, and customer documents in one focused shop workspace.">
+    <meta property="og:title" content="FretTrack | Instrument Repair Shop Workflow">
+    <meta property="og:description" content="Run guitar, amplifier, and keyboard repair work from intake through pickup in one focused shop workspace.">
     <meta property="og:image" content="https://frettrack-app.com/landing/overview.jpg">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://frettrack-app.com/">
@@ -1148,7 +1148,7 @@ function landingPage() {
       <nav class="nav" aria-label="Main navigation">
         <a class="brand" href="/" aria-label="FretTrack home">
           <img src="/android-chrome-192x192.png" alt="">
-          <span class="brand-text"><strong>FretTrack</strong><span>Modern workflow for guitar repair</span></span>
+          <span class="brand-text"><strong>FretTrack</strong><span>Modern workflow for instrument repair</span></span>
         </a>
         <div class="nav-links">
           <a href="#product">Product</a>
@@ -1159,7 +1159,7 @@ function landingPage() {
           <a href="/docs">Docs</a>
           <a href="/support">Support</a>
           <a href="/terms">Terms</a>
-          <a href="/testing-checklist">Testing Checklist</a>
+          <a href="/docs/release-notes">Release Notes</a>
           <a class="login" href="${APP_URL}">Login</a>
         </div>
       </nav>
@@ -1168,12 +1168,12 @@ function landingPage() {
         <div>
           <h1>FretTrack</h1>
           <p class="hero-subtitle">Repair shop workflow from intake to pickup.</p>
-          <p class="hero-copy">A focused operations workspace for guitar and bass repair shops: customers, work orders, photos, damage maps, inventory, scheduling, email documents, and job history.</p>
+          <p class="hero-copy">A focused operations workspace for guitar, bass, amplifier, and keyboard repair shops: customers, work orders, specialist bench records, inventory, scheduling, customer communication, billing, and job history.</p>
           <div class="hero-actions">
             <a class="button primary" href="#application-modal" id="open-application">Request Access</a>
             <a class="button secondary" href="${APP_URL}">Open App Login</a>
           </div>
-          <p class="hero-note">Controlled workspace access is open. Shop and Pro subscriptions use secure Stripe Checkout and self-service billing management.</p>
+          <p class="hero-note">Stable release 0.3.0 is available. Controlled workspace access is open, and Shop and Pro subscriptions use secure Stripe Checkout and self-service billing management.</p>
         </div>
 
         <div class="product-frame" aria-label="FretTrack app preview">
@@ -1234,7 +1234,7 @@ function landingPage() {
           <div class="step">
             <span>03</span>
             <h3>Repair</h3>
-            <p>Track services, parts, work logs, payments, low-stock parts, scheduling, and status changes.</p>
+            <p>Use focused Guitar, Amplifier, and Keyboard benches while tracking services, parts, work logs, payments, scheduling, and status changes.</p>
           </div>
           <div class="step">
             <span>04</span>
@@ -1261,6 +1261,10 @@ function landingPage() {
               <div class="feature">
                 <h3>Scheduling and customer records</h3>
                 <p>Keep appointments, due dates, pickups, customer history, and repeat-customer lookup connected to shop operations.</p>
+              </div>
+              <div class="feature">
+                <h3>Customer communication and retention</h3>
+                <p>Send immediate or scheduled email, configure opted-in service reminders, and manage Pro loyalty stamps without leaving the work order.</p>
               </div>
             </div>
           </div>
@@ -1342,7 +1346,7 @@ function landingPage() {
           </div>
           <div class="hero-actions">
             <a class="button" href="#application-modal">Request Access</a>
-            <a class="button secondary" href="/testing-checklist">Workflow Testing Checklist</a>
+            <a class="button secondary" href="/docs/release-notes">Read the 0.3.0 Release Notes</a>
           </div>
         </div>
       </section>
@@ -1357,7 +1361,7 @@ function landingPage() {
             <div class="discord-copy">
               <span class="discord-label">FretTrack community</span>
               <h3>Join our Discord for news and updates!</h3>
-              <p>Get product announcements, release notes, feature previews, support, and honest shop-floor conversation directly from the people building and testing FretTrack.</p>
+              <p>Get product announcements, release notes, feature previews, support, and honest shop-floor conversation directly from the people building and using FretTrack.</p>
               <span class="discord-cta">Join the FretTrack Discord <span aria-hidden="true">→</span></span>
             </div>
             <div class="discord-visual" aria-hidden="true">
@@ -1411,7 +1415,7 @@ function landingPage() {
           <a href="/terms">Terms</a>
           <a href="/support">Support</a>
           <a href="/privacy">Privacy</a>
-          <a href="/testing-checklist">Workflow Testing Checklist</a>
+          <a href="/docs/release-notes">Release Notes</a>
           <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
         </div>
       </div>
@@ -1574,7 +1578,7 @@ function landingPage() {
         status.className = 'form-status';
 
         try {
-          const response = await fetch('/api/beta-application', {
+          const response = await fetch('/api/access-application', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(payload)
@@ -1643,11 +1647,11 @@ export default {
       return serveAsset(url.pathname, env);
     }
 
-    if (url.pathname === '/api/beta-application') {
+    if (url.pathname === '/api/access-application' || url.pathname === '/api/beta-application') {
       if (request.method !== 'POST') {
         return jsonResponse({ ok: false, error: 'Method not allowed.' }, 405);
       }
-      return saveBetaApplication(request, env);
+      return saveAccessApplication(request, env);
     }
 
     if (url.pathname === '/api/system-status') {
@@ -1715,7 +1719,7 @@ function getPublicStatusLabel(status) {
   }[status] || 'Status unavailable';
 }
 
-async function saveBetaApplication(request, env) {
+async function saveAccessApplication(request, env) {
   const contentType = request.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
     return jsonResponse({ ok: false, error: 'Invalid request.' }, 400);
@@ -1750,9 +1754,9 @@ async function saveBetaApplication(request, env) {
   }
 
   try {
-    const applicationResult = await submitBetaAccessRequest(application, env);
-    const emailResult = await sendBetaApplicationEmails(application, env);
-    const archiveResult = await archiveBetaApplication(application, env);
+    const applicationResult = await submitAccessRequest(application, env);
+    const emailResult = await sendAccessApplicationEmails(application, env);
+    const archiveResult = await archiveAccessApplication(application, env);
 
     const responseBody = {
       ok: true,
@@ -1768,7 +1772,7 @@ async function saveBetaApplication(request, env) {
       responseBody.warning = warnings.join(' ');
     }
 
-    console.log('beta application saved', {
+    console.log('access application saved', {
       applicantDomain: getEmailDomain(application.email),
       status: responseBody.status,
       emailWarning: Boolean(emailResult.warning),
@@ -1776,15 +1780,15 @@ async function saveBetaApplication(request, env) {
     });
     return jsonResponse(responseBody);
   } catch (error) {
-    console.error('beta application save failed', {
+    console.error('access application save failed', {
       applicantDomain: getEmailDomain(application.email),
-      error: error.message || 'Unknown beta application error.'
+      error: error.message || 'Unknown access application error.'
     });
     return jsonResponse({ ok: false, error: error.message || 'Unable to submit right now.' }, 500);
   }
 }
 
-async function submitBetaAccessRequest(application, env) {
+async function submitAccessRequest(application, env) {
   const supabaseUrl = cleanText(env.SUPABASE_URL || env.VITE_SUPABASE_URL || '', 300).replace(/\/+$/, '');
   const supabaseAnonKey = cleanText(env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || '', 1000);
 
@@ -1829,13 +1833,13 @@ async function submitBetaAccessRequest(application, env) {
   return result;
 }
 
-async function sendBetaApplicationEmails(application, env) {
+async function sendAccessApplicationEmails(application, env) {
   const resendApiKey = cleanText(env.RESEND_API_KEY || '', 300);
   const fromEmail = cleanText(env.SHOP_EMAIL_FROM || '', 180) || 'FretTrack <noreply@frettrack-app.com>';
-  const notifyRecipients = parseEmailRecipients(env.BETA_APPLICATION_NOTIFY_TO || SUPPORT_EMAIL);
+  const notifyRecipients = parseEmailRecipients(env.ACCESS_APPLICATION_NOTIFY_TO || env.BETA_APPLICATION_NOTIFY_TO || SUPPORT_EMAIL);
 
   if (!resendApiKey || !fromEmail || !notifyRecipients.length) {
-    console.error('beta application email not configured', {
+    console.error('access application email not configured', {
       hasResendApiKey: Boolean(resendApiKey),
       hasFromEmail: Boolean(fromEmail),
       hasNotifyRecipients: notifyRecipients.length > 0
@@ -1900,7 +1904,7 @@ async function sendBetaApplicationEmails(application, env) {
     if (result.status === 'rejected' || result.value?.ok === false) {
       const emailJob = emailJobs[index];
       const message = result.reason?.message || result.value?.error || 'Email send failed.';
-      console.error('beta application email failed', {
+      console.error('access application email failed', {
         kind: emailJob.kind,
         recipientDomain: getEmailDomain(emailJob.to),
         error: message
@@ -1927,7 +1931,7 @@ async function sendBetaApplicationEmails(application, env) {
     };
   }
 
-  console.log('beta application emails sent', {
+  console.log('access application emails sent', {
     applicantConfirmationSent: true,
     operatorNotificationCount: notifyRecipients.length
   });
@@ -2017,7 +2021,7 @@ async function sendResendEmail({ apiKey, from, to, subject, text, html }) {
   return { ok: true, id: result.id || '' };
 }
 
-async function archiveBetaApplication(application, env) {
+async function archiveAccessApplication(application, env) {
   if (!env.FRETTRACK_APP_ASSETS) {
     return { warning: '' };
   }
@@ -2026,7 +2030,7 @@ async function archiveBetaApplication(application, env) {
     const id = crypto.randomUUID();
     const datePath = application.submittedAt.slice(0, 10);
     await env.FRETTRACK_APP_ASSETS.put(
-      `beta-applications/${datePath}/${id}.json`,
+      `access-applications/${datePath}/${id}.json`,
       JSON.stringify(application, null, 2),
       {
         httpMetadata: {
@@ -2037,7 +2041,7 @@ async function archiveBetaApplication(application, env) {
     );
     return { warning: '' };
   } catch (error) {
-    console.error('beta application archive failed', {
+    console.error('access application archive failed', {
       applicantDomain: getEmailDomain(application.email),
       error: error.message || 'Unknown archive error.'
     });

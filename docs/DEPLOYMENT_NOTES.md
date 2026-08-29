@@ -1,136 +1,103 @@
 # Deployment Notes
 
-Review this file before every production deploy and after every manual database/function deployment.
+Review this file before every production deploy and update it after app, public-site, database, or Edge Function changes.
 
-## Current Deployment Status
+## Current status
 
-- Current branch checked during this review: `main` after approval-notification idempotency merge `5695a23`.
-- FretTrack `v0.2.9` is the live stable commercial release. PR `#215` removed customer-facing beta branding while retaining legacy internal identifiers and URL aliases for compatibility.
-- The commercial launch package was deployed on 2026-08-26. It standardizes Shop at $29.99 monthly/$299.99 yearly and Pro at $39.99 monthly/$399.99 yearly; changes newly created approved workspaces to a 14-day Pro trial with no automatic paid conversion; updates Checkout billing-address, tax-ID, and optional terms-consent controls; and publishes the approved seller, cancellation, annual refund, renewal-notice, and tax language.
-- Production Stripe uses the new FretTrack account `acct_1U8kPt2mvRJalgin`. Its live webhook `we_1U8lOW2mvRJalgincc2N7SPn` targets the hosted `stripe-webhook` function and subscribes to the seven reviewed Checkout, subscription, and invoice events. The customer portal configuration `bpc_1U8lui2mvRJalgineCPlaGoc` is live with payment-method updates, invoice history, the four reviewed Shop/Pro prices, period-end cancellation, cancellation reasons, and the public Terms/Privacy URLs.
-- The isolated `FretTrack sandbox` account `acct_1U8kQ329ES8UKGXN` passed the full local annual lifecycle on 2026-08-26: pilot gating, Pro yearly Checkout, signed Shop activation, Billing Portal creation, annual Shop-to-Pro change, period-end cancellation, final cancellation, duplicate-event replay, older-event rejection, and sandbox-only webhook-ledger verification. Cleanup removed the temporary customer and left only Stripe's terminal canceled subscription audit record; no nonterminal validation subscription remains. Production billing and hosted secrets were unchanged.
-- New Checkout is open to every eligible shop owner/admin with `STRIPE_BILLING_ENABLED=true`, an empty `STRIPE_BILLING_PILOT_SHOP_IDS`, and `STRIPE_REQUIRE_TERMS_ACCEPTANCE=true`. These hosted settings were applied on 2026-08-27 without replacing or printing the existing live `STRIPE_API_KEY`. Checkout must display required Terms acceptance before payment is completed. Automatic tax remains disabled until the business's registration and tax obligations are confirmed.
-- PR `#201` added the amplifier/keyboard purchasing bridge, PR `#202` added Pro Automated Service Reminders, and PR `#203` added the Pro Loyalty Program. All three merged to `main` on 2026-08-22 after their combined regression/build, audit, database/browser, focused checker, and production-build gates passed.
-- PR `#205` polished Automated Service Reminder templates with a customer-style preview, labeled personalization controls, and legacy newline normalization. It merged to `main` on 2026-08-22 after the audit, regression/build, pgTAP/RLS, and Playwright gates passed.
-- App domain returned `200 OK` with stable `0.2.9` on 2026-08-27. Cloudflare Pages deployment `0ed55971.frettrack.pages.dev` contains `assets/index-BRmocq9N.js`, `assets/App-CWHgQsiV.js`, and `assets/index-CCSjcyBA.css`; the live App asset contains `0.2.9` and not `0.2.9-beta.6`.
-- The public landing/docs Worker deployed stable access, pricing, annual-savings, support, Terms, Privacy, and workflow-testing copy on 2026-08-27 as version `0a3b6e87-f1cb-40b8-8268-a6ca42198fa4`. The landing, docs, Terms, Privacy, Support, testing checklist, and workflow-testing guide routes returned `200 OK`.
-- Production migration history matches the repository through `20260828005958_beta_approval_notification_idempotency.sql`; a post-deployment dry run reported the remote database up to date. PR `#217` makes unfinished Stripe event claims retryable, and PR `#219` gives approval emails a private delivery ledger, stable provider idempotency, atomic finalization, and an automatic retry cutoff before provider deduplication expires.
-- Supabase Edge Functions are active at `stripe-webhook` version 24, `create-checkout-session` version 13, `create-billing-portal-session` version 10, `notify-beta-access-request` version 19, `notify-beta-approval` version 19, `send-email` version 45, and JWT-protected `send-service-reminders` version 8. Legacy notification function slugs remain for compatibility, while their customer-facing copy now says FretTrack access. Checkout/Portal and approval notification retain JWT verification, while the webhook retains Stripe-signature verification.
-- Supabase Vault contains the three named Cron inputs, and active job `frettrack-service-reminders-nightly` runs at `17 3 * * *` (03:17 UTC). The six initial shop rules are disabled, so deployment did not opt customers in or send reminders.
-- Cloudflare Pages production HTML matched the guarded production build and returned the expected CSP, Permissions Policy, Referrer Policy, and content-type protection headers.
-- Hosted secret digests confirmed the live Stripe key, four price IDs, webhook signing secret, and app URL remain present. The empty pilot-list digest matches an empty value; billing and required-Terms flags match enabled values.
-- Post-release unauthenticated probes returned HTTP 401 from Checkout, Billing Portal, and both access-notification functions, while the webhook reached its Stripe-signature boundary and rejected the unsigned body with HTTP 400.
-- Pre-migration snapshot `backups/hosted-supabase-20260826-111909` completed with database, migration history, 4,911 checksummed Storage files, row counts, and comparison report. It contains no failure marker; the comparison reported no schema or migration-history drift.
+- Stable `v0.2.9` is the currently tagged GitHub release while `release/0.3.0` prepares the stable Operational Shop Release.
+- The production app already includes the post-0.2.9 Guitar Bench and print-safety work from PRs #225 and #226, deployed as Cloudflare Pages build `39ac92ae.frettrack.pages.dev`. The branded app URL and public root returned `200 OK`, and their asset references matched the guarded local production build.
+- The 0.3.0 release changes application/public version metadata, release documentation, and public landing/docs content. It does not add a database migration or change a Supabase Edge Function.
+- Production migration history matched the repository through `20260828022147_accounting_safe_job_void.sql` during the latest read-only comparison.
+- The public landing/docs Worker currently serves stable access, pricing, annual savings, Terms, Privacy, Support, product guides, community links, and the access-application flow. The 0.3.0 public-site deployment will replace the retired public testing package with release notes while retaining old route aliases.
+- The 0.3.0 release branch passed the exact GitHub regression/build commands, 343 local pgTAP/RLS assertions, all 29 Playwright tests, the production deploy preflight, local data-integrity checks, migration parity, and `npm audit` with zero vulnerabilities.
+- The linked-project integrity audit still reports two legacy ownerless shop profiles. One contains historical work-order/customer data and neither has an identifiable owner or matching access request, so they must not be deleted or assigned by guesswork. Resolve or formally classify those records before the final production release gate.
 
-## Current Migration Note
+## Commercial configuration
 
-The 2026-08-22 production dry run contained exactly these reviewed migrations, which were applied in order:
+- FretTrack is operated by Jeffrey Russell d/b/a Torrance Guitar Repair.
+- Shop is $29.99 monthly or $299.99 yearly.
+- Pro is $39.99 monthly or $399.99 yearly.
+- New approved workspaces receive a non-converting 14-day Pro trial with no card required.
+- Production Stripe account: `acct_1U8kPt2mvRJalgin`.
+- Production webhook: `we_1U8lOW2mvRJalgincc2N7SPn`.
+- Production customer portal configuration: `bpc_1U8lui2mvRJalgineCPlaGoc`.
+- Checkout is enabled for eligible owners/admins, requires Terms acceptance, and uses an empty pilot allowlist. Existing subscriptions retain Billing Portal access even if new Checkout is later closed.
+- Automatic tax remains disabled until applicable registrations and obligations are confirmed.
+- Never print or replace the hosted Stripe API key, webhook signing secret, price IDs, or other secret values during ordinary verification.
 
-- `20260822033718_specialist_purchasing_bridge.sql`
-- `20260822035953_pro_automated_service_reminders.sql`
-- `20260822041624_pro_loyalty_program.sql`
+## Hosted service baseline
 
-The post-deployment migration list aligned local and remote history, and a second `supabase db push --linked --dry-run` reported the database up to date with no pending migrations.
+- Stripe Billing uses authenticated Checkout/Portal functions and a signature-verified webhook with atomic event claims, lease recovery, event ordering, and replay handling.
+- Access-notification function slugs and database objects containing `beta` remain deployed compatibility identifiers; customer-facing copy uses **FretTrack access** and **Account Access**.
+- Pro Scheduled Email uses `send-email`; Automated Service Reminders use the JWT-protected `send-service-reminders` worker and the `frettrack-service-reminders-nightly` Cron job at 03:17 UTC.
+- Reminder rules default to disabled until a shop explicitly configures and enables one.
+- The isolated Stripe sandbox passed annual Checkout, plan change, cancellation, payment lifecycle, duplicate replay, older-event rejection, and cleanup validation.
 
-On 2026-08-26, migration `20260826054954_standard_pro_trial_launch_terms.sql` was backed up, applied, recorded remotely, and verified for its 14-day Pro trial trigger/bootstrap behavior and authenticated-only bootstrap access.
+## Backup and recovery baseline
 
-Continue using `supabase migration list --linked`, `supabase db push --dry-run`, and `npm run check:migrations` before future production schema changes. Do not use a blanket push when unrelated migrations are pending.
+- Daily hosted snapshots are managed by `scripts/backup-hosted-supabase.ps1` and the `FretTrack Daily Supabase Backup` scheduled task.
+- The workflow captures database dumps, migration history, row counts, function sources, checksums, comparison reports, and Storage objects. Manual full backups also archive the local Docker database volume.
+- Three consecutive unattended daily backups were recorded from 2026-08-22 through 2026-08-24.
+- The 2026-08-11 hosted-to-local restore drill matched 73 table counts, 58 migrations, application integrity, and all 194 Storage object hashes.
+- Pre-migration snapshot `backups/hosted-supabase-20260826-111909` completed with 4,911 checksummed files and no failure marker or schema/migration-history drift.
+- Restore selection must reject `FAILED.txt` and require validated completion metadata before any destructive local refresh begins.
 
-0.2.8 inventory work also includes these migrations that must be verified against remote migration history before production apply:
+## Standard app deployment
 
-- `20260617220231_inventory_purchasing_foundation_phase_1.sql`
-- `20260618072854_inventory_receiving_rpc_polish.sql`
-- `20260619092622_po_items_create_inventory_parts.sql`
-- `20260620015312_inventory_vendor_shipping_landed_cost.sql`
-
-## Recent Deployed Systems
-
-- Inventory purchasing foundation: parts, vendors, purchase orders, receiving, purchase history, barcode labels, and transactional receiving RPCs
-- Amplifier/keyboard specialist purchasing bridge with job-linked purchase lines, package/job quantity separation, Inventory receiving, and idempotent Parts & Payments fulfillment
-- Pro Automated Service Reminders with independent consent, durable queueing, nightly Cron dispatch, quota integration, and Message History
-- Pro Loyalty Program with paid/completed-work-order award reconciliation and audited redemption
-- Scheduling / Calendar Phase 1
-- Premium entitlement foundation
-- Advanced Reporting Phase 1
-- Beta access operator notification fix
-- Beta approval notification function
-- Photo Editor Phase 1 frontend
-- Photo Editor Phase 1 documentation and screenshot: `docs/screenshots/photo_editor.jpg`
-- Permission hardening with centralized role checks and granular photo controls
-- Premium Trial Management Phase 1 with operator-managed 7/14/30-day trials
-- Paid Access Lifecycle Phase 1 is implemented locally: Trial/Shop/Pro public model, expired trials block writes, and legacy internal unpaid values remain compatibility-only.
-- Supabase SECURITY DEFINER RPC hardening is implemented locally in `20260616063922`: flagged RPCs have explicit grants/search paths, inventory and transaction write paths have stronger validation, and public beta intake remains intentionally `anon` callable until the landing Worker moves to a server-side credential.
-- 0.2.8 inventory purchasing work adds vendor/Purchase Order/receiving/barcode/purchase-history flows and transactional receiving RPCs.
-- 0.2.8-D vendor + landed-cost purchasing polish adds Company/Sales Rep vendor labels, vendor address and Online Only fields, PO Shipping Cost, optional Add shipping to cost allocation, landed-cost receipt fields, and partial-receipt shipping allocation.
-- Free vs Pro Tier Split Phase 1 was the earlier entitlement boundary pass before the Trial/Shop/Pro wording change.
-- Shop Tier Foundation Phase 1 is implemented locally but not deployed from this development pass.
-- Customer email/SMS Edge Function effective team-member access hardening is implemented locally but not deployed from this review pass
-- `notify-beta-access-request` Supabase Edge Function
-- `notify-beta-approval` Supabase Edge Function
-- Cloudflare landing Worker beta application email path
-- Cloudflare landing Worker beta application hardening deployed on 2026-06-12: Supabase request creation is authoritative, email/R2 archive failures return warnings after save, and `npm run check:landing-worker` covers the request lifecycle.
-- Cloudflare landing Worker launch-page redesign deployed on 2026-06-18 as Worker version `490c7988-a697-4d06-8845-a72ff6fc6017`. It adds a product screenshot hero, workflow/security/pricing sections, bundled favicon/static screenshot assets through `LANDING_ASSETS`, and `no-store` HTML caching so deploys do not leave stale launch copy in browser cache.
-
-## Verification Reminders
-
-Before future deploys, check:
+Before deployment:
 
 ```powershell
 git status
 git branch --show-current
-git pull origin main
 npm run check:migrations
 npm run check:landing-worker
 npm run check:permissions
 npm run check:tiers
+npm run check:version-consistency
+npm run check:stable-release
 npm run build
-npm run check:production-build-config
+npm run deploy:app:production:check
 git diff --check
-curl.exe -I https://app.frettrack-app.com/
-curl.exe -I https://frettrack-app.com/
 ```
 
-`npm run check:production-build-config` is a hard safety gate for app deploys. It must pass after `npm run build` and before `npx wrangler pages deploy dist --project-name=frettrack --branch=main`; it fails if the compiled `dist` bundle contains local Supabase URLs, demo auth keys, or local test-shop defaults.
-
-For App Pages deploys, prefer the guarded wrapper:
+Deploy the app only through the guarded wrapper:
 
 ```powershell
 npm run deploy:app:production
 ```
 
-The wrapper forces the production Supabase URL, forces the production FretTrack Edge Function key from `.env` when the shell does not provide one, clears local test-shop defaults for the build, runs `npm run check:production-build-config`, and only then deploys `dist` to Cloudflare Pages. Use `npm run deploy:app:production:check` for the same build/config preflight without uploading.
+The wrapper forces the reviewed production Supabase URL and function key, clears local test-shop defaults, builds `dist`, rejects unsafe compiled configuration, and then deploys Cloudflare Pages.
 
-## Backup Automation
+## Public landing/docs deployment
 
-- Daily hosted Supabase snapshots are managed by `scripts/backup-hosted-supabase.ps1`.
-- The npm wrapper is `npm run backup:supabase`.
-- The Windows Scheduled Task is `FretTrack Daily Supabase Backup`, scheduled for `02:00` local time.
-- Repair or register the task with `npm run backup:register-task`.
-- Each snapshot writes SQL dumps, Supabase Storage bucket files, checksums, migration versions, row counts, a transcript log, and a compare report under `backups/hosted-supabase-*`. Storage files are listed recursively and copied object by object for reliability with the current Supabase CLI.
-- Each scheduled run also archives the existing local Docker volume `supabase_db_FretTrack` under `backups/docker-volume-*`.
-- Local Docker database refresh is intentionally separate and manual through `npm run db:local:refresh-from-backup`.
-- The task runs under the current Windows user account and depends on that user's Supabase CLI login/profile, network access, and local Docker access.
-- Manual scheduled-task verification on `2026-06-26 02:58` completed with result `0`, snapshot `backups/hosted-supabase-20260626-025825`, and Docker archive `backups/docker-volume-20260626-025825/supabase_db_FretTrack.tar.gz`.
-- Backup workflow details live in `docs/DATABASE_BACKUPS.md`.
+When `cloudflare/frettrack-coming-soon` changes:
 
-## Manual Deployment Caveats
+```powershell
+npm run check:landing-worker
+npx wrangler deploy --config cloudflare/frettrack-coming-soon/wrangler.jsonc
+```
 
-- Do not use a blanket production migration push when unrelated local migrations are still pending.
-- Premium Trial Management Phase 1 adds `20260611120000_premium_trial_management_phase_1.sql`. It replaces entitlement snapshot behavior and adds operator-only trial RPCs; verify migration-history alignment before future production migration work.
-- Free vs Pro Tier Split Phase 1 adds `20260611133000_free_pro_tier_split_phase_1.sql`. It seeds explicit `photo_editor`, `advanced_reporting`, and `team_members` entitlements and hardens team-member access/RPCs. This migration still needs an intentional production apply after review.
-- Shop Tier Foundation Phase 1 adds `20260612233321_shop_tier_foundation_phase_1.sql`. It adds the `shop` plan identifier and allows `shop` in subscription-tier resolution. The follow-up live-demo polish migration `20260629155417_live_demo_bug_polish_phase_1.sql` moves Photo Editor and Team Members to Pro-only, keeps Advanced Reporting on Pro, sets Shop to one user, and updates team-member RPC wording to Pro. This migration still needs an intentional production apply after review.
-- Pro Team Assignment Foundation adds `20260727151302_pro_team_assignment_foundation.sql` for nullable same-shop job assignment, role enforcement, active-member listing, stale-aware targeted updates, audit events, and the `team_assignment` entitlement. It is pending review and must be applied before deploying the beta.2 app; this branch does not apply it or deploy any Edge Function, Worker, billing, or Stripe change.
-- Inventory Purchasing Foundation adds `20260617220231_inventory_purchasing_foundation_phase_1.sql`, `20260618072854_inventory_receiving_rpc_polish.sql`, and `20260619092622_po_items_create_inventory_parts.sql`; verify vendors, POs, partial/full receiving, part linkage, barcode search/labels, purchase history, and receive movement rows after deploy.
-- Inventory vendor + landed-cost purchasing polish adds `20260620015312_inventory_vendor_shipping_landed_cost.sql`; verify vendor Company/Sales Rep/address/Online Only fields, PO Shipping Cost, Add shipping to cost, partial-receipt allocation, receipt item landed costs, and purchase-history landed-cost display after deploy.
-- Inventory/vendor/shipping polish adds `20260630041703_inventory_vendor_shipping_polish_phase_1.sql`; verify Shop Settings inventory Location/Category presets, UPC-facing labels, Special Order Part low-stock suppression, 300x300 max part-image upload to the private `part-images` bucket, and shipping/parts label printer presets after deploy.
-- The Free vs Pro review also updates `send-email` and `send-sms`; deploy those Edge Functions after the database migration so service-role message sends respect effective team-member access.
-- Beta access approval and premium trial state are separate. Do not use premium trial expiry as a reason to remove beta approval.
-- Trial expiry should preserve shop data and memberships, block writes, and require restored access before core operations continue.
-- Free owner access must remain active after downgrade. Existing non-owner staff memberships should be preserved but inactive while `team_members` is false, then restored when Shop entitlement returns.
-- Historical note superseded on 2026-08-24: Stripe Checkout, Billing Portal, signed webhooks, and server-authoritative launch gating are implemented. Production enrollment still requires an intentional live-account configuration check before the launch switch opens.
-- If a migration is manually applied with `supabase db query --linked --file`, confirm the schema change and then align remote migration history intentionally.
-- Confirm Supabase Edge Function secrets by name only; never print secret values.
-- Confirm Cloudflare Worker secrets by name only; never print secret values.
-- The public landing Worker now has a bundled static-assets binding named `LANDING_ASSETS` in addition to the existing `FRETTRACK_APP_ASSETS` R2 binding. Confirm favicon routes such as `https://frettrack-app.com/favicon.ico` and landing screenshots such as `https://frettrack-app.com/landing/overview.jpg` after deploying the Worker.
-- For public beta application issues, run `npm run check:landing-worker`, submit a live test through `https://frettrack-app.com/api/beta-application`, and confirm the saved row in `public.beta_access_requests`.
-- If frontend asset hashes are used to confirm a deployment, compare the current app HTML against the most recent local build output.
+Afterward, verify `/`, `/docs`, `/docs/release-notes`, `/terms`, `/privacy`, `/support`, community links, and the legacy `/testing-checklist` plus `/docs/workflow-testing` aliases. The old aliases must show current release information rather than retired testing copy.
+
+## Database and function deployment
+
+- Do not use a blanket production migration push when local-only migrations are present or history is misaligned.
+- Review `supabase migration list --linked`, `supabase db push --linked --dry-run`, and `npm run check:migrations` before schema work.
+- Apply only reviewed migrations in order, then verify history and application behavior.
+- Deploy database changes before dependent Edge Functions and dependent frontend code.
+- Confirm secret names or digests without printing values.
+- No database or Edge Function deployment is required solely for the 0.3.0 release metadata/public-site update.
+
+## Post-deployment verification
+
+1. Confirm `https://app.frettrack-app.com/` and `https://frettrack-app.com/` return `200 OK`.
+2. Confirm the app HTML references the same assets as the guarded production build.
+3. Confirm the app visibly reports `0.3.0` without prerelease wording.
+4. Confirm the public landing page and docs report stable `v0.3.0` and contain no public testing-program calls to action.
+5. Confirm Terms, Privacy, Support, pricing, access application, Discord, GitHub, Reddit, Product Hunt, and Torrance Guitar Repair links.
+6. Confirm unauthenticated Checkout, Billing Portal, and protected notification functions reject unauthorized requests.
+7. Record the Cloudflare Pages deployment URL, landing Worker version, validation result, and any hosted migration/function changes here before publishing the `v0.3.0` GitHub release.
+
+## Protected local files
+
+Backup contents, local Supabase configuration, local fixture reports, screenshots, environment files, and stashes are not release artifacts unless deliberately reviewed and added. Never delete or commit them as collateral cleanup.

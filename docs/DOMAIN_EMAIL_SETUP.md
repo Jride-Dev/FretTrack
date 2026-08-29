@@ -24,7 +24,7 @@ Domain: `frettrack-app.com`
     - `SUPABASE_ANON_KEY`
     - `RESEND_API_KEY`
     - `SHOP_EMAIL_FROM`
-    - Optional `BETA_APPLICATION_NOTIFY_TO`
+    - Optional `ACCESS_APPLICATION_NOTIFY_TO` (`BETA_APPLICATION_NOTIFY_TO` remains a legacy fallback)
 - Cloudflare R2:
   - Bucket: `frettrack-app-assets`
   - Worker binding: `FRETTRACK_APP_ASSETS`
@@ -32,7 +32,7 @@ Domain: `frettrack-app.com`
   - Current objects:
     - `site/frettrack-banner.png`
     - `site/frettrack-emblem.png`
-  - Beta applications are stored as private JSON objects under `beta-applications/YYYY-MM-DD/{uuid}.json`
+  - Access applications are stored as private JSON objects under `access-applications/YYYY-MM-DD/{uuid}.json`
 - DNS:
   - `app.frettrack-app.com` CNAME to `frettrack.pages.dev`
   - Cloudflare Email Routing MX records enabled
@@ -124,7 +124,7 @@ http://localhost:5173/**
 ```
 
 6. Customize the Supabase Invite user email template so it says FretTrack, not Supabase.
-7. Send a test invite to an internal address before inviting outside testers.
+7. Send a test invite to an internal address before inviting a shop user.
 
 ## Website Deployment Notes
 
@@ -143,7 +143,7 @@ https://frettrack-app.com
 Deploy the app:
 
 1. Connect Cloudflare Pages to `Jride-Dev/FretTrack`.
-2. Production branch: `add-auth-shop-memberships` until the beta branch is merged.
+2. Production branch: `main`.
 3. Build command: `npm run build`
 4. Build output directory: `dist`
 5. Set required Pages environment variables from `.env`.
@@ -163,13 +163,13 @@ The root Worker has two asset paths:
   where the favicon package and launch-page screenshots live.
 - Existing R2 assets under `https://frettrack-app.com/assets/...`, served by the `FRETTRACK_APP_ASSETS` binding.
 
-The beta application endpoint calls Supabase RPC `public.submit_beta_access_request`, so the Worker must have `SUPABASE_URL` and `SUPABASE_ANON_KEY` configured before form submissions will create Operator Dashboard requests.
+The access-application endpoint calls the compatibility RPC `public.submit_beta_access_request`, so the Worker must have `SUPABASE_URL` and `SUPABASE_ANON_KEY` configured before form submissions will create Operator Dashboard requests.
 
 It also sends confirmation and notification email through Resend, so the Worker must have:
 
 - `RESEND_API_KEY`
 - `SHOP_EMAIL_FROM`
-- Optional `BETA_APPLICATION_NOTIFY_TO` if you want the operator notification to go somewhere other than `support@frettrack-app.com`
+- Optional `ACCESS_APPLICATION_NOTIFY_TO` if you want the operator notification to go somewhere other than `support@frettrack-app.com`
 
 Confirm:
 
@@ -194,7 +194,7 @@ curl.exe -I https://frettrack-app.com/assets/frettrack-banner.png
 curl.exe -I https://frettrack-app.com/assets/frettrack-emblem.png
 ```
 
-Smoke test the beta application form endpoint:
+Smoke test the access-application endpoint:
 
 ```powershell
 $payload = @{
@@ -206,5 +206,5 @@ $payload = @{
   email = 'support@frettrack-app.com'
 } | ConvertTo-Json -Compress
 
-$payload | curl.exe -sS --max-time 20 -X POST https://frettrack-app.com/api/beta-application -H "Content-Type: application/json" --data-binary "@-"
+$payload | curl.exe -sS --max-time 20 -X POST https://frettrack-app.com/api/access-application -H "Content-Type: application/json" --data-binary "@-"
 ```

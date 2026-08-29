@@ -1,4 +1,4 @@
-# FretTrack Paid-Tier Readiness Audit
+# Historical FretTrack Paid-Tier Readiness Audit
 
 Date: 2026-05-25
 

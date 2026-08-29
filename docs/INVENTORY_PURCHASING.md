@@ -1,8 +1,8 @@
 # Inventory Purchasing Notes
 
-## Current 0.2.8 Scope
+## Current 0.3.0 Scope
 
-Current inventory documentation covers the 0.2.8 purchasing foundation:
+Current inventory documentation covers the purchasing and specialist-workflow foundation included in stable 0.3.0:
 
 - parts catalog, stock counts, reorder levels, low-stock visibility, and job-part usage/returns
 - shop-scoped vendors with Company/Sales Rep labels, address fields, and Online Only behavior
@@ -62,7 +62,7 @@ The inventory UI now uses UPC-facing labels for the existing part identifier fie
 - `parts.sku` displays as UPC.
 - `purchase_order_items.vendor_sku` and the matching part field display as Vendor UPC.
 
-The database column names are intentionally preserved for compatibility with existing beta data and migrations.
+The database column names are intentionally preserved for compatibility with legacy data and migrations.
 
 ## Vendors
 

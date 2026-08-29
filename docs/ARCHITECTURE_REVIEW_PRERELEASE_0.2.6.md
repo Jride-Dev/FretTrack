@@ -1,4 +1,6 @@
-# Architecture Review Beta 14
+# Historical Architecture Review — Prerelease 0.2.6
+
+This document preserves an earlier architecture snapshot. Current 0.3.0 status and post-release priorities are recorded in [Architecture Health Audit for 0.3.0](ARCHITECTURE_HEALTH_AUDIT_0.3.0.md).
 
 ## Current Position
 

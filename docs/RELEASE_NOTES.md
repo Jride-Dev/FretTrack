@@ -1,5 +1,11 @@
 # Release Notes
 
+## GitHub Release Summary: v0.3.0
+
+FretTrack `0.3.0` is the stable Operational Shop Release. Guitar, Amplifier, and Keyboard repair work now use focused bench workspaces while sharing one established commercial workflow for parts, services, payments, messages, scheduling, photos, print documents, and history. Customer and invoice-style documents use isolated print renderers, invalid work orders can be excluded from operational accounting without erasing their audit trail, and production subscription access remains synchronized through Stripe's signed lifecycle.
+
+The release also consolidates the shipped customer, inventory, purchasing, scheduling, reporting, photo, email, service-reminder, loyalty, role, quota, backup, and recovery foundations behind stable `0.3.0` product documentation. Customer-facing pages no longer present FretTrack as a pre-release testing program. Historical prerelease notes and internal compatibility identifiers remain intact for audit and migration safety.
+
 - Guitar work orders now open in a focused, full-width Guitar Bench matching the newer Amplifier and Keyboard bench experience. The bench reuses the existing guitar identity, string-gauge, staged neck-inspection, measurement-unit, visual Damage Map, photo-upload, dirty-state, and version-guarded save paths. A shared workspace switch keeps parts, services, payments, customer communication, scheduling, photos, printing, and history in the existing Work Order, Parts & Payments view instead of duplicating commercial logic.
 
 - Print actions now share a synchronous request sequence so the most recent document choice wins. If a Customer Service Report is still waiting for images when staff switch to Job Sheet, the delayed report cannot reopen the browser print dialog or print the wrong document.
@@ -46,7 +52,7 @@ Local test-shop fixture setup can now be retried after a partial shop failure wi
 
 Rapid repeated Work Note submissions now coalesce onto one in-flight save. The Save and Discard controls remain unavailable until persistence finishes, preventing concurrent stale snapshots from deleting the note that another request just created.
 
-## GitHub Release Summary: v0.2.9
+## GitHub Release Summary: v0.2.9 — Previous Stable Release
 
 FretTrack `0.2.9` is the first stable commercial release. It includes dedicated Amplifier and Keyboard Repair, job-linked specialist purchasing, Scheduled Email, Automated Service Reminders, and Loyalty while preserving the existing guitar-repair, immediate-email, permission, shop-isolation, billing, inventory, and quota behavior. Signed Stripe webhooks now atomically claim event IDs before processing, preventing concurrent duplicate deliveries from both entering billing lifecycle handling.
 
@@ -194,7 +200,7 @@ Customer-facing print and email document output now avoids misleading marker doc
 
 This pass responds to first real-job beta feedback from a UK shop. Customer, job intake, and job detail address fields now use `Postal Code / ZIP`, accept alphanumeric postal codes with spaces, and trim stored values without adding a database migration. Neck inspection now includes `Hump / rise at body joint` while preserving the existing `Twist` option and old stored values.
 
-A new [Customer Data & Privacy Note for Beta Shops](CUSTOMER_DATA_PRIVACY_NOTE_BETA_SHOPS.md) gives beta shops practical customer-facing wording about FretTrack's repair-shop workflow purpose, shop-scoped role-based access, avoiding unnecessary sensitive personal information, shop responsibility, and the existing Privacy Policy and Terms.
+A new [Customer Data & Privacy Note for Beta Shops](CUSTOMER_DATA_PRIVACY_NOTE.md) gives beta shops practical customer-facing wording about FretTrack's repair-shop workflow purpose, shop-scoped role-based access, avoiding unnecessary sensitive personal information, shop responsibility, and the existing Privacy Policy and Terms.
 
 ## Role And Permission Audit
 

@@ -1,249 +1,73 @@
 # Subscription Foundation
 
-Originally documented: 2026-05-25
+Current release: **FretTrack 0.3.0**
 
-Paid-launch readiness update: 2026-08-11
+FretTrack uses database-owned subscription state and entitlements. Stripe is the payment and billing provider; the browser is never authoritative for plan access.
 
-This document began with FretTrack's paid-readiness infrastructure. The 2026-08-11 paid-launch readiness update adds source-controlled Stripe Checkout, Billing Portal, and signature-verified Stripe webhook handling for review and production rollout. Production payment behavior is not considered launch-verified until the migration/functions are deployed and the documented test-mode and live-mode smoke matrix passes.
+## Access, trial, and paid state
 
-## Current Premium Trial Rule
+Account approval controls whether a new user may enter FretTrack. Subscription lifecycle controls whether an approved shop may write data and which features it may use. These are separate systems.
 
-Beta access approval and premium trial entitlement are separate systems.
+New approved workspaces receive a non-converting 14-day Pro trial with no card required. Owners and admins may start a paid Shop or Pro subscription through Stripe Checkout. Only signature-verified Stripe events update the saved subscription state.
 
-- Beta access controls whether a user may enter the beta application workspace.
-- Premium trial state controls premium feature availability for an approved shop.
-- Public product language is now Trial, Shop, and Pro. Trial is a lifecycle/status, not a feature tier.
-- Expired unpaid trials preserve shop data and staff memberships, allow login/view access where safe, block writes, and require upgraded/reactivated access.
-- Expired trials use internal compatibility entitlements and ignore feature overrides until the lifecycle is started, extended, or otherwise restored by an operator.
-- Explicit administrative `read_only` or cancellation states can still pause core write operations.
-- Shop Tier Foundation Phase 1 makes `photo_editor`, `advanced_reporting`, and `team_members` explicit entitlements across internal compatibility, Shop, and Pro.
-- Current product behavior keeps Shop on the paid core workflow. Pro unlocks Photo Editor, Team Members, and Advanced Reporting.
-- Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration. Existing `free + active` beta shops are preserved for now.
-- Stripe self-serve billing is implemented in source for Shop and Pro monthly/yearly plans. Opening or abandoning Checkout does not change access; only a signature-verified Stripe webhook persists customer, subscription, plan, interval, and lifecycle state.
-- `0.2.9-beta.3` adds server-enforced email-recipient, source-photo upload, and current repair-photo storage limits. Shop/Shop trial uses 1,000 recipients, 2,000 uploads, and 5 GiB; Pro/Pro trial uses 5,000, 10,000, and 25 GiB. No paid overages are available.
+The supported customer-facing plan names are Shop and Pro. Trial is a lifecycle, not a third feature tier. Internal values including `free`, `solo`, `enterprise`, and `beta_bypass` remain only where compatibility with older records or migrations requires them.
 
-See [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md) for UTC reset, reservation, deletion, downgrade, and operator-override semantics.
+## Authoritative data
 
-## Implemented
-
-### Database
-
-Migration:
-
-- `supabase/migrations/20260525233647_paid_tier_foundation.sql`
-
-New tables:
+The foundation is built around:
 
 - `plans`
 - `plan_entitlements`
 - `shop_subscriptions`
 - `shop_entitlement_overrides`
 - `shop_usage_snapshots`
+- `stripe_webhook_events`
 
-Seeded plans:
+`shop_subscriptions` is the current source for lifecycle, plan, recurring interval, Stripe customer/subscription identity, trial dates, and paid-period boundaries. The app reads an effective entitlement snapshot generated from current plan data and explicit operator overrides.
 
-- `free`
-- `trial`
-- `solo`
-- `pro`
-- `enterprise`
+## Lifecycle behavior
 
-Seeded entitlement keys:
+- `trialing` and `active` permit normal work according to the effective plan.
+- `grace` preserves normal access temporarily while showing the billing warning.
+- `read_only`, expired unpaid trial, and terminal cancellation preserve records while blocking protected writes.
+- Period-end cancellation retains paid access through the recorded current-period end.
+- Failed and recovered payment events update lifecycle only through the signed webhook path.
+- Opening, abandoning, canceling, or failing Checkout does not change the saved plan.
 
-- `core_jobs`
-- `customers`
-- `photos`
-- `photo_editor`
-- `reports`
-- `advanced_reporting`
-- `team_members`
-- `csv_export`
-- `email_messages`
-- `sms_messages`
-- `inventory`
-- `advanced_accounting`
-- `advanced_branding`
-- `api_access`
-- `max_users`
-- `max_storage_bytes`
-- `monthly_email_limit`
-- `monthly_sms_limit`
+Entitlement and lifecycle enforcement exists in the database and Edge Functions as well as the app. A hidden button or client feature flag is never treated as authorization.
 
-Supported subscription states:
+## Plan boundaries
 
-- `trialing`
-- `active`
-- `grace`
-- `read_only`
-- `canceled`
-- `expired`
-- `beta_bypass`
+Shop contains the complete core repair workflow and is single-user. Pro adds Team Members, team assignment, Photo Editor, Advanced Reporting, Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, Loyalty Program, and higher usage limits.
 
-Premium trial management added operator-only RPCs in `20260611120000_premium_trial_management_phase_1.sql`, with paid-access lifecycle adjustments in `20260616034902_paid_access_lifecycle_phase_1.sql`:
+Current prices, annual savings, limits, and customer-facing boundaries are documented in [Pricing and Tiers](PRICING_AND_TIERS.md).
 
-- `public.set_shop_premium_trial(target_shop_id text, trial_days integer, trial_tier text default 'pro')`
-- `public.extend_shop_premium_trial(target_shop_id text, extend_days integer)`
-- `public.end_shop_premium_trial(target_shop_id text)`
+## Stripe integration
 
-The start/extend durations are limited to 7, 14, or 30 days. Trial start and extension are currently limited to `shop` or `pro`. These RPCs update authoritative `shop_subscriptions` rows and mirror tier/status/trial end into `shop_profiles`. Ending a trial now marks the lifecycle `expired` instead of silently creating writable unpaid access.
+- `create-checkout-session` creates authenticated Shop/Pro monthly or annual subscription Checkout sessions for eligible owners/admins.
+- `create-billing-portal-session` opens Stripe Billing Portal for an existing Stripe customer.
+- `stripe-webhook` verifies the raw-body Stripe signature, atomically claims an event, synchronizes ordered subscription state, records the outcome, and safely supports retry after a failed or expired processing lease.
+- Price mapping uses the four configured Stripe Price IDs rather than product names or browser values.
+- The launch switch defaults closed unless hosted configuration explicitly enables billing for the requested shop.
 
-Free vs Pro Tier Split Phase 1 added migration `20260611133000_free_pro_tier_split_phase_1.sql`:
+The annual sandbox validator covers Checkout, signed lifecycle events, Billing Portal, Shop-to-Pro change, period-end cancellation, final cancellation, payment failure/recovery, duplicate delivery, older-event rejection, and cleanup.
 
-- Seeds explicit `photo_editor`, `advanced_reporting`, and `team_members` entitlements.
-- Adds `private.shop_has_entitlement(target_shop_id, entitlement_key)`.
-- Adds `public.get_current_user_shop_memberships()` so the app can show preserved-but-locked staff memberships.
-- Updates membership helpers so owners retain safe view access after trial expiry, while admin/tech/viewer access requires the `team_members` entitlement.
-- Hardens member-management RPCs and direct `shop_members` insert/update/delete policies so shops without active Shop/Pro team access cannot add, activate, restore, remove, or role-change staff.
-- Hardens customer email/SMS Edge Function access checks so service-role validation also respects effective team-member access.
-- Extends entitlement snapshots with `canUsePhotoEditor` and `canManageTeamMembers`.
+## Usage enforcement
 
-Shop Tier Foundation Phase 1 adds migration `20260612233321_shop_tier_foundation_phase_1.sql`:
+Shop receives 1,000 email recipients per UTC month, 2,000 source-photo uploads per UTC month, and 5 GiB of current repair-photo storage. Pro receives 5,000 recipients, 10,000 uploads, and 25 GiB. No paid overages are offered in 0.3.0.
 
-- Adds the `shop` plan identifier.
-- Keeps legacy `free`, `solo`, and previously seeded `enterprise` accepted for compatibility, but current product-facing plans are Trial, Shop, and Pro.
-- Updates the shop profile subscription-tier constraint and entitlement snapshot allow-lists to include `shop`.
-- Originally seeded Shop entitlements for Photo Editor and Team Members, then `20260629155417_live_demo_bug_polish_phase_1.sql` moved Photo Editor and Team Members to Pro-only to match the current product model.
-- Does not create a Business tier or add new Enterprise entitlements.
-- Operator-managed trials now support Shop or Pro starts and extensions.
-- Updates team-member RPC rejection wording for the Shop-era split; the 0.2.9-J live-demo polish migration updates current rejection wording to Pro.
+Reservation/release, deletion, downgrade, storage accounting, and operator override behavior are documented in [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md).
 
-RLS is enabled on all new tables. Authenticated owners/admins can read billing tables for their own shops. Normal authenticated users cannot update plan, subscription, Stripe ID, entitlement override, or authoritative usage state.
+## Operational checks
 
-New database helpers:
+Before a billing release or hosted configuration change:
 
-- `public.get_shop_entitlement_snapshot(target_shop_id text)`
-- `public.create_trial_subscription_for_shop_profile()`
+1. Confirm repository and hosted migration history match.
+2. Confirm Checkout, Portal, webhook, and launch-status functions are deployed from the reviewed commit.
+3. Confirm all four Price IDs, API key, signing secret, app URL, and launch flags belong to the intended Stripe account and environment without printing secret values.
+4. Run `npm run test:stripe-sandbox` in the isolated Stripe sandbox.
+5. Verify owner/admin access and tech/viewer denial.
+6. Verify trialing, active, grace, expired, read-only, and canceled UI behavior.
+7. Verify duplicate and failed webhook retries leave one trustworthy ledger result.
 
-The snapshot helper is a `security definer` function that checks shop membership before returning a shop-scoped access object. New `shop_profiles` inserts automatically receive a `trialing` subscription row through the trigger.
-
-### App Services
-
-Added:
-
-- `src/modules/billing/entitlementService.js`
-
-This centralizes entitlement state, billing status labels, writable/read-only checks, feature labels, and storage formatting. Local/non-Supabase mode receives a permissive development fallback.
-
-### UI
-
-Added:
-
-- `src/modules/billing/BillingPage.jsx`
-
-The Billing page is owner/admin only and shows:
-
-- Current plan
-- Effective/stored status
-- Trial end date
-- Grace end date
-- Billing email
-- User count
-- Storage usage
-- Job count
-- Enabled features
-- Upgrade/contact support placeholder
-
-The app shell now fetches an entitlement snapshot when shop access loads and shows a banner for `grace`, `read_only`, `canceled`, and `expired` states. Trial expiry shows upgrade-required messaging and blocks create/edit/send/upload actions through centralized permissions.
-
-Plan Branding + Subscription Status UI Foundation adds a centralized plan-status normalizer for UI display. It supports Trial, Shop, Pro, internal Free compatibility, expired/inactive, canceled, past-due, and unknown states; uses the Pro emblem only for Pro-enabled access; and formats trial, renewal, access-ending, and expired countdown labels from stored timestamps. The normalized object exposes `effectivePlan`, `planLabel`, `hasProBranding`, `emblem`, `hasAdvancedReporting`, `billingInterval`, and `countdownLabel` so individual components do not invent their own branding rules. The app header, version area, Billing page, Shop Settings Plan / Subscription panel, and Advanced Reporting lock/unlock state now use this normalized display state.
-
-Primary display labels are:
-
-- `Trial: Shop`
-- `Trial: Pro`
-- `Shop Monthly`
-- `Shop Yearly`
-- `Pro Monthly`
-- `Pro Yearly`
-- `Pro, canceling`
-- `Expired`
-
-Pro and Trial Pro use `FretTrack Pro` and the Pro emblem as the primary plan identity. They must not display `FretTrack Shop`, plain `Shop`, or the standard Shop emblem except in comparison copy. `npm run check:plan-branding` verifies the supported display states.
-
-Shop Settings now shows:
-
-- Current plan
-- Billing interval
-- Subscription status
-- Trial end
-- Current period end
-- Countdown
-- Advanced Reporting availability
-- Locked premium feature count
-- Disabled Manage Billing and Upgrade Plan placeholders while Stripe billing remains unwired
-
-### Gating
-
-High-cost writes now check the central entitlement/access snapshot:
-
-- Photo uploads
-- Customer email sends
-- Customer SMS sends
-- General write access when the shop is read-only/canceled
-
-Pro feature gates:
-
-- Photo Editor
-- Team Members
-- Team Assignment and workload visibility
-- Advanced Reporting
-
-Advanced Reporting now includes the Pro Reports Dashboard Phase 2 operational view: shop overview cards, jobs by status, priority report, overdue/promise-date list, ready-for-pickup list, waiting-on-parts list, job aging, recent work-log activity, low-stock inventory by desired stock level, purchase-order status, landed-cost purchase history, and upcoming schedule workload. This remains a read/reporting surface only and does not add Stripe, billing automation, charts, exports, PDFs, SMS, public document links, or supplier integrations.
-
-The `0.2.9-beta.2` Team Assignment Foundation adds `team_assignment` separately from `team_members`. It preserves current membership/account access behavior while Pro and approved active beta/trial shops gain same-shop job assignment, assignee filtering, and non-scoring workload visibility. Historical assignment data remains readable when the entitlement or writable lifecycle is unavailable.
-
-The following remain available:
-
-- Viewing existing jobs and customers
-- Photo upload, gallery viewing, and customer-report photo selection
-- Basic job sheet/customer report printing
-- Job JSON export
-- Accounting screen access and basic export while the shop data is visible
-
-Team-member gating is enforced both in the app and in database RPC/RLS paths. Existing non-owner staff memberships are preserved on Free but cannot access the shop until Shop entitlement is restored.
-
-Customer email/SMS Edge Functions also validate effective staff access because they use service-role database reads and cannot rely on browser RLS alone.
-
-## Not Implemented Yet
-
-- Stripe Checkout
-- Stripe Customer Portal
-- Stripe webhooks
-- Real payment collection
-- Automated subscription updates from a provider
-- Scheduled usage snapshots
-- Storage quota hard block by exact byte count
-- Advanced export/report tier separation
-- Operator admin billing dashboard
-
-## Smoke Checklist
-
-After applying the migration:
-
-1. Sign in as an existing shop owner/admin.
-2. Confirm the app loads the shop normally.
-3. Open `Billing`.
-4. Confirm plan/status/usage/features render without errors.
-5. Confirm `trialing`, `active`, `grace`, and `beta_bypass` shops can create jobs and upload photos.
-6. Start a 7-day, 14-day, or 30-day Pro trial from the operator dashboard and confirm the shop receives Pro premium features.
-7. End the trial from the operator dashboard and confirm the shop becomes expired: jobs, customers, inventory purchasing data, scheduling, photos, printing, and email documents remain preserved/viewable where safe, while create/edit/send/upload writes are blocked.
-8. Set a test shop subscription to `grace`; reload and confirm the warning banner appears while normal work remains available.
-9. Set a test shop subscription to `read_only`; reload and confirm:
-   - Existing jobs and customers are visible.
-   - New jobs are disabled.
-   - Save Job is disabled.
-   - Photo upload is blocked.
-   - Email/SMS send returns a billing/read-only message.
-   - Print/export actions remain available from an existing job.
-10. Set a test shop subscription to `canceled`; confirm it behaves like read-only.
-11. Create a brand-new shop profile; confirm a `shop_subscriptions` row is created automatically with `trialing`.
-12. Confirm non-owner/non-admin users do not see the Billing nav item.
-
-## Next Steps
-
-1. Decide final Free/Shop/Pro/Business pricing and any caps before enforcing storage, SMS, or user-count limits.
-2. Add trusted storage usage reconciliation and quota warnings.
-3. Add Edge Function entitlement checks for email/SMS before enabling provider-cost automation.
-4. Keep operator tools for trial/status support separate from future customer self-service billing.
-5. Add data export and account deletion/cancellation policy screens.
-6. Integrate Stripe only after the entitlement/trial/read-only behavior is stable.
+Deployment state and live identifiers are maintained in [Deployment Notes](DEPLOYMENT_NOTES.md).

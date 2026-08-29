@@ -1,172 +1,77 @@
-# Roadmap
+# FretTrack Roadmap
 
-The current stable release is `v0.2.9`. Historical beta milestones remain below as a record of how the product reached this release. Future version bumps should be intentional and keep package, app, public site, and current documentation aligned.
+The current stable release is `v0.3.0`.
 
-## Current Product State
+## v0.3.0: Operational Shop Release
 
-The current stable release is `v0.2.9`. It includes the existing inventory, scheduling, reporting, trial, photo, shop, and Stripe self-service foundations plus Pro Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, Loyalty, specialist purchasing, and safer workspace, Inventory, and Job Detail module boundaries.
+The Operational Shop Release establishes one dependable intake-to-pickup system for guitar, amplifier, and keyboard repair shops.
 
-Shipped or current-branch foundations:
+Shipped product boundaries include:
 
-- controlled account approval gate
-- operator dashboard
-- Stripe self-service billing foundation with authenticated Checkout and Portal sessions, signature-verified webhook synchronization, and webhook idempotency records
-- customer and subcontractor management
-- customer and subcontractor balance/history foundation
-- work-order and invoice email flow
-- mobile and PWA readiness
-- offline draft queue foundation for new work orders
-- image optimization before upload
-- editable job-level parts and services
-- inventory purchasing foundation with parts, stock counts, movements, low-stock visibility, job attachment, vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, and landed-cost allocation
-- Scheduling / Calendar Phase 1 with week view, schedule events, job/customer links, and Job Detail scheduling
-- reusable unsaved-changes protection for high-risk manual-edit screens
-- premium entitlement architecture for future feature gating
-- centralized role/permission helpers for operator, owner/admin, tech, and viewer behavior
-- operator-controlled premium trials with 7/14/30-day start and extension controls
-- Advanced Reporting Phase 1 with premium-gated dashboard metric cards
-- beta approval applicant email notifications through `notify-beta-approval`
-- Photo Editor Phase 1 with freehand markup, shapes, arrows, captions, crop, brightness, save-as-copy, guarded overwrite, and manual background cleanup
-- Shop Tier Foundation Phase 1 with Trial, Shop, and Pro entitlement boundaries: Shop covers the paid core workflow, Pro unlocks Photo Editor, Team Members, and Advanced Reporting, and internal unpaid compatibility rows remain preserved for migration safety
-- Pro Team Assignment Foundation with primary technician assignment, Current Jobs assignee filtering, role-safe self-assignment, audit history, stale-update protection, and non-scoring workload visibility
-- Email and Photo Usage Caps Foundation with atomic recipient/upload reservations, repair-photo byte accounting, failure release, and owner/admin usage visibility
-- workspace routing and persisted-navigation boundaries with lazy-loaded top-level pages
-- focused Inventory presentation modules for parts, vendors, history, labels, purchase orders, and receiving
-- focused Job Detail presentation modules for inspection, work, billing, reports, print documents, dialogs, and header state
-- focused full-width Guitar Bench matching the amplifier/keyboard repair workspace pattern while retaining one shared Work Order, Parts & Payments system
-- authoritative Inventory editor refresh after receiving or stock adjustments
-- local-development protection against accidental hosted Supabase mutations
-- active-shop business address included consistently in generated invoice email and printable invoice-style Job Sheet output
-- separate Amplifier Repair module foundation with shared make/model presets, intake, work queue, before/after electrical diagnostics, private audio/waveform/spectrum evidence, and existing job permissions
-- separate Keyboard Repair module with keybed profiles, interactive per-key fault mapping, MIDI-log assistance, guided diagnostics, parts requests, analytics, and existing job permissions
-- complete commercial work-order views for amplifier and keyboard jobs, with instrument-specific Inspection terminology instead of guitar-only fields
-- job-linked specialist purchasing for amplifier and keyboard work, including vendor packages, Inventory receiving, and explicit transfer of the required quantity into Parts & Payments
-- Pro Scheduled Email foundation for provider-managed transactional job emails up to 30 days ahead, including cancellation and a Drop Off Scheduled template
-- Pro Automated Service Reminders with independent consent, configurable service timing/template, durable long-horizon queueing, nightly dispatch, quota accounting, and Message History
-- Pro Loyalty Program with paid/completed-work-order stamp reconciliation and explicit audited redemption
-- owner/admin accounting-safe work-order exclusion with immutable payment-history safeguards, explicit refund/void entries, read-only preserved records, audit reasons, and accounting/report filtering
-- isolated Customer Service and Condition Report renderer with deterministic damage-map coordinates, image-readiness gating, multi-page tables, and instrument-specific guitar, amplifier, and keyboard inspection language
+- controlled account approval and non-converting 14-day Pro trials;
+- Shop and Pro subscriptions through Stripe Checkout and the Billing Portal;
+- customers, subcontractors, focused repair benches, work logs, parts, services, payments, and history;
+- inventory, vendors, purchase orders, receiving, landed costs, barcode labels, and specialist purchasing;
+- scheduling, Current Jobs, assignment, localization, and permission-aware shop settings;
+- private photos, Damage Maps, Photo Editor, and isolated customer/job-sheet print documents;
+- immediate email, Scheduled Email, service reminders, Message History, and loyalty;
+- accounting-safe work-order exclusion and audited refund/payment-void safeguards;
+- usage limits, shop isolation, Row Level Security, guarded RPCs, backup automation, and tested restore procedures;
+- focused workspace, Inventory, Job Detail, Guitar, Amplifier, Keyboard, and print presentation boundaries;
+- pgTAP/RLS, focused regression, production-build, and 29-test Playwright coverage in CI.
 
-Known weak spots:
+Known product boundaries:
 
-- broad job and inventory persistence services still need later query/mutation decomposition; beta.4 deliberately changed presentation boundaries first
-- offline continuity only supports new-job drafts, not existing job edits
-- SMS remains disabled
-- staff permissions are centralized but still broad-role based, not task-by-task custom ACLs
-- public invoice and work-order links are planned but not implemented
-- deeper inventory operations such as vendor import/export, supplier integrations, vendor returns, forecasting, outbound/customer shipping, carrier labels, and tracking numbers are still future work
-- Stripe lifecycle validation, production recovery evidence, and monitoring hardening remain paid-launch work
-- Photo Editor Phase 1 is practical canvas editing, not a full Photoshop-style editor or AI cutout tool
-- Final public pricing and paid overages are not implemented; Shop/Pro email and repair-photo caps are enforced, while Shop/Pro self-service subscription plumbing is deployed and awaiting full live lifecycle validation
+- SMS is disabled.
+- Existing-job edits do not have full offline synchronization.
+- Public invoice and work-order links are not implemented.
+- Customer instruments are stored with work orders rather than in an independent asset registry.
+- Advanced accounting permissions and locked/finalized totals need deeper design.
+- Supplier APIs, carrier labels/rates, vendor returns, forecasting, and automated customer shipping remain future work.
+- Paid usage overages and multi-shop subscription administration are not implemented.
 
-## Milestone Version Ladder
+## v0.3.1: Maintainability and service boundaries
 
-| Version | Meaning |
-| --- | --- |
-| `v0.2.61 beta` | Customers complete |
-| `v0.2.62 beta` | Inventory complete |
-| `v0.2.63 beta` | Scheduling complete |
-| `v0.3.0 beta` | Operational Shop Release |
+The first post-release work is deliberate spaghetti reduction without changing product behavior:
 
-## v0.2.63 Beta: Scheduling / Calendar
+1. Add an ESLint baseline for JavaScript, React hooks, import hygiene, and CI enforcement.
+2. Split `jobService.js` into mapping, queries, mutations, child synchronization, and compatibility exports.
+3. Split `inventoryService.js` into parts, vendors, purchase orders, receiving, and specialist purchasing operations.
+4. Continue reducing `App.jsx` and `JobDetail.jsx` orchestration through focused hooks and domain controllers.
+5. Begin moving global CSS into shared foundations and module-owned styles without redesigning the interface.
+6. Replace remaining source-text and dirty-diff assertions with executable behavior checks where practical.
 
-Scheduling Phase 1 is the current branch milestone. It is meant to be a practical shop calendar, not a full external-calendar replacement.
+Each extraction must preserve the current facade, permissions, database behavior, and regression suite. No broad rewrite.
 
-Included in Phase 1:
+## v0.3.x: Commerce hardening
 
-- shop-scoped `schedule_events`
-- job due dates
-- intake appointments
-- pickup appointments
-- follow-up reminders
-- shop blocks and other internal events
-- daily and weekly schedule visibility
-- week view with type/status filters
-- job/customer-linked schedule events
-- Job Detail scheduling section
-- upcoming schedule panel
-- internal-only scheduling, with no customer-facing appointment confirmations yet
-
-## v0.3.0 Beta: Operational Shop Release
-
-The Operational Shop Release should pull the core workflow into one stable beta experience.
-
-- stable intake-to-pickup job workflow
-- customers, inventory purchasing foundation, and scheduling working together
-- reliable work-order and invoice email summaries
-- customer-facing **Drop Off Scheduled** email template using the authoritative job appointment date and time, including: “Your appointment is scheduled for [date and time].”
-- reliable beta application and approval notification flow
-- practical photo documentation editor for annotated customer/shop records
-- dependable basic print output
-- clean operator/admin workflow for beta shops
-- beta access approval and premium trial access kept as separate systems
-- Trial, Shop, and Pro are the public product states; internal unpaid compatibility rows remain migration-only
-- expired trials preserve data and memberships, allow safe viewing, block writes, and show upgrade-required messaging
-- Pro entitlement boundaries are explicit for Photo Editor, Team Members, Advanced Reporting, and advanced Team Assignment/workload controls
-- practical shop settings for currency, tax labels, date formats, and measurement preferences
-- shipped: owner/admin accounting-safe job void/exclusion removes test or invalid jobs from operational accounting totals and counts without deleting customer, invoice, payment, or audit history; recorded payments must be explicitly refunded or voided first
-- shipped: the Customer Service and Condition Report now uses an isolated print-only document renderer, waits for its images before printing, keeps saved condition markers aligned, and avoids guitar inspection terms on amplifier and keyboard reports
-- shipped: the invoice-style Job Sheet now uses the same isolated print boundary, preserves parts, services, taxes, discounts, payments, and balance, and prints amplifier or keyboard service terms without guitar-only measurements
-- shipped: stringed-instrument jobs now open in a focused Guitar Bench and switch into the same shared commercial work-order workspace used by amplifier and keyboard jobs
-- known launch limitations documented clearly
-
-## v0.3.x: Commerce Foundation
-
-This series turns the operational workflow into a more complete shop commerce flow while staying focused on repair-shop needs.
-
-- estimates
-- invoices
-- payments
-- taxes
-- transaction numbering
-- sales history
-- entitlement checks for premium commerce/reporting boundaries
-- keep commerce entitlements server-authoritative as Stripe lifecycle handling is validated
+- estimate approval and lifecycle clarity;
+- stronger monetary-edit permissions and finalized-total audit behavior;
+- invoice and transaction numbering review;
+- deeper payment/refund support tooling;
+- tax-profile and sales-history improvements;
+- public invoice or work-order links only after a secure token and revocation design;
+- billing reconciliation and operator support tools.
 
 ## v0.4.x: Operations
 
-This series deepens back-office and repeat-workflow tools after the core operational shop release is stable.
+- reviewed customer import and duplicate resolution;
+- customer instrument/asset profiles independent of individual work orders;
+- vendor import/export and supplier integrations;
+- vendor returns and inventory forecasting;
+- outbound/customer shipping, carrier rates, labels, and tracking;
+- deeper reminder campaigns and unsubscribe management;
+- optional loyalty-to-invoice assistance without treating loyalty as payment or store credit;
+- broader document and photo workflows based on shop feedback.
 
-- customer import
-- reporting
-- vendor import/export
-- low stock management
-- deeper multi-rule reminder campaigns, seasonal segmentation, and unsubscribe-management tooling beyond the shipped single-rule service-reminder workflow
-- optional loyalty-to-invoice assistance beyond the shipped stamp and redemption ledger, without turning loyalty into an implicit payment or store-credit system
-- supplier integrations
-- vendor returns
-- inventory forecasting
-- outbound/customer shipping workflow
-- carrier labels and tracking numbers
-- deeper photo/document workflows if real-shop testing shows gaps
+## v0.5.x: Scale and resilience
 
-## v0.5.x: Commercial Release Preparation
+- multi-shop subscription administration;
+- advanced billing support operations;
+- recurring restore drills and off-device backup execution;
+- deeper monitoring, incident response, and reconciliation;
+- stronger offline continuity only after conflict and synchronization behavior is designed explicitly.
 
-This series extends and hardens the paid-production foundation introduced before `v0.3.0`.
+## Historical milestones
 
-- subscription licensing
-- advanced Stripe lifecycle operations and billing support tooling
-- multi-tenant billing administration
-- recurring restore drills and off-device backup automation
-- deeper monitoring, incident response, and billing reconciliation
-
-## Explicitly Shipped / Not Future Work
-
-These are already shipped or have a first foundation in place and should not be described as future-only roadmap items:
-
-- customer and subcontractor standalone management
-- work-order and invoice email sending
-- PWA install support
-- mobile and tablet responsive improvements
-- camera-first photo workflow
-- offline local draft queue for new work orders
-- editable job-level parts and services
-- inventory purchasing foundation with vendors, purchase orders, receiving, purchase history, barcode labels, inbound PO shipping, and landed-cost allocation
-- Scheduling / Calendar Phase 1
-- unsaved-changes protection foundation
-- premium entitlement foundation
-- premium trial management foundation
-- Shop Tier Foundation Phase 1
-- Advanced Reporting Phase 1
-- beta approval applicant email notification foundation
-- Photo Editor Phase 1
+Earlier `0.2.x` prerelease milestones delivered Customers, Inventory, Scheduling, permissions, trials, photo workflows, specialist repair modules, messaging, billing, recovery, and the architecture foundation that made the stable 0.3.0 release possible. Historical release notes retain their original version labels for auditability; they are not current product branding.

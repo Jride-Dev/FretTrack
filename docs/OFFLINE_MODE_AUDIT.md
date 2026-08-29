@@ -1,6 +1,6 @@
 # Offline Mode Audit
 
-Current audited version: `0.2.8-beta.0`
+Current release interpretation: `0.3.0`. The original audit predates the stable release, but its supported boundary remains accurate.
 
 ## Current Scope
 

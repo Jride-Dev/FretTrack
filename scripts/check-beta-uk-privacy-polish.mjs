@@ -41,8 +41,8 @@ const customerForm = source('src/modules/customers/CustomerForm.jsx');
 const customerNormalize = source('src/modules/customers/customerNormalize.js');
 const neckOptions = source('src/modules/jobs/neckInspectionOptions.js');
 const neckSection = source('src/modules/jobs/NeckInspectionSection.js');
-const privacyNote = source('docs/CUSTOMER_DATA_PRIVACY_NOTE_BETA_SHOPS.md');
-const betaChecklist = source('docs/BETA_TESTER_CHECKLIST.md');
+const privacyNote = source('docs/CUSTOMER_DATA_PRIVACY_NOTE.md');
+const betaChecklist = source('docs/RELEASE_VALIDATION_CHECKLIST.md');
 const docsReadme = source('docs/README.md');
 
 for (const [label, value] of [

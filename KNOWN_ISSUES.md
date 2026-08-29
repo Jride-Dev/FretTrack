@@ -1,238 +1,59 @@
 # Known Issues
 
-Current version: `0.2.6-beta.14`
+Current version: `0.3.0`
 
-This file tracks active bugs, setup traps, beta limitations, and historical break/fix notes that are useful when debugging regressions.
+This file lists active product boundaries and setup traps. Resolved prerelease defects remain in the changelog and release notes instead of being presented as current problems.
 
-## Active Beta Limitations
+## Active product boundaries
 
-### Full email invitation flow is not built yet
+### SMS is disabled
 
-- Status: Future member-management expansion.
-- Current behavior: Owners/admins can manage shop members from Shop Settings when the target user already has a FretTrack Auth account. They can add/update by email, change roles, remove members, and the database protects the last owner.
-- Limitation: FretTrack does not yet send Auth invitation emails or create Auth users from the member-management panel.
-- Planned fix: Add a server-side Auth Admin invite flow later through an Edge Function or equivalent trusted backend path.
+Email is active. SMS requires carrier registration, provider configuration, consent handling, delivery-status reconciliation, and a reviewed metered-cost model before it can be enabled safely.
 
-### Customer import workflow is not built yet
+### Offline continuity is limited to new-job drafts
 
-- Status: Future release change.
-- Current behavior: Customers can be created without a work order and records include import-ready fields.
-- Current prep: `customerImportMapper` can map future spreadsheet rows into customer drafts, normalization and validation are split out, and duplicate detection is separated from persistence.
-- Limitation: Bulk Excel/CSV import, import preview, duplicate merge, bulk insert/update, and rollback are not implemented yet.
-- Planned fix: Add a customer import screen that stages spreadsheet rows, flags likely duplicates, then creates/updates customer records in a reviewed batch.
+FretTrack can preserve new work-order drafts locally and sync them deliberately after reconnecting. Existing-job edits, inventory receiving, purchase orders, photos, and authenticated Supabase records are not a general offline database.
 
-### Accounting totals are not permission-gated yet
+### Customer instruments are stored on work orders
 
-- Status: Future release change.
-- Current behavior: Role-level write protection is in place and payment changes autosave, but discount and monetary controls are still editable directly by users with write access to the work order UI.
-- Problem: Once a discount is applied, it should become part of the saved work order totals and should not remain casually editable. Reopening an existing work order should expose an intentional `Edit Totals` action only when monetary edits are needed.
-- Tax concern: Discounts, taxes, labor totals, parts totals, and balance-affecting edits need stronger audit behavior before broader shop/member use.
-- Planned fix: Modularize accounting, lock applied totals, and allow regular employees to add payments without giving them access to edit already-applied monetary portions.
+Instrument data is attached to each job. A separate customer-owned instrument registry with its own history and identifiers is future work.
 
-### Stripe billing is intentionally not built yet
+### Public document links are not available
 
-- Status: Planned after beta entitlement behavior settles.
-- Current behavior: Plans, entitlements, subscription states, trial/grace/read-only/beta-bypass states, usage snapshots, and a billing placeholder exist. Manual beta billing and operator-controlled access are the current path.
-- Limitation: Stripe Checkout, Customer Portal, webhooks, failed-payment handling, and self-serve subscription changes are not implemented.
-- Planned fix: Add Stripe only after the current entitlement and trial/read-only behavior is stable in live beta use.
+Customer documents can be printed or emailed from authenticated shop workflows. Public tokenized invoice or work-order links need an explicit expiration, revocation, authorization, and access-log design.
 
-### SMS is disabled in beta builds
+### Monetary edits use broad work-order write roles
 
-- Status: Known limitation.
-- Current behavior: SMS buttons are visible but disabled.
-- Expected disabled message: `SMS is disabled for this trial build. Email is active.`
-- Reason: SMS requires carrier registration and a metered cost model.
-- Current setting: `VITE_SMS_ENABLED=false`.
-- Related changes: `v0.1.10-beta` added Twilio SMS plumbing; `v0.1.11` removed Twilio from required trial setup and disabled SMS for trial builds.
+Owners, admins, and technicians with work-order write access can edit applicable parts, services, discounts, and payments. More granular accounting permissions and finalized-total locking remain future commerce hardening.
 
-### Instruments are not a standalone customer asset table yet
+### Customer import is not enabled
 
-- Status: Future release change.
-- Current behavior: Instrument details live on work orders, and the instrument catalog is local code.
-- Limitation: Customer-owned instruments/assets do not yet have their own `shop_id`-scoped table or RLS policies.
-- Planned fix: Add a customer instruments/assets module linked by `customer_id` and `shop_id`.
+Import parsing and preview foundations exist, but reviewed batch persistence, duplicate merge decisions, and rollback are not available in the product UI.
 
-### Existing timeline history is partially backfilled
+### Advanced inventory and shipping integrations are future work
 
-- Status: Known v0.2.5 limitation.
-- Current behavior: Existing jobs have a backfilled `Job created` event, and new activity is logged going forward.
-- Limitation: Detailed historical events before the timeline migration, such as older status changes or photo uploads, are not reconstructed.
-- Planned fix: Add deeper historical backfill only if beta shops need it.
+Vendor import/export, supplier APIs, vendor returns, forecasting, outbound/customer shipping, carrier rates, purchased labels, and automatic tracking notifications are outside 0.3.0.
 
-### Migration drift check emits a Node deprecation warning
+### Historical timelines are not reconstructed completely
 
-- Status: Tooling cleanup.
-- Current behavior: `npm run check:migrations` passes, but Node may emit `[DEP0190]` because the script invokes the Supabase CLI with `shell: true`.
-- Risk: No current functional failure, but this should be cleaned up before relying on the script in CI.
-- Planned fix: Update `scripts/check-supabase-migrations.mjs` to call the CLI without `shell: true` or escape arguments explicitly.
+Activity is recorded from the event-system rollout forward. FretTrack does not invent detailed status, photo, payment, or work-log events for older records when no authoritative event exists.
 
-### Local safe database may have stale schema despite recorded migrations
+### Supabase leaked-password protection depends on project plan
 
-- Status: Local setup trap found during five-shop seed testing.
-- Current behavior: A local safe database can have migration history entries for older work-log changes while the physical `work_logs.text` column is missing.
-- Error found: `column "text" of relation "work_logs" does not exist`
-- Mitigation: `npm run seed:local-test-shops` runs `alter table work_logs add column if not exists text text not null default ''` before seeding local test data.
-- Planned fix: Prefer rebuilding or reapplying local migrations from a clean local database when schema history and actual columns disagree.
+Email confirmation is required and anonymous/phone sign-in are disabled. Recheck password-strength and leaked-password protection whenever the Supabase project plan or Auth configuration changes.
 
-### Supabase/Postgres port is not the app URL
+## Setup traps
 
-- Status: Common setup trap.
-- Correct app URL: `http://127.0.0.1:5173/`
-- Database port in `.env`: `5432`
-- Notes: The `:5432` address is the Supabase Postgres database port. It is not the browser URL for this app.
-- Related fix: `v0.1.1` clarified the local app URL and database port distinction.
+- The local app URL is normally `http://127.0.0.1:5173/`; PostgreSQL port `5432` is not a browser URL.
+- Vite uses `strictPort`, so an existing process on port 5173 must be closed before starting another dev server.
+- Fictional local testing must use local Supabase. The development startup guard rejects an unsafe hosted configuration.
+- A migration-history entry does not prove a stale local database physically contains the expected schema; reset or reapply a disposable local stack when history and schema disagree.
+- Supabase database dumps include Storage metadata, not the underlying object bytes. Use the FretTrack backup workflow for a complete recoverable snapshot.
 
-### Vite will fail if port 5173 is already in use
+## Messaging verification
 
-- Status: Intentional behavior.
-- Current behavior: The app uses `strictPort: true`.
-- Fix: Close the old dev server first, then run `npm run dev` again.
-- Reason: Vite should fail clearly instead of silently moving to another port.
-- Related fix: `v0.1.1` added strict Vite port settings.
+For email-provider testing, keep `VITE_SMS_ENABLED=false`, send only to controlled addresses, confirm Message History, and verify that rejected sends release quota while provider-accepted sends retain a durable reconciliation record.
 
-## Recently Fixed Or Reclassified
+## Reporting defects
 
-### Shop settings are database-backed
-
-- Fixed/reclassified in: `v0.2.6-beta.2`.
-- Previous issue: Shop settings were documented as local trial settings.
-- Current behavior: Shop profile, print footer, logo, tax defaults, currency, date format, and measurement preferences are stored in shop-scoped records/storage with owner/admin editing controls.
-
-### Job image storage is private and optimized
-
-- Fixed/reclassified in: `v0.2.6-beta.6`.
-- Previous issue: Job image delivery was documented as public-URL based.
-- Current behavior: Job photos use private storage access patterns and are optimized before upload. The original full-size phone-camera file is not uploaded by default.
-- Remaining watch item: Keep photo upload, private authenticated display, print rendering, and storage quota behavior in the beta smoke checklist.
-
-### Job Sheet printed unwanted setup measurement data
-
-- Fixed in: `v0.2.6-beta.4.1`.
-- Problem: The Job Sheet printed the full setup measurement table after the money/balance section.
-- Fix: The printed tech summary now shows only New String Brand, New String Gauge, and Final Neck Inspection.
-
-### Payment changes required manual save
-
-- Fixed in: `v0.2.6-beta.6`.
-- Problem: Adding, removing, or editing payments could leave the job detail screen visually updated before the remote save completed.
-- Fix: Payment adds/removes save immediately and payment edits debounce-save.
-
-### Supabase db push was blocked by pooler auth lockout
-
-- Reclassified: External tooling/setup incident.
-- Previous behavior: `npm run check:migrations` reported no remote-only drift, but Supabase `db push`/dry-run was blocked by the pooler circuit breaker.
-- Error: `FATAL: Circuit breaker open: Too many authentication errors`
-- Current guidance: If this returns, refresh/verify database credentials or wait for the Supabase pooler lockout to clear, then rerun `npm run check:migrations` and `npx supabase db push --dry-run`.
-
-## Messaging Provider Test Checklist
-
-Beta builds use email-only messaging. SMS requires carrier registration and will be added later.
-
-Local frontend `.env`:
-
-```text
-VITE_FRETTRACK_FUNCTION_KEY=<same random value>
-VITE_SMS_ENABLED=false
-```
-
-Supabase Edge Function secrets:
-
-```text
-FRETTRACK_FUNCTION_KEY=<same random value>
-RESEND_API_KEY=<Resend API key>
-SHOP_EMAIL_FROM=<verified sender email>
-```
-
-Checklist:
-
-1. Confirm `VITE_SMS_ENABLED=false` for beta builds.
-2. Send test email to your own email.
-3. Confirm the send appears in message history.
-4. Confirm SMS buttons are visible but disabled with this message: `SMS is disabled for this trial build. Email is active.`
-
-## Historical Break/Fix Notes
-
-### Auth/RLS rollout blocked saves inside local-only jobs
-
-- Fixed in: `v0.2.6`.
-- Problem: Some work orders existed only in browser local storage after the auth/shop-membership rollout. Child records such as work logs, images, messages, parts, services, and activity events could then fail RLS because Supabase had no parent `jobs` row to authorize against.
-- Fix: Job save, photo upload, and customer messaging now verify or create the remote parent work order before syncing child records. Child-table RLS now consistently checks shop membership through the parent job.
-
-### Duplicate work orders could be created by repeated submits
-
-- Fixed in: `v0.2.6`.
-- Problem: Slow network saves or repeated clicks could attempt to create multiple work orders for the same shop/job number.
-- Fix: The app now blocks repeat submit attempts, checks local and remote duplicates before creating a job, and surfaces `MULTIPLE WORK ORDERS CANNOT BE CREATED FOR [JobID, WORKORDER NUMBER]`. The remote numbered-job function is also idempotent by shop/job number.
-
-### Appended work order history disappeared after closing a job
-
-- Fixed in: `v0.2.3`.
-- Problem: `Append Entry` updated only the open work-order draft. The old child-table sync could also fail quietly, allowing Save Job to appear successful even if Supabase did not persist work log rows.
-- Likely trigger: Finishing a job as `Picked up` saved the work order again. Before the sync was hardened, that follow-up save could delete existing `work_logs` before failing to write the replacement rows.
-- Fix: Appended work log entries now save immediately. Deleted entries also save immediately, edited entries save when leaving the edited log field, and Supabase work log errors now block the success message. Work logs are now upserted before stale rows are deleted. Finish / Picked Up now uses the explicit save path and surfaces save errors.
-
-### Work log save failed on older `work_logs` schema
-
-- Fixed in: `v0.2.3`.
-- Problem: Some Supabase installs had a `work_logs` table with `entry` but no duplicate `text` column. Saving a job could fail with `Could not find the 'text' column of 'work_logs' in the schema cache`.
-- Fix: Work log inserts and sync now retry with the older `entry`-only row shape when Supabase reports the missing `text` column. The schema file also now includes `alter table work_logs add column if not exists text text not null default ''`.
-
-### Image uploads expected `job_images.public_url`
-
-- Fixed in: `v0.2.3`.
-- Problem: Image uploads used a `job_images.public_url` column that was missing from the Supabase schema.
-- Fix: Added the missing Supabase `job_images.public_url` column.
-
-### Damage-map pictures did not reliably show after import
-
-- Fixed in: `v0.2.3`.
-- Problem: Damage-map view images and marker photos could fail to show on new jobs or after an upload/save refresh race. When a storage upload did not create a fresh image record, the UI could show nothing or reuse an older damage image from the same category.
-- Fix: Damage-map imports now use the shared image upload path when possible, skip the job-list refresh race during damage imports, require a newly-created image record before using an uploaded URL, and fall back to a compressed local preview so the selected picture shows immediately. Marker photos now display thumbnail previews in the damage list.
-
-### Customer name search needed first/last name structure
-
-- Fixed in: `v0.2.3`.
-- Problem: Search and lookup depended on combined `customer_name`, which limited first/last name lookup.
-- Fix: Added `customer_first_name` and `customer_last_name`, backfilled from `customer_name`, and added lookup indexes while preserving `customer_name` for display and templates.
-
-### Damage-map persistence needed to carry into live baseline
-
-- Fixed by: `v0.2.0` baseline carry-forward.
-- Problem: Damage-map data needed persistence reliability before real shop testing.
-- Fix: The live baseline carried forward damage-map persistence fixes.
-
-### Work log entries needed edit/delete controls
-
-- Fixed in: `v0.1.11`.
-- Problem: Work log entries could be added, but day-to-day corrections needed direct edit/delete controls.
-- Fix: Added edit and delete controls for work log entries.
-
-### Tech Detail typing lag
-
-- Fixed in: `v0.1.4`.
-- Problem: String gauges, action fields, neck relief, and neck inspection fields lagged while typing.
-- Fix: These fields now update locally while typing and save on blur or with Save Job.
-
-### Fake test customer record from old save behavior
-
-- Fixed in: `v0.1.4`.
-- Problem: The old `Test Supabase Save` behavior created a fake test customer record.
-- Fix: Renamed the action to `Save Job` and removed the fake test customer creation.
-
-### Multiple jobs on the same date needed unique numbers
-
-- Fixed in: `v0.1.3`.
-- Problem: Same-day jobs could collide on the base date-derived job number.
-- Fix: Additional jobs now receive suffixes like `26122-01`, `26122-02`, and so on.
-
-### Supabase bucket size pressure from images
-
-- Mitigated in: `v0.1.2` and expanded in `v0.2.6-beta.6`.
-- Problem: Large original uploads could quickly consume storage.
-- Fix: Browser-side compression resizes images, converts repair photos to JPEG, and avoids uploading original phone-camera files by default.
-
-### Deleted images needed full cleanup
-
-- Fixed in: `v0.1.2`.
-- Problem: Deleted images needed to remove both file storage and database references.
-- Fix: Deleting an image removes the Supabase Storage object and the `job_images` database row.
+Use **Report Issue** inside FretTrack when possible or email `support@frettrack-app.com`. Include the affected shop role, work-order number, browser/device, expected result, actual result, and approximate time. Never include passwords, API keys, payment-card data, or unnecessary customer information.

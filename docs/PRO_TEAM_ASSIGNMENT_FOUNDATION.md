@@ -1,6 +1,6 @@
 # Pro Team Assignment Foundation
 
-FretTrack `0.2.9-beta.2` establishes the first persisted multi-user job workflow before Stripe work. A real beta shop needs multiple employees to coordinate current repairs now; billing automation can follow after the workflow and entitlement boundaries have been tested.
+FretTrack 0.3.0 includes the persisted Pro multi-user job-assignment workflow. Pro shops can coordinate current repairs across active team members while Shop remains a single-user plan.
 
 ## Primary technician assignment
 
@@ -56,9 +56,9 @@ This phase does not change the existing `team_members` entitlement, membership r
 
 No historical assignment is hidden when a subscription expires.
 
-## Beta entitlement behavior
+## Entitlement behavior
 
-Active Pro trials receive `team_assignment`. An approved beta member in a writable beta shop also keeps an explicit server-validated access path so approved testers such as the current UK beta shop can exercise the workflow during the beta lifecycle. Expired, canceled, or read-only lifecycle states still block assignment writes.
+Active Pro trials and paid Pro shops receive `team_assignment`. Older approved-access records retain their explicit server-validated compatibility path where required. Expired, canceled, or read-only lifecycle states still block assignment writes.
 
 ## Concurrency limitations
 
@@ -70,7 +70,7 @@ This is optimistic concurrency for one field, not realtime collaborative editing
 
 `20260727151302_pro_team_assignment_foundation.sql` adds the nullable assignment columns and index, entitlement rows, same-shop/active-member validation, role-enforcement trigger, safe member-list RPC, targeted assignment RPC, audit events, and assignment-aware job creation.
 
-The migration is intentionally not applied by this branch.
+The migration is part of the deployed schema and the stable 0.3.0 release baseline.
 
 ## Remaining Phase 2 work
 

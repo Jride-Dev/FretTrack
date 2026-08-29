@@ -1,4 +1,6 @@
-# Beta Feedback Notes
+# Historical Product Feedback
+
+This file preserves feedback gathered during prerelease testing. It is research history, not a current testing program or release-status document. Current product behavior is documented in [Release Notes](RELEASE_NOTES.md), [Known Issues](../KNOWN_ISSUES.md), and the public product guide.
 
 ## Extended-Range Instrument Feedback
 
