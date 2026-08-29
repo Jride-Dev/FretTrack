@@ -1,5 +1,7 @@
 # Release Notes
 
+- Guitar work orders now open in a focused, full-width Guitar Bench matching the newer Amplifier and Keyboard bench experience. The bench reuses the existing guitar identity, string-gauge, staged neck-inspection, measurement-unit, visual Damage Map, photo-upload, dirty-state, and version-guarded save paths. A shared workspace switch keeps parts, services, payments, customer communication, scheduling, photos, printing, and history in the existing Work Order, Parts & Payments view instead of duplicating commercial logic.
+
 - Print actions now share a synchronous request sequence so the most recent document choice wins. If a Customer Service Report is still waiting for images when staff switch to Job Sheet, the delayed report cannot reopen the browser print dialog or print the wrong document.
 
 - The printable Job Sheet and its invoice summary now use a dedicated print-only renderer instead of the interactive Job Detail/global print layout. Shop identity, customer and instrument details, services, parts, tax, discounts, payments, balance, and measurement units remain intact. Amplifier and keyboard Job Sheets now use specialist service terminology and never show guitar string or neck fields. A deterministic amplifier fixture verifies the complete document as a one-page Letter PDF.

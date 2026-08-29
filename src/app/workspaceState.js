@@ -3,7 +3,7 @@ export function resolveStoredWorkspaceState({
   jobs = [],
   isAllowedMode = () => false
 } = {}) {
-  const isDetailMode = ['detail', 'amplifier-detail', 'keyboard-detail'].includes(workspaceState.mode);
+  const isDetailMode = ['detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(workspaceState.mode);
 
   const selectedJob = jobs.find((job) => job.id === workspaceState.selectedJobId);
   if (isDetailMode && selectedJob) {
@@ -12,7 +12,7 @@ export function resolveStoredWorkspaceState({
       ? 'amplifier-detail'
       : instrumentType === 'keyboard'
         ? 'keyboard-detail'
-        : 'detail';
+        : 'guitar-detail';
     return {
       mode: workspaceState.mode === 'detail' ? 'detail' : specialistMode,
       selectedJobId: workspaceState.selectedJobId

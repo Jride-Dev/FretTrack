@@ -102,7 +102,7 @@ assert.match(jobForm, /amplifierRepairEnabled \|\| option\.value !== 'Amplifier'
 assert.match(jobInfo, /amplifierRepairEnabled \|\| option\.value !== 'Amplifier'/, 'Generic job editing must not offer an Amplifier conversion to non-Pro shops.');
 assert.match(page, /Amplifier Repair is available on Pro\.[\s\S]*?Existing amplifier work orders remain available to view/, 'Non-Pro shops must receive a clear upgrade message while retaining historical visibility.');
 assert.match(navigation, /selectJob\(jobId, detailMode = 'detail', \{ skipDirtyGuard = false \} = \{\}\)/, 'Workspace selection must support a focused detail target and safe post-save transition without duplicating navigation.');
-assert.match(navigation, /\['detail', 'amplifier-detail', 'keyboard-detail'\]\.includes\(mode\)/, 'Close Detail must preserve the originating page for repair detail modes.');
+assert.match(navigation, /\['detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'\]\.includes\(mode\)/, 'Close Detail must preserve the originating page for repair detail modes.');
 assert.match(workspaceState, /instrumentType === 'amplifier'[\s\S]*?'amplifier-detail'/, 'Refresh restoration must correct amplifier detail routing.');
 
 for (const label of ['Safety Notes', 'Diagnosis', 'Repair Performed', 'Parts Replaced', 'Bench Test Notes', 'Final Test']) {

@@ -61,6 +61,7 @@
     "check:inventory-shipping-polish": "node scripts/check-inventory-shipping-polish.mjs",
     "check:inventory-module-boundaries": "node scripts/check-inventory-module-boundaries.mjs",
     "check:job-detail-module-boundaries": "node scripts/check-job-detail-module-boundaries.mjs",
+    "check:guitar-repair-bench": "node scripts/check-guitar-repair-bench.mjs",
     "check:amplifier-repair-module": "node scripts/check-amplifier-repair-module.mjs",
     "check:keyboard-repair-module": "node scripts/check-keyboard-repair-module.mjs",
     "check:specialist-work-order-commerce": "node scripts/check-specialist-work-order-commerce.mjs",

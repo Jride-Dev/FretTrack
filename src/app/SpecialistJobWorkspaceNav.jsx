@@ -1,5 +1,6 @@
 import { isAmplifierJob } from '../modules/amplifiers/amplifierRepair.js';
 import { isKeyboardJob } from '../modules/keyboards/keyboardRepair.js';
+import { isStringedInstrumentType } from '../modules/instruments/instrumentService.js';
 import JobAccountingVoidControl from '../modules/jobs/JobAccountingVoidControl.jsx';
 
 export function getSpecialistRepairMode(job) {
@@ -8,6 +9,9 @@ export function getSpecialistRepairMode(job) {
   }
   if (isKeyboardJob(job)) {
     return 'keyboard-detail';
+  }
+  if (job && isStringedInstrumentType(job.instrumentType || job.techDetails?.instrumentType)) {
+    return 'guitar-detail';
   }
   return '';
 }
@@ -25,7 +29,11 @@ export default function SpecialistJobWorkspaceNav({
     return null;
   }
 
-  const repairLabel = repairMode === 'amplifier-detail' ? 'Amplifier Bench' : 'Keyboard Bench';
+  const repairLabel = repairMode === 'amplifier-detail'
+    ? 'Amplifier Bench'
+    : repairMode === 'keyboard-detail'
+      ? 'Keyboard Bench'
+      : 'Guitar Bench';
 
   function selectMode(nextMode) {
     if (nextMode !== activeMode) {
@@ -35,7 +43,7 @@ export default function SpecialistJobWorkspaceNav({
 
   return (
     <>
-      <section className="panel specialist-workspace-nav no-print" aria-label="Specialist work order workspace">
+      <section className="panel specialist-workspace-nav no-print" aria-label="Repair work order workspace">
         <div>
           <p className="eyebrow">Complete work order</p>
           <strong>Diagnostics and shop operations stay on the same job.</strong>
