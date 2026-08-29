@@ -1,6 +1,6 @@
 # Mobile and Tablet Readiness Audit
 
-FretTrack is still a desktop-first browser app, but the current beta can be made much easier to use on phones and tablets without rewriting the product. This pass focused on responsive layout, touch target sizing, and modal behavior.
+FretTrack 0.3.0 remains a desktop-first browser app with supported responsive shop workflows on phones and tablets. This audit focused on responsive layout, touch target sizing, and modal behavior.
 
 ## Tested Widths
 
@@ -26,7 +26,7 @@ FretTrack is still a desktop-first browser app, but the current beta can be made
 - Tightened forms, summary grids, and job detail layouts so they wrap cleanly instead of crushing fields.
 - Increased touch target size for buttons, inputs, selects, and textareas on smaller screens.
 - Made job tabs horizontally scrollable on narrow screens so they stay usable without wrapping into a mess.
-- Improved modal sizing and spacing for the beta application and feedback dialogs.
+- Improved modal sizing and spacing for the access application and issue-report dialogs.
 - Kept operator tables scrollable while making operator controls wrap better.
 - Tuned the public landing page application modal for smaller screens.
 
@@ -34,7 +34,7 @@ FretTrack is still a desktop-first browser app, but the current beta can be made
 
 FretTrack has a legacy browser compatibility pass for older iPad browsers. The login screen has been smoke-tested on an older iPad/iOS WebKit browser stack and now renders instead of failing to a black screen. The app includes legacy Vite output, runtime polyfill coverage, readable load/error fallbacks, and temporary legacy debug logging for diagnosing older WebKit auth/bootstrap issues.
 
-These devices are useful for beta testing and light shop-floor workflows, but older iOS/iPadOS releases and third-party iOS browsers still share the system WebKit engine and may no longer receive current security updates. Shops should keep devices updated when possible, avoid using unpatched legacy devices for owner/operator administration, and treat older devices as convenience clients rather than primary security-sensitive workstations.
+These devices are useful for light shop-floor workflows, but older iOS/iPadOS releases and third-party iOS browsers still share the system WebKit engine and may no longer receive current security updates. Shops should keep devices updated when possible, avoid using unpatched legacy devices for owner/operator administration, and treat older devices as convenience clients rather than primary security-sensitive workstations.
 
 ## Remaining Tablet and PWA Candidates
 
@@ -47,7 +47,7 @@ These devices are useful for beta testing and light shop-floor workflows, but ol
 
 ## Recommended Next Sprint
 
-1. Keep the responsive shell changes in place and watch real beta usage on phones/tablets.
+1. Keep the responsive shell changes in place and monitor real shop usage on phones/tablets.
 2. Prioritize the damage map and photo upload experience if those still feel awkward on touch devices.
 3. Add tablet intake polish only if shops start working from iPads or similar devices regularly.
 4. Hold PWA and offline work until the browser workflow is stable and predictable.

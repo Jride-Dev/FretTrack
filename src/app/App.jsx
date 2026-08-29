@@ -44,9 +44,9 @@ import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pw
 import { isAmplifierJob } from '../modules/amplifiers/amplifierRepair.js';
 import { isKeyboardJob } from '../modules/keyboards/keyboardRepair.js';
 
-const APP_VERSION = '0.2.9';
+const APP_VERSION = '0.3.0';
 const APP_NAME = 'FretTrack';
-const APP_TAGLINE = 'Modern workflow for guitar repair';
+const APP_TAGLINE = 'Modern workflow for instrument repair';
 const PWA_INSTALL_HELP_DISMISSED_KEY = 'frettrack_pwa_install_help_dismissed';
 const NEW_JOB_SIDEBAR_COLLAPSED_KEY = 'frettrack:new-job-sidebar-collapsed';
 

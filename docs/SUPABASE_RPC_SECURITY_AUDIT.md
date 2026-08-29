@@ -8,7 +8,7 @@ This note documents the SECURITY DEFINER RPC hardening pass for Supabase Securit
 
 | RPC | Classification | Reason |
 | --- | --- | --- |
-| `submit_beta_access_request(text,text,text,text)` | Public intake, intentionally callable by `anon` for now | The Cloudflare landing Worker currently submits public beta applications with the anon key. Inputs are normalized/bounded and status is always server-assigned as `pending`. Future hardening should move this to Worker-only service credentials. |
+| `submit_beta_access_request(text,text,text,text)` | Public intake, intentionally callable by `anon` for now | The Cloudflare landing Worker submits public access applications through this compatibility RPC with the anon key. Inputs are normalized/bounded and status is always server-assigned as `pending`. Future hardening may move this to Worker-only service credentials. |
 | `add_inventory_part_to_job(uuid,uuid,integer)` | Authenticated app RPC | Requires `auth.uid()`, job write permission, shop lifecycle write permission, same-shop part/job ownership, active inventory part, and bounded positive quantity. |
 | `update_inventory_job_part_quantity(uuid,integer)` | Authenticated app RPC | Requires `auth.uid()`, job/shop write permission, lifecycle write permission, same-shop inventory part, bounded positive quantity, and balanced stock movement deltas. |
 | `create_transaction_event(jsonb)` | Authenticated app RPC | Requires `auth.uid()`, JSON object payload, explicit shop ID, shop write permission, shop-scoped customer/employee/reversal references, bounded amounts, and server-assigned `created_by`. |
@@ -34,5 +34,5 @@ This note documents the SECURITY DEFINER RPC hardening pass for Supabase Securit
 
 ## Accepted Risk
 
-`submit_beta_access_request` remains directly callable by `anon` through PostgREST because removing that grant would break the current public beta application path unless the Cloudflare Worker is first migrated to a server-side Supabase credential. The function does not accept status/operator fields and returns only a minimal response.
+`submit_beta_access_request` remains directly callable by `anon` through PostgREST because removing that grant would break the current public access-application path unless the Cloudflare Worker is first migrated to a server-side Supabase credential. The function does not accept status/operator fields and returns only a minimal response.
 

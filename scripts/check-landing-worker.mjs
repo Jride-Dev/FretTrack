@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import worker from '../cloudflare/frettrack-coming-soon/src/index.js';
 
-const BASE_URL = 'https://frettrack-app.com/api/beta-application';
+const BASE_URL = 'https://frettrack-app.com/api/access-application';
 const VALID_BODY = {
   name: 'Test Applicant',
   state: 'OH',
@@ -15,7 +15,7 @@ const VALID_BODY = {
 const PUBLIC_DOC_ROUTES = [
   { route: '/docs/how-to-use-frettrack', assetPath: '/docs/how-to-use-frettrack.html', title: 'How to use FretTrack' },
   { route: '/docs/getting-started', assetPath: '/docs/getting-started.html', title: 'Start using FretTrack' },
-  { route: '/docs/workflow-testing', assetPath: '/docs/beta-tester-guide.html', title: 'How to test FretTrack' },
+  { route: '/docs/release-notes', assetPath: '/docs/release-notes.html', title: 'FretTrack 0.3.0' },
   { route: '/docs/shops-and-accounts', assetPath: '/docs/shops-and-accounts.html', title: 'Manage shop access' },
   { route: '/docs/customers', assetPath: '/docs/customers.html', title: 'Manage customer records' },
   { route: '/docs/jobs', assetPath: '/docs/jobs.html', title: 'Create and manage jobs' },
@@ -47,7 +47,12 @@ const PUBLIC_DOC_DENY_PATTERNS = [
   /Real shop data only/i,
   /no charts, exports, PDFs/i,
   /Stripe, or billing actions/i,
-  /in this phase/i
+  /in this phase/i,
+  /\bbeta\b/i,
+  /\btesters?\b/i,
+  /workflow testing/i,
+  /testing checklist/i,
+  /frettrack-beta/i
 ];
 const REQUIRED_DOC_SECURITY_HEADERS = [
   'content-security-policy',
@@ -62,6 +67,7 @@ const REQUIRED_DIRECT_ROUTES = [
   '/docs.html',
   '/docs/how-to-use-frettrack',
   '/docs/getting-started',
+  '/docs/release-notes',
   '/docs/jobs',
   '/docs/inventory-and-parts',
   '/docs/shipping-and-custody',
@@ -77,8 +83,9 @@ try {
   await testLandingPageIncludesLaunchAssets();
   await testBundledFaviconAssetRoute();
   await testCommunityAssetRoutes();
-  await testBetaTesterChecklistRoutes();
+  await testReleaseDocumentationRoutes();
   await testSuccessfulApplication();
+  await testRetryUsesStableSideEffectIdentity();
   await testSupabaseFailureBlocksSuccess();
   await testEmailFailureDoesNotLoseSavedApplication();
   await testArchiveFailureDoesNotLoseSavedApplication();
@@ -139,6 +146,7 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /<link rel="icon" href="\/favicon\.ico" sizes="any">/);
   assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png">/);
   assert.match(html, /Request Access/);
+  assert.match(html, /Stable release 0\.3\.0 is available/);
   assert.match(html, /\/landing\/overview\.jpg/);
   assert.match(html, /Stripe Checkout and self-service billing management/);
   assert.match(html, /\$29\.99 monthly/);
@@ -166,11 +174,12 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.doesNotMatch(html, /community-card-mark[\s\S]*>TGR</);
   assert.match(html, /View FretTrack on GitHub/);
   assert.match(html, /Visit Torrance Guitar Repair/);
-  assert.match(html, /href="\/testing-checklist"/);
+  assert.match(html, /href="\/docs\/release-notes"/);
   assert.match(html, /href="\/support"/);
   assert.match(html, /href="\/privacy"/);
   assert.match(html, /href="\/terms"/);
-  assert.match(html, /Workflow Testing Checklist/);
+  assert.match(html, /Release Notes/);
+  assert.doesNotMatch(html, /testing-checklist|workflow-testing|beta-tester/i);
 }
 
 async function testBundledFaviconAssetRoute() {
@@ -227,7 +236,7 @@ async function testCommunityAssetRoutes() {
   }
 }
 
-async function testBetaTesterChecklistRoutes() {
+async function testReleaseDocumentationRoutes() {
   const assetCalls = [];
   const env = {
     ...baseEnv(),
@@ -235,13 +244,8 @@ async function testBetaTesterChecklistRoutes() {
       async fetch(request) {
         const pathname = new URL(request.url).pathname;
         assetCalls.push(pathname);
-        if (pathname === '/beta-tester.html') {
-          return new Response('<!doctype html><title>FretTrack Workflow Testing Checklist</title><a href="/downloads/frettrack-beta-tester-workbook.xlsx">Download workbook</a><a href="/downloads/frettrack-beta-tester-checklist.csv">CSV fallback</a>', {
-            headers: { 'content-type': 'text/html; charset=utf-8' }
-          });
-        }
         if (pathname === '/docs.html') {
-          return new Response('<!doctype html><title>Docs | FretTrack</title><h1>FretTrack Docs</h1><a href="/docs/how-to-use-frettrack">Complete how-to guide</a><a href="/support">Support</a><a href="/testing-checklist">Workflow Testing Checklist</a>', {
+          return new Response('<!doctype html><title>Docs | FretTrack</title><h1>FretTrack Docs</h1><a href="/docs/how-to-use-frettrack">Complete how-to guide</a><a href="/support">Support</a><a href="/docs/release-notes">Release Notes</a>', {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
@@ -271,28 +275,10 @@ async function testBetaTesterChecklistRoutes() {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
-        if (pathname === '/downloads/frettrack-beta-tester-workbook.xlsx') {
-          return new Response('workbook-bytes', {
-            headers: { 'content-type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-          });
-        }
-        if (pathname === '/downloads/frettrack-beta-tester-checklist.csv') {
-          return new Response('"Section","Test ID"', {
-            headers: { 'content-type': 'text/csv; charset=utf-8' }
-          });
-        }
         return new Response('not found', { status: 404 });
       }
     }
   };
-
-  const pageResponse = await worker.fetch(new Request('https://frettrack-app.com/testing-checklist'), env);
-  const pageHtml = await pageResponse.text();
-  assert.equal(pageResponse.status, 200);
-  assert.match(pageResponse.headers.get('content-type') || '', /text\/html/);
-  assert.match(pageHtml, /FretTrack Workflow Testing Checklist/);
-  assert.match(pageHtml, /frettrack-beta-tester-workbook\.xlsx/);
-  assert.match(pageHtml, /frettrack-beta-tester-checklist\.csv/);
 
   const docsResponse = await worker.fetch(new Request('https://frettrack-app.com/docs'), env);
   const docsHtml = await docsResponse.text();
@@ -302,7 +288,8 @@ async function testBetaTesterChecklistRoutes() {
   assertRequiredDocSecurityHeaders(docsResponse, '/docs');
   assert.match(docsHtml, /FretTrack Docs/);
   assert.match(docsHtml, /Complete how-to guide/);
-  assert.match(docsHtml, /Workflow Testing Checklist/);
+  assert.match(docsHtml, /Release Notes/);
+  assert.doesNotMatch(docsHtml, /\bbeta\b|\btesters?\b|workflow testing|testing checklist/i);
 
   const docsHtmlResponse = await worker.fetch(new Request('https://frettrack-app.com/docs.html'), env);
   assert.equal(docsHtmlResponse.status, 200);
@@ -334,18 +321,14 @@ async function testBetaTesterChecklistRoutes() {
     assert.match(htmlText, new RegExp(escapeRegExp(docsPage.title)));
   }
 
-  const workbookResponse = await worker.fetch(new Request('https://frettrack-app.com/downloads/frettrack-beta-tester-workbook.xlsx'), env);
-  assert.equal(workbookResponse.status, 200);
-  assert.match(workbookResponse.headers.get('content-type') || '', /spreadsheetml\.sheet/);
-  assert.equal(workbookResponse.headers.get('cache-control'), 'public, max-age=3600');
-  assert.equal(await workbookResponse.text(), 'workbook-bytes');
-
-  const csvResponse = await worker.fetch(new Request('https://frettrack-app.com/downloads/frettrack-beta-tester-checklist.csv'), env);
-  const csvText = await csvResponse.text();
-  assert.equal(csvResponse.status, 200);
-  assert.match(csvResponse.headers.get('content-type') || '', /text\/csv/);
-  assert.equal(csvResponse.headers.get('cache-control'), 'public, max-age=3600');
-  assert.match(csvText, /"Section","Test ID"/);
+  for (const legacyRoute of ['/beta-tester', '/testing-checklist', '/docs/beta-tester-guide', '/docs/workflow-testing']) {
+    const legacyResponse = await worker.fetch(new Request(`https://frettrack-app.com${legacyRoute}`), env);
+    const legacyHtml = await legacyResponse.text();
+    assert.equal(legacyResponse.status, 200, legacyRoute);
+    assertNoRedirect(legacyResponse, legacyRoute);
+    assert.match(legacyHtml, /FretTrack 0\.3\.0/, legacyRoute);
+    assert.doesNotMatch(legacyHtml, /\bbeta\b|\btesters?\b|workflow testing|testing checklist/i, legacyRoute);
+  }
 
   const privacyResponse = await worker.fetch(new Request('https://frettrack-app.com/privacy'), env);
   const privacyHtml = await privacyResponse.text();
@@ -378,11 +361,9 @@ async function testBetaTesterChecklistRoutes() {
   assert.match(termsHtmlResponse.headers.get('content-type') || '', /text\/html/);
 
   for (const expectedPath of [
-    '/beta-tester.html',
     '/docs.html',
     '/docs/docs.css',
-    '/downloads/frettrack-beta-tester-workbook.xlsx',
-    '/downloads/frettrack-beta-tester-checklist.csv',
+    '/docs/release-notes.html',
     '/privacy.html',
     '/support.html',
     '/terms.html',
@@ -418,6 +399,27 @@ async function testSuccessfulApplication() {
   assert.equal(calls.filter((call) => call.kind === 'resend').length, 2);
   assertApplicantConfirmationEmail(calls);
   assert.equal(r2Writes.length, 1);
+  assert.match(r2Writes[0].key, /^access-applications\/by-request\/[0-9a-f-]+\.json$/);
+}
+
+async function testRetryUsesStableSideEffectIdentity() {
+  const calls = [];
+  const r2Writes = [];
+  const r2 = mockR2(r2Writes);
+  globalThis.fetch = mockFetch(calls);
+
+  const firstResponse = await postApplication(VALID_BODY, { FRETTRACK_APP_ASSETS: r2 });
+  const retryResponse = await postApplication(VALID_BODY, { FRETTRACK_APP_ASSETS: r2 });
+
+  assert.equal(firstResponse.status, 200);
+  assert.equal(retryResponse.status, 200);
+  const resendCalls = calls.filter((call) => call.kind === 'resend');
+  assert.equal(resendCalls.length, 4, 'A retry may reach Resend, which must receive the same provider idempotency keys.');
+  const idempotencyKeys = resendCalls.map((call) => call.init.headers['Idempotency-Key']);
+  assert.equal(new Set(idempotencyKeys).size, 2, 'Applicant and operator delivery must each reuse one stable key on retry.');
+  assert.equal(idempotencyKeys[0], idempotencyKeys[2]);
+  assert.equal(idempotencyKeys[1], idempotencyKeys[3]);
+  assert.equal(r2Writes.length, 1, 'A retry must reuse the existing private archive object.');
 }
 
 async function testSupabaseFailureBlocksSuccess() {
@@ -525,7 +527,7 @@ function baseEnv() {
     SUPABASE_ANON_KEY: 'anon-key',
     RESEND_API_KEY: 'resend-key',
     SHOP_EMAIL_FROM: 'FretTrack <noreply@frettrack-app.com>',
-    BETA_APPLICATION_NOTIFY_TO: 'operator@example.com'
+    ACCESS_APPLICATION_NOTIFY_TO: 'operator@example.com'
   };
 }
 
@@ -536,6 +538,7 @@ function mockFetch(calls, options = {}) {
       calls.push({ kind: 'supabase', url: href, init });
       return options.supabaseResponse || Response.json({
         ok: true,
+        requestId: 'a1000000-0000-4000-a000-000000000001',
         status: 'pending',
         email: VALID_BODY.email,
         requestedAt: '2026-06-12T00:00:00.000Z'
@@ -553,8 +556,13 @@ function mockFetch(calls, options = {}) {
 }
 
 function mockR2(writes) {
+  const storedKeys = new Set();
   return {
+    async head(key) {
+      return storedKeys.has(key) ? { key } : null;
+    },
     async put(key, value, options) {
+      storedKeys.add(key);
       writes.push({ key, value, options });
     }
   };
@@ -567,6 +575,7 @@ function assertApplicantConfirmationEmail(calls) {
   ));
 
   assert.ok(applicantCall, 'Expected applicant confirmation email call.');
+  assert.match(applicantCall.init.headers['Idempotency-Key'], /^frettrack-access\/[0-9a-f-]+\/applicant$/);
   assert.equal(applicantCall.body.subject, 'Thank you for requesting FretTrack access');
   assert.match(applicantCall.body.text, /Thank you for requesting FretTrack access!/);
   assert.match(applicantCall.body.text, /waiting for operator review/i);

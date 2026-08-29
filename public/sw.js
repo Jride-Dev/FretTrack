@@ -7,7 +7,7 @@ const CORE_ASSETS = [
   '/release-icons/frettrack-release-icon-2.png'
 ];
 
-// Beta 14 intentionally keeps runtime caching narrow:
+// Keep runtime caching narrow for authenticated production data:
 // - cache the app shell and same-origin static assets only
 // - do not cache Supabase API traffic (different origin)
 // - do not cache authenticated customer/job payloads

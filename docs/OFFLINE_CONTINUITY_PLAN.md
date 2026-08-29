@@ -1,10 +1,10 @@
 # Offline Continuity Plan
 
-## Beta 14 Scope
+## Stable 0.3.0 Scope
 
-FretTrack beta.14 adds a first safe offline continuity layer for repair intake. The goal is to keep shops moving when the internet or Supabase connection goes down without pretending the whole app is fully offline-capable yet.
+FretTrack 0.3.0 includes a safe offline continuity layer for new repair intake. The goal is to keep shops moving when the internet or Supabase connection goes down without presenting the whole app as fully offline-capable.
 
-What beta.14 supports now:
+What 0.3.0 supports:
 
 - browser online/offline detection
 - clear offline status messaging in the app shell
@@ -13,7 +13,7 @@ What beta.14 supports now:
 - manual one-at-a-time sync when the connection returns
 - clear failed/pending/synced state per draft
 
-What beta.14 intentionally does not support:
+What the 0.3.0 implementation intentionally does not support:
 
 - full offline database behavior
 - background auto-sync
@@ -24,7 +24,7 @@ What beta.14 intentionally does not support:
 
 ## Storage Approach
 
-Beta.14 uses IndexedDB in the browser for local draft work orders.
+The 0.3.0 implementation uses IndexedDB in the browser for local draft work orders.
 
 Draft records store:
 
@@ -50,7 +50,7 @@ This avoids silent data loss and avoids falsely implying that the job already ex
 
 ## Manual Sync
 
-Beta.14 uses manual sync only.
+The 0.3.0 implementation uses manual sync only.
 
 When the shop is online again, the user can:
 
@@ -63,7 +63,7 @@ We intentionally do not auto-sync everything in the background yet. That keeps t
 
 ## Duplicate and Conflict Policy
 
-Beta.14 only supports offline continuity for brand-new work orders.
+The 0.3.0 implementation only supports offline continuity for brand-new work orders.
 
 - existing remote job edits remain online-only
 - conflict handling for edited existing jobs is future work
@@ -75,7 +75,7 @@ If a draft sync collides with an already-created remote work order using the sam
 
 Offline photo queueing is intentionally deferred.
 
-For beta.14:
+For 0.3.0:
 
 - new work-order drafts can be saved locally
 - photos should be added after the draft syncs remotely
@@ -97,11 +97,11 @@ It should:
 - avoid Resend/email call caching
 - avoid authenticated private data caching
 
-Offline continuity in beta.14 comes from IndexedDB draft storage, not from broad response caching.
+Offline continuity in 0.3.0 comes from IndexedDB draft storage, not from broad response caching.
 
 ## Future Phases
 
-Likely beta.15+ candidates:
+Likely post-0.3.0 candidates:
 
 - queued offline photos
 - recently-opened job cache with strict privacy rules

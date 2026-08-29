@@ -1,6 +1,6 @@
 # Security Review Checklist
 
-Use this checklist during the next beta-to-paid hardening pass.
+Use this checklist for stable 0.3.0 release verification and subsequent security hardening. Database or function identifiers containing `beta` are retained compatibility names, not customer-facing release status.
 
 ## Isolation
 
@@ -51,7 +51,7 @@ Use this checklist during the next beta-to-paid hardening pass.
 - `npm run check:permissions`, `npm run check:role-permissions`, and `npm run check:stripe-edge-functions` passed.
 - `npm run check:production-build-config` passed, and a focused source/build scan found no service-role JWT, Stripe secret, webhook secret, private key, or Resend secret in `src/` or `dist/`.
 - `get_public_system_status` is intentionally anonymous and returns only the public operational-status fields.
-- `submit_beta_access_request` is intentionally anonymous for the public beta form; its inputs are bounded and normalized, it cannot approve access, and this accepted boundary remains documented in `docs/SUPABASE_RPC_SECURITY_AUDIT.md`.
+- `submit_beta_access_request` is intentionally anonymous for the public access form; its inputs are bounded and normalized, it cannot approve access, and this accepted compatibility boundary remains documented in `docs/SUPABASE_RPC_SECURITY_AUDIT.md`.
 - The linked Supabase organization was verified on the Free plan on `2026-08-11`, where leaked-password protection is unavailable. This limitation is an explicitly accepted pre-launch risk unless the project is upgraded; email confirmation remains required, anonymous sign-in is disabled, and phone sign-in is disabled. Recheck the dashboard's minimum-length/password-strength settings and sign-in/password-reset behavior immediately before paid launch.
 - Migration `20260812025459_harden_set_updated_at_search_path.sql` pins the shared `set_updated_at` trigger helper to an empty search path, schema-qualifies `pg_catalog.now()`, and removes direct public/client execution. The local trigger test passed and Supabase Security Advisor returned no warnings after the migration.
 - The linked advisor's client-callable `SECURITY DEFINER` findings were triaged. `get_public_system_status` and `submit_beta_access_request` are intentionally anonymous, fixed-purpose projections/intake paths with bounded output/input. Authenticated bootstrap, inventory/PO receiving, usage, operator, entitlement, and transaction RPCs retain their required client grants but pin search paths and authorize the caller inside the function. `npm run check:permissions` now covers the newer bootstrap, system-status, and receiving boundaries as well as the earlier RPC audit.

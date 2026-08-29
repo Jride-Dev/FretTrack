@@ -1,5 +1,16 @@
 # Changelog
 
+Current version: `0.3.0`
+
+This file tracks product, reliability, security, and operational changes by release. Historical prerelease labels remain only in their original release records.
+
+## v0.3.0 - Current Stable Release
+
+- Added a focused full-width Guitar Bench that matches the Amplifier and Keyboard workspaces while retaining one shared work-order surface for parts, services, payments, messaging, scheduling, photos, printing, and history.
+- Rebuilt the Customer Service and Condition Report and invoice-style Job Sheet as isolated print documents with image-readiness handling, instrument-appropriate terminology, deterministic layouts, and protection against duplicate or stale print actions.
+- Added accounting-safe work-order exclusion so invalid or test records can be removed from operational totals without deleting customer, payment, invoice, message, or audit history.
+- Completed the stable public release surface with 0.3.0 product documentation, release notes, pricing, access, legal, support, and operational guidance instead of a public testing program.
+- Made public access-application retries idempotent across the database request, Resend delivery keys, and private archive object so a lost response cannot duplicate confirmation mail or backup copies.
 - Made beta approval emails idempotent across concurrent calls and post-provider database failures by claiming a durable delivery before Resend, reusing a stable provider key and message snapshot, atomically finalizing the legacy notification marker, and blocking blind retries once provider deduplication can no longer guarantee safety.
 - Released FretTrack 0.2.9 as the first stable commercial build, retaining controlled account approval while removing customer-facing beta branding.
 - Made Stripe webhook claims recoverable when terminal finalization is unavailable: the current token owner can release an unfinished claim, nonterminal replays remain non-2xx so Stripe retries, and abandoned processing leases can be reclaimed after five minutes without allowing stale attempts to finalize newer work.
@@ -31,11 +42,7 @@
 - Hardened Stripe self-serve billing against duplicate subscriptions and superseded events, made Portal prices authoritative over stale Checkout metadata, and kept failed-payment grace states compatible with the legacy shop-profile mirror.
 - Added a local Playwright and Supabase pgTAP testing foundation with authenticated shop fixtures, transactional cross-shop RLS coverage, and isolated pull-request CI reporting.
 
-Current version: `0.2.9`
-
-This file tracks what changed in each release, including fixes that were added because an earlier change exposed or broke something.
-
-## v0.2.9 - Current Stable Release
+## v0.2.9 - Previous Stable Release
 
 - Added a paid-launch readiness pass with a 30-day launch checklist, restore-drill runbook, backup automation blocker, Stripe self-serve billing source control, Checkout/Portal/Webhook launch docs, and `npm run check:paid-launch-readiness` validation.
 - Hardened hosted-backup checksum generation to use the platform-independent .NET SHA-256 implementation after the Windows PowerShell hash command failed during a pre-launch backup; the full database, Storage, manifest, and Docker-volume backup now completes end to end.
@@ -275,7 +282,7 @@ This file tracks what changed in each release, including fixes that were added b
 - Documented FretTrack domain email/DNS setup for Resend and Supabase Auth invite branding.
 - Added `system_announcements` and in-app announcement banners for beta maintenance and bug-fix notices.
 - Added `beta_feedback` and a logged-in **Report Issue** form that stores user, shop, page, browser, and selected job context in Supabase.
-- Added beta messaging operator notes in `docs/BETA_MESSAGING.md`.
+- Added beta messaging operator notes in `docs/FEEDBACK_AND_SYSTEM_NOTICES.md`.
 - Added roadmap items for Supabase Realtime announcement delivery, beta feedback notifications/admin view, and a future paid AI-assisted 3D instrument visualization option.
 - Fixed selected-shop job saves so House of Bass and other non-default shops no longer fail RLS because `jobService` captured an old shop id at module load.
 - Fixed auth token/focus refresh churn so transient auth events no longer clear the open workspace unless the user explicitly signs out or changes account.

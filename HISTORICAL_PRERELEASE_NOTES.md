@@ -1,4 +1,6 @@
-# Beta Notes
+# Historical Prerelease Notes
+
+This file preserves the original `0.2.x` prerelease record. It is not current product guidance; see [README](README.md), [Release Notes](docs/RELEASE_NOTES.md), and [Known Issues](KNOWN_ISSUES.md) for stable 0.3.0 information.
 
 ## Known beta limitations
 
@@ -9,7 +11,7 @@
 - Not tax/accounting software
 - Backups/export warning still applies
 - Known issue: older Supabase schema drift remains under review, but current beta-blocking privacy checks passed.
-- Backup awareness, export paths, and recovery notes are documented in `docs/BETA_OPERATIONS.md`.
+- Backup awareness, export paths, and recovery notes are documented in `docs/OPERATIONS.md`.
 
 ## v0.2.6-beta.4.1 - Simon's Beta Release Hotfix
 

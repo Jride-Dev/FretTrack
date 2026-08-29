@@ -1,4 +1,4 @@
-# FretTrack v0.2.9 Trial Readiness Checklist
+# FretTrack v0.3.0 Trial And Release Readiness Checklist
 
 Use this checklist before handing a build to a real trial shop.
 
@@ -37,7 +37,7 @@ FRETTRACK_APP_URL=https://app.frettrack-app.com
 3. Confirm the `job-images` and `shop-assets` storage buckets exist and are private.
 4. Enable Supabase Auth email/password sign-in for trial users.
 5. Deploy `send-email`.
-6. Keep `send-sms` deployed only as dormant scaffolding while SMS is disabled.
+6. Keep `send-sms` dormant while SMS is disabled.
 7. Set Edge Function secrets.
 8. Sign in through FretTrack and create the first shop owner if the shop has no members yet.
 9. Send a test email through the app.
@@ -163,14 +163,14 @@ Account approval is separate from paid access trial state. A user may be approve
 2. Enter shop name, phone, email, address, tax defaults, logo, and print footer text.
 3. Save settings.
 4. Open a job and print the Job Sheet.
-5. Print the Customer Damage Acknowledgment.
+5. Print the Customer Service and Condition Report.
 6. Confirm no hardcoded business name appears and footer text prints.
 
-## Backup / Export Warning
+## Backup And Export Readiness
 
-Before real shop testing, confirm the Supabase project has a backup plan and that the operator can export data if a trial shop needs support.
+Before a release or material hosted change, confirm the scheduled backup task is healthy, the newest snapshot is complete, and the operator can export affected shop data when support is needed.
 
-See [Operations](BETA_OPERATIONS.md) for backup awareness, export paths, recovery notes, and current operational limitations. The filename is retained for historical link compatibility.
+See [Operations](OPERATIONS.md) for backup awareness, export paths, recovery notes, and current operational limitations. The filename is retained for historical link compatibility.
 
 For single-job debugging, use `Export Job JSON` from Job Detail.
 
@@ -182,5 +182,5 @@ For single-job debugging, use `Export Job JSON` from Job Detail.
 - Shop profile onboarding now persists remote shop settings and logo storage.
 - Monetary controls are not permission-gated yet.
 - Negative parts/services prices are blocked unless explicitly allowed in job data.
-- Stripe Checkout/Portal and webhook synchronization are implemented, but a real paid subscription lifecycle—including renewal, cancellation, past-due, recovery, and trial-ended events—must pass the paid-launch matrix before general availability.
-- Supabase Auth leaked-password protection is a Supabase Pro-plan feature. Enable it before paid launch if available; otherwise record the accepted risk, use the strongest available password settings, and recheck login/password-reset behavior.
+- Stripe Checkout, the Billing Portal, signed webhook synchronization, annual sandbox lifecycle, launch gating, cancellation, and payment-recovery handling are implemented. Continue monitoring the first live subscriptions and reconcile any provider/local mismatch before changing access manually.
+- Supabase Auth leaked-password protection depends on the project plan. The current accepted boundary requires confirmed email with anonymous and phone sign-in disabled; recheck password-strength, reset behavior, and leaked-password availability whenever the plan changes.

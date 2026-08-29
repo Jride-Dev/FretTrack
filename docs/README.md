@@ -1,137 +1,64 @@
-# FretTrack Docs
+# FretTrack Documentation
 
-This folder is the home for product and technical documentation that does not belong in the root README.
+Current stable release: `v0.3.0`.
 
-Customer-facing and workflow-testing docs should also be reachable from the public FretTrack site at `https://frettrack-app.com/docs`. The public docs hub hosts a complete screenshot-backed how-to manual at `https://frettrack-app.com/docs/how-to-use-frettrack`, plus shorter topic guides for getting started, workflow testing, shops/accounts, customers, jobs, estimates, photos/damage maps, inventory, shipping/custody, scheduling, reports, billing basics, roles, troubleshooting, and FAQ. GitHub Wiki can still be useful for project/developer notes, but repair shops should not need GitHub access to read support, legal, checklist, or day-to-day user-guide material.
+Customer-facing help is published at [frettrack-app.com/docs](https://frettrack-app.com/docs). The public site contains the complete how-to guide, topic guides, release notes, support, pricing and subscription information, Terms, and Privacy Policy. Shops do not need GitHub access to use those materials.
 
-FretTrack's historical pre-milestone baseline was `v0.2.6-beta.14`. Current branch planning uses product milestone versions:
+## Product and release
 
-- `v0.2.61 beta`: Customers complete
-- `v0.2.62 beta`: Inventory complete
-- `v0.2.63 beta`: Scheduling complete
-- `v0.3.0 beta`: Operational Shop Release
+- [Release Notes](RELEASE_NOTES.md)
+- [Roadmap](../ROADMAP.md)
+- [0.3.0 Release Validation Checklist](RELEASE_VALIDATION_CHECKLIST.md)
+- [Trial and Release Readiness](TRIAL_READINESS.md)
+- [Pricing and Tiers](PRICING_AND_TIERS.md)
+- [Known Issues](../KNOWN_ISSUES.md)
 
-Current stable release: `v0.2.9`. This release includes Pro-gated Amplifier Repair, Keyboard Repair, Scheduled Email, Automated Service Reminders, and Loyalty workflows; restores the complete commercial and purchasing lifecycle for specialist jobs; hardens Stripe lifecycle ordering and retry safety; and carries the existing architecture, recovery, permission, quota, and shop-isolation work through a coordinated production rollout.
+## Operations, deployment, and security
 
-Start here for the current product path:
+- [Operations](OPERATIONS.md)
+- [Database Backups](DATABASE_BACKUPS.md)
+- [Deployment Notes](DEPLOYMENT_NOTES.md)
+- [Testing](TESTING.md)
+- [System Status and Uptime](SYSTEM_STATUS_AND_UPTIME.md)
+- [Security Review Checklist](SECURITY_REVIEW_CHECKLIST.md)
+- [Supabase Migration Workflow](supabase-migrations.md)
+- [Supabase RPC Security Audit](SUPABASE_RPC_SECURITY_AUDIT.md)
+- [Domain and Email Setup](DOMAIN_EMAIL_SETUP.md)
 
-- [Release notes](RELEASE_NOTES.md)
-- [System status and uptime](SYSTEM_STATUS_AND_UPTIME.md)
-- [Shop localization and Current Jobs](SHOP_LOCALIZATION_AND_CURRENT_JOBS.md)
-- [Pro Team Assignment Foundation](PRO_TEAM_ASSIGNMENT_FOUNDATION.md)
-- [Amplifier Repair](AMPLIFIER_REPAIR_MODULE.md)
-- [Keyboard Repair](KEYBOARD_REPAIR_MODULE.md)
+## Accounts, plans, and communication
+
+- [Account Access Approval](ACCOUNT_ACCESS_APPROVAL.md)
+- [Operator Dashboard](OPERATOR_DASHBOARD.md)
+- [Feedback and System Notices](FEEDBACK_AND_SYSTEM_NOTICES.md)
+- [Customer Data and Privacy Note](CUSTOMER_DATA_PRIVACY_NOTE.md)
+- [Subscription Foundation](SUBSCRIPTION_FOUNDATION.md)
+- [Stripe Self-Serve Billing](STRIPE_SELF_SERVE_BILLING.md)
+- [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md)
 - [Pro Scheduled Email](PRO_EMAIL_SCHEDULING.md)
 - [Pro Automated Service Reminders](PRO_AUTOMATED_SERVICE_REMINDERS.md)
 - [Pro Loyalty Program](PRO_LOYALTY_PROGRAM.md)
-- [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md)
-- [Roadmap](../ROADMAP.md)
+
+## Repair and shop workflows
+
+- [Amplifier Repair](AMPLIFIER_REPAIR_MODULE.md)
+- [Keyboard Repair](KEYBOARD_REPAIR_MODULE.md)
+- [Inventory Purchasing](INVENTORY_PURCHASING.md)
+- [Shipping](SHIPPING.md)
+- [Reports](REPORTS.md)
+- [Photo Editor](PHOTO_EDITOR.md)
+- [Shop Localization and Current Jobs](SHOP_LOCALIZATION_AND_CURRENT_JOBS.md)
+- [Pro Team Assignment](PRO_TEAM_ASSIGNMENT_FOUNDATION.md)
 - [Accounting-Safe Work-Order Exclusion](ACCOUNTING_SAFE_JOB_VOID.md)
-- [Deployment notes](DEPLOYMENT_NOTES.md)
-- [Reports](REPORTS.md)
-- [Inventory purchasing notes](INVENTORY_PURCHASING.md)
-- [Shipping foundation](SHIPPING.md)
-- [Photo editor](PHOTO_EDITOR.md)
-- [Architecture review beta 14](ARCHITECTURE_REVIEW_BETA14.md)
-- [Architecture health audit for 0.3.0](ARCHITECTURE_HEALTH_AUDIT_0.3.0.md)
-- [Paid launch readiness: 30-day plan](PAID_LAUNCH_READINESS_30_DAY.md)
-- [Stripe self-serve billing](STRIPE_SELF_SERVE_BILLING.md)
-- [Print renderer rebuild plan](PRINT_RENDERER_REBUILD_PLAN.md)
-- [Security review checklist](SECURITY_REVIEW_CHECKLIST.md)
-- [Supabase RPC security audit](SUPABASE_RPC_SECURITY_AUDIT.md)
-- [Testing: Playwright, pgTAP, and local Supabase](TESTING.md)
-- [Offline continuity plan](OFFLINE_CONTINUITY_PLAN.md)
-- [Offline mode audit](OFFLINE_MODE_AUDIT.md)
-- [Public invoice links plan](PUBLIC_INVOICE_LINKS_PLAN.md)
-- [Paid tier readiness audit](PAID_TIER_READINESS_AUDIT.md)
-- [Subscription foundation](SUBSCRIPTION_FOUNDATION.md)
-- [Beta operator dashboard](BETA_OPERATOR_DASHBOARD.md)
-- [Trial readiness checklist](TRIAL_READINESS.md)
+- [Customer Import](CUSTOMER_IMPORT.md)
 
-Core shipped product areas now include:
+## Architecture and future work
 
-- customer and subcontractor management
-- public launch landing page refresh with bundled favicon and product screenshot assets
-- public docs hub at `https://frettrack-app.com/docs` with a complete screenshot-backed how-to manual and customer-facing topic pages adapted from FretTrack Wiki/user-guide material for workflow testing and shop resources when GitHub Wiki is blocked or inconvenient
-- public Terms of Service, Privacy Policy, and Support / FAQ pages on the landing site
-- work-order and invoice email flow
-- mobile and PWA readiness
-- legacy WebKit compatibility for older iPad browser versions, with readable fallback messaging instead of black screens
-- offline new-job draft queue with 0.2.8 scope audit
-- editable job-level parts and services
-- inventory purchasing foundation with parts, vendors, purchase orders, receiving, purchase history, barcode labels, inventory Location/Category presets, UPC-facing labels, Special Order Part behavior, small part images, inbound PO shipping, landed-cost allocation, and transactional receiving RPCs
-- amplifier and keyboard job-linked purchasing with idempotent vendor order creation, Inventory receiving, purchase-unit conversion, and explicit transfer into customer billing
-- shipping / receiving / chain-of-custody foundation with `job_shipments`, `shipping_items`, custody events, manual carrier/tracking and label-reference fields, a grouped Shipping dashboard, and reuse of inventory Location/Category presets; carrier APIs, label/rate purchasing, and automatic shipment notifications are still future work
-- Scheduling / Calendar Phase 1
-- Pro Automated Service Reminders with independent consent, a durable long-horizon queue, shop-controlled templates, and nightly Cron dispatch
-- Pro Loyalty Program with reconciled work-order stamps and an auditable redemption ledger
-- persistent per-shop country, measurement, currency, and tax terminology defaults plus a full Current Jobs workspace
-- Pro primary-technician assignment, Current Jobs assignee filtering, role-safe self-assignment, assignment audit history, and non-scoring workload visibility
-- unsaved-changes protection foundation
-- premium entitlement foundation
-- permission hardening with centralized role checks
-- role/permission audit coverage for owner, admin, tech, viewer, expired-access, and verified-operator paths, including viewer-safe Job Detail controls
-- operator-managed Shop and Pro trial controls
-- Shop Tier Foundation Phase 1
-- Paid Access Lifecycle Phase 1
-- Advanced Reporting Phase 1
-- Pro Reports export, print, row-cap, and large-dataset safety behavior
-- first-shop bootstrap reliability: approved/confirmed users create shop profile, owner membership, and default trial subscription together before the app loads real shop access
-- account approval applicant notifications
-- Photo Editor Phase 1
+- [0.3.0 Architecture Health Audit](ARCHITECTURE_HEALTH_AUDIT_0.3.0.md)
+- [Print Renderer Rebuild Plan](PRINT_RENDERER_REBUILD_PLAN.md)
+- [Offline Continuity Plan](OFFLINE_CONTINUITY_PLAN.md)
+- [Offline Mode Audit](OFFLINE_MODE_AUDIT.md)
+- [Public Invoice Links Plan](PUBLIC_INVOICE_LINKS_PLAN.md)
+- [Historical Paid Tier Readiness Audit](HISTORICAL_PAID_TIER_READINESS_AUDIT.md)
+- [Shop Provisioning and Installer Packaging](shop-provisioning-and-installer.md)
 
-Current permission and premium-trial behavior:
-
-- Account approval and paid trial access are separate systems.
-- New shop bootstrap requires confirmed email plus approved account access or operator access; it creates the shop profile, owner membership, and default trial subscription atomically.
-- Operators can start, extend, and end 7/14/30-day Shop or Pro trials.
-- Expired trials preserve data and memberships, allow safe viewing, block writes, and lock premium entitlements.
-- Internal `free`, `solo`, and `enterprise` values remain compatibility/fallback values during migration and should not be marketed as public plans.
-- Shop currently covers the paid core workflow.
-- Pro currently unlocks Photo Editor, Team Members, and Advanced Reporting.
-- Photo permissions are split across upload, edit, overwrite, delete, and customer-report selection.
-- Shop owners/admins can view subscription status but cannot manage premium trials unless they are also platform operators.
-
-Additional documentation areas:
-
-- API notes
-- Schema docs
-- Deployment guides
-- Screenshots
-- Branding assets
-- Onboarding docs
-
-Current docs:
-
-- [Deployment notes](DEPLOYMENT_NOTES.md)
-- [Beta operations](BETA_OPERATIONS.md)
-- [Beta tester checklist](BETA_TESTER_CHECKLIST.md)
-- [Customer Data & Privacy Note for Beta Shops](CUSTOMER_DATA_PRIVACY_NOTE_BETA_SHOPS.md)
-- [Customer import](CUSTOMER_IMPORT.md)
-- Public Terms of Service: `https://frettrack-app.com/terms`
-- Public Privacy Policy: `https://frettrack-app.com/privacy`
-- Public Docs hub: `https://frettrack-app.com/docs`
-- Public complete how-to guide: `https://frettrack-app.com/docs/how-to-use-frettrack`
-- Public Support / FAQ: `https://frettrack-app.com/support`
-- [Beta access approval](BETA_ACCESS_APPROVAL.md)
-- [Beta operator dashboard](BETA_OPERATOR_DASHBOARD.md)
-- [Beta messaging](BETA_MESSAGING.md)
-- [Domain and email setup](DOMAIN_EMAIL_SETUP.md)
-- [Customer module plan](CUSTOMER_MODULE_PLAN.md)
-- [Image optimization](IMAGE_OPTIMIZATION.md)
-- [Inventory purchasing notes](INVENTORY_PURCHASING.md)
-- [Shipping foundation](SHIPPING.md)
-- [Reports](REPORTS.md)
-- [Photo editor](PHOTO_EDITOR.md)
-- [Mobile/tablet readiness audit](MOBILE_TABLET_READINESS_AUDIT.md)
-- [Release notes](RELEASE_NOTES.md)
-- [System status and uptime](SYSTEM_STATUS_AND_UPTIME.md)
-- [Shop provisioning and installer packaging](shop-provisioning-and-installer.md)
-- [Trial readiness checklist](TRIAL_READINESS.md)
-- [Supabase migration workflow](supabase-migrations.md)
-- [Pricing and tiers](PRICING_AND_TIERS.md)
-- [Offline continuity plan](OFFLINE_CONTINUITY_PLAN.md)
-- [Offline mode audit](OFFLINE_MODE_AUDIT.md)
-- [Public invoice links plan](PUBLIC_INVOICE_LINKS_PLAN.md)
-
-The root README should stay focused on what the app is and how to open it. Deeper product, setup, and operational notes can live here as FretTrack grows from a React project into a product repository.
+Historical planning and prerelease audit files retain their original names and language when that context is necessary to understand old migrations, incidents, or release decisions. They are not current customer-facing product documentation.
