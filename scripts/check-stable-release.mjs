@@ -16,6 +16,8 @@ const publicFiles = [
   'cloudflare/frettrack-coming-soon/public/support.html',
   'cloudflare/frettrack-coming-soon/public/terms.html',
   'cloudflare/frettrack-coming-soon/public/docs/release-notes.html',
+  'cloudflare/frettrack-coming-soon/public/docs/billing-and-subscriptions.html',
+  'cloudflare/frettrack-coming-soon/public/docs/how-to-use-frettrack.html',
   'cloudflare/frettrack-coming-soon/public/docs/faq.html',
   'cloudflare/frettrack-coming-soon/public/docs/getting-started.html',
   'cloudflare/frettrack-coming-soon/public/docs/shops-and-accounts.html',
@@ -71,10 +73,15 @@ for (const [label, text] of publicReleaseSources) {
 
 assert.match(landingPage, /Request Access/);
 assert.match(landingPage, /Release Notes/);
+assert.match(landingPage, /AmpTrack and MidiTrack add-on modules(?: that)? are planned later/i);
 assert.doesNotMatch(landingPage, /testing-checklist|workflow-testing|beta-tester/i);
 assert.match(landingWorker, /\['\/testing-checklist', '\/docs\/release-notes\.html'\]/);
 assert.match(landingWorker, /\['\/docs\/workflow-testing', '\/docs\/release-notes\.html'\]/);
 assert.match(source('cloudflare/frettrack-coming-soon/public/docs.html'), /Current release: v0\.3\.0/);
 assert.match(source('supabase/functions/notify-beta-approval/index.ts'), /Your FretTrack access is approved/);
+assert.match(source('cloudflare/frettrack-coming-soon/public/docs/release-notes.html'), /AmpTrack and MidiTrack add-on modules(?: that)? are planned later/i);
+assert.match(source('cloudflare/frettrack-coming-soon/public/docs/billing-and-subscriptions.html'), /AmpTrack and MidiTrack add-on modules(?: that)? are planned later/i);
+assert.match(source('cloudflare/frettrack-coming-soon/public/docs/shops-and-accounts.html'), /AmpTrack and MidiTrack add-on modules(?: that)? are planned later/i);
+assert.match(source('cloudflare/frettrack-coming-soon/public/docs/how-to-use-frettrack.html'), /AmpTrack and MidiTrack add-on modules(?: that)? are planned later/i);
 
 console.log('Stable release checks passed.');

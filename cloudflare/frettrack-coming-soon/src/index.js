@@ -1335,6 +1335,7 @@ function landingPage() {
             </ul>
           </div>
         </div>
+        <p class="section-lede">Dedicated AmpTrack and MidiTrack add-on modules are planned later with more specialized amplifier and keyboard workflows.</p>
         <p class="section-lede">Cancel anytime through the Stripe Billing Portal; access continues through the current paid period. The first annual subscription purchase has a 14-day refund window. Monthly payments and renewals are non-refundable except for billing errors or when required by law. Prices are USD; applicable taxes, if any, are shown at Checkout.</p>
       </section>
 

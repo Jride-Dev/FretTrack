@@ -180,6 +180,7 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /href="\/privacy"/);
   assert.match(html, /href="\/terms"/);
   assert.match(html, /Release Notes/);
+  assert.match(html, /AmpTrack and MidiTrack add-on modules are planned later/i);
   assert.doesNotMatch(html, /testing-checklist|workflow-testing|beta-tester/i);
 }
 
@@ -246,7 +247,7 @@ async function testReleaseDocumentationRoutes() {
         const pathname = new URL(request.url).pathname;
         assetCalls.push(pathname);
         if (pathname === '/docs.html') {
-          return new Response('<!doctype html><title>Docs | FretTrack</title><h1>FretTrack Docs</h1><a href="/docs/how-to-use-frettrack">Complete how-to guide</a><a href="/support">Support</a><a href="/docs/release-notes">Release Notes</a>', {
+          return new Response('<!doctype html><title>Docs | FretTrack</title><h1>FretTrack Docs</h1><p>Dedicated AmpTrack and MidiTrack add-on modules are planned later with more specialized amplifier and keyboard workflows.</p><a href="/docs/how-to-use-frettrack">Complete how-to guide</a><a href="/support">Support</a><a href="/docs/release-notes">Release Notes</a>', {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
@@ -257,7 +258,10 @@ async function testReleaseDocumentationRoutes() {
         }
         const docsPage = PUBLIC_DOC_ROUTES.find((candidate) => candidate.assetPath === pathname);
         if (docsPage) {
-          return new Response(`<!doctype html><title>${docsPage.title} | FretTrack Docs</title><h1>${docsPage.title}</h1><a href="/docs">Back to Docs</a>`, {
+          const addOnNote = ['release-notes', 'billing-and-subscriptions', 'shops-and-accounts', 'how-to-use-frettrack'].includes(docsPage.route.split('/').pop())
+            ? '<p>Dedicated AmpTrack and MidiTrack add-on modules are planned later with more specialized amplifier and keyboard workflows.</p>'
+            : '';
+          return new Response(`<!doctype html><title>${docsPage.title} | FretTrack Docs</title><h1>${docsPage.title}</h1>${addOnNote}<a href="/docs">Back to Docs</a>`, {
             headers: { 'content-type': 'text/html; charset=utf-8' }
           });
         }
@@ -290,6 +294,7 @@ async function testReleaseDocumentationRoutes() {
   assert.match(docsHtml, /FretTrack Docs/);
   assert.match(docsHtml, /Complete how-to guide/);
   assert.match(docsHtml, /Release Notes/);
+  assert.match(docsHtml, /AmpTrack and MidiTrack add-on modules are planned later/i);
   assert.doesNotMatch(docsHtml, /\bbeta\b|\btesters?\b|workflow testing|testing checklist/i);
 
   const docsHtmlResponse = await worker.fetch(new Request('https://frettrack-app.com/docs.html'), env);
@@ -312,6 +317,9 @@ async function testReleaseDocumentationRoutes() {
     assertRequiredDocSecurityHeaders(cleanResponse, docsPage.route);
     assert.match(cleanHtml, new RegExp(escapeRegExp(docsPage.title)));
     assert.match(cleanHtml, /Back to Docs/);
+    if (['/docs/release-notes', '/docs/billing-and-subscriptions', '/docs/shops-and-accounts', '/docs/how-to-use-frettrack'].includes(docsPage.route)) {
+      assert.match(cleanHtml, /AmpTrack and MidiTrack add-on modules are planned later/i, `${docsPage.route} should mention the future add-on modules.`);
+    }
 
     const htmlResponse = await worker.fetch(new Request(`https://frettrack-app.com${docsPage.assetPath}`), env);
     const htmlText = await htmlResponse.text();
@@ -320,6 +328,9 @@ async function testReleaseDocumentationRoutes() {
     assert.match(htmlResponse.headers.get('content-type') || '', /text\/html/);
     assertRequiredDocSecurityHeaders(htmlResponse, docsPage.assetPath);
     assert.match(htmlText, new RegExp(escapeRegExp(docsPage.title)));
+    if (['/docs/release-notes', '/docs/billing-and-subscriptions', '/docs/shops-and-accounts', '/docs/how-to-use-frettrack'].includes(docsPage.route)) {
+      assert.match(htmlText, /AmpTrack and MidiTrack add-on modules are planned later/i, `${docsPage.assetPath} should mention the future add-on modules.`);
+    }
   }
 
   for (const legacyRoute of ['/beta-tester', '/testing-checklist', '/docs/beta-tester-guide', '/docs/workflow-testing']) {
