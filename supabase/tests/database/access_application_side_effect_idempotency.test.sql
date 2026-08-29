@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(7);
+select plan(9);
 
 select has_function(
   'public',
@@ -85,6 +85,28 @@ select is(
   ),
   1,
   'an identical retry does not append duplicate application notes'
+);
+
+select throws_like(
+  $$select public.submit_beta_access_request(
+    'length-check@example.test',
+    repeat('A', 121),
+    'Length Check Shop',
+    E'State: CA\nTeam size: 2\nCurrent tracking: Paper'
+  )$$,
+  '%character limit%',
+  'over-limit applicant names are rejected'
+);
+
+select throws_like(
+  $$select public.submit_beta_access_request(
+    'notes-check@example.test',
+    'Length Check',
+    'Length Check Shop',
+    repeat('N', 1501)
+  )$$,
+  '%character limit%',
+  'over-limit application notes are rejected'
 );
 
 select * from finish();

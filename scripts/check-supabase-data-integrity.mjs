@@ -141,11 +141,48 @@ function runSupabaseQuery(sql) {
 
 function parseJsonEnvelope(output) {
   const trimmed = output.trim();
-  const jsonStart = trimmed.indexOf('{');
+  const jsonStart = trimmed.search(/[\[{]/);
   if (jsonStart === -1) {
     throw new Error(`Supabase query did not return JSON output.\n\n${output}`);
   }
-  return JSON.parse(trimmed.slice(jsonStart));
+
+  let inString = false;
+  let escaped = false;
+  let depth = 0;
+
+  for (let index = jsonStart; index < trimmed.length; index += 1) {
+    const character = trimmed[index];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === '\\') {
+        escaped = true;
+      } else if (character === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (character === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (character === '{' || character === '[') {
+      depth += 1;
+      continue;
+    }
+
+    if (character === '}' || character === ']') {
+      depth -= 1;
+      if (depth === 0) {
+        return JSON.parse(trimmed.slice(jsonStart, index + 1));
+      }
+    }
+  }
+
+  throw new Error(`Supabase query returned incomplete JSON output.\n\n${output}`);
 }
 
 let envelope;

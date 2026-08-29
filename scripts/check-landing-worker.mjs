@@ -90,6 +90,7 @@ try {
   await testEmailFailureDoesNotLoseSavedApplication();
   await testArchiveFailureDoesNotLoseSavedApplication();
   await testValidationFailureDoesNotCallSupabase();
+  await testOverLimitApplicationFieldsDoNotCallSupabase();
   await testInvalidJson();
   console.log('Landing Worker checks passed.');
 } finally {
@@ -485,6 +486,18 @@ async function testValidationFailureDoesNotCallSupabase() {
   assert.equal(response.status, 400);
   assert.equal(body.ok, false);
   assert.match(body.error, /valid email/i);
+  assert.equal(calls.length, 0);
+}
+
+async function testOverLimitApplicationFieldsDoNotCallSupabase() {
+  const calls = [];
+  globalThis.fetch = mockFetch(calls);
+  const response = await postApplication({ ...VALID_BODY, name: 'A'.repeat(121) });
+  const body = await response.json();
+
+  assert.equal(response.status, 400);
+  assert.equal(body.ok, false);
+  assert.match(body.error, /character limit/i);
   assert.equal(calls.length, 0);
 }
 

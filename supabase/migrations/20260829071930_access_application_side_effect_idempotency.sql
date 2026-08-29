@@ -17,9 +17,9 @@ set search_path = public, private, auth
 as $$
 declare
   normalized_email text := lower(trim(coalesce(applicant_email, '')));
-  clean_name text := left(trim(coalesce(applicant_name, '')), 120);
-  clean_shop_name text := left(trim(coalesce(applicant_shop_name, '')), 160);
-  clean_notes text := left(trim(coalesce(applicant_notes, '')), 1500);
+  clean_name text := trim(coalesce(applicant_name, ''));
+  clean_shop_name text := trim(coalesce(applicant_shop_name, ''));
+  clean_notes text := trim(coalesce(applicant_notes, ''));
   matching_user_id uuid;
   request_row public.beta_access_requests%rowtype;
   next_notes text;
@@ -36,6 +36,12 @@ begin
   where lower(email) = normalized_email
   order by created_at desc
   limit 1;
+
+  if length(clean_name) > 120
+    or length(clean_shop_name) > 160
+    or length(clean_notes) > 1500 then
+    raise exception 'Please keep each field within its character limit.';
+  end if;
 
   next_notes := trim(concat_ws(E'\n',
     nullif('Applicant: ' || clean_name, 'Applicant: '),
@@ -67,6 +73,14 @@ begin
       next_notes
     )
     returning * into request_row;
+  elsif auth.uid() is null or auth.uid() is distinct from matching_user_id then
+    return jsonb_build_object(
+      'ok', true,
+      'requestId', request_row.id,
+      'status', request_row.status,
+      'email', request_row.email,
+      'requestedAt', request_row.requested_at
+    );
   else
     update public.beta_access_requests
     set

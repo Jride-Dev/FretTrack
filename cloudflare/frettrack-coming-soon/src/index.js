@@ -1732,13 +1732,33 @@ async function saveAccessApplication(request, env) {
     return jsonResponse({ ok: false, error: 'Invalid request.' }, 400);
   }
 
+  const name = normalizeApplicationText(data.name);
+  const state = normalizeApplicationText(data.state);
+  const shopName = normalizeApplicationText(data.shopName);
+  const teamSize = normalizeApplicationText(data.teamSize);
+  const currentTracking = normalizeApplicationText(data.currentTracking);
+  const email = normalizeApplicationText(data.email).toLowerCase();
+
+  const oversizedField = [
+    ['name', name, 120],
+    ['state', state, 80],
+    ['shopName', shopName, 160],
+    ['teamSize', teamSize, 80],
+    ['currentTracking', currentTracking, 1200],
+    ['email', email, 180]
+  ].find(([, value, maxLength]) => value.length > maxLength);
+
+  if (oversizedField) {
+    return jsonResponse({ ok: false, error: 'Please keep each field within its character limit.' }, 400);
+  }
+
   const application = {
-    name: cleanText(data.name, 120),
-    state: cleanText(data.state, 80),
-    shopName: cleanText(data.shopName, 160),
-    teamSize: cleanText(data.teamSize, 80),
-    currentTracking: cleanText(data.currentTracking, 1200),
-    email: cleanText(data.email, 180).toLowerCase(),
+    name,
+    state,
+    shopName,
+    teamSize,
+    currentTracking,
+    email,
     submittedAt: new Date().toISOString(),
     userAgent: cleanText(request.headers.get('user-agent') || '', 500),
     ipCountry: cleanText(request.cf?.country || '', 8)
@@ -2150,6 +2170,10 @@ async function serveBundledAsset(request, env) {
 
 function cleanText(value, maxLength) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, maxLength);
+}
+
+function normalizeApplicationText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
 function parseEmailRecipients(value) {
