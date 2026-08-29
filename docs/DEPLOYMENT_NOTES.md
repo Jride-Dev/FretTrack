@@ -4,11 +4,11 @@ Review this file before every production deploy and update it after app, public-
 
 ## Current status
 
-- Stable `v0.2.9` is the currently tagged GitHub release while `release/0.3.0` prepares the stable Operational Shop Release.
-- The production app already includes the post-0.2.9 Guitar Bench and print-safety work from PRs #225 and #226, deployed as Cloudflare Pages build `39ac92ae.frettrack.pages.dev`. The branded app URL and public root returned `200 OK`, and their asset references matched the guarded local production build.
-- The 0.3.0 release changes application/public version metadata, release documentation, and public landing/docs content. Migration `20260829071930_access_application_side_effect_idempotency.sql` makes repeated access submissions retain one request identity/timestamp; deploy it before the matching landing Worker so email and archive retries reuse stable side-effect keys.
-- Production migration history matched the repository through `20260828022147_accounting_safe_job_void.sql` during the latest read-only comparison.
-- The public landing/docs Worker currently serves stable access, pricing, annual savings, Terms, Privacy, Support, product guides, community links, and the access-application flow. The 0.3.0 public-site deployment will replace the retired public testing package with release notes while retaining old route aliases.
+- FretTrack 0.3.0 is deployed as the stable Operational Shop Release. Tagging and GitHub release publication follow the recorded production verification below.
+- The production app is Cloudflare Pages build `1c947651.frettrack.pages.dev`. The branded app URL and public root returned `200 OK`, and the live asset references exactly matched the guarded local production build.
+- Migration `20260829071930_access_application_side_effect_idempotency.sql` is applied in production. Repeated access submissions now retain one request identity/timestamp so email and archive retries reuse stable side-effect keys.
+- Production migration history matches the repository through `20260829071930_access_application_side_effect_idempotency.sql`; the linked dry run reports that the remote database is up to date.
+- The public landing/docs Worker is deployed as version `3ed22996-0154-4818-8599-0bc739b0d26b` and serves stable 0.3.0 access, pricing, annual savings, Terms, Privacy, Support, product guides, community links, release notes, and legacy documentation aliases.
 - The 0.3.0 release branch passed the exact GitHub regression/build commands, 350 local pgTAP/RLS assertions, all 29 Playwright tests, the production deploy preflight, local data-integrity checks, migration parity, and `npm audit` with zero vulnerabilities.
 - The two legacy ownerless shop profiles are formally classified as closed historical tenants because both subscriptions are canceled, neither has a Stripe customer/subscription ID, and neither has a member who could access the tenant. `B-U Music Garage` retains eight jobs and five customers for historical integrity; `Pv Music House` has no jobs or customers. The integrity gate requires an owner for every operational shop while preserving canceled historical tenants without assigning, deleting, or reactivating them.
 
@@ -40,7 +40,17 @@ Review this file before every production deploy and update it after app, public-
 - Three consecutive unattended daily backups were recorded from 2026-08-22 through 2026-08-24.
 - The 2026-08-11 hosted-to-local restore drill matched 73 table counts, 58 migrations, application integrity, and all 194 Storage object hashes.
 - Pre-migration snapshot `backups/hosted-supabase-20260826-111909` completed with 4,911 checksummed files and no failure marker or schema/migration-history drift.
+- Pre-release snapshot `backups/hosted-supabase-20260829-005315` completed with database, migration-history, Storage, manifest, and checksum artifacts and no failure marker. Its comparison report found no schema or migration-history drift before the 0.3.0 migration.
 - Restore selection must reject `FAILED.txt` and require validated completion metadata before any destructive local refresh begins.
+
+## 0.3.0 production verification
+
+- Merged release PR #227 at `6562fe39586a15ffb885be28fd404567d82fa815` and the historical-tenant gate correction in PR #228 at `2c33f72e21e7e793954c3e5642f856357ad2e24e`.
+- Applied production migration `20260829071930`; verified its history row, anonymous intake grant, linked data integrity, repository parity, and an empty migration dry run.
+- Deployed Cloudflare Pages build `https://1c947651.frettrack.pages.dev` and public Worker version `3ed22996-0154-4818-8599-0bc739b0d26b`.
+- Verified `200 OK` for the branded app, public root, docs, release notes, Terms, Privacy, Support, and both legacy testing-document aliases.
+- Verified the live app asset list matches the guarded build, the application bundle reports `0.3.0` without prerelease copy, and public pages retain CSP plus MIME-sniffing protection.
+- Verified Discord, GitHub, Reddit, Product Hunt, and Torrance Guitar Repair links, and confirmed unauthenticated Checkout, Billing Portal, and approval-notification requests return `401`.
 
 ## Standard app deployment
 
