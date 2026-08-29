@@ -32,7 +32,7 @@ Domain: `frettrack-app.com`
   - Current objects:
     - `site/frettrack-banner.png`
     - `site/frettrack-emblem.png`
-  - Access applications are stored as private JSON objects under `access-applications/YYYY-MM-DD/{uuid}.json`
+  - Access applications are stored idempotently as private JSON objects under `access-applications/by-request/{request-id}.json`
 - DNS:
   - `app.frettrack-app.com` CNAME to `frettrack.pages.dev`
   - Cloudflare Email Routing MX records enabled

@@ -6,6 +6,8 @@ FretTrack `0.3.0` is the stable Operational Shop Release. Guitar, Amplifier, and
 
 The release also consolidates the shipped customer, inventory, purchasing, scheduling, reporting, photo, email, service-reminder, loyalty, role, quota, backup, and recovery foundations behind stable `0.3.0` product documentation. Customer-facing pages no longer present FretTrack as a pre-release testing program. Historical prerelease notes and internal compatibility identifiers remain intact for audit and migration safety.
 
+Repeated access-application submissions now retain their original database request identity and timestamp. Confirmation/notification emails reuse provider idempotency keys, and the private backup archive reuses one deterministic object, preventing a lost response from multiplying customer mail or archive copies.
+
 - Guitar work orders now open in a focused, full-width Guitar Bench matching the newer Amplifier and Keyboard bench experience. The bench reuses the existing guitar identity, string-gauge, staged neck-inspection, measurement-unit, visual Damage Map, photo-upload, dirty-state, and version-guarded save paths. A shared workspace switch keeps parts, services, payments, customer communication, scheduling, photos, printing, and history in the existing Work Order, Parts & Payments view instead of duplicating commercial logic.
 
 - Print actions now share a synchronous request sequence so the most recent document choice wins. If a Customer Service Report is still waiting for images when staff switch to Job Sheet, the delayed report cannot reopen the browser print dialog or print the wrong document.

@@ -85,6 +85,7 @@ try {
   await testCommunityAssetRoutes();
   await testReleaseDocumentationRoutes();
   await testSuccessfulApplication();
+  await testRetryUsesStableSideEffectIdentity();
   await testSupabaseFailureBlocksSuccess();
   await testEmailFailureDoesNotLoseSavedApplication();
   await testArchiveFailureDoesNotLoseSavedApplication();
@@ -398,6 +399,27 @@ async function testSuccessfulApplication() {
   assert.equal(calls.filter((call) => call.kind === 'resend').length, 2);
   assertApplicantConfirmationEmail(calls);
   assert.equal(r2Writes.length, 1);
+  assert.match(r2Writes[0].key, /^access-applications\/by-request\/[0-9a-f-]+\.json$/);
+}
+
+async function testRetryUsesStableSideEffectIdentity() {
+  const calls = [];
+  const r2Writes = [];
+  const r2 = mockR2(r2Writes);
+  globalThis.fetch = mockFetch(calls);
+
+  const firstResponse = await postApplication(VALID_BODY, { FRETTRACK_APP_ASSETS: r2 });
+  const retryResponse = await postApplication(VALID_BODY, { FRETTRACK_APP_ASSETS: r2 });
+
+  assert.equal(firstResponse.status, 200);
+  assert.equal(retryResponse.status, 200);
+  const resendCalls = calls.filter((call) => call.kind === 'resend');
+  assert.equal(resendCalls.length, 4, 'A retry may reach Resend, which must receive the same provider idempotency keys.');
+  const idempotencyKeys = resendCalls.map((call) => call.init.headers['Idempotency-Key']);
+  assert.equal(new Set(idempotencyKeys).size, 2, 'Applicant and operator delivery must each reuse one stable key on retry.');
+  assert.equal(idempotencyKeys[0], idempotencyKeys[2]);
+  assert.equal(idempotencyKeys[1], idempotencyKeys[3]);
+  assert.equal(r2Writes.length, 1, 'A retry must reuse the existing private archive object.');
 }
 
 async function testSupabaseFailureBlocksSuccess() {
@@ -516,6 +538,7 @@ function mockFetch(calls, options = {}) {
       calls.push({ kind: 'supabase', url: href, init });
       return options.supabaseResponse || Response.json({
         ok: true,
+        requestId: 'a1000000-0000-4000-a000-000000000001',
         status: 'pending',
         email: VALID_BODY.email,
         requestedAt: '2026-06-12T00:00:00.000Z'
@@ -533,8 +556,13 @@ function mockFetch(calls, options = {}) {
 }
 
 function mockR2(writes) {
+  const storedKeys = new Set();
   return {
+    async head(key) {
+      return storedKeys.has(key) ? { key } : null;
+    },
     async put(key, value, options) {
+      storedKeys.add(key);
       writes.push({ key, value, options });
     }
   };
@@ -547,6 +575,7 @@ function assertApplicantConfirmationEmail(calls) {
   ));
 
   assert.ok(applicantCall, 'Expected applicant confirmation email call.');
+  assert.match(applicantCall.init.headers['Idempotency-Key'], /^frettrack-access\/[0-9a-f-]+\/applicant$/);
   assert.equal(applicantCall.body.subject, 'Thank you for requesting FretTrack access');
   assert.match(applicantCall.body.text, /Thank you for requesting FretTrack access!/);
   assert.match(applicantCall.body.text, /waiting for operator review/i);

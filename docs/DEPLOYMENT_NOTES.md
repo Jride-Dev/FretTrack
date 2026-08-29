@@ -6,10 +6,10 @@ Review this file before every production deploy and update it after app, public-
 
 - Stable `v0.2.9` is the currently tagged GitHub release while `release/0.3.0` prepares the stable Operational Shop Release.
 - The production app already includes the post-0.2.9 Guitar Bench and print-safety work from PRs #225 and #226, deployed as Cloudflare Pages build `39ac92ae.frettrack.pages.dev`. The branded app URL and public root returned `200 OK`, and their asset references matched the guarded local production build.
-- The 0.3.0 release changes application/public version metadata, release documentation, and public landing/docs content. It does not add a database migration or change a Supabase Edge Function.
+- The 0.3.0 release changes application/public version metadata, release documentation, and public landing/docs content. Migration `20260829071930_access_application_side_effect_idempotency.sql` makes repeated access submissions retain one request identity/timestamp; deploy it before the matching landing Worker so email and archive retries reuse stable side-effect keys.
 - Production migration history matched the repository through `20260828022147_accounting_safe_job_void.sql` during the latest read-only comparison.
 - The public landing/docs Worker currently serves stable access, pricing, annual savings, Terms, Privacy, Support, product guides, community links, and the access-application flow. The 0.3.0 public-site deployment will replace the retired public testing package with release notes while retaining old route aliases.
-- The 0.3.0 release branch passed the exact GitHub regression/build commands, 343 local pgTAP/RLS assertions, all 29 Playwright tests, the production deploy preflight, local data-integrity checks, migration parity, and `npm audit` with zero vulnerabilities.
+- The 0.3.0 release branch passed the exact GitHub regression/build commands, 350 local pgTAP/RLS assertions, all 29 Playwright tests, the production deploy preflight, local data-integrity checks, migration parity, and `npm audit` with zero vulnerabilities.
 - The linked-project integrity audit still reports two legacy ownerless shop profiles. One contains historical work-order/customer data and neither has an identifiable owner or matching access request, so they must not be deleted or assigned by guesswork. Resolve or formally classify those records before the final production release gate.
 
 ## Commercial configuration
@@ -86,7 +86,7 @@ Afterward, verify `/`, `/docs`, `/docs/release-notes`, `/terms`, `/privacy`, `/s
 - Apply only reviewed migrations in order, then verify history and application behavior.
 - Deploy database changes before dependent Edge Functions and dependent frontend code.
 - Confirm secret names or digests without printing values.
-- No database or Edge Function deployment is required solely for the 0.3.0 release metadata/public-site update.
+- Apply `20260829071930_access_application_side_effect_idempotency.sql` before deploying the 0.3.0 public landing/docs Worker. No Supabase Edge Function deployment is required for this follow-up.
 
 ## Post-deployment verification
 

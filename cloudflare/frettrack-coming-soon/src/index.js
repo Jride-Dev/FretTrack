@@ -1754,9 +1754,11 @@ async function saveAccessApplication(request, env) {
   }
 
   try {
+    const applicationFingerprint = await createAccessApplicationFingerprint(application);
     const applicationResult = await submitAccessRequest(application, env);
-    const emailResult = await sendAccessApplicationEmails(application, env);
-    const archiveResult = await archiveAccessApplication(application, env);
+    const sideEffectKey = getAccessApplicationSideEffectKey(applicationResult, applicationFingerprint);
+    const emailResult = await sendAccessApplicationEmails(application, env, sideEffectKey);
+    const archiveResult = await archiveAccessApplication(application, env, sideEffectKey);
 
     const responseBody = {
       ok: true,
@@ -1800,7 +1802,6 @@ async function submitAccessRequest(application, env) {
     `State: ${application.state}`,
     `Team size: ${application.teamSize}`,
     `Current tracking: ${application.currentTracking}`,
-    `Submitted: ${application.submittedAt}`,
     application.ipCountry ? `Country: ${application.ipCountry}` : ''
   ].filter(Boolean).join('\n');
 
@@ -1833,7 +1834,7 @@ async function submitAccessRequest(application, env) {
   return result;
 }
 
-async function sendAccessApplicationEmails(application, env) {
+async function sendAccessApplicationEmails(application, env, sideEffectKey) {
   const resendApiKey = cleanText(env.RESEND_API_KEY || '', 300);
   const fromEmail = cleanText(env.SHOP_EMAIL_FROM || '', 180) || 'FretTrack <noreply@frettrack-app.com>';
   const notifyRecipients = parseEmailRecipients(env.ACCESS_APPLICATION_NOTIFY_TO || env.BETA_APPLICATION_NOTIFY_TO || SUPPORT_EMAIL);
@@ -1859,10 +1860,7 @@ async function sendAccessApplicationEmails(application, env) {
     `State: ${application.state}`,
     `Shop Name: ${application.shopName}`,
     `Team Size: ${application.teamSize}`,
-    `Current Tracking: ${application.currentTracking}`,
-    `Submitted: ${application.submittedAt}`,
-    application.ipCountry ? `Country: ${application.ipCountry}` : '',
-    application.userAgent ? `User Agent: ${application.userAgent}` : ''
+    `Current Tracking: ${application.currentTracking}`
   ].filter(Boolean).join('\n');
 
   const applicantEmail = buildApplicantConfirmationEmail(application, details);
@@ -1873,20 +1871,24 @@ async function sendAccessApplicationEmails(application, env) {
     details
   ].join('\n');
 
+  const operatorJobs = await Promise.all(notifyRecipients.map(async (recipient) => ({
+    kind: 'operator',
+    to: recipient,
+    subject: `New FretTrack access application: ${application.shopName || application.email}`,
+    text: operatorText,
+    idempotencyKey: `frettrack-access/${sideEffectKey}/operator/${await sha256Hex(recipient.toLowerCase())}`
+  })));
+
   const emailJobs = [
     {
       kind: 'applicant',
       to: application.email,
       subject: 'Thank you for requesting FretTrack access',
       text: applicantEmail.text,
-      html: applicantEmail.html
+      html: applicantEmail.html,
+      idempotencyKey: `frettrack-access/${sideEffectKey}/applicant`
     },
-    ...notifyRecipients.map((recipient) => ({
-      kind: 'operator',
-      to: recipient,
-      subject: `New FretTrack access application: ${application.shopName || application.email}`,
-      text: operatorText
-    }))
+    ...operatorJobs
   ];
 
   const results = await Promise.allSettled(emailJobs.map((emailJob) => (
@@ -1896,7 +1898,8 @@ async function sendAccessApplicationEmails(application, env) {
       to: emailJob.to,
       subject: emailJob.subject,
       text: emailJob.text,
-      html: emailJob.html || ''
+      html: emailJob.html || '',
+      idempotencyKey: emailJob.idempotencyKey
     })
   )));
 
@@ -1948,7 +1951,6 @@ function buildApplicantConfirmationEmail(application, details) {
   const safeName = escapeHtml(application.name || 'there');
   const safeShopName = escapeHtml(application.shopName || 'your shop');
   const safeEmail = escapeHtml(application.email);
-  const safeSubmittedAt = escapeHtml(application.submittedAt);
   const safeDetails = escapeHtml(details);
 
   const text = [
@@ -1988,7 +1990,7 @@ function buildApplicantConfirmationEmail(application, details) {
         <p style="margin:0 0 14px;"><a href="${APP_URL}" style="color:#9a4d14;font-weight:700;">FretTrack login</a></p>
         <h2 style="font-size:16px;margin:22px 0 8px;">Application summary</h2>
         <pre style="white-space:pre-wrap;background:#f8f6f1;border:1px solid #d9d1c2;border-radius:6px;color:#374151;font-family:Arial,sans-serif;font-size:14px;margin:0 0 18px;padding:12px;">${safeDetails}</pre>
-        <p style="color:#4b5563;font-size:13px;margin:0 0 18px;">Submitted as ${safeEmail} on ${safeSubmittedAt}.</p>
+        <p style="color:#4b5563;font-size:13px;margin:0 0 18px;">Submitted as ${safeEmail}.</p>
         <p style="margin:0;">Best regards,<br>Jeffrey Russell<br>FretTrack<br><a href="https://frettrack-app.com/" style="color:#9a4d14;">frettrack-app.com</a></p>
       </div>
     </div>
@@ -1998,7 +2000,7 @@ function buildApplicantConfirmationEmail(application, details) {
   return { text, html };
 }
 
-async function sendResendEmail({ apiKey, from, to, subject, text, html }) {
+async function sendResendEmail({ apiKey, from, to, subject, text, html, idempotencyKey }) {
   const body = { from, to, subject, text };
   if (html) {
     body.html = html;
@@ -2008,7 +2010,8 @@ async function sendResendEmail({ apiKey, from, to, subject, text, html }) {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Idempotency-Key': idempotencyKey
     },
     body: JSON.stringify(body)
   });
@@ -2021,16 +2024,21 @@ async function sendResendEmail({ apiKey, from, to, subject, text, html }) {
   return { ok: true, id: result.id || '' };
 }
 
-async function archiveAccessApplication(application, env) {
+async function archiveAccessApplication(application, env, sideEffectKey) {
   if (!env.FRETTRACK_APP_ASSETS) {
     return { warning: '' };
   }
 
   try {
-    const id = crypto.randomUUID();
-    const datePath = application.submittedAt.slice(0, 10);
+    const key = `access-applications/by-request/${sideEffectKey}.json`;
+    if (typeof env.FRETTRACK_APP_ASSETS.head === 'function') {
+      const existing = await env.FRETTRACK_APP_ASSETS.head(key);
+      if (existing) {
+        return { warning: '' };
+      }
+    }
     await env.FRETTRACK_APP_ASSETS.put(
-      `access-applications/${datePath}/${id}.json`,
+      key,
       JSON.stringify(application, null, 2),
       {
         httpMetadata: {
@@ -2049,6 +2057,27 @@ async function archiveAccessApplication(application, env) {
       warning: 'Application saved, but the backup archive step failed. Check Worker logs.'
     };
   }
+}
+
+async function createAccessApplicationFingerprint(application) {
+  return sha256Hex(JSON.stringify({
+    email: application.email,
+    name: application.name,
+    state: application.state,
+    shopName: application.shopName,
+    teamSize: application.teamSize,
+    currentTracking: application.currentTracking
+  }));
+}
+
+function getAccessApplicationSideEffectKey(applicationResult, fallbackFingerprint) {
+  const requestId = cleanText(applicationResult?.requestId || '', 80);
+  return /^[0-9a-f-]{32,80}$/i.test(requestId) ? requestId : fallbackFingerprint;
+}
+
+async function sha256Hex(value) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(value)));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 async function serveAsset(pathname, env) {
