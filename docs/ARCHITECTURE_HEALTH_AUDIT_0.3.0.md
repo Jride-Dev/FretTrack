@@ -16,7 +16,7 @@ The 0.3.0 work deliberately established safe presentation and routing boundaries
 | Establish the workspace router boundary | Complete | `WorkspaceRouter.jsx`, `useWorkspaceNavigation.js`, persisted restoration, lazy page loading, and shared specialist navigation are shipped. |
 | Add browser smoke coverage | Complete | CI runs 29 Playwright tests across public print documents, authenticated US/UK shops, Shop/Pro gates, Guitar, Amplifier, Keyboard, work notes, and Scheduled Email. |
 | Reduce diff-dependent checks | In progress, not a release blocker | Executable Node and Playwright regressions now cover high-risk behavior; some older source and scope checks remain. |
-| Add linting | Scheduled for 0.3.1 | ESLint will be introduced after release so baseline cleanup cannot destabilize the release candidate. |
+| Add linting | Complete | `eslint.config.js`, a reviewed baseline, and CI enforcement are now in place for the JavaScript app and maintainer scripts. |
 
 ## Current pressure points
 
@@ -25,13 +25,13 @@ Approximate release-branch sizes:
 | File | Lines | Next boundary |
 | --- | ---: | --- |
 | `src/styles.css` | 6,446 | Shared foundations plus module-owned styles |
-| `src/app/App.jsx` | 1,738 | Application data orchestration and domain hooks |
-| `src/modules/jobs/jobService.js` | 1,661 | Mapping, queries, mutations, and child synchronization |
-| `src/modules/jobs/JobDetail.jsx` | 1,385 | Focused state/action hooks and thinner orchestration |
-| `src/modules/inventory/inventoryService.js` | 1,286 | Parts, vendors, purchase orders, receiving, and specialist purchasing |
+| `src/app/App.jsx` | 1,355 | Remaining application data and mutation orchestration |
+| `src/modules/jobs/jobService.js` | 1,624 | Remaining reads and parent mutations behind compatibility exports |
+| `src/modules/jobs/JobDetail.jsx` | 1,142 | Focused state/action hooks and thinner orchestration |
+| `src/modules/inventory/inventoryService.js` | 149 | Compatibility facade over focused inventory services |
 | `src/modules/inventory/InventoryPage.jsx` | 953 | Remaining controller state and mutation coordination |
 
-Inventory presentation was reduced from roughly 1,619 lines to 953. Job Detail presentation was reduced from roughly 1,584 lines to 1,385 while gaining isolated print boundaries and specialist routing. `jobService.js`, `inventoryService.js`, and global CSS grew as product behavior expanded, making them the correct post-release targets.
+Inventory presentation was reduced from roughly 1,619 lines to 953. Job Detail presentation was reduced from roughly 1,584 lines to 1,142 while gaining isolated print boundaries and specialist routing. The inventory service is now a 149-line compatibility facade over focused catalog, purchasing, receiving, and history modules. `App.jsx`, the remaining job-service reads and mutations, and global CSS are the next concentration points.
 
 ## Shipped boundaries
 
@@ -49,12 +49,20 @@ Inventory presentation was reduced from roughly 1,619 lines to 953. Job Detail p
 
 ## 0.3.1 maintainability sequence
 
-1. Add ESLint with JavaScript, React, React Hooks, and import rules. Establish a reviewed baseline before making it a required CI gate.
+1. ESLint baseline is established with JavaScript, React, React Hooks, and import rules. Keep the baseline narrow while the first extraction slices land.
 2. Split `jobService.js` behind its current exports. Move pure mapping first, then reads, parent mutations, and child synchronization.
 3. Split `inventoryService.js` by parts, vendors, purchasing, receiving, and specialist-bridge operations.
 4. Extract domain data hooks from `App.jsx` and action/state hooks from `JobDetail.jsx` one tested slice at a time.
 5. Move CSS incrementally into shared foundations and module styles while preserving current rendering and print media behavior.
 6. Replace remaining source-text checks with unit, component, database, or browser behavior tests where the behavior can be exercised deterministically.
+
+The release-version bump stays deferred until the maintainability slices are merged and the new boundaries remain green in CI.
+
+The first job-service extraction slice is already in motion behind compatibility exports: job normalization and child synchronization helpers now live in focused modules while the facade remains stable.
+
+The first inventory-service extraction slice is also in motion behind compatibility exports: inventory normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while the facade remains stable.
+
+The first `App.jsx` extractions are complete: access/status panels and pure runtime helpers now live in `AppAccessPanels.jsx` and `appRuntimeHelpers.js`, while offline connectivity, local-draft loading, sync, retry, duplicate recovery, and discard behavior live in `useOfflineDraftQueue.js`. The app shell is smaller while retaining its existing permission, billing, shop-selection, and offline-intake behavior.
 
 The compatibility facades stay in place during extraction. No broad rewrite, no schema change solely for code organization, and no mixing behavioral feature work into structural PRs.
 

@@ -23,7 +23,7 @@ const allMigrations = readdirSync(join(root, 'supabase/migrations'))
   .sort()
   .map((file) => read(`supabase/migrations/${file}`))
   .join('\n');
-const inventoryService = read('src/modules/inventory/inventoryService.js');
+const inventoryReceivingService = read('src/modules/inventory/inventoryServiceReceiving.js');
 const transactionService = read('src/services/transactionService.js');
 const betaService = read('src/modules/beta/betaAccessService.js');
 const operatorService = read('src/modules/operator/operatorService.js');
@@ -133,8 +133,8 @@ assertIncludes(membershipService, "supabase.rpc('get_current_user_shop_membershi
 assertIncludes(operatorService, "supabase.rpc('is_current_operator')", 'Operator status must use the operator RPC.');
 assertIncludes(operatorService, "supabase.rpc('get_beta_operator_dashboard')", 'Operator dashboard must call the guarded dashboard RPC.');
 
-assertIncludes(inventoryService, "supabase.rpc('add_inventory_part_to_job'", 'Inventory job-part add must use the guarded RPC.');
-assertIncludes(inventoryService, "supabase.rpc('update_inventory_job_part_quantity'", 'Inventory quantity edit must use the guarded RPC.');
+assertIncludes(inventoryReceivingService, "supabase.rpc('add_inventory_part_to_job'", 'Inventory job-part add must use the guarded RPC.');
+assertIncludes(inventoryReceivingService, "supabase.rpc('update_inventory_job_part_quantity'", 'Inventory quantity edit must use the guarded RPC.');
 assertIncludes(securityMigration, 'if auth.uid() is null then', 'Mutating RPCs must require an authenticated session.');
 assertIncludes(securityMigration, 'if safe_quantity < 1 or safe_quantity > 9999 then', 'Inventory RPCs must bound quantity.');
 assertIncludes(securityMigration, 'not private.can_write_job(p_job_id)', 'Inventory add must enforce job write permission.');

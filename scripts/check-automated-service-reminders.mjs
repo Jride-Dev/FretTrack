@@ -40,7 +40,7 @@ includes(migration, "grant execute on function public.claim_due_service_reminder
 assert.ok(!migration.includes('grant execute on function public.claim_due_service_reminders(uuid, integer) to authenticated'), 'Authenticated clients must not claim reminder deliveries.');
 includes(migration, "cron.schedule('frettrack-service-reminders-nightly'", 'The migration must register one named nightly job.');
 includes(migration, "frettrack_function_key", 'Cron must load its shared function key from Vault.');
-assert.ok(!/RESEND_API_KEY\s*[:=]\s*['\"][^'\"]+/i.test(migration), 'Provider secrets must not be stored in the migration.');
+assert.ok(!/RESEND_API_KEY\s*[:=]\s*['"][^'"]+/i.test(migration), 'Provider secrets must not be stored in the migration.');
 
 includes(edge, "request.headers.get('x-frettrack-key')", 'The nightly Edge Function must authenticate the Cron request.');
 includes(edge, ".rpc('claim_due_service_reminders'", 'The Edge Function must claim durable queue rows.');

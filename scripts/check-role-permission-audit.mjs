@@ -18,6 +18,7 @@ function assertMatches(value, pattern, message) {
 const helpers = source('src/modules/auth/permissionService.js');
 const app = source('src/app/App.jsx');
 const appAccess = source('src/app/appAccess.js');
+const appAccessPanels = source('src/app/AppAccessPanels.jsx');
 const workspaceRouter = source('src/app/WorkspaceRouter.jsx');
 const workspaceNavigation = source('src/app/useWorkspaceNavigation.js');
 const inventory = source('src/modules/inventory/InventoryPage.jsx');
@@ -26,7 +27,6 @@ const scheduling = source('src/modules/scheduling/SchedulingPage.jsx');
 const scheduleEventDetails = source('src/modules/scheduling/ScheduleEventDetailsDialog.jsx');
 const customerManager = source('src/modules/customers/CustomerManager.jsx');
 const jobDetail = source('src/modules/jobs/JobDetail.jsx');
-const currentAccessPanel = app.slice(app.indexOf('function InternalCurrentAccessPanel'));
 
 for (const helperName of [
   'canAccessOperatorDashboard',
@@ -84,6 +84,6 @@ assertIncludes(scheduleEventDetails, 'const canReopen = canWrite', 'Schedule reo
 assertIncludes(customerManager, 'canWrite && <button type="button" className="primary-action"', 'Customer creation must remain guarded.');
 assertIncludes(jobDetail, "throw new Error('Your shop role is read-only.')", 'Job save path must reject read-only writes.');
 assertIncludes(jobDetail, 'canWrite={canWrite}', 'Job Detail child sections must receive write state.');
-assertIncludes(currentAccessPanel, 'if (!canAccessOperatorDashboard({ isOperator }))', 'Current Access panel must stay operator-only.');
+assertIncludes(appAccessPanels, 'if (!canAccessOperatorDashboard({ isOperator }))', 'Current Access panel must stay operator-only.');
 
 console.log('Role permission audit checks passed.');

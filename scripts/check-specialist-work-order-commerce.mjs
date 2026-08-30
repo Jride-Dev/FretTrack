@@ -18,7 +18,7 @@ const amplifierDetail = read('src/modules/amplifiers/AmplifierJobDetail.jsx');
 const keyboardWorkflow = read('src/modules/keyboards/KeyboardWorkflowPanel.jsx');
 const keyboardDetail = read('src/modules/keyboards/KeyboardJobDetail.jsx');
 const purchasingPanel = read('src/modules/inventory/SpecialistPurchasingPanel.jsx');
-const inventoryService = read('src/modules/inventory/inventoryService.js');
+const inventoryPurchasingService = read('src/modules/inventory/inventoryServicePurchasing.js');
 const purchasingMigration = read('supabase/migrations/20260822033718_specialist_purchasing_bridge.sql');
 const styles = read('src/styles.css');
 
@@ -55,8 +55,8 @@ assert.match(purchasingPanel, /submitLockRef\.current[\s\S]*?requestKeyRef\.curr
 assert.match(purchasingPanel, /createSpecialistPurchaseOrder[\s\S]*?fulfillSpecialistPurchaseOrderItem/, 'Specialist purchasing must separate ordering from explicit billing fulfillment.');
 assert.match(purchasingPanel, /fulfillSpecialistPurchaseOrderItem\(item\.id\)[\s\S]*?await onInventoryPartAdded\?\.\(jobPart\)/, 'Fulfillment must wait for parent billing state synchronization before reporting success.');
 assert.match(purchasingPanel, /Open Inventory & Receiving/, 'Specialist benches must retain a clear route into normal receiving.');
-assert.match(inventoryService, /rpc\('create_specialist_purchase_order'/, 'Specialist PO creation must use the atomic database operation.');
-assert.match(inventoryService, /rpc\('fulfill_specialist_purchase_order_item'/, 'Specialist fulfillment must use the idempotent database operation.');
+assert.match(inventoryPurchasingService, /rpc\('create_specialist_purchase_order'/, 'Specialist PO creation must use the atomic database operation.');
+assert.match(inventoryPurchasingService, /rpc\('fulfill_specialist_purchase_order_item'/, 'Specialist fulfillment must use the idempotent database operation.');
 assert.match(purchasingMigration, /specialist_request_key[\s\S]*?create unique index purchase_order_items_specialist_request_key_uidx/, 'Database idempotency must be enforced by a unique request key.');
 assert.match(purchasingMigration, /pg_advisory_xact_lock[\s\S]*?hashtextextended\(p_request_key::text, 0\)[\s\S]*?where specialist_request_key = p_request_key/, 'Concurrent retries must serialize by request key before the replay lookup.');
 assert.match(purchasingMigration, /private\.can_write_job[\s\S]*?private\.shop_has_entitlement/, 'The database bridge must recheck job write access and the Pro specialist entitlement.');

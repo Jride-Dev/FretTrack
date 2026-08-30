@@ -162,7 +162,7 @@ assert.match(detail, /disabled=\{!canWrite\}/, 'Keyboard fields must enforce rea
 assert.match(detail, /window\.confirm\('You have unsaved keyboard repair changes\./, 'Keyboard detail must protect dirty navigation.');
 assert.match(detail, /onUpdate\?\.\(draft, \{ expectedUpdatedAt: draft\.updatedAt \}\)/, 'Keyboard saves must submit the loaded version.');
 assert.match(jobService, /\.eq\('updated_at', expectedUpdatedAt\)/, 'Keyboard persistence must atomically compare the loaded version.');
-assert.match(jobService, /const remotePayload = toDbJob\(newJob, \{ includeAssignment: true \}\);[\s\S]*?remotePayload\.job_number = '';[\s\S]*?create_job_with_number/, 'Hosted job creation must let PostgreSQL assign the final job number so concurrent repair intakes cannot claim the same browser preview.');
+assert.match(jobService, /const remotePayload = toDbJobFromModule\(newJob, \{ includeAssignment: true \}\);[\s\S]*?remotePayload\.job_number = '';[\s\S]*?create_job_with_number/, 'Hosted job creation must let PostgreSQL assign the final job number so concurrent repair intakes cannot claim the same browser preview.');
 assert.doesNotMatch(detail, /NeckInspection|DamageMap|String Count|String Gauges/, 'Keyboard detail must not render guitar inspection controls.');
 
 assert.match(migration, /\('shop', 'keyboard_repair', 'false'::jsonb\)[\s\S]*?\('pro', 'keyboard_repair', 'true'::jsonb\)/, 'The database plan matrix must reserve Keyboard Repair for Pro.');

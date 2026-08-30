@@ -26,6 +26,7 @@ function functionBody(sql, name) {
 const permissionService = read('src/modules/auth/permissionService.js');
 const app = read('src/app/App.jsx');
 const appAccess = read('src/app/appAccess.js');
+const appAccessPanels = read('src/app/AppAccessPanels.jsx');
 const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
 const workspaceNavigation = read('src/app/useWorkspaceNavigation.js');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
@@ -53,7 +54,7 @@ assertIncludes(appAccess, 'canEditSchedulingForRole(permissionContext)', 'Schedu
 assertIncludes(appAccess, 'canEditCustomersForRole(permissionContext)', 'Customer writes must use permission service.');
 assertIncludes(app, 'getAppAccess({ membership, billingAccess, betaApproved, hasSupabaseConfig })', 'App must use the centralized derived access boundary.');
 assertIncludes(app, '<InternalCurrentAccessPanel', 'Internal access panel should be wired into app shell.');
-assertIncludes(app, 'if (!canAccessOperatorDashboard({ isOperator }))', 'Internal access panel must be operator-only.');
+assertIncludes(appAccessPanels, 'if (!canAccessOperatorDashboard({ isOperator }))', 'Internal access panel must be operator-only.');
 
 assertIncludes(jobDetail, 'canUploadPhotos = canWrite', 'JobDetail should accept upload permission.');
 assertIncludes(jobDetail, 'canEditPhotos = canWrite', 'JobDetail should accept edit permission.');

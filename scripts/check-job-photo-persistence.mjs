@@ -25,6 +25,7 @@ function assertNotMatches(source, pattern, fileName, message) {
 const photoUrls = readFile('src/modules/photos/photoUrls.js');
 const photoService = readFile('src/modules/photos/photoService.js');
 const jobService = readFile('src/modules/jobs/jobService.js');
+const jobNormalization = readFile('src/modules/jobs/jobServiceNormalization.js');
 const photoGallery = readFile('src/modules/photos/PhotoGallery.jsx');
 const damageMap = readFile('src/components/DamageMap.js');
 
@@ -60,20 +61,21 @@ assertNotMatches(
   'job image database writes must not persist temporary display URLs.'
 );
 
-assertIncludes(jobService, 'sanitizeJobForPersistence', 'jobService.js');
-assertIncludes(jobService, 'sanitizeTechDetailsForPersistence', 'jobService.js');
-assertIncludes(jobService, 'sanitizeDamageMapForPersistence', 'jobService.js');
-assertIncludes(jobService, 'sanitizeJobForPersistence(normalizeJob(job))', 'jobService.js');
-assertIncludes(jobService, 'url: storagePath ?', 'jobService.js');
-assertIncludes(jobService, 'getJobImageStoragePath({', 'jobService.js');
-assertIncludes(jobService, 'resolveJobImageUrl({', 'jobService.js');
+assertIncludes(jobService, 'sanitizeJobForPersistence as sanitizeJobForPersistenceFromModule', 'jobService.js');
+assertIncludes(jobService, 'sanitizeJobForPersistenceFromModule(normalizeJobFromModule(job))', 'jobService.js');
+assertIncludes(jobNormalization, 'export function sanitizeJobForPersistence', 'jobServiceNormalization.js');
+assertIncludes(jobNormalization, 'export function sanitizeTechDetailsForPersistence', 'jobServiceNormalization.js');
+assertIncludes(jobNormalization, 'export function sanitizeDamageMapForPersistence', 'jobServiceNormalization.js');
+assertIncludes(jobNormalization, 'url: storagePath ?', 'jobServiceNormalization.js');
+assertIncludes(jobNormalization, 'getJobImageStoragePath({', 'jobServiceNormalization.js');
+assertIncludes(jobNormalization, 'resolveJobImageUrl({', 'jobServiceNormalization.js');
 
 assertIncludes(photoGallery, 'getPhotoUnavailableMessage(image)', 'PhotoGallery.jsx');
 assertIncludes(damageMap, 'storagePath: uploadedImage.storagePath ||', 'DamageMap.js');
 assertNotMatches(
-  jobService,
+  jobNormalization,
   /tech_details:\s*\{[\s\S]{0,200}\.\.\.\(job\.techDetails\s*\|\|\s*\{\}\)/,
-  'jobService.js',
+  'jobServiceNormalization.js',
   'tech_details persistence must sanitize damage map photo URLs before database writes.'
 );
 
