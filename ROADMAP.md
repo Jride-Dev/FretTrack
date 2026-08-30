@@ -34,12 +34,14 @@ Known product boundaries:
 
 The first post-release work is deliberate spaghetti reduction without changing product behavior:
 
-1. Add an ESLint baseline for JavaScript, React hooks, import hygiene, and CI enforcement.
+1. ESLint baseline is now in place for JavaScript, React hooks, import hygiene, and CI enforcement.
 2. Split `jobService.js` into mapping, queries, mutations, child synchronization, and compatibility exports.
 3. Split `inventoryService.js` into parts, vendors, purchase orders, receiving, and specialist purchasing operations.
 4. Continue reducing `App.jsx` and `JobDetail.jsx` orchestration through focused hooks and domain controllers.
 5. Begin moving global CSS into shared foundations and module-owned styles without redesigning the interface.
 6. Replace remaining source-text and dirty-diff assertions with executable behavior checks where practical.
+
+The version bump to the next minor release stays deferred until the extraction work is streamlined and the new boundaries hold under CI.
 
 Each extraction must preserve the current facade, permissions, database behavior, and regression suite. No broad rewrite.
 
