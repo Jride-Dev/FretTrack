@@ -1,6 +1,6 @@
 # FretTrack Architecture Overview
 
-Generated for architecture review on 2026-05-11 and retained as a historical module inventory. For the stable 0.3.0 release assessment and the approved 0.3.1 maintainability sequence, use [Architecture Health Audit 0.3.0](docs/ARCHITECTURE_HEALTH_AUDIT_0.3.0.md).
+Generated for architecture review on 2026-05-11 and retained as a historical module inventory. For current status, use [Architecture Health Audit 0.3.1](docs/ARCHITECTURE_HEALTH_AUDIT_0.3.1.md); the [0.3.0 audit](docs/ARCHITECTURE_HEALTH_AUDIT_0.3.0.md) remains the launch baseline.
 
 ## 1. Current Module Structure
 

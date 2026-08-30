@@ -17,7 +17,7 @@ function assertMatches(value, pattern, message) {
 }
 
 const damageMap = source('src/components/DamageMap.js');
-const styles = source('src/styles.css');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css'].map(source).join('\n');
 const printDamageMapFigure = source('src/modules/print/PrintDamageMapFigure.jsx');
 const emailDocuments = source('src/modules/jobs/emailDocuments.js');
 const packageJson = source('package.json');

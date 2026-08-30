@@ -1,18 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
-import { calculateJobTotals } from '../billing/accounting';
-import { getShopDefaultTaxRate, resolveJobTaxSettings } from '../billing/jobTaxSettings';
-import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
+import { getShopDefaultTaxRate } from '../billing/jobTaxSettings';
 import { formatMeasurementChange } from '../../shared/utils/measurements';
-import { getShopDateOptions, getShopMeasurementOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
 import {
   formatInstrumentLabel,
-  getInstrumentStringCount,
-  getOuterStringLabels,
   normalizeInstrumentType
 } from '../instruments/instrumentService';
 import { getJobEvents } from './jobEventsService';
-import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
 import { mergeUploadedJobImages } from '../photos/photoState.js';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
@@ -27,10 +21,6 @@ import JobDetailShell from './JobDetailShell.jsx';
 import { cancelPrintRequests } from '../print/printRequestCoordinator.js';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import {
-  buildAddPaymentJob,
-  buildAddInventoryPartJob,
-  buildAddManualPartPatch,
-  buildAddServicePatch,
   buildAppendImagePreviewsJob,
   buildAssignmentJob,
   buildDamageMapJob,
@@ -39,11 +29,7 @@ import {
   buildJobFieldPatch,
   buildMeasurementDisplay,
   buildNeckInspectionPatch,
-  buildRemoveManualPartPatch,
   buildRemoveImageJob,
-  buildRemoveInventoryPartJob,
-  buildRemovePaymentJob,
-  buildRemoveServicePatch,
   buildShopTaxRatePatch,
   buildStringCountPatch,
   buildStringGaugePatch,
@@ -51,14 +37,13 @@ import {
   buildTaxFieldPatch,
   buildTechFieldPatch,
   buildUnlinkCustomerPatch,
-  buildUpdateInventoryPartQuantityJob,
-  buildUpdateManualPartPatch,
-  buildUpdatePaymentJob,
-  buildUpdateServicePatch,
   buildWorkOrderImageIdsPatch,
   findNewDamageViewImage
 } from './jobDetailFormatting.js';
 import { createJobDetailCommunicationActions } from './jobDetailCommunicationActions.js';
+import useJobDetailBillingActions from './useJobDetailBillingActions.js';
+import useJobDetailDerivedState from './useJobDetailDerivedState.js';
+import useJobInventoryParts from './useJobInventoryParts.js';
 import {
   appendWorkLogDraft,
   buildRemoveWorkLogEntryJob,
@@ -111,9 +96,6 @@ function JobDetailWorkspace({
   const [saveStatus, setSaveStatus] = useState('saved');
   const [workLogText, setWorkLogText] = useState('');
   const [isSavingWorkLog, setIsSavingWorkLog] = useState(false);
-  const [part, setPart] = useState({ name: '', quantity: '1', cost: '', retail: '' });
-  const [service, setService] = useState({ description: '', quantity: '1', cost: '', retail: '' });
-  const [payment, setPayment] = useState({ amount: '', type: 'payment', method: 'Cash', note: '', date: toIsoDateInputValue() });
   const [imageImportErrors, setImageImportErrors] = useState([]);
   const [imageOptimizationNotices, setImageOptimizationNotices] = useState([]);
   const [isImportingImages, setIsImportingImages] = useState(false);
@@ -123,11 +105,7 @@ function JobDetailWorkspace({
   const [documentEmailDraft, setDocumentEmailDraft] = useState(null);
   const [photoEditorImage, setPhotoEditorImage] = useState(null);
   const [isSavingEditedPhoto, setIsSavingEditedPhoto] = useState(false);
-  const [inventorySearch, setInventorySearch] = useState('');
-  const [inventoryParts, setInventoryParts] = useState([]);
-  const [isInventoryLoading, setIsInventoryLoading] = useState(false);
   const imageImportInputRef = useRef(null);
-  const paymentAutosaveTimeoutRef = useRef(null);
   const activeJobIdRef = useRef(job.id);
   const hydratedJobIdRef = useRef(job.id);
   const workLogSavePromiseRef = useRef(null);
@@ -193,7 +171,6 @@ function JobDetailWorkspace({
   useEffect(() => {
     return () => {
       cancelPrintRequests(printRequestSequenceRef, document.body);
-      window.clearTimeout(paymentAutosaveTimeoutRef.current);
     };
   }, []);
 
@@ -205,30 +182,22 @@ function JobDetailWorkspace({
     return () => window.removeEventListener('afterprint', cleanupPrintMode);
   }, []);
 
-  const parts = draftJob.parts || [];
-  const services = draftJob.services || draftJob.labor || [];
-  const images = draftJob.images || [];
-  const workOrderImageIds = draftJob.techDetails.workOrderImageIds || [];
-  const workOrderImages = images.filter((image) => workOrderImageIds.includes(image.id));
-  const shopSettings = shopProfile || getShopSettings();
-  const taxSettings = resolveJobTaxSettings(draftJob, shopSettings);
-  const payments = draftJob.techDetails.payments || [];
-  const instrumentStringCount = getInstrumentStringCount(draftJob);
-  const outerStringLabels = getOuterStringLabels(draftJob.instrumentType, instrumentStringCount);
-  const measurementOptions = getShopMeasurementOptions(shopSettings);
-
-  const totals = useMemo(
-    () => calculateJobTotals(draftJob, taxSettings),
-    [draftJob, taxSettings.salesTaxRate, taxSettings.taxableParts, taxSettings.taxableServices]
-  );
-  const dateOptions = getShopDateOptions({
-    dateFormat: taxSettings.dateFormat || shopSettings.dateFormat,
-    locale: taxSettings.locale || shopSettings.locale
-  });
-  const moneyOptions = getShopMoneyOptions({
-    currencyCode: taxSettings.currencyCode || shopSettings.currencyCode,
-    locale: taxSettings.locale || shopSettings.locale
-  });
+  const {
+    dateOptions,
+    images,
+    instrumentStringCount,
+    measurementOptions,
+    moneyOptions,
+    outerStringLabels,
+    parts,
+    payments,
+    services,
+    shopSettings,
+    taxSettings,
+    totals,
+    workOrderImageIds,
+    workOrderImages
+  } = useJobDetailDerivedState(draftJob, shopProfile);
   const communicationActions = createJobDetailCommunicationActions({
     canWrite,
     canSendEmail,
@@ -424,56 +393,26 @@ function JobDetailWorkspace({
     setDraftJob((current) => buildNeckInspectionPatch(current, stage, fieldOrPatch, value));
   }
 
-  async function savePaymentChange(nextJob, { immediate = false } = {}) {
-    if (!canWrite) {
-      return;
-    }
-    window.clearTimeout(paymentAutosaveTimeoutRef.current);
-    setDraftJob(nextJob);
-    setIsDirty(true);
-
-    if (immediate) {
-      await saveDraftNow(nextJob).catch(() => {});
-      return;
-    }
-
-    paymentAutosaveTimeoutRef.current = window.setTimeout(() => {
-      saveDraftNow(nextJob).catch(() => {});
-    }, 700);
-  }
-
-  function addPayment(event) {
-    event.preventDefault();
-    if (!canWrite) {
-      return;
-    }
-    if (!Number(payment.amount)) {
-      return;
-    }
-
-    const nextJob = buildAddPaymentJob(draftJob, payment, crypto.randomUUID());
-
-    savePaymentChange(nextJob, { immediate: true });
-    setPayment({ amount: '', type: 'payment', method: 'Cash', note: '', date: toIsoDateInputValue() });
-  }
-
-  function updatePayment(paymentId, field, value) {
-    if (!canWrite) {
-      return;
-    }
-    const nextJob = buildUpdatePaymentJob(draftJob, paymentId, field, value);
-
-    savePaymentChange(nextJob);
-  }
-
-  function removePayment(paymentId) {
-    if (!canWrite) {
-      return;
-    }
-    const nextJob = buildRemovePaymentJob(draftJob, paymentId);
-
-    savePaymentChange(nextJob, { immediate: true });
-  }
+  const {
+    addPayment,
+    addService,
+    payment,
+    removePayment,
+    removeService,
+    service,
+    setPayment,
+    setService,
+    updatePayment,
+    updateService
+  } = useJobDetailBillingActions({
+    canWrite,
+    draftJob,
+    patchJob,
+    saveDraftNow,
+    services,
+    setDraftJob,
+    setIsDirty
+  });
 
   function exportJobJson() {
     const payload = {
@@ -595,189 +534,30 @@ function JobDetailWorkspace({
     }
   }
 
-  function addPart(event) {
-    event.preventDefault();
-    if (!canWrite) {
-      return;
-    }
-    if (!part.name.trim()) {
-      return;
-    }
-    patchJob(buildAddManualPartPatch(draftJob, parts, part, crypto.randomUUID()));
-    setPart({ name: '', quantity: '1', cost: '', retail: '' });
-  }
-
-  async function searchInventoryParts(event) {
-    event.preventDefault();
-    setIsInventoryLoading(true);
-    try {
-      const loadedParts = await listInventoryParts(draftJob.shopId, {
-        search: inventorySearch,
-        activeOnly: true
-      });
-      setInventoryParts(loadedParts);
-    } catch (error) {
-      console.error('Inventory search failed.', error);
-      window.alert(error.message || 'Inventory search failed.');
-    } finally {
-      setIsInventoryLoading(false);
-    }
-  }
-
-  async function addInventoryPart(inventoryPart, quantity = 1) {
-    if (!canWrite) {
-      return;
-    }
-    const requestedQuantity = Math.max(Number(quantity || 1), 1);
-    if (inventoryPart.quantityOnHand < requestedQuantity) {
-      const confirmed = window.confirm(`${inventoryPart.name} only has ${inventoryPart.quantityOnHand} on hand. Add ${requestedQuantity} anyway?`);
-      if (!confirmed) {
-        return;
-      }
-    }
-
-    let jobForInventory = draftJob;
-    if (isDirty) {
-      try {
-        jobForInventory = (await saveDraftNow()) || draftJob;
-      } catch (error) {
-        window.alert(error.message || 'Save the job before adding inventory.');
-        return;
-      }
-    }
-
-    try {
-      const jobPart = await addPartToJob(jobForInventory.id, inventoryPart.id, requestedQuantity);
-      const nextJob = buildAddInventoryPartJob(jobForInventory, jobPart);
-      setDraftJob(nextJob);
-      setIsDirty(false);
-      refreshTimelineEvents();
-      if (onRefresh) {
-        await onRefresh();
-      }
-      setInventoryParts((current) => current.map((partRow) => (
-        partRow.id === inventoryPart.id
-          ? { ...partRow, quantityOnHand: partRow.quantityOnHand - requestedQuantity }
-          : partRow
-      )));
-    } catch (error) {
-      console.error('Add inventory part failed.', error);
-      window.alert(error.message || 'Unable to add inventory part.');
-    }
-  }
-
-  async function updatePart(partId, field, value) {
-    if (!canWrite) {
-      return;
-    }
-    const editedPart = parts.find((row) => row.id === partId);
-    if (field === 'quantity' && editedPart?.partId) {
-      const requestedQuantity = Math.max(Number(value || 1), 1);
-      if (requestedQuantity > Number(editedPart.quantity || 1)) {
-        const additionalQuantity = requestedQuantity - Number(editedPart.quantity || 1);
-        const inventoryPart = inventoryParts.find((row) => row.id === editedPart.partId);
-        if (inventoryPart && inventoryPart.quantityOnHand < additionalQuantity) {
-          const confirmed = window.confirm(`${editedPart.name} only has ${inventoryPart.quantityOnHand} additional on hand. Save quantity ${requestedQuantity} anyway?`);
-          if (!confirmed) {
-            return;
-          }
-        }
-      }
-
-      if (isDirty) {
-        try {
-          await saveDraftNow();
-        } catch (error) {
-          window.alert(error.message || 'Save the job before changing inventory quantity.');
-          return;
-        }
-      }
-
-      try {
-        const updatedJobPart = await updateInventoryJobPartQuantity(partId, requestedQuantity);
-        setDraftJob((current) => buildUpdateInventoryPartQuantityJob(current, parts, partId, updatedJobPart));
-        setIsDirty(false);
-        setInventoryParts((current) => current.map((row) => (
-          row.id === editedPart.partId
-            ? { ...row, quantityOnHand: row.quantityOnHand - (requestedQuantity - Number(editedPart.quantity || 1)) }
-            : row
-        )));
-        refreshTimelineEvents();
-        if (onRefresh) {
-          await onRefresh();
-        }
-      } catch (error) {
-        console.error('Inventory quantity update failed.', error);
-        window.alert(error.message || 'Unable to update inventory quantity.');
-      }
-      return;
-    }
-
-    patchJob(buildUpdateManualPartPatch(draftJob, parts, partId, field, value));
-  }
-
-  async function removePart(partId) {
-    if (!canWrite) {
-      return;
-    }
-    const removedPart = parts.find((row) => row.id === partId);
-    if (removedPart?.partId) {
-      const confirmed = window.confirm(`Remove ${removedPart.name} from this job and return it to inventory?`);
-      if (!confirmed) {
-        return;
-      }
-      if (isDirty) {
-        try {
-          await saveDraftNow();
-        } catch (error) {
-          window.alert(error.message || 'Save the job before removing inventory.');
-          return;
-        }
-      }
-      try {
-        await removeJobPart(partId);
-        const nextJob = buildRemoveInventoryPartJob(draftJob, parts, partId);
-        setDraftJob(nextJob);
-        setIsDirty(false);
-        refreshTimelineEvents();
-        if (onRefresh) {
-          await onRefresh();
-        }
-      } catch (error) {
-        console.error('Remove inventory part failed.', error);
-        window.alert(error.message || 'Unable to remove inventory part.');
-      }
-      return;
-    }
-
-    patchJob(buildRemoveManualPartPatch(draftJob, parts, partId));
-  }
-
-  function addService(event) {
-    event.preventDefault();
-    if (!canWrite) {
-      return;
-    }
-    if (!service.description.trim()) {
-      return;
-    }
-    patchJob(buildAddServicePatch(draftJob, services, service, crypto.randomUUID()));
-    setService({ description: '', quantity: '1', cost: '', retail: '' });
-  }
-
-  function updateService(serviceId, field, value) {
-    if (!canWrite) {
-      return;
-    }
-    patchJob(buildUpdateServicePatch(services, serviceId, field, value));
-  }
-
-  function removeService(serviceId) {
-    if (!canWrite) {
-      return;
-    }
-    patchJob(buildRemoveServicePatch(services, serviceId));
-  }
+  const {
+    addInventoryPart,
+    addPart,
+    inventoryParts,
+    inventorySearch,
+    isInventoryLoading,
+    part,
+    removePart,
+    searchInventoryParts,
+    setInventorySearch,
+    setPart,
+    updatePart
+  } = useJobInventoryParts({
+    canWrite,
+    draftJob,
+    isDirty,
+    onRefresh,
+    parts,
+    patchJob,
+    refreshTimelineEvents,
+    saveDraftNow,
+    setDraftJob,
+    setIsDirty
+  });
 
   async function handleImageChange(event) {
     const files = Array.from(event.target.files || []);

@@ -12,7 +12,7 @@ const currentJobStatus = source('src/modules/jobs/currentJobStatus.js');
 const app = source('src/app/App.jsx');
 const workspaceRouter = source('src/app/WorkspaceRouter.jsx');
 const newJobSidebar = source('src/app/NewJobSidebar.jsx');
-const styles = source('src/styles.css');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css'].map(source).join('\n');
 
 assert.ok(page.includes('<h2>Current Jobs</h2>'), 'Full Current Jobs page must exist.');
 assert.ok(compactList.includes('className="panel current-jobs-summary"'), 'Compact Current Jobs must use a summary-specific container.');

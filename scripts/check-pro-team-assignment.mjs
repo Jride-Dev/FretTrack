@@ -44,7 +44,7 @@ const compactJobs = read('src/modules/jobs/JobList.jsx');
 const workload = read('src/modules/shops/TeamWorkloadSummary.jsx');
 const entitlementService = read('src/modules/billing/entitlementService.js');
 const permissionService = read('src/modules/auth/permissionService.js');
-const styles = read('src/styles.css');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css'].map(read).join('\n');
 const docs = read('docs/PRO_TEAM_ASSIGNMENT_FOUNDATION.md');
 
 assert.match(migration, /add column if not exists assigned_member_id uuid[\s\S]*references public\.shop_members\(id\) on delete set null/i, 'Jobs must persist an optional membership relationship.');

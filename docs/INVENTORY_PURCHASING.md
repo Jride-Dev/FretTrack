@@ -1,8 +1,8 @@
 # Inventory Purchasing Notes
 
-## Current 0.3.0 Scope
+## Current 0.3.1 Scope
 
-Current inventory documentation covers the purchasing and specialist-workflow foundation included in stable 0.3.0:
+Current inventory documentation covers the purchasing and specialist-workflow foundation included in stable 0.3.1:
 
 - parts catalog, stock counts, reorder levels, low-stock visibility, and job-part usage/returns
 - shop-scoped vendors with Company/Sales Rep labels, address fields, and Online Only behavior

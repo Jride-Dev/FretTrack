@@ -1,11 +1,11 @@
-# FretTrack v0.3.0 Release Validation Checklist
+# FretTrack v0.3.1 Release Validation Checklist
 
 Use this checklist for the stable Operational Shop Release. It supplements automated CI and does not authorize a production migration or deployment by itself.
 
 ## Repository and configuration
 
 1. Confirm the release branch starts from current `main` and contains no unrelated files.
-2. Confirm package metadata, in-app version, changelog, release notes, roadmap, public docs, and release checks all identify stable `0.3.0`.
+2. Confirm package metadata, in-app version, changelog, release notes, roadmap, public docs, and release checks all identify stable `0.3.1`.
 3. Confirm no customer-facing page advertises a pre-release testing program.
 4. Run `git diff --check` and `npm audit --audit-level=moderate`.
 5. Run `npm run check:migrations` and review any local-only migration before remote work.
@@ -39,5 +39,5 @@ Use this checklist for the stable Operational Shop Release. It supplements autom
 4. Deploy the public Cloudflare Worker only if its source or bundled assets changed.
 5. Verify the app, landing page, docs, release notes, Terms, Privacy, Support, and legacy documentation aliases return successfully.
 6. Confirm live asset hashes match the guarded production build.
-7. Tag `v0.3.0` and publish the GitHub release.
+7. Tag `v0.3.1` and publish the GitHub release.
 8. Record deployment identifiers and verification evidence in [Deployment Notes](DEPLOYMENT_NOTES.md).

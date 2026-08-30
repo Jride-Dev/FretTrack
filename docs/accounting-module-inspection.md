@@ -7,7 +7,7 @@ FretTrack already has two money-tracking paths:
 
 The commerce backbone is append-only. `transaction_events`, `payment_events`, and `inventory_movements` have mutation-prevention triggers, and `20260514035528_shop_scope_rls_audit.sql` replaces the original public read policies with authenticated shop-member policies. Transaction creation is guarded by `private.can_write_shop(...)`.
 
-For the stable 0.3.0 accounting module, reports derive from current shop-scoped job data and preserve the event-table direction for later integration. This avoids turning the app into a general ledger while still giving owners clean daily/monthly/yearly summaries, payments by method, tax collected, and open balances.
+For the stable 0.3.1 accounting module, reports derive from current shop-scoped job data and preserve the event-table direction for later integration. This avoids turning the app into a general ledger while still giving owners clean daily/monthly/yearly summaries, payments by method, tax collected, and open balances.
 
 Important constraints carried into implementation:
 

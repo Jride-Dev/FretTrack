@@ -1,6 +1,6 @@
 # Mobile and Tablet Readiness Audit
 
-FretTrack 0.3.0 remains a desktop-first browser app with supported responsive shop workflows on phones and tablets. This audit focused on responsive layout, touch target sizing, and modal behavior.
+FretTrack 0.3.1 remains a desktop-first browser app with supported responsive shop workflows on phones and tablets. This audit focused on responsive layout, touch target sizing, and modal behavior.
 
 ## Tested Widths
 

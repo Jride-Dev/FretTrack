@@ -20,7 +20,7 @@ const keyboardDetail = read('src/modules/keyboards/KeyboardJobDetail.jsx');
 const purchasingPanel = read('src/modules/inventory/SpecialistPurchasingPanel.jsx');
 const inventoryPurchasingService = read('src/modules/inventory/inventoryServicePurchasing.js');
 const purchasingMigration = read('supabase/migrations/20260822033718_specialist_purchasing_bridge.sql');
-const styles = read('src/styles.css');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css'].map(read).join('\n');
 
 assert.match(navigation, /isAmplifierJob\(job\)[\s\S]*?'amplifier-detail'/, 'Amplifier jobs must map to the amplifier repair bench.');
 assert.match(navigation, /isKeyboardJob\(job\)[\s\S]*?'keyboard-detail'/, 'Keyboard jobs must map to the keyboard repair bench.');

@@ -4,10 +4,11 @@ import { resolve } from 'node:path';
 
 const root = process.cwd();
 const read = (file) => readFileSync(resolve(root, file), 'utf8');
-const styles = read('src/styles.css');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css'].map(read).join('\n');
 const documentStyles = read('src/modules/print/PrintStyles.css');
 const jobPrintSheet = read('src/modules/print/PrintJobSheet.jsx');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
+const jobDetailCommunication = read('src/modules/jobs/jobDetailCommunicationActions.js');
 const printActions = read('src/modules/jobs/PrintActions.js');
 const documentEmailDialog = read('src/modules/jobs/JobDocumentEmailDialog.jsx');
 const printStyles = styles.slice(styles.indexOf('@media print'));
@@ -21,7 +22,7 @@ assert.match(jobPrintSheet, /isGuitarFamily[\s\S]*?<GuitarFinalInspection/, 'Gui
 assert.match(jobPrintSheet, /<h2>Invoice summary<\/h2>[\s\S]*?totals\.totalDue[\s\S]*?totals\.paidTotal[\s\S]*?totals\.balanceDue/, 'Job Sheet must retain invoice totals, payments, and balance.');
 assert.match(documentStyles, /body:not\(\.customer-report-printing\) \.print-job-sheet\s*{[\s\S]*display:\s*block !important;[\s\S]*max-width:\s*7\.5in;/, 'Job Sheet must own its print-only Letter layout.');
 assert.match(documentStyles, /\.print-job-sheet-totals\s*{[\s\S]*max-width:\s*3\.45in;/, 'Job Sheet invoice totals must use the isolated financial summary layout.');
-assert.ok(jobDetail.includes('await waitForJobSheetPrintReady();'), 'Job Sheet printing must wait for document images and layout.');
+assert.ok(jobDetailCommunication.includes('await waitForJobSheetPrintReady();'), 'Job Sheet printing must wait for document images and layout.');
 assert.ok(printActions.includes('printJobSheet'), 'Job Sheet print action must remain available.');
 assert.ok(printActions.includes('>Close Detail</button>'), 'The detail-only action must be labeled Close Detail.');
 assert.ok(!printActions.includes('Close Job Detail'), 'The detail-only action must not imply that it closes the job.');

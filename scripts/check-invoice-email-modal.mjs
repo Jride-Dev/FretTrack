@@ -5,7 +5,9 @@ import { join } from 'node:path';
 const root = process.cwd();
 const dialog = readFileSync(join(root, 'src/modules/jobs/JobDocumentEmailDialog.jsx'), 'utf8');
 const communicationActions = readFileSync(join(root, 'src/modules/jobs/jobDetailCommunicationActions.js'), 'utf8');
-const styles = readFileSync(join(root, 'src/styles.css'), 'utf8');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css']
+  .map((file) => readFileSync(join(root, file), 'utf8'))
+  .join('\n');
 
 function assertIncludes(source, expected, message) {
   assert.ok(source.includes(expected), message || `Expected source to include: ${expected}`);

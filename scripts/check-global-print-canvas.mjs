@@ -4,7 +4,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = process.cwd();
-const styles = readFileSync(resolve(root, 'src/styles.css'), 'utf8');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css']
+  .map((file) => readFileSync(resolve(root, file), 'utf8'))
+  .join('\n');
 const documentStyles = readFileSync(resolve(root, 'src/modules/print/PrintStyles.css'), 'utf8');
 const printStart = styles.lastIndexOf('@media print');
 const printStyles = styles.slice(printStart);

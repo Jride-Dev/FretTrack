@@ -1,6 +1,12 @@
 # Release Notes
 
-## GitHub Release Summary: v0.3.0
+## GitHub Release Summary: v0.3.1
+
+FretTrack `0.3.1` is a behavior-preserving maintainability release. The app shell now delegates PWA/theme/sidebar preferences and stale-safe team-member loading to focused hooks. Job Detail delegates derived billing, measurement, payment, and service state to focused hooks. Global CSS is loaded in the same cascade order from smaller foundation, workspace, and feature/detail files.
+
+The Shop and Pro catalog, Stripe lifecycle, trial behavior, permissions, migrations, repair workflows, and customer-facing feature set remain unchanged from `0.3.0`.
+
+## v0.3.0 Operational Shop Release
 
 FretTrack `0.3.0` is the stable Operational Shop Release. Guitar, Amplifier, and Keyboard repair work now use focused bench workspaces while sharing one established commercial workflow for parts, services, payments, messages, scheduling, photos, print documents, and history. Customer and invoice-style documents use isolated print renderers, invalid work orders can be excluded from operational accounting without erasing their audit trail, and production subscription access remains synchronized through Stripe's signed lifecycle.
 

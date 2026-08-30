@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 const source = (path) => readFileSync(join(root, path), 'utf8');
-const expectedVersion = '0.3.0';
+const expectedVersion = '0.3.1';
 
 const packageJson = JSON.parse(source('package.json'));
 const packageLock = JSON.parse(source('package-lock.json'));
@@ -64,7 +64,7 @@ for (const [label, text] of customerFacingSources) {
   for (const pattern of retiredCustomerPhrases) {
     assert.doesNotMatch(text, pattern, `${label} still exposes retired customer wording: ${pattern}`);
   }
-  assert.doesNotMatch(text, /0\.3\.0-(?:alpha|beta|rc)/i, `${label} must expose stable 0.3.0 wording.`);
+  assert.doesNotMatch(text, /0\.3\.1-(?:alpha|beta|rc)/i, `${label} must expose stable 0.3.1 wording.`);
 }
 
 for (const [label, text] of publicReleaseSources) {
@@ -77,7 +77,7 @@ assert.match(landingPage, /AmpTrack and MidiTrack add-on modules(?: that)? are p
 assert.doesNotMatch(landingPage, /testing-checklist|workflow-testing|beta-tester/i);
 assert.match(landingWorker, /\['\/testing-checklist', '\/docs\/release-notes\.html'\]/);
 assert.match(landingWorker, /\['\/docs\/workflow-testing', '\/docs\/release-notes\.html'\]/);
-assert.match(source('cloudflare/frettrack-coming-soon/public/docs.html'), /Current release: v0\.3\.0/);
+assert.match(source('cloudflare/frettrack-coming-soon/public/docs.html'), /Current release: v0\.3\.1/);
 assert.match(source('supabase/functions/notify-beta-approval/index.ts'), /Your FretTrack access is approved/);
 assert.match(source('cloudflare/frettrack-coming-soon/public/docs/release-notes.html'), /AmpTrack and MidiTrack add-on modules(?: that)? are planned later/i);
 assert.match(source('cloudflare/frettrack-coming-soon/public/docs/billing-and-subscriptions.html'), /AmpTrack and MidiTrack add-on modules(?: that)? are planned later/i);

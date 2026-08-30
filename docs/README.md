@@ -1,6 +1,6 @@
 # FretTrack Documentation
 
-Current stable release: `v0.3.0`.
+Current stable release: `v0.3.1`.
 
 Customer-facing help is published at [frettrack-app.com/docs](https://frettrack-app.com/docs). The public site contains the complete how-to guide, topic guides, release notes, support, pricing and subscription information, Terms, and Privacy Policy. Shops do not need GitHub access to use those materials.
 
@@ -8,7 +8,7 @@ Customer-facing help is published at [frettrack-app.com/docs](https://frettrack-
 
 - [Release Notes](RELEASE_NOTES.md)
 - [Roadmap](../ROADMAP.md)
-- [0.3.0 Release Validation Checklist](RELEASE_VALIDATION_CHECKLIST.md)
+- [0.3.1 Release Validation Checklist](RELEASE_VALIDATION_CHECKLIST.md)
 - [Trial and Release Readiness](TRIAL_READINESS.md)
 - [Pricing and Tiers](PRICING_AND_TIERS.md)
 - [Known Issues](../KNOWN_ISSUES.md)
@@ -53,7 +53,7 @@ Customer-facing help is published at [frettrack-app.com/docs](https://frettrack-
 
 ## Architecture and future work
 
-- [0.3.0 Architecture Health Audit](ARCHITECTURE_HEALTH_AUDIT_0.3.0.md)
+- [0.3.1 Architecture Health Audit](ARCHITECTURE_HEALTH_AUDIT_0.3.1.md)
 - [Print Renderer Rebuild Plan](PRINT_RENDERER_REBUILD_PLAN.md)
 - [Offline Continuity Plan](OFFLINE_CONTINUITY_PLAN.md)
 - [Offline Mode Audit](OFFLINE_MODE_AUDIT.md)

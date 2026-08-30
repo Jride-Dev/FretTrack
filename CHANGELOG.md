@@ -1,10 +1,18 @@
 # Changelog
 
-Current version: `0.3.0`
+Current version: `0.3.1`
 
 This file tracks product, reliability, security, and operational changes by release. Historical prerelease labels remain only in their original release records.
 
-## v0.3.0 - Current Stable Release
+## v0.3.1 - Current Stable Release
+
+- Reduced application-shell orchestration by moving PWA installation, theme preferences, sidebar persistence, and stale-safe assignable-member loading into focused hooks.
+- Reduced Job Detail orchestration by moving derived billing/measurement state and payment/service draft actions into focused hooks while retaining existing save and optimistic-concurrency behavior.
+- Split the global stylesheet into ordered foundation, workspace, and feature/detail files without changing selectors, cascade order, responsive rules, or print behavior.
+- Updated focused checks to follow extracted Job Detail owners and removed a dirty-diff scope assertion from email isolation validation so unrelated intentional release files do not create false failures.
+- Retained the established `0.3.0` product, billing, security, migration, and operational boundaries; `0.3.1` is a maintainability release with no plan or schema change.
+
+## v0.3.0 - Operational Shop Release
 
 - Added a focused full-width Guitar Bench that matches the Amplifier and Keyboard workspaces while retaining one shared work-order surface for parts, services, payments, messaging, scheduling, photos, printing, and history.
 - Rebuilt the Customer Service and Condition Report and invoice-style Job Sheet as isolated print documents with image-readiness handling, instrument-appropriate terminology, deterministic layouts, and protection against duplicate or stale print actions.

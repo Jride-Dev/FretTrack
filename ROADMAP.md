@@ -1,6 +1,6 @@
 # FretTrack Roadmap
 
-The current stable release is `v0.3.0`.
+The current stable release is `v0.3.1`.
 
 ## v0.3.0: Operational Shop Release
 
@@ -37,11 +37,11 @@ The first post-release work is deliberate spaghetti reduction without changing p
 1. ESLint baseline is now in place for JavaScript, React hooks, import hygiene, and CI enforcement.
 2. Keep the completed `jobService.js` split stable across mapping, queries, mutations, messaging, child synchronization, and compatibility exports.
 3. Keep the completed `inventoryService.js` split stable across parts, vendors, purchase orders, receiving, specialist purchasing, and history operations.
-4. Continue reducing `App.jsx` and `JobDetail.jsx` orchestration through focused hooks and domain controllers.
-5. Begin moving global CSS into shared foundations and module-owned styles without redesigning the interface.
+4. Continue reducing `App.jsx` and `JobDetail.jsx` orchestration through focused hooks and domain controllers. The first 0.3.1 slice moved app preferences/team loading and Job Detail derived billing/payment/service state into focused hooks.
+5. Keep the global CSS split into ordered foundations, workspace surfaces, and remaining feature/detail styles, then continue moving rules into module-owned styles without redesigning the interface.
 6. Replace remaining source-text and dirty-diff assertions with executable behavior checks where practical.
 
-The version bump to the next minor release stays deferred until the extraction work is streamlined and the new boundaries hold under CI.
+The `0.3.1` version identifies this behavior-preserving maintainability release. Later version bumps remain deferred until each additional extraction slice holds under CI.
 
 The job-service split is complete behind a 21-line compatibility facade. Normalization, queries, mutations, messaging, and child synchronization now have focused owners, and the transitional duplicate implementations have been removed.
 

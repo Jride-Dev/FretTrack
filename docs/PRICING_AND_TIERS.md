@@ -1,6 +1,6 @@
 # FretTrack Pricing and Tiers
 
-Current release: **FretTrack 0.3.0**
+Current release: **FretTrack 0.3.1**
 
 FretTrack is operational workflow software for instrument repair shops. It handles intake, bench work, condition records, customer communication, parts, payments, scheduling, and shop records without presenting itself as full accounting, tax, payroll, or legal software.
 
@@ -11,7 +11,7 @@ FretTrack is operational workflow software for instrument repair shops. It handl
 | Shop | $29.99 | $299.99 | $59.89 compared with 12 monthly payments |
 | Pro | $39.99 | $399.99 | $80.89 compared with 12 monthly payments |
 
-Prices are in USD. Annual plans are billed once per year. There are no usage-based overage charges in 0.3.0.
+Prices are in USD. Annual plans are billed once per year. There are no usage-based overage charges in 0.3.1.
 
 ## Trial
 
@@ -49,7 +49,7 @@ Pro includes everything in Shop plus:
 
 Pro limits are 5,000 email recipients per UTC month, 10,000 source-photo uploads per UTC month, and 25 GiB of current repair-photo storage.
 
-Specialist modules are included with Pro in 0.3.0. Future packaging may offer them as separately marketable add-ons, but no separate add-on price or entitlement is active in this release.
+Specialist modules are included with Pro in 0.3.1. Future packaging may offer them as separately marketable add-ons, but no separate add-on price or entitlement is active in this release.
 
 ## Billing lifecycle
 
@@ -71,7 +71,7 @@ When a Shop or Pro subscription loses writable access, FretTrack preserves exist
 
 ## Current product boundaries
 
-- SMS is not active in 0.3.0.
+- SMS is not active in 0.3.1.
 - FretTrack is not a general ledger, payment processor, tax advisor, or payroll system.
 - Customer CSV import remains parser/template foundation and is not exposed as a production write workflow.
 - Public invoice/customer portal links are future work and require a fresh security review.

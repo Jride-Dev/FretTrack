@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
-const expectedVersion = '0.3.0';
+const expectedVersion = '0.3.1';
 const source = (path) => readFileSync(join(root, path), 'utf8');
 const packageJson = JSON.parse(source('package.json'));
 const packageLock = JSON.parse(source('package-lock.json'));
@@ -37,7 +37,7 @@ for (const [label, value] of [
   ['RELEASE_NOTES current header', releaseNotes.slice(0, releaseNotes.indexOf('## Role And Permission Audit'))],
   ['README current header', readme.slice(0, 600)]
 ]) {
-  assert.ok(!/0\.3\.0-(?:alpha|beta|rc)/i.test(value), `${label} must expose the stable 0.3.0 release.`);
+  assert.ok(!/0\.3\.1-(?:alpha|beta|rc)/i.test(value), `${label} must expose the stable 0.3.1 release.`);
 }
 
 console.log('Version consistency checks passed.');
