@@ -60,7 +60,7 @@ The release-version bump stays deferred until the maintainability slices are mer
 
 The first job-service extraction slice is already in motion behind compatibility exports: job normalization and child synchronization helpers now live in focused modules while the facade remains stable.
 
-The first inventory-service extraction slice is also in motion behind compatibility exports: inventory normalization helpers and purchase-order helpers now live in focused modules while the facade remains stable.
+The first inventory-service extraction slice is also in motion behind compatibility exports: inventory normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while the facade remains stable.
 
 The compatibility facades stay in place during extraction. No broad rewrite, no schema change solely for code organization, and no mixing behavioral feature work into structural PRs.
 
