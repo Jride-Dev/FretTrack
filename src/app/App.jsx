@@ -7,10 +7,10 @@ import {
   getCurrentShopProfileFallback,
   getErrorMessage,
   resolveMembership,
-  shouldQueueOfflineDraft,
   slugifyShopId
 } from './appRuntimeHelpers.js';
 import WorkspaceRouter from './WorkspaceRouter.jsx';
+import useOfflineDraftQueue from './useOfflineDraftQueue.js';
 import useWorkspaceNavigation from './useWorkspaceNavigation.js';
 import AuthGate from '../modules/auth/AuthGate.jsx';
 import { getCustomers } from '../modules/customers';
@@ -25,10 +25,9 @@ import {
   canAccessOperatorDashboard,
   getCurrentAccessPermissions
 } from '../modules/auth/permissionService';
-import { addJob, findRemoteJobByNumber, getJobs, isDuplicateWorkOrderError, setJobAccountingVoid, updateJob } from '../modules/jobs/jobService';
+import { addJob, getJobs, setJobAccountingVoid, updateJob } from '../modules/jobs/jobService';
 import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService';
 import { calculateTillSummary, sortNewestFirst } from '../modules/jobs/jobSelectors';
-import { deleteOfflineDraft, getOfflineDrafts, saveOfflineDraft, updateOfflineDraft } from '../modules/jobs/offlineDraftService.js';
 import { clearSelectedShop, getCurrentShopName, getSelectedShop, getShopDateOptions, getShopMoneyOptions, setSelectedShop } from '../modules/shops/shopConfig';
 import { clearVitePreloadReloadGuard } from '../shared/pwa/preloadRecovery';
 import { bootstrapCurrentUserAsOwner, getCurrentUserShopMemberships } from '../modules/shops/shopMembershipService';
@@ -87,16 +86,11 @@ export default function App() {
   const [isStandalonePwa, setIsStandalonePwa] = useState(() => isStandaloneDisplayMode());
   const [showInstallHelp, setShowInstallHelp] = useState(() => localStorage.getItem(PWA_INSTALL_HELP_DISMISSED_KEY) !== 'true');
   const [isNewJobSidebarCollapsed, setIsNewJobSidebarCollapsed] = useState(() => localStorage.getItem(NEW_JOB_SIDEBAR_COLLAPSED_KEY) === 'true');
-  const [isOnline, setIsOnline] = useState(() => window.navigator.onLine);
-  const [offlineDrafts, setOfflineDrafts] = useState([]);
-  const [selectedOfflineDraftId, setSelectedOfflineDraftId] = useState('');
-  const [syncingDraftId, setSyncingDraftId] = useState('');
   const manualSignOutRef = useRef(false);
   const shopAccessRequestIdRef = useRef(0);
   const jobsRequestIdRef = useRef(0);
   const customersRequestIdRef = useRef(0);
   const assignableMembersRequestIdRef = useRef(0);
-  const offlineDraftsRequestIdRef = useRef(0);
 
   useEffect(() => {
     clearVitePreloadReloadGuard();
@@ -165,6 +159,25 @@ export default function App() {
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
   const selectedJobIdRef = useRef(selectedJobId);
   selectedJobIdRef.current = selectedJobId;
+  const {
+    handleDiscardOfflineDraft,
+    handleOfflineDraftSaved,
+    handleSyncOfflineDraft,
+    isOnline,
+    offlineDraftCount,
+    offlineDrafts,
+    refreshOfflineDraftQueue,
+    resetOfflineDraftQueue,
+    selectedOfflineDraftId,
+    setSelectedOfflineDraftId,
+    syncingDraftId
+  } = useOfflineDraftQueue({
+    onNotice: setNotice,
+    onOpenDrafts: () => setMode('drafts'),
+    refreshCustomers,
+    refreshJobs,
+    shopId: membership?.shopId
+  });
 
   function handleSelectJob(jobId) {
     const job = jobs.find((item) => item.id === jobId);
@@ -247,31 +260,6 @@ export default function App() {
     }
   }
 
-  async function refreshOfflineDraftQueue(shopId = membership?.shopId || getSelectedShop().shopId) {
-    if (shopId && getSelectedShop().shopId !== shopId) {
-      return null;
-    }
-    const requestId = ++offlineDraftsRequestIdRef.current;
-    if (!shopId) {
-      setOfflineDrafts([]);
-      setSelectedOfflineDraftId('');
-      return [];
-    }
-
-    const drafts = await getOfflineDrafts(shopId);
-    if (requestId !== offlineDraftsRequestIdRef.current || getSelectedShop().shopId !== shopId) {
-      return null;
-    }
-    setOfflineDrafts(drafts);
-    setSelectedOfflineDraftId((currentDraftId) => {
-      if (drafts.some((draft) => draft.id === currentDraftId)) {
-        return currentDraftId;
-      }
-      return drafts[0]?.id || '';
-    });
-    return drafts;
-  }
-
   useEffect(() => {
     if (!hasSupabaseConfig) {
       refreshJobs().then((loadedJobs) => refreshCustomers(loadedJobs));
@@ -328,8 +316,7 @@ export default function App() {
           setEntitlementSnapshot(getDefaultEntitlementSnapshot());
           setJobs([]);
           setCustomers([]);
-          setOfflineDrafts([]);
-          setSelectedOfflineDraftId('');
+          resetOfflineDraftQueue();
           resetWorkspaceNavigation();
           if (!nextSession) {
             clearSelectedShop();
@@ -419,24 +406,6 @@ export default function App() {
   }, [theme]);
 
   useEffect(() => {
-    function handleOnline() {
-      setIsOnline(true);
-    }
-
-    function handleOffline() {
-      setIsOnline(false);
-    }
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  useEffect(() => {
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
 
     function handleBeforeInstallPrompt(event) {
@@ -476,22 +445,6 @@ export default function App() {
 
     return () => window.clearTimeout(timeoutId);
   }, [notice]);
-
-  useEffect(() => {
-    if (!membership?.shopId) {
-      setOfflineDrafts([]);
-      setSelectedOfflineDraftId('');
-      return;
-    }
-
-    refreshOfflineDraftQueue(membership.shopId).catch((error) => {
-      console.error('Offline draft load failed.', error);
-      setNotice({
-        type: 'error',
-        message: getErrorMessage(error, 'Unable to load local drafts.')
-      });
-    });
-  }, [membership?.shopId]);
 
   async function checkSupabaseConnection() {
     const result = await checkSupabaseJobsConnection();
@@ -620,8 +573,7 @@ export default function App() {
     setIsBetaAccessLoading(false);
     setShowOperatorDashboard(false);
     setEntitlementSnapshot(getDefaultEntitlementSnapshot());
-    setOfflineDrafts([]);
-    setSelectedOfflineDraftId('');
+    resetOfflineDraftQueue();
     resetWorkspaceNavigation();
     clearSelectedShop();
     try {
@@ -889,12 +841,10 @@ export default function App() {
     setMembership(null);
     setShowOperatorDashboard(false);
     setEntitlementSnapshot(getDefaultEntitlementSnapshot());
-    setOfflineDrafts([]);
-    setSelectedOfflineDraftId('');
+    resetOfflineDraftQueue();
     clearSelectedShop();
   }
 
-  const offlineDraftCount = offlineDrafts.filter((draft) => draft.status !== 'synced').length;
   const statusText = {
     checking: 'Supabase Checking',
     connected: 'Supabase Connected',
@@ -927,102 +877,6 @@ export default function App() {
       localStorage.setItem(NEW_JOB_SIDEBAR_COLLAPSED_KEY, String(nextValue));
       return nextValue;
     });
-  }
-
-  async function handleOfflineDraftSaved(jobDraft, error) {
-    if (!shouldQueueOfflineDraft(error)) {
-      return false;
-    }
-
-    const draft = await saveOfflineDraft(
-      {
-        ...jobDraft,
-        shopId: membership?.shopId || getSelectedShop().shopId
-      },
-      {
-        shopId: membership?.shopId || getSelectedShop().shopId,
-        status: 'pending',
-        lastError: getErrorMessage(error, 'Connection lost while saving the work order.'),
-        needsPhotoUpload: false
-      }
-    );
-
-    await refreshOfflineDraftQueue(draft.shopId);
-    setSelectedOfflineDraftId(draft.id);
-    setMode('drafts');
-    setNotice({
-      type: 'success',
-      message: 'Saved locally as a new-job intake draft. Sync when connection returns.'
-    });
-    return true;
-  }
-
-  async function handleSyncOfflineDraft(draft) {
-    if (!draft) {
-      return;
-    }
-
-    if (!isOnline) {
-      setNotice({ type: 'error', message: 'You are offline. Reconnect before syncing local drafts.' });
-      return;
-    }
-
-    setSyncingDraftId(draft.id);
-    try {
-      await updateOfflineDraft(draft.id, {
-        status: 'pending',
-        lastAttemptAt: new Date().toISOString(),
-        lastError: ''
-      });
-
-      const savedJob = await addJob(draft.jobData);
-      await deleteOfflineDraft(draft.id);
-      const loadedJobs = await refreshJobs();
-      await refreshCustomers(loadedJobs);
-      await refreshOfflineDraftQueue(draft.shopId);
-      setNotice({
-        type: 'success',
-        message: `Local draft synced as job ${savedJob?.jobNumber || draft.jobData?.jobNumber || ''}.`
-      });
-    } catch (error) {
-      if (isDuplicateWorkOrderError(error)) {
-        const existingJob = await findRemoteJobByNumber(draft.jobData?.jobNumber, draft.shopId);
-        if (existingJob?.id) {
-          await deleteOfflineDraft(draft.id);
-          const loadedJobs = await refreshJobs();
-          await refreshCustomers(loadedJobs);
-          await refreshOfflineDraftQueue(draft.shopId);
-          setNotice({
-            type: 'success',
-            message: `Draft already exists remotely as ${existingJob.job_number || draft.jobData?.jobNumber}. The local draft was cleared.`
-          });
-          return;
-        }
-      }
-
-      await updateOfflineDraft(draft.id, {
-        status: 'failed',
-        lastAttemptAt: new Date().toISOString(),
-        lastError: getErrorMessage(error, 'Draft sync failed.')
-      });
-      await refreshOfflineDraftQueue(draft.shopId);
-      setNotice({
-        type: 'error',
-        message: getErrorMessage(error, 'Draft sync failed.')
-      });
-    } finally {
-      setSyncingDraftId('');
-    }
-  }
-
-  async function handleDiscardOfflineDraft(draft) {
-    if (!draft) {
-      return;
-    }
-
-    await deleteOfflineDraft(draft.id);
-    await refreshOfflineDraftQueue(draft.shopId);
-    setNotice({ type: 'success', message: 'Local draft discarded.' });
   }
 
   if (hasSupabaseConfig && isAuthLoading) {
