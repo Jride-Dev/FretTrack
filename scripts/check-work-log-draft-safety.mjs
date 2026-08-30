@@ -7,6 +7,7 @@ const root = process.cwd();
 const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
 const app = read('src/app/App.jsx');
 const detail = read('src/modules/jobs/JobDetail.jsx');
+const communicationActions = read('src/modules/jobs/jobDetailCommunicationActions.js');
 const workLogSection = read('src/modules/jobs/WorkLogSection.js');
 const packageJson = JSON.parse(read('package.json'));
 const draftHelperPath = join(root, 'src/modules/jobs/workLogDraft.js');
@@ -82,11 +83,11 @@ assert.match(detail, /getWorkLogSubmission\(workLogRetrySubmissionRef\.current/,
 assert.match(detail, /workLogRetrySubmissionRef\.current = submission/, 'The retry identity must be retained before remote persistence starts.');
 assert.match(workLogSection, /!hasPendingWorkLog \|\| isSavingWorkLog/, 'The Work Note save control must remain disabled while persistence is in flight.');
 for (const actionName of ['printJobSheet', 'printCustomerReport', 'openWorkOrderEmail']) {
-  const actionSource = detail.match(new RegExp(`function ${actionName}\\(\\) \\{([\\s\\S]*?)\\n  \\}`))?.[1] || '';
+  const actionSource = communicationActions.match(new RegExp(`function ${actionName}\\(\\) \\{([\\s\\S]*?)\\n  \\}`))?.[1] || '';
   assert.match(actionSource, /guardPendingWorkLogDocumentAction\(\)/, `${actionName} must use the pending Work Note guard.`);
 }
-assert.match(detail, /if \(hasPendingWorkLog\) \{\s*return \{ ok: false, error: PENDING_WORK_LOG_MESSAGE \};/, 'The document send handler must defensively reject a pending Work Note.');
-assert.match(detail, /PENDING_WORK_LOG_MESSAGE/, 'Customer document actions must explain how to resolve a pending Work Note.');
+assert.match(communicationActions, /if \(hasPendingWorkLog\) \{\s*return \{ ok: false, error: PENDING_WORK_LOG_MESSAGE \};/, 'The document send handler must defensively reject a pending Work Note.');
+assert.match(communicationActions, /PENDING_WORK_LOG_MESSAGE/, 'Customer document actions must explain how to resolve a pending Work Note.');
 assert.match(detail, /Work Note changes could not be saved/, 'Existing Work Note blur-save failures must be visible to the user.');
 assert.equal(packageJson.scripts['check:work-log-draft-safety'], 'node scripts/check-work-log-draft-safety.mjs');
 
