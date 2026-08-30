@@ -12,6 +12,7 @@ import { getBrandsForInstrumentType, getModelsForBrand } from '../src/modules/in
 const root = process.cwd();
 const read = (path) => readFileSync(join(root, path), 'utf8');
 const app = read('src/app/App.jsx');
+const appActions = read('src/app/useJobWorkspaceActions.js');
 const appAccess = read('src/app/appAccess.js');
 const permissionService = read('src/modules/auth/permissionService.js');
 const entitlementService = read('src/modules/billing/entitlementService.js');
@@ -92,7 +93,7 @@ assert.match(router, /mode === 'amplifiers'[\s\S]*?<AmplifierRepairPage[\s\S]*?i
 assert.match(router, /mode === 'amplifier-detail'[\s\S]*?<AmplifierJobDetail[\s\S]*?onUpdate=\{actions\.onUpdateJob\}/, 'Amplifier detail must reuse the established job update path.');
 assert.match(app, /isAmplifierJob\(job\)[\s\S]*?'amplifier-detail'/, 'Job selection must route amplifiers away from guitar-specific Job Detail.');
 assert.match(app, /onCreateAmplifierJob: handleAmplifierJobCreate/, 'Amplifier creation must cross the workspace action boundary.');
-assert.match(app, /if \(!amplifierRepairEnabled\)[\s\S]*?Amplifier Repair is available on Pro/, 'Amplifier creation must retain a defensive client entitlement guard.');
+assert.match(appActions, /const enabled = isAmplifier \? access\.amplifierRepairEnabled[\s\S]*?if \(!enabled\)[\s\S]*?Repair is available on Pro/, 'Amplifier creation must retain a defensive client entitlement guard.');
 assert.match(appAccess, /const amplifierRepairEnabled = [^;]+canUseAmplifierRepair\(billingAccess\)/, 'App access must expose entitlement-only Amplifier Repair availability.');
 assert.match(appAccess, /canEditAmplifierRepair: [^,]+canEditAmplifierRepairForRole\(permissionContext\)/, 'App access must expose role-aware Amplifier Repair writes.');
 assert.match(permissionService, /canEditAmplifierRepair[\s\S]*?hasAmplifierRepairEntitlement/, 'Amplifier writes must require the Pro entitlement and an existing write role.');

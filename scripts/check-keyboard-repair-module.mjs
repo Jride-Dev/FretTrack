@@ -37,6 +37,7 @@ assert.ok(existsSync(join(root, hardeningMigrationPath)), 'The Keyboard Repair w
 assert.ok(existsSync(join(root, normalizedMigrationPath)), 'The normalized Keyboard Repair damage-map migration must exist.');
 
 const app = read('src/app/App.jsx');
+const appActions = read('src/app/useJobWorkspaceActions.js');
 const appAccess = read('src/app/appAccess.js');
 const router = read('src/app/WorkspaceRouter.jsx');
 const navigation = read('src/app/useWorkspaceNavigation.js');
@@ -125,7 +126,7 @@ assert.match(router, /mode === 'keyboards'[\s\S]*?<KeyboardRepairPage[\s\S]*?isE
 assert.match(router, /mode === 'keyboard-detail'[\s\S]*?<KeyboardJobDetail[\s\S]*?onUpdate=\{actions\.onUpdateJob\}/, 'Keyboard detail must reuse the established job update path.');
 assert.match(app, /isKeyboardJob\(job\)[\s\S]*?'keyboard-detail'/, 'Job selection must route keyboards away from guitar-specific detail.');
 assert.match(app, /onCreateKeyboardJob: handleKeyboardJobCreate/, 'Keyboard creation must cross the workspace action boundary.');
-assert.match(app, /if \(!keyboardRepairEnabled\)[\s\S]*?Keyboard Repair is available on Pro/, 'Keyboard creation must retain a defensive client entitlement guard.');
+assert.match(appActions, /const enabled = isAmplifier \? access\.amplifierRepairEnabled : access\.keyboardRepairEnabled[\s\S]*?if \(!enabled\)[\s\S]*?Repair is available on Pro/, 'Keyboard creation must retain a defensive client entitlement guard.');
 assert.match(appAccess, /const keyboardRepairEnabled = [^;]+canUseKeyboardRepair\(billingAccess\)/, 'App access must expose entitlement-only Keyboard Repair availability.');
 assert.match(appAccess, /canEditKeyboardRepair: [^,]+canEditKeyboardRepairForRole\(permissionContext\)/, 'App access must expose role-aware Keyboard Repair writes.');
 assert.match(permissionService, /canEditKeyboardRepair[\s\S]*?hasKeyboardRepairEntitlement/, 'Keyboard writes must require the entitlement and an established write role.');

@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 
 const root = process.cwd();
 const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
-const app = read('src/app/App.jsx');
+const appActions = read('src/app/useJobWorkspaceActions.js');
 const detail = read('src/modules/jobs/JobDetail.jsx');
 const communicationActions = read('src/modules/jobs/jobDetailCommunicationActions.js');
 const workLogSection = read('src/modules/jobs/WorkLogSection.js');
@@ -76,7 +76,7 @@ assert.match(detail, /const workLogSavePromiseRef = useRef\(null\)/, 'Work Note 
 assert.match(detail, /const hasUnsettledWorkLog = hasPendingWorkLog \|\| isSavingWorkLog/, 'An in-flight Work Note save must remain protected as unsettled work.');
 assert.match(detail, /const didSwitchJobs = hydratedJobIdRef\.current !== job\.id[\s\S]*?if \(didSwitchJobs\) \{[\s\S]*?setWorkLogText\(''\);[\s\S]*?setIsSavingWorkLog\(false\);/, 'Switching jobs must give the new job an independent blank Work Note state.');
 assert.match(detail, /activeJobIdRef\.current === savingJobId[\s\S]*?setDraftJob\(savedJob \|\| jobToSave\);/, 'A completed save must update the draft only while its original job is still active.');
-assert.match(app, /if \(selectedJobIdRef\.current !== job\.id\) \{[\s\S]*?return savedJob;/, 'A completed save for a departed job must not refresh and overwrite the newly selected job.');
+assert.match(appActions, /if \(selectedJobIdRef\.current !== job\.id\) \{[\s\S]*?return savedJob;/, 'A completed save for a departed job must not refresh and overwrite the newly selected job.');
 assert.match(detail, /if \(workLogSavePromiseRef\.current\?\.jobId === draftJob\.id\) \{\s*return workLogSavePromiseRef\.current\.promise;/, 'Repeated Work Note submissions for the same job must coalesce onto the active save.');
 assert.match(detail, /workLogSavePromiseRef\.current = \{ jobId: submission\.jobId, promise: savePromise \}/, 'The active Work Note save must retain its job identity before another submission can start.');
 assert.match(detail, /getWorkLogSubmission\(workLogRetrySubmissionRef\.current/, 'Failed Work Note retries must reuse their original submission identity.');
