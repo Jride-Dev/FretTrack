@@ -397,7 +397,10 @@ function JobDetailWorkspace({
       setSaveStatus('saving');
     }
     try {
-      const savedJob = await onUpdate(jobToSave);
+      if (!jobToSave.updatedAt) {
+        throw new Error('This work order has no save version. Reload it before saving.');
+      }
+      const savedJob = await onUpdate(jobToSave, { expectedUpdatedAt: jobToSave.updatedAt });
       if (activeJobIdRef.current === savingJobId) {
         setDraftJob(savedJob || jobToSave);
         setIsDirty(false);
