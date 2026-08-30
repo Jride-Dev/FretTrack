@@ -4,12 +4,12 @@ Review this file before every production deploy and update it after app, public-
 
 ## Current status
 
-- FretTrack 0.3.0 is deployed as the stable Operational Shop Release. Tagging and GitHub release publication follow the recorded production verification below.
-- The production app is Cloudflare Pages build `1c947651.frettrack.pages.dev`. The branded app URL and public root returned `200 OK`, and the live asset references exactly matched the guarded local production build.
+- FretTrack 0.3.1 is deployed as the current stable maintainability release over the Operational Shop Release.
+- The production app is Cloudflare Pages build `bcc1d845.frettrack.pages.dev`. The branded app URL and public root returned `200 OK`, and the live asset references exactly matched the guarded local production build.
 - Migration `20260829071930_access_application_side_effect_idempotency.sql` is applied in production. Repeated access submissions now retain one request identity/timestamp so email and archive retries reuse stable side-effect keys.
 - Production migration history matches the repository through `20260829071930_access_application_side_effect_idempotency.sql`; the linked dry run reports that the remote database is up to date.
-- The public landing/docs Worker is deployed as version `3ed22996-0154-4818-8599-0bc739b0d26b` and serves stable 0.3.0 access, pricing, annual savings, Terms, Privacy, Support, product guides, community links, release notes, and legacy documentation aliases.
-- The 0.3.0 release branch passed the exact GitHub regression/build commands, 350 local pgTAP/RLS assertions, all 29 Playwright tests, the production deploy preflight, local data-integrity checks, migration parity, and `npm audit` with zero vulnerabilities.
+- The public landing/docs Worker is deployed as version `e25e1800-1b76-434b-b4a2-9dfc27d6dfd5` and serves stable 0.3.1 access, pricing, annual savings, Terms, Privacy, Support, product guides, community links, release notes, and legacy documentation aliases.
+- The 0.3.1 release branch passed the exact GitHub regression/build commands, 352 local pgTAP/RLS assertions, all 30 Playwright tests, the production deploy preflight, migration parity, and `npm audit` with zero vulnerabilities.
 - The two legacy ownerless shop profiles are formally classified as closed historical tenants because both subscriptions are canceled, neither has a Stripe customer/subscription ID, and neither has a member who could access the tenant. `B-U Music Garage` retains eight jobs and five customers for historical integrity; `Pv Music House` has no jobs or customers. The integrity gate requires an owner for every operational shop while preserving canceled historical tenants without assigning, deleting, or reactivating them.
 
 ## Commercial configuration
@@ -51,6 +51,16 @@ Review this file before every production deploy and update it after app, public-
 - Verified `200 OK` for the branded app, public root, docs, release notes, Terms, Privacy, Support, and both legacy testing-document aliases.
 - Verified the live app asset list matches the guarded build, the application bundle reports `0.3.0` without prerelease copy, and public pages retain CSP plus MIME-sniffing protection.
 - Verified Discord, GitHub, Reddit, Product Hunt, and Torrance Guitar Repair links, and confirmed unauthenticated Checkout, Billing Portal, and approval-notification requests return `401`.
+
+## 0.3.1 production verification
+
+- Merged release PR #235 at `e1204134e6b778c81151593d53b04fa140033f28` after ITO and all GitHub quality/security gates passed.
+- Deployed Cloudflare Pages build `https://bcc1d845.frettrack.pages.dev` and public Worker version `e25e1800-1b76-434b-b4a2-9dfc27d6dfd5`.
+- Verified `200 OK` for the branded app, public root, docs, release notes, pricing, Terms, Privacy, Support, and access application.
+- Verified the live app asset list exactly matches the guarded production build and the deployed application chunk reports `0.3.1`.
+- Verified CSP and MIME-sniffing protection on the app and public root, retained Discord, GitHub, Reddit, Product Hunt, and Torrance Guitar Repair links, and found no public beta-testing call to action.
+- Confirmed unauthenticated Checkout, Billing Portal, and approval-notification requests return `401`.
+- No database migration or Edge Function deployment was required; production migration history remained aligned through `20260829071930_access_application_side_effect_idempotency.sql`.
 
 ## Standard app deployment
 
@@ -103,11 +113,11 @@ Afterward, verify `/`, `/docs`, `/docs/release-notes`, `/terms`, `/privacy`, `/s
 
 1. Confirm `https://app.frettrack-app.com/` and `https://frettrack-app.com/` return `200 OK`.
 2. Confirm the app HTML references the same assets as the guarded production build.
-3. Confirm the app visibly reports `0.3.0` without prerelease wording.
-4. Confirm the public landing page and docs report stable `v0.3.0` and contain no public testing-program calls to action.
+3. Confirm the app visibly reports the current release version without prerelease wording.
+4. Confirm the public landing page and docs report the current stable version and contain no public testing-program calls to action.
 5. Confirm Terms, Privacy, Support, pricing, access application, Discord, GitHub, Reddit, Product Hunt, and Torrance Guitar Repair links.
 6. Confirm unauthenticated Checkout, Billing Portal, and protected notification functions reject unauthorized requests.
-7. Record the Cloudflare Pages deployment URL, landing Worker version, validation result, and any hosted migration/function changes here before publishing the `v0.3.0` GitHub release.
+7. Record the Cloudflare Pages deployment URL, landing Worker version, validation result, and any hosted migration/function changes here before publishing the matching GitHub release.
 
 ## Protected local files
 
