@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx';
 import JobDetailTabs from './components/JobDetailTabs.jsx';
 import { calculateJobTotals } from '../billing/accounting';
-import { getShopDefaultTaxRate, resolveJobTaxSettings, withResolvedJobTaxSettings } from '../billing/jobTaxSettings';
+import { getShopDefaultTaxRate, resolveJobTaxSettings } from '../billing/jobTaxSettings';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { formatMeasurementChange } from '../../shared/utils/measurements';
 import { getShopDateOptions, getShopMeasurementOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig';
@@ -12,9 +11,7 @@ import {
   getOuterStringLabels,
   normalizeInstrumentType
 } from '../instruments/instrumentService';
-import { getJobEvents, logJobEventSafe } from './jobEventsService';
-import { sendCustomerMessage } from '../../data/messagesRepository';
-import { SHOP_EMAIL_CONTEXT_ERROR, buildDocumentEmailHtml, buildInvoiceEmailDraft, buildSelectedDocumentEmailContent, buildWorkOrderEmailDraft, resolveScopedShopEmailSettings } from './emailDocuments';
+import { getJobEvents } from './jobEventsService';
 import { addPartToJob, listParts as listInventoryParts, removeJobPart, updateInventoryJobPartQuantity } from '../inventory/inventoryService';
 import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
 import { mergeUploadedJobImages } from '../photos/photoState.js';
@@ -27,13 +24,7 @@ import JobIntakeSections from './JobIntakeSections.jsx';
 import JobPhotoSections from './JobPhotoSections.jsx';
 import buildJobPrintSections from './JobPrintSections.jsx';
 import JobDetailShell from './JobDetailShell.jsx';
-import { waitForCustomerReportPrintReady, waitForJobSheetPrintReady } from '../print/printDocumentReady.js';
-import {
-  CUSTOMER_REPORT_PRINT_MODE,
-  beginPrintRequest,
-  cancelPrintRequests,
-  isCurrentPrintRequest
-} from '../print/printRequestCoordinator.js';
+import { cancelPrintRequests } from '../print/printRequestCoordinator.js';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import {
   buildAddPaymentJob,
@@ -42,16 +33,12 @@ import {
   buildAddServicePatch,
   buildAppendImagePreviewsJob,
   buildAssignmentJob,
-  buildContactPreferencePatch,
   buildDamageMapJob,
   buildDiscountFieldPatch,
   buildInstrumentTypePatch,
   buildJobFieldPatch,
   buildMeasurementDisplay,
-  buildMessageTemplatePatch,
-  buildMergeJobMessageJob,
   buildNeckInspectionPatch,
-  buildPickedUpJob,
   buildRemoveManualPartPatch,
   buildRemoveImageJob,
   buildRemoveInventoryPartJob,
@@ -71,8 +58,8 @@ import {
   buildWorkOrderImageIdsPatch,
   findNewDamageViewImage
 } from './jobDetailFormatting.js';
+import { createJobDetailCommunicationActions } from './jobDetailCommunicationActions.js';
 import {
-  PENDING_WORK_LOG_MESSAGE,
   appendWorkLogDraft,
   buildRemoveWorkLogEntryJob,
   buildUpdateWorkLogEntryPatch,
@@ -242,6 +229,51 @@ function JobDetailWorkspace({
     currencyCode: taxSettings.currencyCode || shopSettings.currencyCode,
     locale: taxSettings.locale || shopSettings.locale
   });
+  const communicationActions = createJobDetailCommunicationActions({
+    canWrite,
+    canSendEmail,
+    canScheduleEmail,
+    canSendSms,
+    entitlementMessage,
+    draftJob,
+    shopProfile,
+    measurementOptions,
+    dateOptions,
+    moneyOptions,
+    formatInstrumentLabel,
+    hasPendingWorkLog,
+    isDirty,
+    printRequestSequenceRef,
+    documentBody: document.body,
+    setDraftJob,
+    setDocumentEmailDraft,
+    setIsSendingSubcontractorEmail,
+    setSubcontractorPickupJob,
+    subcontractorPickupJob,
+    setIsDirty,
+    setWorkLogText,
+    patchJob,
+    onDirtyChange,
+    onClose,
+    confirmIfDirty,
+    saveDraftNow,
+    onNotice,
+    onRefresh,
+    refreshTimelineEvents
+  });
+  const {
+    closeDetail,
+    finishJob,
+    handleSendCustomerMessage,
+    handleSendDocumentEmail,
+    openInvoiceEmail,
+    openWorkOrderEmail,
+    printCustomerReport,
+    printJobSheet,
+    sendSubcontractorPickupEmail,
+    updateContactPreference,
+    updateMessageTemplate
+  } = communicationActions;
 
   function patchJob(patch, saveImmediately = false) {
     if (!canWrite) {
@@ -558,18 +590,6 @@ function JobDetailWorkspace({
       workLogRetrySubmissionRef.current = null;
       setWorkLogText('');
     }
-  }
-
-  function guardPendingWorkLogDocumentAction() {
-    if (!hasPendingWorkLog) {
-      if (!isDirty) {
-        return true;
-      }
-      window.alert('Save the job changes before printing or sending customer documents.');
-      return false;
-    }
-    window.alert(PENDING_WORK_LOG_MESSAGE);
-    return false;
   }
 
   function addPart(event) {
@@ -907,271 +927,8 @@ function JobDetailWorkspace({
     patchJob(buildWorkOrderImageIdsPatch(draftJob, workOrderImageIds, imageId, checked));
   }
 
-  function closeDetail() {
-    if (hasPendingWorkLog && !window.confirm('This Work Note has not been saved. Discard it and close the detail view?')) {
-      return;
-    }
-    if (!confirmIfDirty()) {
-      return;
-    }
-
-    setWorkLogText('');
-    onDirtyChange?.(false);
-    onClose();
-  }
-
-  async function printJobSheet() {
-    if (!guardPendingWorkLogDocumentAction()) {
-      return;
-    }
-    const requestSequence = beginPrintRequest(printRequestSequenceRef, 'job-sheet', document.body);
-    await waitForJobSheetPrintReady();
-    if (!isCurrentPrintRequest(printRequestSequenceRef, requestSequence, 'job-sheet', document.body)) {
-      return;
-    }
-    window.print();
-  }
-
-  async function printCustomerReport() {
-    if (!guardPendingWorkLogDocumentAction()) {
-      return;
-    }
-    const requestSequence = beginPrintRequest(printRequestSequenceRef, CUSTOMER_REPORT_PRINT_MODE, document.body);
-    await waitForCustomerReportPrintReady();
-    if (!isCurrentPrintRequest(printRequestSequenceRef, requestSequence, CUSTOMER_REPORT_PRINT_MODE, document.body)) {
-      return;
-    }
-    window.print();
-  }
-
-  function openWorkOrderEmail() {
-    if (!canWrite || !canSendEmail) {
-      return;
-    }
-    if (!guardPendingWorkLogDocumentAction()) {
-      return;
-    }
-    try {
-      const scopedShopSettings = resolveScopedShopEmailSettings(draftJob, shopProfile);
-      setDocumentEmailDraft({
-        kind: 'work_order',
-        jobId: draftJob.id,
-        shopId: draftJob.shopId,
-        ...buildWorkOrderEmailDraft(draftJob, {
-          shopSettings: scopedShopSettings,
-          lengthUnit: measurementOptions.lengthUnit,
-          dateOptions,
-          moneyOptions,
-          totals,
-          instrumentLabel: formatInstrumentLabel(draftJob)
-        })
-      });
-    } catch (error) {
-      onNotice?.({ type: 'error', message: error?.message || SHOP_EMAIL_CONTEXT_ERROR });
-    }
-  }
-
-  function openInvoiceEmail() {
-    if (!canWrite || !canSendEmail) {
-      return;
-    }
-    try {
-      const scopedShopSettings = resolveScopedShopEmailSettings(draftJob, shopProfile);
-      setDocumentEmailDraft({
-        kind: 'invoice',
-        jobId: draftJob.id,
-        shopId: draftJob.shopId,
-        ...buildInvoiceEmailDraft(draftJob, {
-          shopSettings: scopedShopSettings,
-          dateOptions,
-          moneyOptions,
-          totals,
-          taxLabel: taxSettings.taxLabel || scopedShopSettings.taxLabel || 'Sales Tax',
-          instrumentLabel: formatInstrumentLabel(draftJob)
-        })
-      });
-    } catch (error) {
-      onNotice?.({ type: 'error', message: error?.message || SHOP_EMAIL_CONTEXT_ERROR });
-    }
-  }
-
   function formatMeasurementDelta(initialValue, finalValue, unit = measurementOptions.lengthUnit) {
     return formatMeasurementChange(initialValue, finalValue, unit);
-  }
-
-  async function finishJob() {
-    if (!canWrite) {
-      return;
-    }
-    const nextJob = buildPickedUpJob(draftJob, new Date().toISOString());
-
-    setDraftJob(nextJob);
-    setIsDirty(true);
-    try {
-      const savedJob = await saveDraftNow(nextJob);
-      if (shouldOfferPvmhPickupEmail(savedJob || nextJob)) {
-        setSubcontractorPickupJob(savedJob || nextJob);
-      }
-    } catch {
-      // saveDraftNow already surfaces save errors through the app notice path.
-    }
-  }
-
-  async function sendSubcontractorPickupEmail(message) {
-    if (!subcontractorPickupJob) {
-      return;
-    }
-    if (!canSendEmail) {
-      window.alert(entitlementMessage || 'Email sending is unavailable for this shop plan or billing state.');
-      return;
-    }
-
-    setIsSendingSubcontractorEmail(true);
-    const result = await sendCustomerMessage(subcontractorPickupJob, {
-      channel: 'email',
-      templateKey: 'subcontractor_pickup_ready',
-      to: message.to,
-      subject: message.subject,
-      body: message.body
-    });
-
-    if (!result.ok) {
-      setIsSendingSubcontractorEmail(false);
-      window.alert(result.error || 'PVMH email failed to send.');
-      return;
-    }
-
-    setSubcontractorPickupJob(null);
-    setIsSendingSubcontractorEmail(false);
-    if (result.message) {
-      setDraftJob((current) => buildMergeJobMessageJob(current, result.message));
-    }
-    if (onRefresh) {
-      await onRefresh();
-    }
-  }
-
-  function updateContactPreference(field, value) {
-    patchJob(buildContactPreferencePatch(field, value));
-  }
-
-  function updateMessageTemplate(templateKey) {
-    patchJob(buildMessageTemplatePatch(draftJob, templateKey));
-  }
-
-  async function handleSendCustomerMessage(message) {
-    if (!canWrite) {
-      return { ok: false, error: 'Your shop role is read-only.' };
-    }
-    if ((message.channel === 'email' || message.channel === 'both') && !canSendEmail) {
-      return { ok: false, error: entitlementMessage || 'Email sending is unavailable for this shop plan or billing state.' };
-    }
-    if (message.scheduledAt && !canScheduleEmail) {
-      return { ok: false, error: 'Scheduled Email is available on Pro.' };
-    }
-    if ((message.channel === 'sms' || message.channel === 'both') && !canSendSms) {
-      return { ok: false, error: entitlementMessage || 'SMS sending is unavailable for this shop plan or billing state.' };
-    }
-
-    const result = await sendCustomerMessage(draftJob, message);
-    if (result.message) {
-      setDraftJob((current) => buildMergeJobMessageJob(current, result.message));
-    }
-    if (result.ok && onRefresh) {
-      await onRefresh();
-    }
-    return result;
-  }
-
-  async function handleSendDocumentEmail({ type, recipient, subject, body, includeJobSheet, includeCustomerReport }) {
-    if (!canWrite) {
-      return { ok: false, error: 'Your shop role is read-only.' };
-    }
-    if (!canSendEmail) {
-      return { ok: false, error: entitlementMessage || 'Email sending is unavailable for this shop plan or billing state.' };
-    }
-    if (hasPendingWorkLog) {
-      return { ok: false, error: PENDING_WORK_LOG_MESSAGE };
-    }
-
-    let jobToSend = draftJob;
-    if (isDirty) {
-      try {
-        jobToSend = (await saveDraftNow()) || draftJob;
-      } catch (error) {
-        return { ok: false, error: error?.message || 'Save the job before sending email.' };
-      }
-    }
-
-    let documentContent;
-    let scopedShopSettings;
-    try {
-      scopedShopSettings = resolveScopedShopEmailSettings(jobToSend, shopProfile);
-      const jobWithCurrentTax = withResolvedJobTaxSettings(jobToSend, scopedShopSettings);
-      const resolvedTaxSettings = jobWithCurrentTax.techDetails.tax;
-      documentContent = buildSelectedDocumentEmailContent(jobWithCurrentTax, {
-        shopSettings: scopedShopSettings,
-        lengthUnit: measurementOptions.lengthUnit,
-        dateOptions,
-        moneyOptions,
-        totals: calculateJobTotals(jobWithCurrentTax, resolvedTaxSettings),
-        taxLabel: resolvedTaxSettings.taxLabel || scopedShopSettings.taxLabel || 'Sales Tax',
-        instrumentLabel: formatInstrumentLabel(jobWithCurrentTax)
-      }, {
-        includeJobSheet,
-        includeCustomerReport
-      });
-    } catch (error) {
-      return { ok: false, error: error?.message || SHOP_EMAIL_CONTEXT_ERROR };
-    }
-    const emailBody = [body.trim(), documentContent.text].filter(Boolean).join('\n\n');
-
-    const result = await sendCustomerMessage(jobToSend, {
-      channel: 'email',
-      customerId: jobToSend.customerId || null,
-      templateKey: type === 'invoice' ? 'invoice_email' : 'work_order_email',
-      to: recipient,
-      subject,
-      body: emailBody,
-      html: documentContent.html ? buildDocumentEmailHtml(body.trim(), documentContent.html) : ''
-    });
-
-    if (result.message) {
-      setDraftJob((current) => buildMergeJobMessageJob(current, result.message));
-    }
-
-    if (!result.ok) {
-      return result;
-    }
-
-    onNotice?.({
-      type: 'success',
-      message: type === 'invoice' ? 'Invoice email sent.' : 'Work order email sent.'
-    });
-
-    logJobEventSafe({
-      shopId: jobToSend.shopId,
-      jobId: jobToSend.id,
-      eventType: type === 'invoice' ? 'invoice_emailed' : 'work_order_emailed',
-      eventLabel: type === 'invoice' ? 'Invoice emailed' : 'Work order emailed',
-      eventNote: recipient,
-      eventData: {
-        recipient,
-        subject,
-        channel: 'email'
-      }
-    });
-
-    refreshTimelineEvents().catch((error) => {
-      console.warn('Document email timeline refresh failed.', error);
-    });
-    if (onRefresh) {
-      Promise.resolve(onRefresh()).catch((error) => {
-        console.warn('Document email job refresh failed.', error);
-      });
-    }
-
-    return { ok: true };
   }
 
   async function refreshTimelineEvents() {
