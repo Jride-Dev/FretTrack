@@ -25,13 +25,13 @@ Approximate release-branch sizes:
 | File | Lines | Next boundary |
 | --- | ---: | --- |
 | `src/styles.css` | 6,446 | Shared foundations plus module-owned styles |
-| `src/app/App.jsx` | 1,738 | Application data orchestration and domain hooks |
-| `src/modules/jobs/jobService.js` | 1,661 | Mapping, queries, mutations, and child synchronization |
-| `src/modules/jobs/JobDetail.jsx` | 1,385 | Focused state/action hooks and thinner orchestration |
-| `src/modules/inventory/inventoryService.js` | 1,286 | Parts, vendors, purchase orders, receiving, and specialist purchasing |
+| `src/app/App.jsx` | 1,501 | Application data orchestration and domain hooks |
+| `src/modules/jobs/jobService.js` | 1,624 | Remaining reads and parent mutations behind compatibility exports |
+| `src/modules/jobs/JobDetail.jsx` | 1,142 | Focused state/action hooks and thinner orchestration |
+| `src/modules/inventory/inventoryService.js` | 149 | Compatibility facade over focused inventory services |
 | `src/modules/inventory/InventoryPage.jsx` | 953 | Remaining controller state and mutation coordination |
 
-Inventory presentation was reduced from roughly 1,619 lines to 953. Job Detail presentation was reduced from roughly 1,584 lines to 1,385 while gaining isolated print boundaries and specialist routing. `jobService.js`, `inventoryService.js`, and global CSS grew as product behavior expanded, making them the correct post-release targets.
+Inventory presentation was reduced from roughly 1,619 lines to 953. Job Detail presentation was reduced from roughly 1,584 lines to 1,142 while gaining isolated print boundaries and specialist routing. The inventory service is now a 149-line compatibility facade over focused catalog, purchasing, receiving, and history modules. `App.jsx`, the remaining job-service reads and mutations, and global CSS are the next concentration points.
 
 ## Shipped boundaries
 
@@ -61,6 +61,8 @@ The release-version bump stays deferred until the maintainability slices are mer
 The first job-service extraction slice is already in motion behind compatibility exports: job normalization and child synchronization helpers now live in focused modules while the facade remains stable.
 
 The first inventory-service extraction slice is also in motion behind compatibility exports: inventory normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while the facade remains stable.
+
+The first `App.jsx` extraction is complete: access/status panels and pure runtime helpers now live in `AppAccessPanels.jsx` and `appRuntimeHelpers.js`. The app shell is smaller while retaining its existing permission, billing, and shop-selection behavior.
 
 The compatibility facades stay in place during extraction. No broad rewrite, no schema change solely for code organization, and no mixing behavioral feature work into structural PRs.
 

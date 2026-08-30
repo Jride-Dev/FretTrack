@@ -47,6 +47,8 @@ The first job-service slice is already underway behind compatibility exports: sh
 
 The first inventory-service slice is also underway behind compatibility exports: shared normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while the existing inventory service facade stays intact.
 
+The first app-shell extraction is complete: access/status panels and pure runtime helpers now live outside `App.jsx`, leaving the remaining work centered on data loading and mutation orchestration.
+
 Each extraction must preserve the current facade, permissions, database behavior, and regression suite. No broad rewrite.
 
 ## v0.3.x: Commerce hardening
