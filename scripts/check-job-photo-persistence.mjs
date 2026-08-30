@@ -24,8 +24,8 @@ function assertNotMatches(source, pattern, fileName, message) {
 
 const photoUrls = readFile('src/modules/photos/photoUrls.js');
 const photoService = readFile('src/modules/photos/photoService.js');
-const jobService = readFile('src/modules/jobs/jobService.js');
 const jobNormalization = readFile('src/modules/jobs/jobServiceNormalization.js');
+const jobQueries = readFile('src/modules/jobs/jobServiceQueries.js');
 const photoGallery = readFile('src/modules/photos/PhotoGallery.jsx');
 const damageMap = readFile('src/components/DamageMap.js');
 
@@ -61,8 +61,8 @@ assertNotMatches(
   'job image database writes must not persist temporary display URLs.'
 );
 
-assertIncludes(jobService, 'sanitizeJobForPersistence as sanitizeJobForPersistenceFromModule', 'jobService.js');
-assertIncludes(jobService, 'sanitizeJobForPersistenceFromModule(normalizeJobFromModule(job))', 'jobService.js');
+assertIncludes(jobQueries, 'sanitizeJobForPersistence', 'jobServiceQueries.js');
+assertIncludes(jobQueries, 'sanitizeJobForPersistence(normalizeJob(job))', 'jobServiceQueries.js');
 assertIncludes(jobNormalization, 'export function sanitizeJobForPersistence', 'jobServiceNormalization.js');
 assertIncludes(jobNormalization, 'export function sanitizeTechDetailsForPersistence', 'jobServiceNormalization.js');
 assertIncludes(jobNormalization, 'export function sanitizeDamageMapForPersistence', 'jobServiceNormalization.js');

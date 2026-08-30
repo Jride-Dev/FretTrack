@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 const dialog = readFileSync(join(root, 'src/modules/jobs/JobDocumentEmailDialog.jsx'), 'utf8');
-const jobDetail = readFileSync(join(root, 'src/modules/jobs/JobDetail.jsx'), 'utf8');
+const communicationActions = readFileSync(join(root, 'src/modules/jobs/jobDetailCommunicationActions.js'), 'utf8');
 const styles = readFileSync(join(root, 'src/styles.css'), 'utf8');
 
 function assertIncludes(source, expected, message) {
@@ -28,11 +28,11 @@ assertIncludes(dialog, 'onClick={(event) => event.stopPropagation()}', 'Document
 assertIncludes(dialog, '<button type="button" className="button-tertiary" onClick={onClose}>', 'Cancel must remain reachable regardless of send state.');
 assert.ok(!dialog.includes('onClick={onClose} disabled={sendState.sending}'), 'Cancel must not stay disabled after a send settles.');
 assertIncludes(dialog, 'disabled={!canSend}', 'Send control must still prevent duplicate sends while busy.');
-assertIncludes(jobDetail, "message: type === 'invoice' ? 'Invoice email sent.' : 'Work order email sent.'", 'Successful sends must leave a visible app-level confirmation after modal close.');
-assertIncludes(jobDetail, "import { getJobEvents, logJobEventSafe } from './jobEventsService';", 'Document email audit logging must import the safe job-event helper.');
-assertIncludes(jobDetail, 'logJobEventSafe({', 'Successful document sends must retain non-blocking job-event logging.');
-assertIncludes(jobDetail, 'buildSelectedDocumentEmailContent', 'Document email send path must build selected document content.');
-assertIncludes(jobDetail, 'buildDocumentEmailHtml', 'Document email send path must use formatted HTML when documents are selected.');
+assertIncludes(communicationActions, "message: type === 'invoice' ? 'Invoice email sent.' : 'Work order email sent.'", 'Successful sends must leave a visible app-level confirmation after modal close.');
+assertIncludes(communicationActions, "import { logJobEventSafe } from './jobEventsService.js';", 'Document email audit logging must import the safe job-event helper.');
+assertIncludes(communicationActions, 'logJobEventSafe({', 'Successful document sends must retain non-blocking job-event logging.');
+assertIncludes(communicationActions, 'buildSelectedDocumentEmailContent', 'Document email send path must build selected document content.');
+assertIncludes(communicationActions, 'buildDocumentEmailHtml', 'Document email send path must use formatted HTML when documents are selected.');
 assertIncludes(styles, '.document-email-option input[type="checkbox"]', 'Document email checkbox sizing must stay scoped to the dialog.');
 assertIncludes(styles, 'width: auto;', 'Document email checkboxes must override full-width text input styling.');
 
@@ -41,8 +41,8 @@ assertIncludes(emailDocuments, 'buildJobSheetEmailSection', 'Document email help
 assertIncludes(emailDocuments, 'buildCustomerReportEmailSection', 'Document email helper must build the Customer Report content.');
 assertIncludes(emailDocuments, 'escapeHtml', 'Document email helper must escape customer and job text before rendering HTML.');
 
-const jobService = readFileSync(join(root, 'src/modules/jobs/jobService.js'), 'utf8');
-assertIncludes(jobService, "html: message.html || ''", 'Document email client must forward formatted document HTML to the email function.');
+const jobMessaging = readFileSync(join(root, 'src/modules/jobs/jobServiceMessaging.js'), 'utf8');
+assertIncludes(jobMessaging, "html: message.html || ''", 'Document email client must forward formatted document HTML to the email function.');
 
 const emailFunction = readFileSync(join(root, 'supabase/functions/send-email/index.ts'), 'utf8');
 assertIncludes(emailFunction, "...(html ? { html } : {})", 'Email function must send formatted document HTML when provided.');

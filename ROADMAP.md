@@ -35,17 +35,17 @@ Known product boundaries:
 The first post-release work is deliberate spaghetti reduction without changing product behavior:
 
 1. ESLint baseline is now in place for JavaScript, React hooks, import hygiene, and CI enforcement.
-2. Split `jobService.js` into mapping, queries, mutations, child synchronization, and compatibility exports.
-3. Split `inventoryService.js` into parts, vendors, purchase orders, receiving, and specialist purchasing operations.
+2. Keep the completed `jobService.js` split stable across mapping, queries, mutations, messaging, child synchronization, and compatibility exports.
+3. Keep the completed `inventoryService.js` split stable across parts, vendors, purchase orders, receiving, specialist purchasing, and history operations.
 4. Continue reducing `App.jsx` and `JobDetail.jsx` orchestration through focused hooks and domain controllers.
 5. Begin moving global CSS into shared foundations and module-owned styles without redesigning the interface.
 6. Replace remaining source-text and dirty-diff assertions with executable behavior checks where practical.
 
 The version bump to the next minor release stays deferred until the extraction work is streamlined and the new boundaries hold under CI.
 
-The first job-service slice is already underway behind compatibility exports: shared normalization and child synchronization helpers now live in focused modules while the existing job service facade stays intact.
+The job-service split is complete behind a 21-line compatibility facade. Normalization, queries, mutations, messaging, and child synchronization now have focused owners, and the transitional duplicate implementations have been removed.
 
-The first inventory-service slice is also underway behind compatibility exports: shared normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while the existing inventory service facade stays intact.
+The inventory-service split is complete behind its compatibility facade: shared normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while existing imports remain intact.
 
 The first app-shell extractions are complete: access/status panels and pure runtime helpers now live outside `App.jsx`, and the offline draft lifecycle now has a focused hook. The remaining work is centered on online data loading and mutation orchestration.
 

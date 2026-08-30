@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const source = readFileSync(join(process.cwd(), 'src/modules/jobs/jobService.js'), 'utf8');
+const source = readFileSync(join(process.cwd(), 'src/modules/jobs/jobServiceChildren.js'), 'utf8');
 
 const helper = source.match(/async function syncReplaceableJobChildren[\s\S]*?\n}/)?.[0] || '';
 assert.match(helper, /\.upsert\(rows, \{ onConflict: 'id' \}\)/, 'Billing children must be written before stale rows are removed.');
