@@ -10,10 +10,11 @@ import {
   slugifyShopId
 } from './appRuntimeHelpers.js';
 import WorkspaceRouter from './WorkspaceRouter.jsx';
+import useJobWorkspaceActions from './useJobWorkspaceActions.js';
+import useJobWorkspaceData from './useJobWorkspaceData.js';
 import useOfflineDraftQueue from './useOfflineDraftQueue.js';
 import useWorkspaceNavigation from './useWorkspaceNavigation.js';
 import AuthGate from '../modules/auth/AuthGate.jsx';
-import { getCustomers } from '../modules/customers';
 import { getAssignableShopMembers } from '../modules/jobs/teamAssignmentService.js';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
@@ -25,9 +26,7 @@ import {
   canAccessOperatorDashboard,
   getCurrentAccessPermissions
 } from '../modules/auth/permissionService';
-import { addJob, getJobs, setJobAccountingVoid, updateJob } from '../modules/jobs/jobService';
-import { deleteJobImage, uploadJobImages } from '../modules/photos/photoService';
-import { calculateTillSummary, sortNewestFirst } from '../modules/jobs/jobSelectors';
+import { calculateTillSummary } from '../modules/jobs/jobSelectors';
 import { clearSelectedShop, getCurrentShopName, getSelectedShop, getShopDateOptions, getShopMoneyOptions, setSelectedShop } from '../modules/shops/shopConfig';
 import { clearVitePreloadReloadGuard } from '../shared/pwa/preloadRecovery';
 import { bootstrapCurrentUserAsOwner, getCurrentUserShopMemberships } from '../modules/shops/shopMembershipService';
@@ -51,9 +50,6 @@ const PWA_INSTALL_HELP_DISMISSED_KEY = 'frettrack_pwa_install_help_dismissed';
 const NEW_JOB_SIDEBAR_COLLAPSED_KEY = 'frettrack:new-job-sidebar-collapsed';
 
 export default function App() {
-  const [jobs, setJobs] = useState([]);
-  const [jobsReadyShopId, setJobsReadyShopId] = useState('');
-  const [customers, setCustomers] = useState([]);
   const [assignableMembers, setAssignableMembers] = useState([]);
   const [assignableMembersError, setAssignableMembersError] = useState('');
   const [assignableMembersLoading, setAssignableMembersLoading] = useState(false);
@@ -88,9 +84,18 @@ export default function App() {
   const [isNewJobSidebarCollapsed, setIsNewJobSidebarCollapsed] = useState(() => localStorage.getItem(NEW_JOB_SIDEBAR_COLLAPSED_KEY) === 'true');
   const manualSignOutRef = useRef(false);
   const shopAccessRequestIdRef = useRef(0);
-  const jobsRequestIdRef = useRef(0);
-  const customersRequestIdRef = useRef(0);
   const assignableMembersRequestIdRef = useRef(0);
+
+  const {
+    customers,
+    jobs,
+    jobsReadyShopId,
+    refreshCustomers,
+    refreshJobs,
+    setCustomers,
+    setJobs,
+    setJobsReadyShopId
+  } = useJobWorkspaceData({ shopId: membership?.shopId });
 
   useEffect(() => {
     clearVitePreloadReloadGuard();
@@ -157,8 +162,6 @@ export default function App() {
     onAccessDenied: () => setNotice({ type: 'error', message: 'This area is not available for your account.' })
   });
   const selectedJob = jobs.find((job) => job.id === selectedJobId);
-  const selectedJobIdRef = useRef(selectedJobId);
-  selectedJobIdRef.current = selectedJobId;
   const {
     handleDiscardOfflineDraft,
     handleOfflineDraftSaved,
@@ -178,6 +181,33 @@ export default function App() {
     refreshJobs,
     shopId: membership?.shopId
   });
+  const {
+    handleAccountingVoidChange,
+    handleAmplifierJobCreate,
+    handleAssignmentChanged,
+    handleImageDelete,
+    handleImageUpload,
+    handleKeyboardJobCreate,
+    handleUpdate
+  } = useJobWorkspaceActions({
+    access: {
+      amplifierRepairEnabled,
+      canEditAmplifierRepair,
+      canEditKeyboardRepair,
+      canEditShopSettings,
+      canUploadPhotos,
+      canWrite,
+      entitlementMessage,
+      keyboardRepairEnabled
+    },
+    isOnline,
+    navigation: { selectWorkspaceJob, setHasUnsavedPageChanges, setSelectedJobId },
+    refreshCustomers,
+    refreshJobs,
+    selectedJobId,
+    setJobs,
+    setNotice
+  });
 
   function handleSelectJob(jobId) {
     const job = jobs.find((item) => item.id === jobId);
@@ -187,43 +217,6 @@ export default function App() {
         ? 'keyboard-detail'
         : 'guitar-detail';
     return selectWorkspaceJob(jobId, detailMode);
-  }
-
-  async function refreshJobs(targetShopId = membership?.shopId || getSelectedShop().shopId) {
-    const requestedShopId = targetShopId || (hasSupabaseConfig ? '' : 'local');
-    const selectedShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
-    if (selectedShopId !== requestedShopId) {
-      return null;
-    }
-    const requestId = ++jobsRequestIdRef.current;
-    const loadedJobs = await getJobs();
-    const activeShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
-    if (requestId !== jobsRequestIdRef.current || activeShopId !== requestedShopId) {
-      return null;
-    }
-    const sortedJobs = sortNewestFirst(loadedJobs);
-    setJobs(sortedJobs);
-    setJobsReadyShopId(requestedShopId);
-    return sortedJobs;
-  }
-
-  async function refreshCustomers(sourceJobs = jobs, targetShopId = membership?.shopId || getSelectedShop().shopId) {
-    if (!Array.isArray(sourceJobs)) {
-      return null;
-    }
-    const requestedShopId = targetShopId || (hasSupabaseConfig ? '' : 'local');
-    const selectedShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
-    if (selectedShopId !== requestedShopId) {
-      return null;
-    }
-    const requestId = ++customersRequestIdRef.current;
-    const loadedCustomers = await getCustomers(sourceJobs);
-    const activeShopId = getSelectedShop().shopId || (hasSupabaseConfig ? '' : 'local');
-    if (requestId !== customersRequestIdRef.current || activeShopId !== requestedShopId) {
-      return null;
-    }
-    setCustomers(loadedCustomers);
-    return loadedCustomers;
   }
 
   async function refreshAssignableMembers(shopId = membership?.shopId) {
@@ -649,137 +642,9 @@ export default function App() {
     });
   }
 
-  async function handleAmplifierJobCreate(jobDraft) {
-    if (!amplifierRepairEnabled) {
-      throw new Error('Amplifier Repair is available on Pro.');
-    }
-    if (!canEditAmplifierRepair) {
-      throw new Error('Your shop role is read-only.');
-    }
-    if (hasSupabaseConfig && !isOnline) {
-      throw new Error('Creating amplifier work orders requires an active connection.');
-    }
-
-    const savedJob = await addJob(jobDraft);
-    const loadedJobs = await refreshJobs();
-    await refreshCustomers(loadedJobs);
-    setHasUnsavedPageChanges(false);
-    selectWorkspaceJob(savedJob.id, 'amplifier-detail', { skipDirtyGuard: true });
-    setNotice({ type: 'success', message: `Created amplifier job ${savedJob.jobNumber || ''}.` });
-    return savedJob;
-  }
-
-  async function handleKeyboardJobCreate(jobDraft) {
-    if (!keyboardRepairEnabled) {
-      throw new Error('Keyboard Repair is available on Pro.');
-    }
-    if (!canEditKeyboardRepair) {
-      throw new Error('Your shop role is read-only.');
-    }
-    if (hasSupabaseConfig && !isOnline) {
-      throw new Error('Creating keyboard work orders requires an active connection.');
-    }
-
-    const savedJob = await addJob(jobDraft);
-    const loadedJobs = await refreshJobs();
-    await refreshCustomers(loadedJobs);
-    setHasUnsavedPageChanges(false);
-    selectWorkspaceJob(savedJob.id, 'keyboard-detail', { skipDirtyGuard: true });
-    setNotice({ type: 'success', message: `Created keyboard job ${savedJob.jobNumber || ''}.` });
-    return savedJob;
-  }
-
-  function handleAssignmentChanged(jobId, assignment) {
-    setJobs((current) => current.map((item) => (
-      item.id === jobId
-        ? {
-            ...item,
-            assignedMemberId: assignment.assignedMemberId || '',
-            assignedMemberDisplayName: assignment.assignedMemberDisplayName || '',
-            assignmentUpdatedAt: assignment.assignmentUpdatedAt || null
-          }
-        : item
-    )));
-  }
-
   function openCurrentJobsForAssignee(assignedMemberId) {
     setCurrentJobsAssigneeFilter(assignedMemberId || '');
     navigateTo('list');
-  }
-
-  async function handleUpdate(job, options = {}) {
-    if (!canWrite) {
-      setNotice({ type: 'error', message: 'Your shop role is read-only.' });
-      return job;
-    }
-
-    if (hasSupabaseConfig && !isOnline) {
-      throw new Error('Offline draft mode is for new job intake only. Existing job edits require an active connection.');
-    }
-
-    if (!options.expectedUpdatedAt) {
-      setJobs((current) => current.map((item) => (item.id === job.id ? job : item)));
-    }
-    const savedJob = await updateJob(job, options);
-    if (selectedJobIdRef.current !== job.id) {
-      setJobs((current) => current.map((item) => (item.id === savedJob.id ? savedJob : item)));
-      return savedJob;
-    }
-    const loadedJobs = await refreshJobs();
-    await refreshCustomers(loadedJobs);
-    return savedJob;
-  }
-
-  async function handleAccountingVoidChange(jobId, voided, reason) {
-    if (!canEditShopSettings) {
-      throw new Error('Only a writable shop owner or admin can change accounting exclusion.');
-    }
-
-    await setJobAccountingVoid(jobId, voided, reason);
-    const loadedJobs = await refreshJobs();
-    await refreshCustomers(loadedJobs);
-    const savedJob = loadedJobs.find((item) => item.id === jobId) || null;
-    setNotice({
-      type: 'success',
-      message: voided
-        ? `Work order ${savedJob?.jobNumber || ''} excluded from accounting.`
-        : `Work order ${savedJob?.jobNumber || ''} restored to accounting.`
-    });
-    return savedJob;
-  }
-
-  async function handleImageUpload(job, files, options = {}) {
-    if (!canWrite) {
-      setNotice({ type: 'error', message: 'Your shop role is read-only.' });
-      return { job, errors: [{ fileName: 'Upload', message: 'Your shop role is read-only.' }] };
-    }
-    if (!canUploadPhotos) {
-      const message = entitlementMessage || 'Photo uploads are unavailable for this shop plan or billing state.';
-      setNotice({ type: 'error', message });
-      return { job, errors: [{ fileName: 'Upload', message }] };
-    }
-
-    const { skipRefresh = false, ...uploadOptions } = options;
-    const result = await uploadJobImages(job, files, { category: 'job', ...uploadOptions });
-    if (result.job && !skipRefresh) {
-      await refreshJobs();
-      setSelectedJobId(result.job.id);
-    }
-
-    return result;
-  }
-
-  async function handleImageDelete(job, image) {
-    if (!canWrite) {
-      setNotice({ type: 'error', message: 'Your shop role is read-only.' });
-      return;
-    }
-
-    const savedJob = await deleteJobImage(job, image);
-    if (savedJob) {
-      await refreshJobs();
-      setSelectedJobId(savedJob.id);
-    }
   }
 
   function showNewJob(customer = null, options = {}) {

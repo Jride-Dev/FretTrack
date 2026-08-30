@@ -47,7 +47,7 @@ The job-service split is complete behind a 21-line compatibility facade. Normali
 
 The inventory-service split is complete behind its compatibility facade: shared normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while existing imports remain intact.
 
-The first app-shell extractions are complete: access/status panels and pure runtime helpers now live outside `App.jsx`, and the offline draft lifecycle now has a focused hook. The remaining work is centered on online data loading and mutation orchestration.
+The app-shell extraction now includes access/status panels, pure runtime helpers, offline draft orchestration, stale-safe job/customer loading, and permission-aware online work-order actions. The remaining `App.jsx` work is centered on shop/session bootstrap and non-job domain coordination.
 
 Each extraction must preserve the current facade, permissions, database behavior, and regression suite. No broad rewrite.
 

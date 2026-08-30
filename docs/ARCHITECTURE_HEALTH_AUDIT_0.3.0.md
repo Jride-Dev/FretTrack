@@ -25,7 +25,7 @@ Approximate release-branch sizes:
 | File | Lines | Next boundary |
 | --- | ---: | --- |
 | `src/styles.css` | 6,446 | Shared foundations plus module-owned styles |
-| `src/app/App.jsx` | 1,355 | Remaining application data and mutation orchestration |
+| `src/app/App.jsx` | 1,140 | Remaining shop/session bootstrap and cross-domain coordination |
 | `src/modules/jobs/jobService.js` | 21 | Compatibility facade over focused job-service modules |
 | `src/modules/jobs/JobDetail.jsx` | 1,142 | Focused state/action hooks and thinner orchestration |
 | `src/modules/inventory/inventoryService.js` | 149 | Compatibility facade over focused inventory services |
@@ -62,7 +62,7 @@ The job-service extraction is complete behind a 21-line compatibility facade. `j
 
 The inventory-service extraction is complete behind compatibility exports: inventory normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while the facade remains stable.
 
-The first `App.jsx` extractions are complete: access/status panels and pure runtime helpers now live in `AppAccessPanels.jsx` and `appRuntimeHelpers.js`, while offline connectivity, local-draft loading, sync, retry, duplicate recovery, and discard behavior live in `useOfflineDraftQueue.js`. The app shell is smaller while retaining its existing permission, billing, shop-selection, and offline-intake behavior.
+The current `App.jsx` extractions are complete: access/status panels and pure runtime helpers live in `AppAccessPanels.jsx` and `appRuntimeHelpers.js`; offline connectivity, local-draft loading, sync, retry, duplicate recovery, and discard behavior live in `useOfflineDraftQueue.js`; stale-safe job/customer loading lives in `useJobWorkspaceData.js`; and specialist creation, job updates, accounting exclusion, assignment state, and photo persistence live in `useJobWorkspaceActions.js`. The app shell is smaller while retaining its existing permission, billing, shop-selection, offline-intake, and stale-response behavior.
 
 The compatibility facades stay in place during extraction. No broad rewrite, no schema change solely for code organization, and no mixing behavioral feature work into structural PRs.
 
