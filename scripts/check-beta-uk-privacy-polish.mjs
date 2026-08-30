@@ -36,7 +36,7 @@ function changedFiles() {
 
 const jobForm = source('src/modules/jobs/JobForm.jsx');
 const jobInfo = source('src/modules/jobs/JobInfoSection.js');
-const jobService = source('src/modules/jobs/jobService.js');
+const jobNormalization = source('src/modules/jobs/jobServiceNormalization.js');
 const customerForm = source('src/modules/customers/CustomerForm.jsx');
 const customerNormalize = source('src/modules/customers/customerNormalize.js');
 const neckOptions = source('src/modules/jobs/neckInspectionOptions.js');
@@ -61,17 +61,17 @@ assertIncludes(jobForm, 'autoCapitalize="characters"', 'New job postal code shou
 assertIncludes(jobInfo, 'autoCapitalize="characters"', 'Job detail postal code should be friendly to UK postcode entry.');
 assertIncludes(customerForm, 'autoCapitalize="characters"', 'Customer postal code should be friendly to UK postcode entry.');
 assertNotMatches(jobForm + jobInfo + customerForm, /inputMode="numeric"[^>]*name="postalCode"|name="postalCode"[^>]*inputMode="numeric"/, 'Postal code inputs must not request numeric-only keyboards.');
-assertNotMatches(jobForm + jobInfo + customerForm + jobService + customerNormalize, /postalCode[\s\S]{0,160}replace\(\s*\/\\D\/g/, 'Postal code handling must not strip non-digits.');
-assertIncludes(jobService, "postalCode: String(postalCode || '').trim()", 'Job normalization must store trimmed postal-code values.');
+assertNotMatches(jobForm + jobInfo + customerForm + jobNormalization + customerNormalize, /postalCode[\s\S]{0,160}replace\(\s*\/\\D\/g/, 'Postal code handling must not strip non-digits.');
+assertIncludes(jobNormalization, "postalCode: String(postalCode || '').trim()", 'Job normalization must store trimmed postal-code values.');
 assertIncludes(customerNormalize, "const postalCode = String(customer.postalCode || customer.postal_code || '').trim();", 'Customer normalization must store trimmed postal-code values.');
 
 assertIncludes(neckOptions, "'Hump / rise at body joint'", 'Neck condition options must include the hump/rise wording.');
 assertIncludes(neckSection, 'NECK_CONDITION_OPTIONS.map', 'Neck condition UI must render shared options.');
 assertIncludes(neckOptions, "'Twist'", 'Twist must remain available.');
 
-assertIncludes(privacyNote, '# Customer Data & Privacy Note for Beta Shops', 'Privacy note must exist with the requested title.');
+assertIncludes(privacyNote, '# Customer Data And Privacy Note For Shops', 'Privacy note must use the stable shop-facing title.');
 assertIncludes(privacyNote, 'FretTrack is repair-shop workflow and recordkeeping software.', 'Privacy note must explain FretTrack purpose.');
-assertIncludes(privacyNote, 'customer, instrument, job, photo, and repair data', 'Privacy note must cover entered data types.');
+assertIncludes(privacyNote, 'customers, instruments, repair jobs, photos, work notes, parts, services, payments, communication history', 'Privacy note must cover entered data types.');
 assertIncludes(privacyNote, 'shop-scoped and role-based', 'Privacy note must explain access model.');
 assertIncludes(privacyNote, 'not intended for unnecessary sensitive personal information', 'Privacy note must avoid encouraging sensitive data entry.');
 assertIncludes(privacyNote, 'remains responsible', 'Privacy note must preserve shop responsibility.');
@@ -79,8 +79,8 @@ assertIncludes(privacyNote, 'does not sell shop workflow or customer repair data
 assertIncludes(privacyNote, 'https://frettrack-app.com/privacy', 'Privacy note must reference Privacy Policy.');
 assertIncludes(privacyNote, 'https://frettrack-app.com/terms', 'Privacy note must reference Terms.');
 assertNotMatches(privacyNote, /GDPR compliant|certified|certification/i, 'Privacy note must not claim GDPR compliance or formal certification.');
-assertIncludes(betaChecklist, 'Customer Data & Privacy Note for Beta Shops', 'Beta checklist must reference the privacy note.');
-assertIncludes(docsReadme, 'Customer Data & Privacy Note for Beta Shops', 'Docs index must reference the privacy note.');
+assertIncludes(betaChecklist, 'Terms, Privacy, Support', 'Release validation must cover the public legal and support documents.');
+assertIncludes(docsReadme, 'Customer Data and Privacy Note', 'Docs index must reference the privacy note.');
 
 const changed = changedFiles();
 const forbiddenPaths = [
@@ -101,4 +101,4 @@ assert.ok(!changed.some((file) => file.startsWith('supabase/migrations/')), 'No 
 const migrationFiles = listFiles('supabase/migrations');
 assert.ok(migrationFiles.length > 0, 'Expected existing Supabase migration history to be present for the no-new-migration check.');
 
-console.log('Beta UK/privacy polish checks passed.');
+console.log('Stable UK/privacy polish checks passed.');

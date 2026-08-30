@@ -13,7 +13,7 @@ const statuses = read('src/modules/jobs/JobStatusSelect.jsx');
 const jobForm = read('src/modules/jobs/JobForm.jsx');
 const jobInfo = read('src/modules/jobs/JobInfoSection.js');
 const overview = read('src/modules/jobs/components/tabs/OverviewTab.jsx');
-const jobService = read('src/modules/jobs/jobService.js');
+const jobNormalization = read('src/modules/jobs/jobServiceNormalization.js');
 const schedulingService = read('src/modules/scheduling/schedulingService.js');
 const schedulingPage = read('src/modules/scheduling/SchedulingPage.jsx');
 const detailsDialog = read('src/modules/scheduling/ScheduleEventDetailsDialog.jsx');
@@ -28,9 +28,9 @@ for (const formSource of [jobForm, jobInfo]) {
   assert.match(formSource, /type="datetime-local"[\s\S]*name="dropOffAt"[\s\S]*disabled=\{!canWrite\}/, 'Drop-off editing must remain job-write permission gated.');
 }
 assert.match(overview, /Drop-off date and time[\s\S]*formatShopDateTime\(draftJob\.dropOffAt, dateOptions\)/, 'Job Detail must display drop-off using shop-aware date/time formatting.');
-assert.match(jobService, /dropOffAt:\s*job\.dropOffAt \|\| job\.drop_off_at \|\| ''/, 'Legacy jobs without drop_off_at must normalize safely.');
-assert.match(jobService, /drop_off_at:\s*job\.dropOffAt \? new Date\(job\.dropOffAt\)\.toISOString\(\) : null/, 'Job saves must persist an optional drop-off timestamp.');
-assert.match(jobService, /dropOffAt:\s*job\.dropOffAt \? new Date\(job\.dropOffAt\)\.toISOString\(\) : ''/, 'The existing create-job JSON payload must carry a timezone-safe drop-off value through the numbered-job RPC.');
+assert.match(jobNormalization, /dropOffAt:\s*job\.dropOffAt \|\| job\.drop_off_at \|\| ''/, 'Legacy jobs without drop_off_at must normalize safely.');
+assert.match(jobNormalization, /drop_off_at:\s*job\.dropOffAt \? new Date\(job\.dropOffAt\)\.toISOString\(\) : null/, 'Job saves must persist an optional drop-off timestamp.');
+assert.match(jobNormalization, /dropOffAt:\s*job\.dropOffAt \? new Date\(job\.dropOffAt\)\.toISOString\(\) : ''/, 'The existing create-job JSON payload must carry a timezone-safe drop-off value through the numbered-job RPC.');
 
 assert.match(migration, /add column if not exists drop_off_at timestamptz/, 'Jobs must have an optional drop-off timestamp.');
 assert.match(migration, /generated_event_kind in \('job_drop_off', 'job_due'\)/, 'Generated events must use explicit drop-off and due kinds.');
