@@ -19,6 +19,7 @@ import {
   fromDbCorrespondenceMessage as fromDbCustomerMessage,
   normalizeCorrespondenceMessage as normalizeCustomerMessage
 } from '../messaging/customerCorrespondence';
+import { mergeJobsByUpdatedAt } from './jobMerge.js';
 
 const STORAGE_KEY = 'guitar_checkin_jobs';
 const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
@@ -169,60 +170,6 @@ export function saveLocalJobs(jobs) {
 
 export const saveJobs = saveLocalJobs;
 
-function mergeJobsByUpdatedAt(remoteJobs, localJobs) {
-  const merged = new Map();
-  const remoteKeys = new Set();
-  const activeShopId = getActiveShopId();
-
-  remoteJobs.forEach((job) => {
-    merged.set(job.id, job);
-    const key = getJobIdentityKey(job);
-    if (key) {
-      remoteKeys.add(key);
-    }
-  });
-
-  localJobs.forEach((localJob) => {
-    if (getActiveShopId(localJob.shopId) !== activeShopId) {
-      return;
-    }
-
-    if (!remoteJobs.length && looksLikeRemoteJob(localJob)) {
-      return;
-    }
-
-    const localKey = getJobIdentityKey(localJob);
-    if (localKey && remoteKeys.has(localKey) && !merged.has(localJob.id)) {
-      return;
-    }
-
-    const remoteJob = merged.get(localJob.id);
-    if (!remoteJob || isNewerJob(localJob, remoteJob)) {
-      merged.set(localJob.id, localJob);
-    }
-  });
-
-  return Array.from(merged.values())
-    .map((job) => normalizeJob(job))
-    .sort((a, b) => new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt));
-}
-
-function getJobIdentityKey(job) {
-  const shopId = getActiveShopId(job.shopId || job.shop_id);
-  const jobNumber = job.jobNumber || job.job_number || '';
-  return shopId && jobNumber ? `${shopId}:${jobNumber}` : '';
-}
-
-function looksLikeRemoteJob(job) {
-  return Boolean(job.jobNumber || job.job_number || job.dailySequence || job.daily_sequence);
-}
-
-function isNewerJob(candidate, baseline) {
-  const candidateTime = new Date(candidate.updatedAt || candidate.updated_at || candidate.createdAt || 0).getTime();
-  const baselineTime = new Date(baseline.updatedAt || baseline.updated_at || baseline.createdAt || 0).getTime();
-  return candidateTime > baselineTime;
-}
-
 export async function getJobs() {
   const activeShopId = getActiveShopId();
 
@@ -249,7 +196,10 @@ export async function getJobs() {
   }
 
   const remoteJobs = await Promise.all(data.map(async (job) => hydrateJobImageUrls(fromDbJob(job))));
-  const jobs = mergeJobsByUpdatedAt(remoteJobs, getLocalJobs());
+  const jobs = mergeJobsByUpdatedAt(remoteJobs, getLocalJobs(), {
+    activeShopId,
+    normalizeJob
+  });
   saveLocalJobs(jobs);
   return jobs;
 }

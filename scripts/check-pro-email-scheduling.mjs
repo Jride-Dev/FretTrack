@@ -9,6 +9,7 @@ const includes = (source, expected, message) => assert.ok(source.includes(expect
 const migration = read('supabase/migrations/20260815095604_pro_email_scheduling_foundation.sql');
 const hardeningMigration = read('supabase/migrations/20260816004706_harden_email_provider_consistency.sql');
 const terminalStateMigration = read('supabase/migrations/20260816032817_guard_email_provider_terminal_state.sql');
+const requestHelpers = read('supabase/functions/send-email/requestHelpers.ts');
 for (const plan of ['free', 'solo', 'shop', 'pro', 'enterprise', 'trial']) {
   includes(migration, `('${plan}', 'scheduled_email'`, `Migration must seed scheduled_email for ${plan}.`);
 }
@@ -30,7 +31,6 @@ includes(edge, "template_key: message.templateKey || ''", 'Scheduled history mus
 includes(edge, "'Idempotency-Key': `frettrack-email/${operationMessage.request_id}`", 'Provider requests must reuse the durable message request ID.');
 includes(edge, "shopHasEntitlement(createServiceClient(), access.shopId, 'scheduled_email')", 'The server must enforce the Pro entitlement.');
 includes(edge, 'access.emailOptIn', 'Scheduled email must require customer email opt-in.');
-includes(edge, 'MAX_SCHEDULE_LEAD_MS = 30 * 24 * 60 * 60 * 1000', 'The provider 30-day schedule limit must be enforced.');
 includes(edge, "fetch(`https://api.resend.com/emails/${encodeURIComponent(cancelingMessage.provider_message_id)}/cancel`", 'Cancellation must target the stored provider message.');
 includes(edge, ".eq('job_id', jobId)", 'Cancellation must remain scoped to the requested job.');
 const initialAccessCheck = edge.indexOf('const access = await resolveEmailProviderAccess(request, jobId');
@@ -50,6 +50,8 @@ includes(edge, "method: 'GET'", 'Provider reconciliation must retrieve authorita
 includes(edge, "status: 'canceling'", 'Cancellation intent must be durable before the provider call.');
 includes(edge, 'buildProviderReconciliationPatch({', 'Provider reconciliation must use the tested terminal-state mapper.');
 includes(edge, ".rpc('reconcile_customer_email_provider_state'", 'Provider reconciliation must use the atomic database transition.');
+includes(requestHelpers, 'MIN_SCHEDULE_LEAD_MS = 2 * 60 * 1000', 'Scheduled email must still enforce the minimum lead time.');
+includes(requestHelpers, 'MAX_SCHEDULE_LEAD_MS = 30 * 24 * 60 * 60 * 1000', 'The provider 30-day schedule limit must be enforced.');
 includes(providerReconciliation, "new Set(['canceled', 'cancel_accepted'])", 'Provider terminal cancellation events must finalize Message History.');
 assert.ok(providerReconciliation.indexOf('sentEvents.has(normalizedEvent)') < providerReconciliation.indexOf('canceledEvents.has(normalizedEvent)'), 'Sent provider events must retain precedence over cancellation finalization.');
 includes(providerReconciliationTest, "for (const lastEvent of ['canceled', 'cancel_accepted'])", 'Executable coverage must include each supported terminal cancellation event.');
@@ -107,7 +109,7 @@ includes(packageJson, '"check:pro-email-scheduling": "node scripts/check-pro-ema
 
 const documentation = read('docs/PRO_EMAIL_SCHEDULING.md');
 includes(documentation, 'Provider schedule elapsed', 'Documentation must distinguish provider scheduling from confirmed delivery.');
-includes(documentation, 'six-/twelve-month customer service reminders', 'Documentation must keep long-horizon reminders outside this transactional slice.');
+includes(documentation, 'Long-horizon service follow-up is handled by the separately gated Automated Service Reminders workflow', 'Documentation must keep long-horizon reminders outside this transactional slice.');
 includes(documentation, 'does not restore quota', 'Documentation must state cancellation quota behavior.');
 includes(documentation, 'rechecks current write access, email opt-in, and scheduled-email entitlement', 'Documentation must describe the final provider authorization check.');
 includes(documentation, 'durable pending Message History row', 'Documentation must describe pre-provider history durability.');
