@@ -58,6 +58,8 @@ Inventory presentation was reduced from roughly 1,619 lines to 953. Job Detail p
 
 The release-version bump stays deferred until the maintainability slices are merged and the new boundaries remain green in CI.
 
+The first job-service extraction slice is already in motion behind compatibility exports: job normalization and child synchronization helpers now live in focused modules while the facade remains stable.
+
 The compatibility facades stay in place during extraction. No broad rewrite, no schema change solely for code organization, and no mixing behavioral feature work into structural PRs.
 
 ## Release validation baseline

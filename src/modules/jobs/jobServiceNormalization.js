@@ -1,45 +1,22 @@
-import { combineCustomerName, ensureCustomerForJob, splitCustomerName } from '../customers';
+import { combineCustomerName, splitCustomerName } from '../customers';
 import { getInstrumentStringCount, normalizeInstrumentType, resizeStringGauges } from '../instruments/instrumentService';
-import { supabase, hasSupabaseConfig } from '../../shared/lib/supabaseClient';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences, normalizeLengthUnit, normalizeMeasurementSystem } from '../../shared/utils/measurements';
 import { formatJobNumber, generateJobNumber, getJobDayCode } from './jobNumber';
-import { logJobEventSafe } from './jobEventsService';
 import { getCurrentShopId } from '../shops/shopConfig';
-import { validateJobForSave } from './jobValidation';
-import {
-  getJobImageStoragePath,
-  getPersistableJobImageUrl,
-  resolveJobImageUrl,
-  resolveJobImageUrls
-} from '../photos/photoUrls';
 import { normalizeJobPriority } from './jobPriority';
 import { normalizeJobSource } from './jobSources';
 import {
   fromDbCorrespondenceMessage as fromDbCustomerMessage,
   normalizeCorrespondenceMessage as normalizeCustomerMessage
 } from '../messaging/customerCorrespondence';
-import { mergeJobsByUpdatedAt } from './jobMerge.js';
 import {
-  fromDbJob as fromDbJobRecord,
-  getActiveShopId as getActiveShopIdFromModule,
-  hydrateJobImageUrls as hydrateJobImageUrlsFromModule,
-  normalizeJob as normalizeJobFromModule,
-  sanitizeJobForPersistence as sanitizeJobForPersistenceFromModule,
-  toDbJob as toDbJobFromModule,
-  toLegacyDbJob as toLegacyDbJobFromModule
-} from './jobServiceNormalization.js';
-import {
-  shouldRetryWithLegacyJobPayload as shouldRetryWithLegacyJobPayloadFromModule,
-  syncJobChildren as syncJobChildrenFromModule
-} from './jobServiceChildren.js';
+  getJobImageStoragePath,
+  getPersistableJobImageUrl,
+  resolveJobImageUrl,
+  resolveJobImageUrls
+} from '../photos/photoUrls';
 
-const STORAGE_KEY = 'guitar_checkin_jobs';
-const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
-const fretTrackFunctionKey = import.meta.env.VITE_FRETTRACK_FUNCTION_KEY || '';
-const duplicateWorkOrderPrefix = 'MULTIPLE WORK ORDERS CANNOT BE CREATED';
-export const JOB_SAVE_CONFLICT_CODE = 'FRETTRACK_JOB_SAVE_CONFLICT';
-export const smsEnabled = import.meta.env.VITE_SMS_ENABLED === 'true';
 const defaultTechDetails = {
   intakeType: 'Walk-In',
   subcontractorName: '',
@@ -145,604 +122,11 @@ const defaultTechDetails = {
   discountValue: ''
 };
 
-export { combineCustomerName, generateJobNumber, splitCustomerName };
-
-function getActiveShopId(shopId = '') {
+export function getActiveShopId(shopId = '') {
   return shopId || getCurrentShopId();
 }
 
-export function getLocalJobs() {
-  try {
-    const activeShopId = getActiveShopIdFromModule();
-    const storedJobs = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (storedJobs) {
-      return storedJobs.map(normalizeJobFromModule).filter((job) => job.shopId === activeShopId);
-    }
-
-    const oldStoredJobs = JSON.parse(localStorage.getItem(OLD_STORAGE_KEY));
-    if (oldStoredJobs) {
-      const migratedJobs = oldStoredJobs.map(normalizeJobFromModule).filter((job) => job.shopId === activeShopId);
-      saveLocalJobs(migratedJobs);
-      return migratedJobs;
-    }
-
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveLocalJobs(jobs) {
-  try {
-    const persistedJobs = jobs.map((job) => sanitizeJobForPersistenceFromModule(normalizeJobFromModule(job)));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedJobs));
-  } catch (error) {
-    console.error('Local job save failed. Supabase save will still be attempted when configured.', error);
-  }
-}
-
-export const saveJobs = saveLocalJobs;
-
-export async function getJobs() {
-  const activeShopId = getActiveShopIdFromModule();
-
-  if (!hasSupabaseConfig || !supabase) {
-    return getLocalJobs();
-  }
-
-  const { data, error } = await supabase
-    .from('jobs')
-    .select(`
-      *,
-      work_logs (*),
-      job_parts (*),
-      job_services (*),
-      job_images (*),
-      customer_messages (*)
-    `)
-    .eq('shop_id', activeShopId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Supabase getJobs failed. Falling back to localStorage.', error);
-    return getLocalJobs();
-  }
-
-  const remoteJobs = await Promise.all(data.map(async (job) => hydrateJobImageUrlsFromModule(fromDbJobRecord(job))));
-  const jobs = mergeJobsByUpdatedAt(remoteJobs, getLocalJobs(), {
-    activeShopId,
-    normalizeJob: normalizeJobFromModule
-  });
-  saveLocalJobs(jobs);
-  return jobs;
-}
-
-export async function addJob(job) {
-  const now = new Date().toISOString();
-  const activeShopId = getActiveShopIdFromModule(job.shopId);
-  const localJobs = getLocalJobs();
-  const newJob = normalizeJobFromModule({
-    ...job,
-    shopId: activeShopId,
-    id: job.id || crypto.randomUUID(),
-    createdAt: job.createdAt || now,
-    updatedAt: now
-  }, localJobs);
-  validateJobForSave(newJob);
-
-  assertNoDuplicateLocalWorkOrder(newJob, localJobs);
-
-  const savedCustomer = await ensureCustomerForJob(newJob);
-  if (savedCustomer?.id) {
-    newJob.customerId = savedCustomer.id;
-  }
-
-  if (!hasSupabaseConfig || !supabase) {
-    saveLocalJobs([newJob, ...localJobs]);
-    logJobCreated(newJob);
-    return newJob;
-  }
-
-  const remotePayload = toDbJobFromModule(newJob, { includeAssignment: true });
-  remotePayload.job_number = '';
-  const { data, error } = await supabase.rpc('create_job_with_number', {
-    job_payload: remotePayload
-  });
-
-  if (error) {
-    console.warn('Supabase numbered job function failed. Retrying with legacy jobs insert.', error);
-    const { error: legacyInsertError } = await supabase.from('jobs').insert(toLegacyDbJobFromModule(newJob));
-
-    if (legacyInsertError) {
-      console.error('Supabase addJob failed. Local copy saved only.', legacyInsertError);
-      throw new Error(`Remote job save failed: ${legacyInsertError.message}. Local copy was saved only on this browser.`);
-    }
-
-    logJobCreated(newJob);
-    return newJob;
-  }
-
-  const savedJob = fromDbJobRecord(Array.isArray(data) ? data[0] : data);
-  saveLocalJobs([savedJob, ...localJobs.filter((item) => item.id !== savedJob.id)]);
-  logJobCreated(savedJob);
-  return savedJob;
-}
-
-export async function findRemoteJobByNumber(jobNumber, shopId = '') {
-  if (!hasSupabaseConfig || !supabase || !jobNumber) {
-    return null;
-  }
-
-  const { data, error } = await supabase
-    .from('jobs')
-    .select('id, job_number, created_at')
-    .eq('shop_id', getActiveShopIdFromModule(shopId))
-    .eq('job_number', jobNumber)
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    console.warn('Remote job lookup by number failed.', error);
-    return null;
-  }
-
-  return data || null;
-}
-
-export function isDuplicateWorkOrderError(error) {
-  const message = String(error?.message || error || '');
-  return message.includes(duplicateWorkOrderPrefix);
-}
-
-export async function sendCustomerMessage(job, message) {
-  const normalizedJob = normalizeJobFromModule(job);
-  const action = message.action || 'send';
-  const channel = message.channel || 'email';
-  const recipient = message.to || message.recipient || (channel === 'sms' ? normalizedJob.phone : normalizedJob.email);
-
-  if (channel === 'sms' && !smsEnabled) {
-    return { ok: false, error: 'SMS is disabled for this trial build. Email is active.' };
-  }
-
-  if (!hasSupabaseConfig || !supabase) {
-    return { ok: false, error: 'Supabase is not configured. Messaging requires Edge Functions.' };
-  }
-
-  try {
-    await ensureRemoteJob(normalizedJob);
-  } catch (error) {
-    console.error('Remote job repair before customer message failed.', error);
-    return {
-      ok: false,
-      error: `Remote job save failed: ${error.message || 'Unable to create remote work order before sending.'}`
-    };
-  }
-
-  const functionName = channel === 'sms' ? 'send-sms' : 'send-email';
-  const { data, error } = await supabase.functions.invoke(functionName, {
-    headers: functionHeaders(),
-    body: {
-      request_id: message.requestId || crypto.randomUUID(),
-      action,
-      job_id: normalizedJob.id,
-      message_id: message.messageId || '',
-      customer_id: message.customerId || null,
-      to: recipient,
-      cc: message.cc || [],
-      bcc: message.bcc || [],
-      subject: message.subject || '',
-      body: message.body || '',
-      html: message.html || '',
-      template_key: message.templateKey || '',
-      scheduled_at: message.scheduledAt || ''
-    }
-  });
-
-  const functionErrorData = error ? await resolveFunctionErrorData(error) : null;
-  if (error || data?.success === false || data?.error) {
-    const errorData = data || functionErrorData || {};
-    const errorMessage = errorData?.error || errorData?.msg || error?.message || 'Provider send failed.';
-    const errorCode = errorData?.code || '';
-    const errorType = error?.constructor?.name || error?.name || '';
-    const retrySameRequest = ['EMAIL_OPERATION_IN_PROGRESS', 'EMAIL_PROVIDER_CONFIRMATION_PENDING', 'EMAIL_HISTORY_RECONCILIATION_REQUIRED', 'EMAIL_CANCELLATION_INDETERMINATE'].includes(errorCode)
-      || ['FunctionsFetchError', 'FunctionsRelayError'].includes(errorType);
-    console.error('Customer message send failed.', { error, data: errorData });
-    return {
-      ok: false,
-      message: errorData?.message ? normalizeCustomerMessage(fromDbCustomerMessage(errorData.message)) : null,
-      mode: errorData?.mode || '',
-      code: errorCode,
-      retrySameRequest,
-      usage: errorData?.limit ? {
-        limit: errorData.limit,
-        used: errorData.used,
-        remaining: errorData.remaining,
-        resetDate: errorData.resetDate
-      } : null,
-      error: errorMessage
-    };
-  }
-
-  return {
-    ok: true,
-    message: data?.message ? normalizeCustomerMessage(fromDbCustomerMessage(data.message)) : null,
-    messages: Array.isArray(data?.messages)
-      ? data.messages.map((messageItem) => normalizeCustomerMessage(fromDbCustomerMessage(messageItem)))
-      : [],
-    mode: data?.mode || '',
-    providerMessageId: data?.id || data?.messageId || ''
-  };
-}
-
-async function resolveFunctionErrorData(error) {
-  const context = error?.context;
-  if (!context || typeof context.json !== 'function') {
-    return null;
-  }
-
-  try {
-    return await context.clone().json();
-  } catch {
-    try {
-      return await context.json();
-    } catch {
-      return null;
-    }
-  }
-}
-
-export async function getSmsMode() {
-  if (!smsEnabled) {
-    return 'disabled';
-  }
-
-  if (!hasSupabaseConfig || !supabase) {
-    return 'not configured';
-  }
-
-  const { data, error } = await supabase.functions.invoke('send-sms', {
-    headers: functionHeaders(),
-    body: { action: 'status' }
-  });
-
-  if (error || data?.success === false) {
-    console.error('SMS mode check failed.', { error, data });
-    return 'error';
-  }
-
-  return data?.mode || 'test';
-}
-
-function functionHeaders() {
-  // Temporary shop-level protection until proper user authentication is added.
-  return {
-    'x-frettrack-key': fretTrackFunctionKey
-  };
-}
-
-export async function updateJob(updatedJob, { expectedUpdatedAt = null } = {}) {
-  const previousJob = getLocalJobs().find((item) => item.id === updatedJob.id);
-  const job = normalizeJobFromModule({
-    ...updatedJob,
-    updatedAt: new Date().toISOString()
-  });
-  validateJobForSave(job);
-
-  const localJobs = getLocalJobs();
-  const savedCustomer = await ensureCustomerForJob(job);
-  if (savedCustomer?.id) {
-    job.customerId = savedCustomer.id;
-  }
-  if (!hasSupabaseConfig || !supabase) {
-    saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
-    logJobUpdated(job, previousJob);
-    return job;
-  }
-
-  if (!expectedUpdatedAt) {
-    saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
-  }
-
-  const { error } = await updateSupabaseJob(job, { expectedUpdatedAt });
-
-  if (error) {
-    if (error.code === JOB_SAVE_CONFLICT_CODE) {
-      throw error;
-    }
-    if (expectedUpdatedAt) {
-      console.error('Supabase version-guarded updateJob failed.', error);
-      throw new Error(`Remote job save failed: ${error.message}. No local or remote job changes were saved.`);
-    }
-    console.error('Supabase updateJob failed. Local copy saved only.', error);
-    throw new Error(`Remote job save failed: ${error.message}. Local copy was saved only on this browser.`);
-  }
-
-  if (expectedUpdatedAt) {
-    saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
-  }
-  await syncJobChildrenFromModule(job);
-  logJobUpdated(job, previousJob);
-  return job;
-}
-
-export async function setJobAccountingVoid(jobId, voided, reason) {
-  if (!jobId) {
-    throw new Error('A work order is required.');
-  }
-  if (!hasSupabaseConfig || !supabase) {
-    throw new Error('Accounting exclusion requires the secured FretTrack database.');
-  }
-
-  const { data, error } = await supabase.rpc('set_job_accounting_void', {
-    p_job_id: jobId,
-    p_void: Boolean(voided),
-    p_reason: String(reason || '').trim()
-  });
-
-  if (error) {
-    throw new Error(error.message || 'Unable to change accounting exclusion.');
-  }
-
-  const saved = Array.isArray(data) ? data[0] : data;
-  return {
-    id: saved?.id || jobId,
-    accountingVoidedAt: saved?.accounting_voided_at || null,
-    accountingVoidedBy: saved?.accounting_voided_by || '',
-    accountingVoidReason: saved?.accounting_void_reason || ''
-  };
-}
-
-export async function ensureRemoteJob(job) {
-  const activeShopId = getActiveShopIdFromModule(job.shopId);
-  const normalizedJob = normalizeJobFromModule({
-    ...job,
-    shopId: activeShopId,
-    updatedAt: job.updatedAt || new Date().toISOString()
-  });
-
-  if (!hasSupabaseConfig || !supabase) {
-    return normalizedJob;
-  }
-
-  const { data: existingJob, error: existingJobError } = await supabase
-    .from('jobs')
-    .select('id')
-    .eq('id', normalizedJob.id)
-    .eq('shop_id', getActiveShopIdFromModule(normalizedJob.shopId))
-    .maybeSingle();
-
-  if (existingJobError) {
-    throw existingJobError;
-  }
-
-  if (existingJob?.id) {
-    return normalizedJob;
-  }
-
-  const duplicateRemoteJob = await findRemoteDuplicateWorkOrder(normalizedJob);
-  if (duplicateRemoteJob && duplicateRemoteJob.id !== normalizedJob.id) {
-    throw new Error(getDuplicateWorkOrderMessage(duplicateRemoteJob.id, duplicateRemoteJob.job_number || normalizedJob.jobNumber));
-  }
-
-  const { data, error } = await supabase.rpc('create_job_with_number', {
-    job_payload: toDbJobFromModule(normalizedJob, { includeAssignment: true })
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  const savedJob = Array.isArray(data) ? data[0] : data;
-  if (savedJob?.id && savedJob.id !== normalizedJob.id) {
-    throw new Error(getDuplicateWorkOrderMessage(savedJob.id, savedJob.job_number || normalizedJob.jobNumber));
-  }
-
-  return normalizedJob;
-}
-
-async function updateSupabaseJob(job, { expectedUpdatedAt = null } = {}) {
-  const activeShopId = getActiveShopIdFromModule(job.shopId);
-  let updateQuery = supabase
-    .from('jobs')
-    .update(toDbJobFromModule(job))
-    .eq('id', job.id)
-    .eq('shop_id', activeShopId);
-  if (expectedUpdatedAt) {
-    updateQuery = updateQuery.eq('updated_at', expectedUpdatedAt);
-  }
-  let { data, error } = await updateQuery
-    .select('id')
-    .maybeSingle();
-
-  if (!error && data?.id) {
-    return { error: null };
-  }
-
-  if (!error && !data) {
-    if (expectedUpdatedAt) {
-      return { error: createJobSaveConflictError() };
-    }
-    return createMissingRemoteJob(job);
-  }
-
-  if (!shouldRetryWithLegacyJobPayloadFromModule(error)) {
-    return { error };
-  }
-
-  console.warn('Retrying job update with legacy Supabase payload.', error);
-  let legacyUpdateQuery = supabase
-    .from('jobs')
-    .update(toLegacyDbJobFromModule(job))
-    .eq('id', job.id)
-    .eq('shop_id', activeShopId);
-  if (expectedUpdatedAt) {
-    legacyUpdateQuery = legacyUpdateQuery.eq('updated_at', expectedUpdatedAt);
-  }
-  ({ data, error } = await legacyUpdateQuery
-    .select('id')
-    .maybeSingle());
-
-  if (!error && !data) {
-    if (expectedUpdatedAt) {
-      return { error: createJobSaveConflictError() };
-    }
-    return createMissingRemoteJob(job);
-  }
-
-  return { error };
-}
-
-function createJobSaveConflictError() {
-  const error = new Error('This job changed in another session. Reload it before saving so another technician\'s work is not overwritten.');
-  error.code = JOB_SAVE_CONFLICT_CODE;
-  return error;
-}
-
-async function createMissingRemoteJob(job) {
-  try {
-    await ensureRemoteJob(job);
-    return { error: null };
-  } catch (error) {
-    return { error };
-  }
-}
-
-async function findRemoteDuplicateWorkOrder(job) {
-  const { data, error } = await supabase
-    .from('jobs')
-    .select('id, job_number')
-    .eq('shop_id', getActiveShopIdFromModule(job.shopId))
-    .eq('job_number', job.jobNumber)
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    console.warn('Duplicate work order preflight failed.', error);
-    return null;
-  }
-
-  return data || null;
-}
-
-function assertNoDuplicateLocalWorkOrder(job, localJobs) {
-  const jobShopId = getActiveShopIdFromModule(job.shopId);
-  const duplicateLocalJob = localJobs.find((item) => (
-    getActiveShopIdFromModule(item.shopId) === jobShopId
-    && item.jobNumber === job.jobNumber
-    && item.id !== job.id
-  ));
-
-  if (duplicateLocalJob) {
-    throw new Error(getDuplicateWorkOrderMessage(duplicateLocalJob.id, duplicateLocalJob.jobNumber || job.jobNumber));
-  }
-}
-
-function getDuplicateWorkOrderMessage(jobId, jobNumber) {
-  return `${duplicateWorkOrderPrefix} FOR [${jobId || 'UNKNOWN JOB ID'}, ${jobNumber || 'UNKNOWN WORK ORDER NUMBER'}]`;
-}
-
-export async function addWorkLog(jobId, entry) {
-  const log = {
-    id: crypto.randomUUID(),
-    jobId,
-    entry,
-    text: entry,
-    createdAt: new Date().toISOString(),
-    timestamp: new Date().toISOString()
-  };
-
-  if (hasSupabaseConfig && supabase) {
-    const row = {
-      id: log.id,
-      job_id: jobId,
-      entry,
-      text: entry,
-      created_at: log.createdAt
-    };
-    let { error } = await supabase.from('work_logs').insert(row);
-
-    if (isMissingColumnError(error, 'text')) {
-      const { text, ...legacyRow } = row;
-      ({ error } = await supabase.from('work_logs').insert(legacyRow));
-    }
-
-    if (error) {
-      console.error('Supabase addWorkLog failed.', error);
-    }
-  }
-
-  return log;
-}
-
-export async function addPart(jobId, part) {
-  const cleanPart = {
-    id: crypto.randomUUID(),
-    jobId,
-    shopId: getActiveShopIdFromModule(part.shopId),
-    partId: part.partId || '',
-    sku: part.sku || '',
-    name: part.name,
-    quantity: Number(part.quantity || 1),
-    cost: Number(part.cost || 0),
-    retail: Number(part.retail || 0),
-    createdAt: new Date().toISOString()
-  };
-
-  if (hasSupabaseConfig && supabase) {
-    const { error } = await supabase.from('job_parts').insert({
-      id: cleanPart.id,
-      shop_id: cleanPart.shopId,
-      job_id: jobId,
-      part_id: cleanPart.partId || null,
-      name: cleanPart.name,
-      sku: cleanPart.sku || null,
-      quantity: cleanPart.quantity,
-      cost: cleanPart.cost,
-      retail: cleanPart.retail,
-      unit_cost: cleanPart.cost,
-      retail_price: cleanPart.retail,
-      created_at: cleanPart.createdAt
-    });
-
-    if (error) {
-      console.error('Supabase addPart failed.', error);
-    }
-  }
-
-  return cleanPart;
-}
-
-export async function addService(jobId, service) {
-  const cleanService = {
-    id: crypto.randomUUID(),
-    jobId,
-    description: service.description,
-    quantity: Number(service.quantity || 1),
-    cost: Number(service.cost || 0),
-    retail: Number(service.retail || 0),
-    createdAt: new Date().toISOString()
-  };
-
-  if (hasSupabaseConfig && supabase) {
-    const { error } = await supabase.from('job_services').insert({
-      id: cleanService.id,
-      job_id: jobId,
-      description: cleanService.description,
-      quantity: cleanService.quantity,
-      cost: cleanService.cost,
-      retail: cleanService.retail,
-      created_at: cleanService.createdAt
-    });
-
-    if (error) {
-      console.error('Supabase addService failed.', error);
-    }
-  }
-
-  return cleanService;
-}
-
-function normalizeJob(job, jobs = []) {
+export function normalizeJob(job, jobs = []) {
   const dateReceived = job.dateReceived || toIsoDateInputValue();
   const shopId = getActiveShopId(job.shopId || job.shop_id);
   const jobDate = job.jobDate || job.job_date || dateReceived;
@@ -818,7 +202,7 @@ function normalizeJob(job, jobs = []) {
   };
 }
 
-function normalizeWorkLog(log) {
+export function normalizeWorkLog(log) {
   const createdAt = log.createdAt || log.timestamp || new Date().toISOString();
   const entry = log.entry || log.text || '';
   return {
@@ -831,7 +215,7 @@ function normalizeWorkLog(log) {
   };
 }
 
-function normalizeTechDetails(techDetails = {}, instrumentType = 'Guitar') {
+export function normalizeTechDetails(techDetails = {}, instrumentType = 'Guitar') {
   const normalizedInstrumentType = normalizeInstrumentType(instrumentType);
   const stringCount = getInstrumentStringCount({
     instrumentType: normalizedInstrumentType,
@@ -868,7 +252,7 @@ function normalizeTechDetails(techDetails = {}, instrumentType = 'Guitar') {
   };
 }
 
-function normalizeContactDetails(contact = {}, source = {}) {
+export function normalizeContactDetails(contact = {}, source = {}) {
   const sourcePhone = firstPresentValue(source, ['phone']);
   const sourceEmail = firstPresentValue(source, ['email']);
   const sourceEmailOptIn = firstPresentValue(source, ['emailOptIn', 'email_opt_in']);
@@ -893,7 +277,7 @@ function normalizeContactDetails(contact = {}, source = {}) {
   };
 }
 
-function firstPresentValue(source = {}, keys = []) {
+export function firstPresentValue(source = {}, keys = []) {
   const matchingKey = keys.find((key) => Object.prototype.hasOwnProperty.call(source, key));
   return matchingKey === undefined ? undefined : source[matchingKey];
 }
@@ -909,7 +293,7 @@ const damageMapStoragePathKeys = [
 const damageMapViewUrlKeys = ['imageUrl', 'image_url', 'url', 'public_url', 'publicUrl', 'photoUrl', 'photo_url'];
 const damageMapMarkUrlKeys = ['photoUrl', 'photo_url', 'url', 'public_url', 'publicUrl', 'imageUrl', 'image_url'];
 
-function getFirstDamageMapString(source = {}, keys = []) {
+export function getFirstDamageMapString(source = {}, keys = []) {
   for (const key of keys) {
     const value = source[key];
     if (typeof value === 'string' && value.trim()) {
@@ -920,7 +304,7 @@ function getFirstDamageMapString(source = {}, keys = []) {
   return '';
 }
 
-function getDamageMapPhotoSource(source = {}, urlKeys = []) {
+export function getDamageMapPhotoSource(source = {}, urlKeys = []) {
   const url = getFirstDamageMapString(source, urlKeys);
   const explicitStoragePath = getFirstDamageMapString(source, damageMapStoragePathKeys);
 
@@ -930,15 +314,15 @@ function getDamageMapPhotoSource(source = {}, urlKeys = []) {
   };
 }
 
-function getDamageMapViewPhotoSource(view = {}) {
+export function getDamageMapViewPhotoSource(view = {}) {
   return getDamageMapPhotoSource(view, damageMapViewUrlKeys);
 }
 
-function getDamageMapMarkPhotoSource(mark = {}) {
+export function getDamageMapMarkPhotoSource(mark = {}) {
   return getDamageMapPhotoSource(mark, damageMapMarkUrlKeys);
 }
 
-function normalizeDamageMap(damageMap = {}) {
+export function normalizeDamageMap(damageMap = {}) {
   const oldMarks = Array.isArray(damageMap.marks) ? damageMap.marks : [];
   const frontView = damageMap.views?.front || {};
   const backView = damageMap.views?.back || {};
@@ -967,7 +351,7 @@ function normalizeDamageMap(damageMap = {}) {
   };
 }
 
-function normalizeDamageView(view = {}, marks = []) {
+export function normalizeDamageView(view = {}, marks = []) {
   const { storagePath, url } = getDamageMapViewPhotoSource(view);
 
   return {
@@ -979,7 +363,7 @@ function normalizeDamageView(view = {}, marks = []) {
   };
 }
 
-function normalizeDamageMark(mark) {
+export function normalizeDamageMark(mark) {
   const { storagePath, url } = getDamageMapMarkPhotoSource(mark);
 
   return {
@@ -997,7 +381,7 @@ function normalizeDamageMark(mark) {
   };
 }
 
-function normalizeSeverity(severity) {
+export function normalizeSeverity(severity) {
   if (severity === 'Critical' || severity === 'Structural' || severity === 'Cosmetic') {
     return severity;
   }
@@ -1006,14 +390,14 @@ function normalizeSeverity(severity) {
   return 'Cosmetic';
 }
 
-function normalizeNeckInspection(neckInspection = {}) {
+export function normalizeNeckInspection(neckInspection = {}) {
   return {
     initial: normalizeNeckStage(neckInspection.initial),
     final: normalizeNeckStage(neckInspection.final)
   };
 }
 
-function normalizeNeckStage(stage = {}) {
+export function normalizeNeckStage(stage = {}) {
   const lengthUnit = normalizeLengthUnit(stage.lengthUnit || stage.reliefUnit, 'in');
   return {
     ...defaultTechDetails.neckInspection.initial,
@@ -1027,7 +411,7 @@ function normalizeNeckStage(stage = {}) {
   };
 }
 
-function normalizePayment(payment) {
+export function normalizePayment(payment) {
   return {
     id: payment.id || crypto.randomUUID(),
     date: payment.date || toIsoDateInputValue(),
@@ -1040,11 +424,11 @@ function normalizePayment(payment) {
   };
 }
 
-function normalizeIntakeType(intakeType) {
+export function normalizeIntakeType(intakeType) {
   return normalizeJobSource(intakeType);
 }
 
-function normalizePart(part) {
+export function normalizePart(part) {
   return {
     id: part.id || crypto.randomUUID(),
     shopId: getActiveShopId(part.shopId || part.shop_id),
@@ -1060,7 +444,7 @@ function normalizePart(part) {
   };
 }
 
-function normalizeService(service) {
+export function normalizeService(service) {
   return {
     id: service.id || crypto.randomUUID(),
     jobId: service.jobId || service.job_id || '',
@@ -1072,7 +456,7 @@ function normalizeService(service) {
   };
 }
 
-function normalizeImage(image) {
+export function normalizeImage(image) {
   const storagePath = getJobImageStoragePath(image);
 
   return {
@@ -1096,7 +480,7 @@ function normalizeImage(image) {
   };
 }
 
-function sanitizeJobForPersistence(job) {
+export function sanitizeJobForPersistence(job) {
   return {
     ...job,
     images: (job.images || []).map(sanitizeJobImageForPersistence),
@@ -1104,7 +488,7 @@ function sanitizeJobForPersistence(job) {
   };
 }
 
-function sanitizeJobImageForPersistence(image = {}) {
+export function sanitizeJobImageForPersistence(image = {}) {
   const storagePath = getJobImageStoragePath(image);
 
   return {
@@ -1114,14 +498,14 @@ function sanitizeJobImageForPersistence(image = {}) {
   };
 }
 
-function sanitizeTechDetailsForPersistence(techDetails = {}) {
+export function sanitizeTechDetailsForPersistence(techDetails = {}) {
   return {
     ...techDetails,
     damageMap: sanitizeDamageMapForPersistence(techDetails.damageMap)
   };
 }
 
-function sanitizeDamageMapForPersistence(damageMap) {
+export function sanitizeDamageMapForPersistence(damageMap) {
   if (!damageMap?.views) {
     return damageMap;
   }
@@ -1137,7 +521,7 @@ function sanitizeDamageMapForPersistence(damageMap) {
   };
 }
 
-function sanitizeDamageViewForPersistence(view = {}) {
+export function sanitizeDamageViewForPersistence(view = {}) {
   const { storagePath, url } = getDamageMapViewPhotoSource(view);
 
   return {
@@ -1148,7 +532,7 @@ function sanitizeDamageViewForPersistence(view = {}) {
   };
 }
 
-function sanitizeDamageMarkForPersistence(mark = {}) {
+export function sanitizeDamageMarkForPersistence(mark = {}) {
   const { storagePath, url } = getDamageMapMarkPhotoSource(mark);
 
   return {
@@ -1158,7 +542,7 @@ function sanitizeDamageMarkForPersistence(mark = {}) {
   };
 }
 
-function parseDailySequence(sequenceValue, jobNumber = '') {
+export function parseDailySequence(sequenceValue, jobNumber = '') {
   const explicitSequence = Number(sequenceValue || 0);
   if (explicitSequence > 0) {
     return explicitSequence;
@@ -1168,7 +552,7 @@ function parseDailySequence(sequenceValue, jobNumber = '') {
   return match ? Number(match[1]) : null;
 }
 
-function toDbJob(job, { includeAssignment = false } = {}) {
+export function toDbJob(job, { includeAssignment = false } = {}) {
   const shopId = getActiveShopId(job.shopId);
   const payload = {
     ...toLegacyDbJob(job),
@@ -1188,7 +572,7 @@ function toDbJob(job, { includeAssignment = false } = {}) {
   return payload;
 }
 
-function toLegacyDbJob(job) {
+export function toLegacyDbJob(job) {
   const splitName = splitCustomerName(job.customerName || '');
   const customerFirstName = job.customerFirstName || splitName.customerFirstName;
   const customerLastName = job.customerLastName || splitName.customerLastName;
@@ -1230,7 +614,7 @@ function toLegacyDbJob(job) {
   };
 }
 
-function toLegacyJobStatus(status) {
+export function toLegacyJobStatus(status) {
   const legacyStatuses = {
     'Checked In': 'Intake',
     'Drop Off': 'Intake',
@@ -1244,7 +628,7 @@ function toLegacyJobStatus(status) {
   return legacyStatuses[status] || status || 'Intake';
 }
 
-function fromDbJob(job) {
+export function fromDbJob(job) {
   return normalizeJob({
     id: job.id,
     customerId: job.customer_id || '',
@@ -1344,7 +728,7 @@ function fromDbJob(job) {
   });
 }
 
-async function hydrateJobImageUrls(job) {
+export async function hydrateJobImageUrls(job) {
   const hydratedDamageMap = await hydrateDamageMapImageUrls(job.techDetails?.damageMap);
 
   const jobWithHydratedDamageMap = hydratedDamageMap
@@ -1367,7 +751,7 @@ async function hydrateJobImageUrls(job) {
   };
 }
 
-async function hydrateDamageMapImageUrls(damageMap) {
+export async function hydrateDamageMapImageUrls(damageMap) {
   if (!damageMap?.views) {
     return damageMap;
   }
@@ -1409,7 +793,19 @@ async function hydrateDamageMapImageUrls(damageMap) {
   };
 }
 
-function fromDbJobEvent(event) {
+export function upsertById(items, item) {
+  const exists = items.some((current) => current.id === item.id);
+  if (exists) {
+    return items.map((current) => (current.id === item.id ? item : current));
+  }
+  return [item, ...items];
+}
+
+export function instrumentLabel(job) {
+  return [job.guitarBrand, job.model].filter(Boolean).join(' ') || normalizeInstrumentType(job.instrumentType);
+}
+
+export function fromDbJobEvent(event) {
   return {
     id: event.id,
     shopId: event.shop_id,
@@ -1421,204 +817,4 @@ function fromDbJobEvent(event) {
     createdAt: event.created_at,
     createdBy: event.created_by || ''
   };
-}
-
-function upsertById(items, item) {
-  const exists = items.some((current) => current.id === item.id);
-  if (exists) {
-    return items.map((current) => (current.id === item.id ? item : current));
-  }
-  return [item, ...items];
-}
-
-function instrumentLabel(job) {
-  return [job.guitarBrand, job.model].filter(Boolean).join(' ') || normalizeInstrumentType(job.instrumentType);
-}
-
-async function syncJobChildren(job) {
-  const partRows = job.parts.map((part) => ({
-    id: part.id,
-    shop_id: getActiveShopId(part.shopId || job.shopId),
-    job_id: job.id,
-    part_id: part.partId || null,
-    name: part.name,
-    sku: part.sku || null,
-    quantity: Number(part.quantity || 1),
-    cost: Number(part.cost || 0),
-    retail: Number(part.retail || 0),
-    unit_cost: Number(part.cost || 0),
-    retail_price: Number(part.retail || 0),
-    created_at: part.createdAt
-  }));
-  await syncReplaceableJobChildren('job_parts', job.id, partRows, 'Billing parts');
-
-  const serviceRows = job.services.map((service) => ({
-    id: service.id,
-    job_id: job.id,
-    description: service.description,
-    quantity: Number(service.quantity || 1),
-    cost: Number(service.cost || 0),
-    retail: Number(service.retail || 0),
-    created_at: service.createdAt
-  }));
-  await syncReplaceableJobChildren('job_services', job.id, serviceRows, 'Billing services');
-
-  const workLogs = job.workLog.map((log) => ({
-    id: log.id,
-    job_id: log.jobId || log.job_id || job.id,
-    entry: log.entry || log.text,
-    text: log.text || log.entry,
-    created_at: log.createdAt || log.timestamp
-  }));
-
-  if (workLogs.length) {
-    let { error } = await supabase.from('work_logs').upsert(workLogs);
-    if (isMissingColumnError(error, 'text')) {
-      const legacyWorkLogs = workLogs.map(({ text, ...log }) => log);
-      ({ error } = await supabase.from('work_logs').upsert(legacyWorkLogs));
-    }
-    if (error) {
-      console.error('Supabase sync work logs failed.', error);
-      throw new Error(`Work log save failed: ${error.message}`);
-    }
-  }
-
-  const savedWorkLogIds = workLogs.map((log) => log.id);
-  let deleteQuery = supabase.from('work_logs').delete().eq('job_id', job.id);
-
-  if (savedWorkLogIds.length) {
-    deleteQuery = deleteQuery.not('id', 'in', `(${savedWorkLogIds.join(',')})`);
-  }
-
-  const { error: deleteWorkLogsError } = await deleteQuery;
-  if (deleteWorkLogsError) {
-    console.error('Supabase stale work log cleanup failed.', deleteWorkLogsError);
-    throw new Error(`Work log cleanup failed: ${deleteWorkLogsError.message}`);
-  }
-}
-
-async function syncReplaceableJobChildren(tableName, jobId, rows, label) {
-  if (rows.length) {
-    const { error: saveError } = await supabase.from(tableName).upsert(rows, { onConflict: 'id' });
-    if (saveError) {
-      console.error(`Supabase ${label.toLowerCase()} save failed.`, saveError);
-      throw new Error(`${label} save failed: ${saveError.message}`);
-    }
-  }
-
-  const savedIds = rows.map((row) => row.id);
-  let cleanupQuery = supabase.from(tableName).delete().eq('job_id', jobId);
-  if (savedIds.length) {
-    cleanupQuery = cleanupQuery.not('id', 'in', `(${savedIds.join(',')})`);
-  }
-
-  const { error: cleanupError } = await cleanupQuery;
-  if (cleanupError) {
-    console.error(`Supabase stale ${label.toLowerCase()} cleanup failed.`, cleanupError);
-    throw new Error(`${label} cleanup failed: ${cleanupError.message}`);
-  }
-}
-
-function isMissingColumnError(error, columnName) {
-  if (!error) {
-    return false;
-  }
-
-  const message = String(error.message || error.details || '');
-  return message.includes(`'${columnName}' column`) || message.includes(`column "${columnName}"`);
-}
-
-function shouldRetryWithLegacyJobPayload(error) {
-  if (!error) {
-    return false;
-  }
-
-  const message = String(error.message || error.details || '');
-  return (
-    ['customer_id', 'job_date', 'promise_date', 'priority', 'job_day_code', 'daily_sequence', 'shop_id'].some((columnName) => isMissingColumnError(error, columnName))
-    || message.includes('violates check constraint')
-    || message.includes('schema cache')
-  );
-}
-
-function logJobCreated(job) {
-  logJobEventSafe({
-    shopId: job.shopId,
-    jobId: job.id,
-    eventType: 'job_created',
-    eventLabel: 'Job created',
-    eventNote: job.jobNumber ? `Job ${job.jobNumber}` : '',
-    eventData: {
-      jobNumber: job.jobNumber,
-      status: job.status
-    }
-  });
-}
-
-function logJobUpdated(job, previousJob) {
-  logJobEventSafe({
-    shopId: job.shopId,
-    jobId: job.id,
-    eventType: 'job_updated',
-    eventLabel: 'Job updated',
-    eventData: {
-      jobNumber: job.jobNumber,
-      status: job.status
-    }
-  });
-
-  if (previousJob?.status && previousJob.status !== job.status) {
-    logJobEventSafe({
-      shopId: job.shopId,
-      jobId: job.id,
-      eventType: 'status_changed',
-      eventLabel: 'Status changed',
-      eventNote: `${previousJob.status} -> ${job.status}`,
-      eventData: {
-        from: previousJob.status,
-        to: job.status
-      }
-    });
-  }
-
-  const previousPayments = previousJob?.techDetails?.payments || [];
-  const nextPayments = job.techDetails?.payments || [];
-  nextPayments
-    .filter((payment) => !previousPayments.some((previousPayment) => previousPayment.id === payment.id))
-    .forEach((payment) => {
-      const paymentType = String(payment.type || 'payment').toLowerCase();
-      const isRefund = paymentType === 'refund';
-      const isVoid = paymentType === 'void';
-      logJobEventSafe({
-        shopId: job.shopId,
-        jobId: job.id,
-        eventType: isRefund ? 'payment_refunded' : isVoid ? 'payment_voided' : 'payment_added',
-        eventLabel: isRefund ? 'Payment refunded' : isVoid ? 'Payment voided' : 'Payment added',
-        eventNote: payment.method || '',
-        eventData: {
-          paymentId: payment.id,
-          amount: payment.amount,
-          type: paymentType,
-          method: payment.method,
-          date: payment.date
-        }
-      });
-    });
-
-  const previousWorkLog = previousJob?.workLog || [];
-  const nextWorkLog = job.workLog || [];
-  nextWorkLog
-    .filter((entry) => !previousWorkLog.some((previousEntry) => previousEntry.id === entry.id))
-    .forEach((entry) => {
-      logJobEventSafe({
-        shopId: job.shopId,
-        jobId: job.id,
-        eventType: 'work_log_added',
-        eventLabel: 'Work log added',
-        eventNote: entry.entry || entry.text || '',
-        eventData: {
-          workLogId: entry.id
-        }
-      });
-    });
 }

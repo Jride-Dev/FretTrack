@@ -43,6 +43,8 @@ The first post-release work is deliberate spaghetti reduction without changing p
 
 The version bump to the next minor release stays deferred until the extraction work is streamlined and the new boundaries hold under CI.
 
+The first job-service slice is already underway behind compatibility exports: shared normalization and child synchronization helpers now live in focused modules while the existing job service facade stays intact.
+
 Each extraction must preserve the current facade, permissions, database behavior, and regression suite. No broad rewrite.
 
 ## v0.3.x: Commerce hardening
