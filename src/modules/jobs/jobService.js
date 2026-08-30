@@ -3,19 +3,15 @@ import { normalizeInstrumentType } from '../instruments/instrumentService';
 import { supabase, hasSupabaseConfig } from '../../shared/lib/supabaseClient';
 import { generateJobNumber } from './jobNumber';
 import { logJobEventSafe } from './jobEventsService';
-import { getCurrentShopId } from '../shops/shopConfig';
 import { validateJobForSave } from './jobValidation';
 import {
   fromDbCorrespondenceMessage as fromDbCustomerMessage,
   normalizeCorrespondenceMessage as normalizeCustomerMessage
 } from '../messaging/customerCorrespondence';
-import { mergeJobsByUpdatedAt } from './jobMerge.js';
 import {
   fromDbJob as fromDbJobRecord,
   getActiveShopId as getActiveShopIdFromModule,
-  hydrateJobImageUrls as hydrateJobImageUrlsFromModule,
   normalizeJob as normalizeJobFromModule,
-  sanitizeJobForPersistence as sanitizeJobForPersistenceFromModule,
   toDbJob as toDbJobFromModule,
   toLegacyDbJob as toLegacyDbJobFromModule
 } from './jobServiceNormalization.js';
@@ -23,84 +19,20 @@ import {
   shouldRetryWithLegacyJobPayload as shouldRetryWithLegacyJobPayloadFromModule,
   syncJobChildren as syncJobChildrenFromModule
 } from './jobServiceChildren.js';
+import {
+  findRemoteJobByNumber,
+  getJobs,
+  getLocalJobs,
+  saveJobs,
+  saveLocalJobs
+} from './jobServiceQueries.js';
 
-const STORAGE_KEY = 'guitar_checkin_jobs';
-const OLD_STORAGE_KEY = 'guitar-checkin-jobs';
 const fretTrackFunctionKey = import.meta.env.VITE_FRETTRACK_FUNCTION_KEY || '';
 const duplicateWorkOrderPrefix = 'MULTIPLE WORK ORDERS CANNOT BE CREATED';
 export const JOB_SAVE_CONFLICT_CODE = 'FRETTRACK_JOB_SAVE_CONFLICT';
 export const smsEnabled = import.meta.env.VITE_SMS_ENABLED === 'true';
 export { combineCustomerName, generateJobNumber, splitCustomerName };
-
-function getActiveShopId(shopId = '') {
-  return shopId || getCurrentShopId();
-}
-
-export function getLocalJobs() {
-  try {
-    const activeShopId = getActiveShopIdFromModule();
-    const storedJobs = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (storedJobs) {
-      return storedJobs.map(normalizeJobFromModule).filter((job) => job.shopId === activeShopId);
-    }
-
-    const oldStoredJobs = JSON.parse(localStorage.getItem(OLD_STORAGE_KEY));
-    if (oldStoredJobs) {
-      const migratedJobs = oldStoredJobs.map(normalizeJobFromModule).filter((job) => job.shopId === activeShopId);
-      saveLocalJobs(migratedJobs);
-      return migratedJobs;
-    }
-
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveLocalJobs(jobs) {
-  try {
-    const persistedJobs = jobs.map((job) => sanitizeJobForPersistenceFromModule(normalizeJobFromModule(job)));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedJobs));
-  } catch (error) {
-    console.error('Local job save failed. Supabase save will still be attempted when configured.', error);
-  }
-}
-
-export const saveJobs = saveLocalJobs;
-
-export async function getJobs() {
-  const activeShopId = getActiveShopIdFromModule();
-
-  if (!hasSupabaseConfig || !supabase) {
-    return getLocalJobs();
-  }
-
-  const { data, error } = await supabase
-    .from('jobs')
-    .select(`
-      *,
-      work_logs (*),
-      job_parts (*),
-      job_services (*),
-      job_images (*),
-      customer_messages (*)
-    `)
-    .eq('shop_id', activeShopId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Supabase getJobs failed. Falling back to localStorage.', error);
-    return getLocalJobs();
-  }
-
-  const remoteJobs = await Promise.all(data.map(async (job) => hydrateJobImageUrlsFromModule(fromDbJobRecord(job))));
-  const jobs = mergeJobsByUpdatedAt(remoteJobs, getLocalJobs(), {
-    activeShopId,
-    normalizeJob: normalizeJobFromModule
-  });
-  saveLocalJobs(jobs);
-  return jobs;
-}
+export { findRemoteJobByNumber, getJobs, getLocalJobs, saveJobs, saveLocalJobs };
 
 export async function addJob(job) {
   const now = new Date().toISOString();
@@ -151,27 +83,6 @@ export async function addJob(job) {
   saveLocalJobs([savedJob, ...localJobs.filter((item) => item.id !== savedJob.id)]);
   logJobCreated(savedJob);
   return savedJob;
-}
-
-export async function findRemoteJobByNumber(jobNumber, shopId = '') {
-  if (!hasSupabaseConfig || !supabase || !jobNumber) {
-    return null;
-  }
-
-  const { data, error } = await supabase
-    .from('jobs')
-    .select('id, job_number, created_at')
-    .eq('shop_id', getActiveShopIdFromModule(shopId))
-    .eq('job_number', jobNumber)
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    console.warn('Remote job lookup by number failed.', error);
-    return null;
-  }
-
-  return data || null;
 }
 
 export function isDuplicateWorkOrderError(error) {
