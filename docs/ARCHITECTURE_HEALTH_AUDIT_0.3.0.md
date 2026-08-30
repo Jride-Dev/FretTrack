@@ -26,7 +26,7 @@ Approximate release-branch sizes:
 | --- | ---: | --- |
 | `src/styles.css` | 6,446 | Shared foundations plus module-owned styles |
 | `src/app/App.jsx` | 1,355 | Remaining application data and mutation orchestration |
-| `src/modules/jobs/jobService.js` | 1,624 | Remaining reads and parent mutations behind compatibility exports |
+| `src/modules/jobs/jobService.js` | 723 | Remaining reads, messaging, and parent mutations behind compatibility exports |
 | `src/modules/jobs/JobDetail.jsx` | 1,142 | Focused state/action hooks and thinner orchestration |
 | `src/modules/inventory/inventoryService.js` | 149 | Compatibility facade over focused inventory services |
 | `src/modules/inventory/InventoryPage.jsx` | 953 | Remaining controller state and mutation coordination |
@@ -58,7 +58,7 @@ Inventory presentation was reduced from roughly 1,619 lines to 953. Job Detail p
 
 The release-version bump stays deferred until the maintainability slices are merged and the new boundaries remain green in CI.
 
-The first job-service extraction slice is already in motion behind compatibility exports: job normalization and child synchronization helpers now live in focused modules while the facade remains stable.
+The job-service normalization and child-synchronization extraction is complete behind compatibility exports. Transitional duplicate implementations were removed from `jobService.js`, leaving the focused modules as the sole source for mapping, image hydration, persistence sanitization, and guarded child writes.
 
 The first inventory-service extraction slice is also in motion behind compatibility exports: inventory normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while the facade remains stable.
 

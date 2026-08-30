@@ -37,6 +37,7 @@ const assignmentControl = read('src/modules/jobs/JobAssignmentControl.jsx');
 const jobDetailHeader = read('src/modules/jobs/JobDetailHeader.jsx');
 const jobDetailShell = read('src/modules/jobs/JobDetailShell.jsx');
 const jobService = read('src/modules/jobs/jobService.js');
+const jobNormalization = read('src/modules/jobs/jobServiceNormalization.js');
 const jobForm = read('src/modules/jobs/JobForm.jsx');
 const currentJobs = read('src/modules/jobs/CurrentJobsPage.jsx');
 const compactJobs = read('src/modules/jobs/JobList.jsx');
@@ -88,9 +89,9 @@ assert.ok(jobDetailShell.includes('<JobDetailHeader'), 'Job Detail shell must re
 assert.ok(jobDetailHeader.includes('<JobAssignmentControl'), 'Job Detail header must render assignment controls.');
 assert.ok(jobForm.includes('Assigned Technician'), 'New Job must support optional assignment.');
 assert.ok(jobForm.includes('<option value="">Unassigned</option>'), 'New Job must default to Unassigned.');
-assert.ok(jobService.includes('assignedMemberId: job.assigned_member_id'), 'Loaded jobs must preserve assignment identity.');
+assert.ok(jobNormalization.includes('assignedMemberId: job.assigned_member_id'), 'Loaded jobs must preserve assignment identity.');
 assert.ok(jobService.includes('toDbJobFromModule(newJob, { includeAssignment: true })'), 'New jobs may persist their optional assignment.');
-assert.match(jobService, /from\('jobs'\)[\s\S]*\.update\(toDbJob\(job\)\)/, 'Ordinary job saves must omit assignment fields and avoid stale assignment overwrite.');
+assert.match(jobService, /from\('jobs'\)[\s\S]*\.update\(toDbJobFromModule\(job\)\)/, 'Ordinary job saves must omit assignment fields and avoid stale assignment overwrite.');
 
 assert.ok(currentJobs.includes('Assigned Technician'), 'Current Jobs must display assigned technician.');
 assert.ok(currentJobs.includes('<option value="unassigned">Unassigned</option>'), 'Current Jobs must filter unassigned work.');

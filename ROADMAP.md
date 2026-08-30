@@ -43,7 +43,7 @@ The first post-release work is deliberate spaghetti reduction without changing p
 
 The version bump to the next minor release stays deferred until the extraction work is streamlined and the new boundaries hold under CI.
 
-The first job-service slice is already underway behind compatibility exports: shared normalization and child synchronization helpers now live in focused modules while the existing job service facade stays intact.
+The job-service normalization and child-synchronization split is complete behind compatibility exports. Transitional duplicate implementations have been removed; the remaining facade work is limited to reads, messaging, and parent mutations.
 
 The first inventory-service slice is also underway behind compatibility exports: shared normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while the existing inventory service facade stays intact.
 
