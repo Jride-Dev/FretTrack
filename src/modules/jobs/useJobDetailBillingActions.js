@@ -18,6 +18,7 @@ function createEmptyPayment() {
 export default function useJobDetailBillingActions({
   canWrite,
   draftJob,
+  onNotice,
   patchJob,
   saveDraftNow,
   services,
@@ -30,6 +31,13 @@ export default function useJobDetailBillingActions({
 
   useEffect(() => () => window.clearTimeout(paymentAutosaveTimeoutRef.current), []);
 
+  function reportPaymentSaveError(error) {
+    onNotice?.({
+      type: 'error',
+      message: error?.message || 'The payment change could not be saved.'
+    });
+  }
+
   async function savePaymentChange(nextJob, { immediate = false } = {}) {
     if (!canWrite) {
       return;
@@ -39,12 +47,12 @@ export default function useJobDetailBillingActions({
     setIsDirty(true);
 
     if (immediate) {
-      await saveDraftNow(nextJob).catch(() => {});
+      await saveDraftNow(nextJob).catch(reportPaymentSaveError);
       return;
     }
 
     paymentAutosaveTimeoutRef.current = window.setTimeout(() => {
-      saveDraftNow(nextJob).catch(() => {});
+      saveDraftNow(nextJob).catch(reportPaymentSaveError);
     }, 700);
   }
 

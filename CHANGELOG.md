@@ -8,6 +8,7 @@ This file tracks product, reliability, security, and operational changes by rele
 
 - Reduced application-shell orchestration by moving PWA installation, theme preferences, sidebar persistence, and stale-safe assignable-member loading into focused hooks.
 - Reduced Job Detail orchestration by moving derived billing/measurement state and payment/service draft actions into focused hooks while retaining existing save and optimistic-concurrency behavior.
+- Made versioned work-order saves report post-save customer synchronization failures as partial failures, and made immediate or delayed payment conflicts show the server conflict instead of silently disappearing.
 - Split the global stylesheet into ordered foundation, workspace, and feature/detail files without changing selectors, cascade order, responsive rules, or print behavior.
 - Updated focused checks to follow extracted Job Detail owners and removed a dirty-diff scope assertion from email isolation validation so unrelated intentional release files do not create false failures.
 - Retained the established `0.3.0` product, billing, security, migration, and operational boundaries; `0.3.1` is a maintainability release with no plan or schema change.

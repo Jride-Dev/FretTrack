@@ -130,6 +130,9 @@ export async function ensureCustomerForJob(job, options = {}) {
   try {
     return await addCustomer(customerToSave, { shopId: activeShopId });
   } catch (error) {
+    if (options.throwOnError) {
+      throw error;
+    }
     console.warn('Customer link save failed. Job save will continue without a customer_id.', error);
     return null;
   }

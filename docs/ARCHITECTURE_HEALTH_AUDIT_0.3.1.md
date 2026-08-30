@@ -14,6 +14,7 @@ The completed job and inventory service facades remain stable. This release cont
 - `useAssignableMembers.js` owns stale-safe shop team loading and error/loading state.
 - `useJobDetailDerivedState.js` owns totals, tax/localization context, measurement options, image selection, and other derived Job Detail values.
 - `useJobDetailBillingActions.js` owns service/payment drafts, payment autosave timing, and billing action builders.
+- Versioned customer synchronization preserves post-parent-save failures for the workspace notice path, while payment autosaves route stale-write conflicts through the same visible error surface.
 - `useJobInventoryParts.js` owns manual and inventory-backed job-part search, add, quantity update, removal, and authoritative refresh coordination.
 - `foundations.css`, `workspace.css`, and `styles.css` preserve the original stylesheet order while separating shared tokens/controls, workspace surfaces, and remaining feature/detail rules.
 

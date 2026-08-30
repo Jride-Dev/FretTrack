@@ -407,6 +407,7 @@ function JobDetailWorkspace({
   } = useJobDetailBillingActions({
     canWrite,
     draftJob,
+    onNotice,
     patchJob,
     saveDraftNow,
     services,
