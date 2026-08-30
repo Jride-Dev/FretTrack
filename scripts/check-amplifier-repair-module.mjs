@@ -146,7 +146,7 @@ assert.match(detail, /guitar-app-save-current-job/, 'Global Save Job must save a
 assert.match(detail, /onUpdate\?\.\(draft, \{ expectedUpdatedAt: draft\.updatedAt \}\)/, 'Amplifier saves must submit the version loaded by the editing session.');
 assert.match(jobMutations, /\.eq\('updated_at', expectedUpdatedAt\)/, 'Amplifier persistence must compare the loaded version atomically with the remote row.');
 assert.match(jobMutations, /FRETTRACK_JOB_SAVE_CONFLICT/, 'Stale amplifier saves must return a recognizable conflict instead of reporting success.');
-assert.match(jobMutations, /if \(expectedUpdatedAt\) \{\s*saveLocalJobs/, 'A version-guarded save must not overwrite the local record until the remote update succeeds.');
+assert.match(jobMutations, /if \(expectedUpdatedAt\) \{[\s\S]*?await updateSupabaseJob\(job, \{ expectedUpdatedAt \}\)[\s\S]*?saveLocalJobs/, 'A version-guarded save must not overwrite the local record until the remote update succeeds.');
 assert.doesNotMatch(detail, /NeckInspection|DamageMap|String Count|String Gauges/, 'Amplifier detail must not render guitar inspection controls.');
 assert.match(page, /type="button" className="amplifier-job-card"/, 'Amplifier queue rows must remain keyboard-accessible buttons.');
 assert.match(page, /onDirtyChange\?\.\(isDirty\)/, 'Amplifier intake must participate in shared unsaved-change protection.');

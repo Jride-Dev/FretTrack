@@ -84,40 +84,63 @@ export async function updateJob(updatedJob, { expectedUpdatedAt = null } = {}) {
   validateJobForSave(job);
 
   const localJobs = getLocalJobs();
-  const savedCustomer = await ensureCustomerForJob(job);
-  if (savedCustomer?.id) {
-    job.customerId = savedCustomer.id;
-  }
   if (!hasSupabaseConfig || !supabase) {
+    const savedCustomer = await ensureCustomerForJob(job);
+    if (savedCustomer?.id) {
+      job.customerId = savedCustomer.id;
+    }
     saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
     logJobUpdated(job, previousJob);
     return job;
   }
 
-  if (!expectedUpdatedAt) {
-    saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
-  }
-
-  const { error } = await updateSupabaseJob(job, { expectedUpdatedAt });
-
-  if (error) {
-    if (error.code === JOB_SAVE_CONFLICT_CODE) {
-      throw error;
-    }
-    if (expectedUpdatedAt) {
-      console.error('Supabase version-guarded updateJob failed.', error);
-      throw new Error(`Remote job save failed: ${error.message}. No local or remote job changes were saved.`);
-    }
-    console.error('Supabase updateJob failed. Local copy saved only.', error);
-    throw new Error(`Remote job save failed: ${error.message}. Local copy was saved only on this browser.`);
-  }
-
   if (expectedUpdatedAt) {
+    const { error } = await updateSupabaseJob(job, { expectedUpdatedAt });
+    if (error) {
+      throwVersionedJobUpdateError(error);
+    }
+
+    const savedCustomer = await ensureCustomerForJob(job);
+    if (savedCustomer?.id && savedCustomer.id !== job.customerId) {
+      const { error: customerLinkError } = await linkCustomerToVersionedJob(job, savedCustomer.id);
+      if (customerLinkError) {
+        throwVersionedCustomerLinkError(customerLinkError);
+      }
+      job.customerId = savedCustomer.id;
+    }
     saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
+  } else {
+    const savedCustomer = await ensureCustomerForJob(job);
+    if (savedCustomer?.id) {
+      job.customerId = savedCustomer.id;
+    }
+    saveLocalJobs(localJobs.map((item) => (item.id === job.id ? job : item)));
+
+    const { error } = await updateSupabaseJob(job);
+    if (error) {
+      console.error('Supabase updateJob failed. Local copy saved only.', error);
+      throw new Error(`Remote job save failed: ${error.message}. Local copy was saved only on this browser.`);
+    }
   }
   await syncJobChildrenFromModule(job);
   logJobUpdated(job, previousJob);
   return job;
+}
+
+function throwVersionedJobUpdateError(error) {
+  if (error.code === JOB_SAVE_CONFLICT_CODE) {
+    throw error;
+  }
+  console.error('Supabase version-guarded updateJob failed.', error);
+  throw new Error(`Remote job save failed: ${error.message}. No local or remote job changes were saved.`);
+}
+
+function throwVersionedCustomerLinkError(error) {
+  if (error.code === JOB_SAVE_CONFLICT_CODE) {
+    throw error;
+  }
+  console.error('Supabase version-guarded customer link failed.', error);
+  throw new Error(`The work order was saved, but its customer link could not be finalized: ${error.message}. Reload before saving again.`);
 }
 
 export async function setJobAccountingVoid(jobId, voided, reason) {
@@ -242,6 +265,23 @@ async function updateSupabaseJob(job, { expectedUpdatedAt = null } = {}) {
       return { error: createJobSaveConflictError() };
     }
     return createMissingRemoteJob(job);
+  }
+
+  return { error };
+}
+
+async function linkCustomerToVersionedJob(job, customerId) {
+  const { data, error } = await supabase
+    .from('jobs')
+    .update({ customer_id: customerId })
+    .eq('id', job.id)
+    .eq('shop_id', getActiveShopIdFromModule(job.shopId))
+    .eq('updated_at', job.updatedAt)
+    .select('id')
+    .maybeSingle();
+
+  if (!error && !data) {
+    return { error: createJobSaveConflictError() };
   }
 
   return { error };
