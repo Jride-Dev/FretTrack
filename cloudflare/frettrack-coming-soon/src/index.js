@@ -1173,7 +1173,7 @@ function landingPage() {
             <a class="button primary" href="#application-modal" id="open-application">Request Access</a>
             <a class="button secondary" href="${APP_URL}">Open App Login</a>
           </div>
-          <p class="hero-note">Stable release 0.3.0 is available. Controlled workspace access is open, and Shop and Pro subscriptions use secure Stripe Checkout and self-service billing management.</p>
+          <p class="hero-note">Stable release 0.3.1 is available. Controlled workspace access is open, and Shop and Pro subscriptions use secure Stripe Checkout and self-service billing management.</p>
         </div>
 
         <div class="product-frame" aria-label="FretTrack app preview">
@@ -1347,7 +1347,7 @@ function landingPage() {
           </div>
           <div class="hero-actions">
             <a class="button" href="#application-modal">Request Access</a>
-            <a class="button secondary" href="/docs/release-notes">Read the 0.3.0 Release Notes</a>
+            <a class="button secondary" href="/docs/release-notes">Read the 0.3.1 Release Notes</a>
           </div>
         </div>
       </section>

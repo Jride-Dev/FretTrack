@@ -81,7 +81,7 @@ includes(panel, 'Provider confirmation pending', 'History must expose an indeter
 includes(panel, 'Cancellation pending confirmation', 'History must expose an indeterminate cancellation honestly.');
 includes(panel, 'RECONCILIATION_RETRY_MS = 30_000', 'Unresolved provider states must be polled until they become terminal.');
 
-const styles = read('src/styles.css');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css'].map(read).join('\n');
 assert.match(styles, /@media \(max-width: 768px\)[\s\S]*\.message-scheduling \{[\s\S]*grid-template-columns: 1fr;/, 'Small-screen scheduling controls must stack in one column.');
 
 const templates = read('src/modules/messaging/messageTemplates.js');

@@ -100,7 +100,12 @@ export async function updateJob(updatedJob, { expectedUpdatedAt = null } = {}) {
       throwVersionedJobUpdateError(error);
     }
 
-    const savedCustomer = await ensureCustomerForJob(job);
+    let savedCustomer;
+    try {
+      savedCustomer = await ensureCustomerForJob(job, { throwOnError: true });
+    } catch (error) {
+      throwVersionedCustomerSyncError(error);
+    }
     if (savedCustomer?.id && savedCustomer.id !== job.customerId) {
       const { error: customerLinkError } = await linkCustomerToVersionedJob(job, savedCustomer.id);
       if (customerLinkError) {
@@ -141,6 +146,11 @@ function throwVersionedCustomerLinkError(error) {
   }
   console.error('Supabase version-guarded customer link failed.', error);
   throw new Error(`The work order was saved, but its customer link could not be finalized: ${error.message}. Reload before saving again.`);
+}
+
+function throwVersionedCustomerSyncError(error) {
+  console.error('The work order saved, but customer synchronization failed.', error);
+  throw new Error(`The work order was saved, but its customer details could not be synchronized: ${error.message}. Reload before saving again.`);
 }
 
 export async function setJobAccountingVoid(jobId, voided, reason) {

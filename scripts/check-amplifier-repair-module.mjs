@@ -34,7 +34,7 @@ const service = read('src/modules/instruments/instrumentService.js');
 const catalog = read('src/modules/instruments/instrumentCatalog.js');
 const jobForm = read('src/modules/jobs/JobForm.jsx');
 const jobInfo = read('src/modules/jobs/JobInfoSection.js');
-const styles = read('src/styles.css');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css'].map(read).join('\n');
 const packageJson = read('package.json');
 
 const amplifierJob = buildAmplifierJobDraft({

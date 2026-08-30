@@ -1,6 +1,6 @@
 # Subscription Foundation
 
-Current release: **FretTrack 0.3.0**
+Current release: **FretTrack 0.3.1**
 
 FretTrack uses database-owned subscription state and entitlements. Stripe is the payment and billing provider; the browser is never authoritative for plan access.
 
@@ -54,7 +54,7 @@ The annual sandbox validator covers Checkout, signed lifecycle events, Billing P
 
 ## Usage enforcement
 
-Shop receives 1,000 email recipients per UTC month, 2,000 source-photo uploads per UTC month, and 5 GiB of current repair-photo storage. Pro receives 5,000 recipients, 10,000 uploads, and 25 GiB. No paid overages are offered in 0.3.0.
+Shop receives 1,000 email recipients per UTC month, 2,000 source-photo uploads per UTC month, and 5 GiB of current repair-photo storage. Pro receives 5,000 recipients, 10,000 uploads, and 25 GiB. No paid overages are offered in 0.3.1.
 
 Reservation/release, deletion, downgrade, storage accounting, and operator override behavior are documented in [Email and Photo Usage Caps](EMAIL_AND_PHOTO_USAGE_CAPS.md).
 

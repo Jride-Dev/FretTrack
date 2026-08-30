@@ -1,6 +1,6 @@
 # Email and Photo Usage Caps
 
-FretTrack 0.3.0 enforces email and repair-photo limits authoritatively on the server. These caps protect infrastructure without deleting customer data, hiding existing photos, or blocking unrelated repair work.
+FretTrack 0.3.1 enforces email and repair-photo limits authoritatively on the server. These caps protect infrastructure without deleting customer data, hiding existing photos, or blocking unrelated repair work.
 
 ## Official Limits
 

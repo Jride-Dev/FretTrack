@@ -28,7 +28,7 @@ const inventoryService = read('src/modules/inventory/inventoryService.js');
 const damageMap = read('src/components/DamageMap.js');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
 const usageUi = read('src/modules/shops/SubscriptionSettingsSection.jsx');
-const styles = read('src/styles.css');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css'].map(read).join('\n');
 const docs = read('docs/EMAIL_AND_PHOTO_USAGE_CAPS.md');
 
 for (const [plan, email, uploads, storage] of [

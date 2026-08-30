@@ -1,6 +1,6 @@
 # Offline Mode Audit
 
-Current release interpretation: `0.3.0`. The original audit predates the stable release, but its supported boundary remains accurate.
+Current release interpretation: `0.3.1`. The original audit predates the stable release, but its supported boundary remains accurate.
 
 ## Current Scope
 

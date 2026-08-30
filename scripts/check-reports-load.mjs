@@ -18,7 +18,7 @@ function read(relativePath) {
 }
 
 const reportsPage = read('src/modules/reports/AdvancedReportsPage.jsx');
-const styles = read('src/styles.css');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css'].map(read).join('\n');
 
 assert.ok(
   reportsPage.includes('formatDateTime('),

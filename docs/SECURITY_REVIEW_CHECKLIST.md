@@ -1,6 +1,6 @@
 # Security Review Checklist
 
-Use this checklist for stable 0.3.0 release verification and subsequent security hardening. Database or function identifiers containing `beta` are retained compatibility names, not customer-facing release status.
+Use this checklist for stable 0.3.1 release verification and subsequent security hardening. Database or function identifiers containing `beta` are retained compatibility names, not customer-facing release status.
 
 ## Isolation
 

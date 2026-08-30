@@ -1,6 +1,6 @@
 # Known Issues
 
-Current version: `0.3.0`
+Current version: `0.3.1`
 
 This file lists active product boundaries and setup traps. Resolved prerelease defects remain in the changelog and release notes instead of being presented as current problems.
 
@@ -32,7 +32,7 @@ Import parsing and preview foundations exist, but reviewed batch persistence, du
 
 ### Advanced inventory and shipping integrations are future work
 
-Vendor import/export, supplier APIs, vendor returns, forecasting, outbound/customer shipping, carrier rates, purchased labels, and automatic tracking notifications are outside 0.3.0.
+Vendor import/export, supplier APIs, vendor returns, forecasting, outbound/customer shipping, carrier rates, purchased labels, and automatic tracking notifications are outside 0.3.1.
 
 ### Historical timelines are not reconstructed completely
 

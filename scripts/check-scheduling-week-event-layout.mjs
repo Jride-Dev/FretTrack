@@ -25,7 +25,7 @@ function assertMatches(value, pattern, message) {
 
 const schedulingPage = source('src/modules/scheduling/SchedulingPage.jsx');
 const detailsDialog = source('src/modules/scheduling/ScheduleEventDetailsDialog.jsx');
-const styles = source('src/styles.css');
+const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css'].map(source).join('\n');
 const packageJson = source('package.json');
 
 for (const constraint of ['min-width: 0', 'max-width: 100%', 'overflow: hidden', 'box-sizing: border-box']) {

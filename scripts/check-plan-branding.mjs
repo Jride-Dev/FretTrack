@@ -152,7 +152,7 @@ const cases = [
       headerLabel: 'FretTrack Pro',
       planLabel: 'Pro Monthly'
     },
-    expectedVersionText: 'v0.3.0 | Pro Monthly | Renews in 24 days'
+    expectedVersionText: 'v0.3.1 | Pro Monthly | Renews in 24 days'
   },
   {
     name: 'Pro Yearly',
@@ -243,7 +243,7 @@ for (const testCase of cases) {
   }
 
   if (testCase.expectedVersionText) {
-    assert.equal(getPlanVersionText('0.3.0', planStatus), testCase.expectedVersionText);
+    assert.equal(getPlanVersionText('0.3.1', planStatus), testCase.expectedVersionText);
   }
 }
 

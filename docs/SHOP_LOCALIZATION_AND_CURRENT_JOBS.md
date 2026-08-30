@@ -1,6 +1,6 @@
 # Shop Localization and Current Jobs
 
-FretTrack 0.3.0 includes persistent shop-level localization and a full Current Jobs workspace. The implementation incorporates practical workflow feedback from Aleks at Sell Us Your Guitar.
+FretTrack 0.3.1 includes persistent shop-level localization and a full Current Jobs workspace. The implementation incorporates practical workflow feedback from Aleks at Sell Us Your Guitar.
 
 ## Shop Settings
 

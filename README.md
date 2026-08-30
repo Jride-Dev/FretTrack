@@ -8,7 +8,7 @@
 
 FretTrack is live at [frettrack-app.com](https://frettrack-app.com).
 
-Current version: `0.3.0`
+Current version: `0.3.1`
 
 FretTrack is professional workflow software for guitar, bass, amplifier, and keyboard repair shops. It keeps customer intake, focused bench work, inspection records, photos, inventory, purchasing, scheduling, customer communication, billing, print documents, payments, and repair history connected from drop-off through pickup.
 
@@ -22,7 +22,7 @@ Public product documentation, release notes, support, privacy, and terms are ava
 
 ## Current stable release
 
-FretTrack `v0.3.0` is the Operational Shop Release. It includes:
+FretTrack `v0.3.1` is the current stable maintenance release over the Operational Shop Release. It includes:
 
 - focused Guitar, Amplifier, and Keyboard repair benches;
 - one shared work-order workspace for parts, services, payments, messages, scheduling, photos, printing, and history;
@@ -88,12 +88,12 @@ npm run deploy:app:production:check
 - [Release notes](docs/RELEASE_NOTES.md)
 - [Roadmap](ROADMAP.md)
 - [Documentation index](docs/README.md)
-- [0.3.0 release validation](docs/RELEASE_VALIDATION_CHECKLIST.md)
+- [0.3.1 release validation](docs/RELEASE_VALIDATION_CHECKLIST.md)
 - [Operations and recovery](docs/OPERATIONS.md)
 - [Deployment notes](docs/DEPLOYMENT_NOTES.md)
 - [Pricing and tiers](docs/PRICING_AND_TIERS.md)
 - [Stripe billing](docs/STRIPE_SELF_SERVE_BILLING.md)
-- [Architecture health](docs/ARCHITECTURE_HEALTH_AUDIT_0.3.0.md)
+- [Architecture health](docs/ARCHITECTURE_HEALTH_AUDIT_0.3.1.md)
 - [Security policy](SECURITY.md)
 
 ## License

@@ -13,9 +13,10 @@ import WorkspaceRouter from './WorkspaceRouter.jsx';
 import useJobWorkspaceActions from './useJobWorkspaceActions.js';
 import useJobWorkspaceData from './useJobWorkspaceData.js';
 import useOfflineDraftQueue from './useOfflineDraftQueue.js';
+import useAppPreferences from './useAppPreferences.js';
+import useAssignableMembers from './useAssignableMembers.js';
 import useWorkspaceNavigation from './useWorkspaceNavigation.js';
 import AuthGate from '../modules/auth/AuthGate.jsx';
-import { getAssignableShopMembers } from '../modules/jobs/teamAssignmentService.js';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import FeedbackReporter from '../modules/system/FeedbackReporter.jsx';
@@ -31,7 +32,6 @@ import { clearSelectedShop, getCurrentShopName, getSelectedShop, getShopDateOpti
 import { clearVitePreloadReloadGuard } from '../shared/pwa/preloadRecovery';
 import { bootstrapCurrentUserAsOwner, getCurrentUserShopMemberships } from '../modules/shops/shopMembershipService';
 import { getCurrentShopProfile } from '../modules/shops/shopProfileService';
-import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes';
 import {
   getDefaultEntitlementSnapshot,
   getShopEntitlementSnapshot
@@ -39,20 +39,14 @@ import {
 import { getPlanStatus, getPlanVersionText } from '../modules/billing/planStatus';
 import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService';
 import { isCurrentOperator } from '../modules/operator/operatorService';
-import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
 import { isAmplifierJob } from '../modules/amplifiers/amplifierRepair.js';
 import { isKeyboardJob } from '../modules/keyboards/keyboardRepair.js';
 
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.3.1';
 const APP_NAME = 'FretTrack';
 const APP_TAGLINE = 'Modern workflow for instrument repair';
-const PWA_INSTALL_HELP_DISMISSED_KEY = 'frettrack_pwa_install_help_dismissed';
-const NEW_JOB_SIDEBAR_COLLAPSED_KEY = 'frettrack:new-job-sidebar-collapsed';
 
 export default function App() {
-  const [assignableMembers, setAssignableMembers] = useState([]);
-  const [assignableMembersError, setAssignableMembersError] = useState('');
-  const [assignableMembersLoading, setAssignableMembersLoading] = useState(false);
   const [currentJobsAssigneeFilter, setCurrentJobsAssigneeFilter] = useState('');
   const [supabaseStatus, setSupabaseStatus] = useState(hasSupabaseConfig ? 'checking' : 'not-configured');
   const [session, setSession] = useState(null);
@@ -73,18 +67,26 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [pendingNewJobCustomer, setPendingNewJobCustomer] = useState(null);
   const [notice, setNotice] = useState(null);
-  const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-    return themes.some((themeOption) => themeOption.value === savedTheme) ? savedTheme : defaultTheme;
-  });
   const [shopName, setShopName] = useState(() => getCurrentShopName());
-  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
-  const [isStandalonePwa, setIsStandalonePwa] = useState(() => isStandaloneDisplayMode());
-  const [showInstallHelp, setShowInstallHelp] = useState(() => localStorage.getItem(PWA_INSTALL_HELP_DISMISSED_KEY) !== 'true');
-  const [isNewJobSidebarCollapsed, setIsNewJobSidebarCollapsed] = useState(() => localStorage.getItem(NEW_JOB_SIDEBAR_COLLAPSED_KEY) === 'true');
   const manualSignOutRef = useRef(false);
   const shopAccessRequestIdRef = useRef(0);
-  const assignableMembersRequestIdRef = useRef(0);
+  const {
+    dismissInstallHelp,
+    installApp: handleInstallApp,
+    isNewJobSidebarCollapsed,
+    setTheme,
+    shouldShowIosInstallHelp,
+    shouldShowPwaInstallButton,
+    theme,
+    themes,
+    toggleNewJobSidebar
+  } = useAppPreferences({ onNotice: setNotice });
+  const {
+    members: assignableMembers,
+    error: assignableMembersError,
+    isLoading: assignableMembersLoading,
+    refresh: refreshAssignableMembers
+  } = useAssignableMembers(membership?.shopId);
 
   const {
     customers,
@@ -134,8 +136,6 @@ export default function App() {
   const tillSummary = calculateTillSummary(jobs, { shopProfile });
   const moneyOptions = getShopMoneyOptions(shopProfile || undefined);
   const dateOptions = getShopDateOptions(shopProfile || undefined);
-  const shouldShowPwaInstallButton = Boolean(deferredInstallPrompt) && !isStandalonePwa;
-  const shouldShowIosInstallHelp = !isStandalonePwa && showInstallHelp && isIosInstallCandidate();
   const {
     mode,
     selectedJobId,
@@ -217,40 +217,6 @@ export default function App() {
         ? 'keyboard-detail'
         : 'guitar-detail';
     return selectWorkspaceJob(jobId, detailMode);
-  }
-
-  async function refreshAssignableMembers(shopId = membership?.shopId) {
-    if (shopId && getSelectedShop().shopId !== shopId) {
-      return null;
-    }
-    const requestId = ++assignableMembersRequestIdRef.current;
-    if (!shopId) {
-      setAssignableMembers([]);
-      setAssignableMembersError('');
-      return [];
-    }
-    setAssignableMembersLoading(true);
-    setAssignableMembersError('');
-    try {
-      const members = await getAssignableShopMembers(shopId);
-      if (requestId !== assignableMembersRequestIdRef.current || getSelectedShop().shopId !== shopId) {
-        return null;
-      }
-      setAssignableMembers(members);
-      return members;
-    } catch (error) {
-      if (requestId !== assignableMembersRequestIdRef.current || getSelectedShop().shopId !== shopId) {
-        return null;
-      }
-      console.error('Assignable shop members failed to load.', error);
-      setAssignableMembers([]);
-      setAssignableMembersError(getErrorMessage(error, 'Unable to load active shop members.'));
-      return [];
-    } finally {
-      if (requestId === assignableMembersRequestIdRef.current && getSelectedShop().shopId === shopId) {
-        setAssignableMembersLoading(false);
-      }
-    }
   }
 
   useEffect(() => {
@@ -383,49 +349,6 @@ export default function App() {
       setIsBetaAccessLoading(false);
     }
   }
-
-  useEffect(() => {
-    if (!membership?.shopId) {
-      setAssignableMembers([]);
-      setAssignableMembersError('');
-      return;
-    }
-    refreshAssignableMembers(membership.shopId);
-  }, [membership?.shopId]);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(display-mode: standalone)');
-
-    function handleBeforeInstallPrompt(event) {
-      event.preventDefault();
-      setDeferredInstallPrompt(event);
-    }
-
-    function handleInstalled() {
-      setDeferredInstallPrompt(null);
-      setIsStandalonePwa(true);
-      setNotice({ type: 'success', message: 'FretTrack was installed on this device.' });
-    }
-
-    function syncStandaloneState() {
-      setIsStandalonePwa(isStandaloneDisplayMode());
-    }
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleInstalled);
-    mediaQuery.addEventListener?.('change', syncStandaloneState);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleInstalled);
-      mediaQuery.removeEventListener?.('change', syncStandaloneState);
-    };
-  }, []);
 
   useEffect(() => {
     if (!notice?.message) {
@@ -717,32 +640,6 @@ export default function App() {
     'auth-required': 'Supabase Auth Required',
     error: 'Supabase Error'
   }[supabaseStatus];
-
-  async function handleInstallApp() {
-    if (!deferredInstallPrompt) {
-      return;
-    }
-
-    deferredInstallPrompt.prompt();
-    const choice = await deferredInstallPrompt.userChoice.catch(() => null);
-    if (choice?.outcome === 'accepted') {
-      setNotice({ type: 'success', message: 'Install prompt accepted. FretTrack will finish installing if the browser allows it.' });
-    }
-    setDeferredInstallPrompt(null);
-  }
-
-  function dismissInstallHelp() {
-    localStorage.setItem(PWA_INSTALL_HELP_DISMISSED_KEY, 'true');
-    setShowInstallHelp(false);
-  }
-
-  function toggleNewJobSidebar() {
-    setIsNewJobSidebarCollapsed((isCollapsed) => {
-      const nextValue = !isCollapsed;
-      localStorage.setItem(NEW_JOB_SIDEBAR_COLLAPSED_KEY, String(nextValue));
-      return nextValue;
-    });
-  }
 
   if (hasSupabaseConfig && isAuthLoading) {
     return (

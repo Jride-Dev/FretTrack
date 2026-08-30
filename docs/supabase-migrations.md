@@ -1,6 +1,6 @@
 # Supabase Migration Workflow
 
-Current release: **FretTrack 0.3.0**. Migration summaries below describe what each change introduced; remote state is authoritative only after `npm run check:migrations` and the strict remote-history comparison pass.
+Current release: **FretTrack 0.3.1**. Migration summaries below describe what each change introduced; remote state is authoritative only after `npm run check:migrations` and the strict remote-history comparison pass.
 
 `20260829071930_access_application_side_effect_idempotency.sql` returns the stable access-request UUID from the public intake RPC, preserves the original request timestamp on retries, and avoids appending identical notes. The landing Worker uses that identity for provider and private-archive idempotency.
 

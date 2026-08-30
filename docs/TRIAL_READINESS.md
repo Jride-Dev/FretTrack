@@ -1,4 +1,4 @@
-# FretTrack v0.3.0 Trial And Release Readiness Checklist
+# FretTrack v0.3.1 Trial And Release Readiness Checklist
 
 Use this checklist before handing a build to a real trial shop.
 

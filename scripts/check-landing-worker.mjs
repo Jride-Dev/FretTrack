@@ -15,7 +15,7 @@ const VALID_BODY = {
 const PUBLIC_DOC_ROUTES = [
   { route: '/docs/how-to-use-frettrack', assetPath: '/docs/how-to-use-frettrack.html', title: 'How to use FretTrack' },
   { route: '/docs/getting-started', assetPath: '/docs/getting-started.html', title: 'Start using FretTrack' },
-  { route: '/docs/release-notes', assetPath: '/docs/release-notes.html', title: 'FretTrack 0.3.0' },
+  { route: '/docs/release-notes', assetPath: '/docs/release-notes.html', title: 'FretTrack 0.3.1' },
   { route: '/docs/shops-and-accounts', assetPath: '/docs/shops-and-accounts.html', title: 'Manage shop access' },
   { route: '/docs/customers', assetPath: '/docs/customers.html', title: 'Manage customer records' },
   { route: '/docs/jobs', assetPath: '/docs/jobs.html', title: 'Create and manage jobs' },
@@ -147,7 +147,7 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /<link rel="icon" href="\/favicon\.ico" sizes="any">/);
   assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png">/);
   assert.match(html, /Request Access/);
-  assert.match(html, /Stable release 0\.3\.0 is available/);
+  assert.match(html, /Stable release 0\.3\.1 is available/);
   assert.match(html, /\/landing\/overview\.jpg/);
   assert.match(html, /Stripe Checkout and self-service billing management/);
   assert.match(html, /\$29\.99 monthly/);
@@ -338,7 +338,7 @@ async function testReleaseDocumentationRoutes() {
     const legacyHtml = await legacyResponse.text();
     assert.equal(legacyResponse.status, 200, legacyRoute);
     assertNoRedirect(legacyResponse, legacyRoute);
-    assert.match(legacyHtml, /FretTrack 0\.3\.0/, legacyRoute);
+    assert.match(legacyHtml, /FretTrack 0\.3\.1/, legacyRoute);
     assert.doesNotMatch(legacyHtml, /\bbeta\b|\btesters?\b|workflow testing|testing checklist/i, legacyRoute);
   }
 

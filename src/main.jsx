@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import './shared/legacy/legacyBrowserSupport';
 import AppBootstrap from './app/AppBootstrap.jsx';
 import ErrorBoundary from './shared/components/ErrorBoundary.jsx';
+import './styles/foundations.css';
+import './styles/workspace.css';
 import './styles.css';
 import { registerPwaServiceWorker } from './shared/pwa/pwaSupport';
 import { installVitePreloadRecovery } from './shared/pwa/preloadRecovery';
