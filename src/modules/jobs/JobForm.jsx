@@ -201,7 +201,7 @@ export default function JobForm({
     });
   }
 
-  function useCustomer(customer) {
+  function applyCustomer(customer) {
     setForm((current) => {
       const nextForm = {
         ...current,
@@ -436,7 +436,7 @@ export default function JobForm({
                         {latestJob.dateReceived ? ` | ${formatShopDate(latestJob.dateReceived, dateOptions)}` : ''}
                       </span>
                     </div>
-                    <button type="button" onClick={() => useCustomer(customer)} disabled={!canWrite}>Use Customer</button>
+                    <button type="button" onClick={() => applyCustomer(customer)} disabled={!canWrite}>Use Customer</button>
                   </div>
                 );
               })}

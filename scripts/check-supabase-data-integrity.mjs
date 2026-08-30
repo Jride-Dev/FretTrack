@@ -141,7 +141,7 @@ function runSupabaseQuery(sql) {
 
 function parseJsonEnvelope(output) {
   const trimmed = output.trim();
-  const jsonStart = trimmed.search(/[\[{]/);
+  const jsonStart = trimmed.search(/[[{]/);
   if (jsonStart === -1) {
     throw new Error(`Supabase query did not return JSON output.\n\n${output}`);
   }
