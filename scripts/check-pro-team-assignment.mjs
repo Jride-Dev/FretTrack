@@ -89,7 +89,7 @@ assert.ok(jobDetailHeader.includes('<JobAssignmentControl'), 'Job Detail header 
 assert.ok(jobForm.includes('Assigned Technician'), 'New Job must support optional assignment.');
 assert.ok(jobForm.includes('<option value="">Unassigned</option>'), 'New Job must default to Unassigned.');
 assert.ok(jobService.includes('assignedMemberId: job.assigned_member_id'), 'Loaded jobs must preserve assignment identity.');
-assert.ok(jobService.includes('toDbJob(newJob, { includeAssignment: true })'), 'New jobs may persist their optional assignment.');
+assert.ok(jobService.includes('toDbJobFromModule(newJob, { includeAssignment: true })'), 'New jobs may persist their optional assignment.');
 assert.match(jobService, /from\('jobs'\)[\s\S]*\.update\(toDbJob\(job\)\)/, 'Ordinary job saves must omit assignment fields and avoid stale assignment overwrite.');
 
 assert.ok(currentJobs.includes('Assigned Technician'), 'Current Jobs must display assigned technician.');
