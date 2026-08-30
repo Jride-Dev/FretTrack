@@ -45,6 +45,8 @@ The version bump to the next minor release stays deferred until the extraction w
 
 The first job-service slice is already underway behind compatibility exports: shared normalization and child synchronization helpers now live in focused modules while the existing job service facade stays intact.
 
+The first inventory-service slice is also underway behind compatibility exports: shared normalization helpers and purchase-order helpers now live in focused modules while the existing inventory service facade stays intact.
+
 Each extraction must preserve the current facade, permissions, database behavior, and regression suite. No broad rewrite.
 
 ## v0.3.x: Commerce hardening
