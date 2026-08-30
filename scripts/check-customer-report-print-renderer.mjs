@@ -7,6 +7,7 @@ const read = (path) => readFileSync(resolve(root, path), 'utf8');
 
 const documents = read('src/modules/jobs/JobPrintDocuments.jsx');
 const detail = read('src/modules/jobs/JobDetail.jsx');
+const communicationActions = read('src/modules/jobs/jobDetailCommunicationActions.js');
 const report = read('src/modules/print/PrintDamageReport.jsx');
 const mapFigure = read('src/modules/print/PrintDamageMapFigure.jsx');
 const readiness = read('src/modules/print/printDocumentReady.js');
@@ -30,7 +31,7 @@ assert.match(mapFigure, /imageStatus === 'loaded' && marks\.length > 0/, 'Condit
 assert.match(styles, /\.print-damage-map-stage > img\s*{[\s\S]*max-height:\s*4\.55in;[\s\S]*max-width:\s*100%;/, 'Damage images must remain inside the printable page frame.');
 assert.match(styles, /\.print-damage-marker\s*{[\s\S]*transform:\s*translate\(-50%, -50%\);/, 'Printed markers must stay centered on saved coordinates.');
 assert.match(styles, /\.print-document-table thead\s*{[\s\S]*display:\s*table-header-group;/, 'Multi-page tables must repeat their headers.');
-assert.ok(detail.includes('await waitForCustomerReportPrintReady();'), 'Customer printing must wait for document images before opening the browser print dialog.');
+assert.ok(communicationActions.includes('await waitForCustomerReportPrintReady();'), 'Customer printing must wait for document images before opening the browser print dialog.');
 assert.match(readiness, /querySelectorAll\(`\$\{selector\} img`\)[\s\S]*Promise\.all\(images\.map\(waitForImage\)\)[\s\S]*nextPaint/, 'Shared print readiness must wait for every selected document image and layout paint.');
 assert.ok(readiness.includes("waitForPrintDocumentReady('.print-damage-report', root)"), 'Customer report readiness must target only the isolated customer document.');
 assert.ok(!roadmap.includes('- Customer Damage Report print rendering still needs a proper isolated rebuild'), 'The completed print blocker must be removed from the active roadmap weak spots.');

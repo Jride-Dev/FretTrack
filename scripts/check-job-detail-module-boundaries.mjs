@@ -18,6 +18,7 @@ const workSections = read('src/modules/jobs/JobWorkSections.jsx');
 const billingSections = read('src/modules/jobs/JobBillingSections.jsx');
 const auxiliarySections = read('src/modules/jobs/JobAuxiliarySections.jsx');
 const photoSections = read('src/modules/jobs/JobPhotoSections.jsx');
+const communicationActions = read('src/modules/jobs/jobDetailCommunicationActions.js');
 const formattingPath = join(root, 'src/modules/jobs/jobDetailFormatting.js');
 const formatting = read('src/modules/jobs/jobDetailFormatting.js');
 const workLogDraft = read('src/modules/jobs/workLogDraft.js');
@@ -25,6 +26,7 @@ const packageJson = read('package.json');
 
 assert.match(detail, /import JobDetailShell from ['"]\.\/JobDetailShell\.jsx['"]/, 'Job Detail must use the focused shell boundary.');
 assert.match(detail, /from ['"]\.\/jobDetailFormatting\.js['"]/, 'Job Detail must use the pure formatting boundary.');
+assert.match(detail, /import { createJobDetailCommunicationActions } from ['"]\.\/jobDetailCommunicationActions\.js['"]/, 'Job Detail must route document and messaging actions through the dedicated communication boundary.');
 assert.match(detail, /import buildJobPrintSections from ['"]\.\/JobPrintSections\.jsx['"]/, 'Job Detail must use the focused print composition boundary.');
 assert.match(detail, /import JobIntakeSections from ['"]\.\/JobIntakeSections\.jsx['"]/, 'Job Detail must use the focused intake boundary.');
 assert.match(detail, /import JobInspectionSections from ['"]\.\/JobInspectionSections\.jsx['"]/, 'Job Detail must use the focused inspection boundary.');
@@ -39,6 +41,7 @@ for (const source of [shell, header, dialogs, printDocuments, printDamageReport,
 }
 assert.doesNotMatch(detail, /<JobDetailHeader|<JobDetailDialogs|<JobDetailTabs/, 'Shell, header, dialog, and tab composition must not remain duplicated in JobDetail.');
 assert.match(detail, /<JobDetailShell[\s\S]*?onAssignmentChanged=\{handleAssignmentChanged\}[\s\S]*?onCloseDocumentEmail=\{\(\) => setDocumentEmailDraft\(null\)\}[\s\S]*?onSendDocumentEmail=\{handleSendDocumentEmail\}[\s\S]*?onStatusChange=\{updateField\}[\s\S]*?saveStatus=\{displayedSaveStatus\}/, 'Job Detail shell must retain established dialog, header, assignment, status, and save-state handlers.');
+assert.match(detail, /const communicationActions = createJobDetailCommunicationActions\([\s\S]*?patchJob,[\s\S]*?refreshTimelineEvents[\s\S]*?\);\s*const \{[\s\S]*?closeDetail,[\s\S]*?finishJob,[\s\S]*?handleSendCustomerMessage,[\s\S]*?handleSendDocumentEmail,[\s\S]*?openInvoiceEmail,[\s\S]*?openWorkOrderEmail,[\s\S]*?printCustomerReport,[\s\S]*?printJobSheet,[\s\S]*?sendSubcontractorPickupEmail,[\s\S]*?updateContactPreference,[\s\S]*?updateMessageTemplate[\s\S]*?\} = communicationActions;/, 'Job Detail must centralize the document, print, and messaging actions in the dedicated communication helper.');
 assert.match(shell, /<JobDetailDialogs[\s\S]*?onSendDocumentEmail=\{onSendDocumentEmail\}[\s\S]*?onSavePhotoCopy=\{onSavePhotoCopy\}[\s\S]*?onOverwritePhoto=\{onOverwritePhoto\}/, 'Shell must retain dialog action wiring.');
 assert.match(shell, /<JobDetailHeader[\s\S]*?onStatusChange=\{onStatusChange\}[\s\S]*?onAssignmentChanged=\{onAssignmentChanged\}[\s\S]*?onNotice=\{onNotice\}/, 'Shell must retain header status, assignment, and notice wiring.');
 assert.match(shell, /<JobDetailTabs[\s\S]*?activityTimeline=\{activityTimeline\}[\s\S]*?billingSections=\{billingSections\}[\s\S]*?imagesSection=\{imagesSection\}[\s\S]*?printSections=\{printSections\}[\s\S]*?workSections=\{workSections\}/, 'Shell must retain all Job Detail tab sections.');
@@ -66,14 +69,14 @@ assert.match(detail, /setDraftJob\(\(current\) => buildNeckInspectionPatch\(curr
 assert.match(detail, /setDraftJob\(\(current\) => buildStringGaugePatch\(current, index, value\)\)/, 'Single string-gauge edits must use the extracted pure patch helper.');
 assert.match(detail, /setDraftJob\(\(current\) => buildStringGaugesPatch\(current, gauges\)\)/, 'Bulk string-gauge edits must use the extracted pure patch helper.');
 assert.match(detail, /patchJob\(buildWorkOrderImageIdsPatch\(draftJob, workOrderImageIds, imageId, checked\)\)/, 'Work-order image selection must use the extracted pure patch helper.');
-assert.match(detail, /patchJob\(buildContactPreferencePatch\(field, value\)\)/, 'Contact preference updates must use the extracted pure patch helper.');
-assert.match(detail, /patchJob\(buildMessageTemplatePatch\(draftJob, templateKey\)\)/, 'Last message template updates must use the extracted pure patch helper.');
+assert.match(communicationActions, /patchJob\(buildContactPreferencePatch\(field, value\)\)/, 'Contact preference updates must use the extracted pure patch helper.');
+assert.match(communicationActions, /patchJob\(buildMessageTemplatePatch\(draftJob, templateKey\)\)/, 'Last message template updates must use the extracted pure patch helper.');
 assert.match(detail, /patchJob\(buildUpdateWorkLogEntryPatch\(draftJob\.workLog, entryId, text\)\)/, 'Work-log entry edits must use the extracted pure draft helper.');
 assert.match(detail, /buildRemoveWorkLogEntryJob\(draftJob, entryId\)/, 'Work-log entry removals must use the extracted pure draft helper.');
 assert.match(detail, /setDraftJob\(\(current\) => buildDamageMapJob\(current, damageMap\)\)/, 'Damage Map edits must use the extracted pure patch helper.');
-assert.match(detail, /setDraftJob\(\(current\) => buildMergeJobMessageJob\(current, result\.message\)\)/, 'Message merges must use the extracted pure patch helper.');
+assert.match(communicationActions, /setDraftJob\(\(current\) => buildMergeJobMessageJob\(current, result\.message\)\)/, 'Message merges must use the extracted pure patch helper.');
 assert.match(detail, /setDraftJob\(\(current\) => buildAssignmentJob\(current, assignment\)\)/, 'Assignment merges must use the extracted pure patch helper.');
-assert.match(detail, /const nextJob = buildPickedUpJob\(draftJob, new Date\(\)\.toISOString\(\)\)/, 'Finish Job must use the extracted pure picked-up patch helper.');
+assert.match(communicationActions, /const nextJob = buildPickedUpJob\(draftJob, new Date\(\)\.toISOString\(\)\)/, 'Finish Job must use the extracted pure picked-up patch helper.');
 assert.match(detail, /return findNewDamageViewImage\(uploadedImages, existingImageIds, category, file\.name\)/, 'Damage Map upload selection must use the extracted pure image selection helper.');
 assert.doesNotMatch(detail, /resizeStringGauges/, 'Job Detail must not resize string-gauge rows inline.');
 assert.match(formatting, /function buildJobFieldPatch\(currentJob, fieldName, value, jobs = \[\]\)[\s\S]*?fieldName === 'customerFirstName'[\s\S]*?customerName: combineCustomerName/, 'Customer name field patches must keep the combined display name synchronized.');

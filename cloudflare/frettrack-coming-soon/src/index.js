@@ -1335,6 +1335,7 @@ function landingPage() {
             </ul>
           </div>
         </div>
+        <p class="section-lede">Dedicated AmpTrack and MidiTrack add-on modules are planned later with more specialized amplifier and keyboard workflows.</p>
         <p class="section-lede">Cancel anytime through the Stripe Billing Portal; access continues through the current paid period. The first annual subscription purchase has a 14-day refund window. Monthly payments and renewals are non-refundable except for billing errors or when required by law. Prices are USD; applicable taxes, if any, are shown at Checkout.</p>
       </section>
 
@@ -1732,13 +1733,33 @@ async function saveAccessApplication(request, env) {
     return jsonResponse({ ok: false, error: 'Invalid request.' }, 400);
   }
 
+  const name = normalizeApplicationText(data.name);
+  const state = normalizeApplicationText(data.state);
+  const shopName = normalizeApplicationText(data.shopName);
+  const teamSize = normalizeApplicationText(data.teamSize);
+  const currentTracking = normalizeApplicationText(data.currentTracking);
+  const email = normalizeApplicationText(data.email).toLowerCase();
+
+  const oversizedField = [
+    ['name', name, 120],
+    ['state', state, 80],
+    ['shopName', shopName, 160],
+    ['teamSize', teamSize, 80],
+    ['currentTracking', currentTracking, 1200],
+    ['email', email, 180]
+  ].find(([, value, maxLength]) => value.length > maxLength);
+
+  if (oversizedField) {
+    return jsonResponse({ ok: false, error: 'Please keep each field within its character limit.' }, 400);
+  }
+
   const application = {
-    name: cleanText(data.name, 120),
-    state: cleanText(data.state, 80),
-    shopName: cleanText(data.shopName, 160),
-    teamSize: cleanText(data.teamSize, 80),
-    currentTracking: cleanText(data.currentTracking, 1200),
-    email: cleanText(data.email, 180).toLowerCase(),
+    name,
+    state,
+    shopName,
+    teamSize,
+    currentTracking,
+    email,
     submittedAt: new Date().toISOString(),
     userAgent: cleanText(request.headers.get('user-agent') || '', 500),
     ipCountry: cleanText(request.cf?.country || '', 8)
@@ -2150,6 +2171,10 @@ async function serveBundledAsset(request, env) {
 
 function cleanText(value, maxLength) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, maxLength);
+}
+
+function normalizeApplicationText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
 function parseEmailRecipients(value) {

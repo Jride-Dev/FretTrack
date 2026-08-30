@@ -21,6 +21,59 @@ with job_orphans as (
   union all select 'shipping_items', count(*)::bigint from public.shipping_items t left join public.jobs j on j.id = t.job_id where t.job_id is not null and j.id is null
   union all select 'work_logs', count(*)::bigint from public.work_logs t left join public.jobs j on j.id = t.job_id where t.job_id is not null and j.id is null
 ),
+ownerless_shop_inputs as (
+  select
+    'production'::text as source,
+    sp.shop_id as case_id,
+    sp.shop_name,
+    (ss.shop_id is not null) as has_subscription,
+    ss.status as subscription_status,
+    ss.stripe_customer_id,
+    ss.stripe_subscription_id,
+    null::boolean as expected_issue
+  from public.shop_profiles sp
+  left join public.shop_members sm on sm.shop_id = sp.shop_id and sm.role = 'owner'
+  left join public.shop_subscriptions ss on ss.shop_id = sp.shop_id
+  where sm.id is null
+
+  union all
+
+  select
+    'self_test'::text,
+    test_case,
+    test_case,
+    has_subscription,
+    subscription_status,
+    stripe_customer_id,
+    stripe_subscription_id,
+    expected_issue
+  from (values
+    ('canceled_without_billing', true, 'canceled', null::text, null::text, false),
+    ('cancelled_with_empty_billing', true, 'cancelled', '', '   ', false),
+    ('canceled_with_customer_id', true, 'canceled', 'cus_fixture', null::text, true),
+    ('canceled_with_subscription_id', true, 'canceled', null::text, 'sub_fixture', true),
+    ('active_without_billing', true, 'active', null::text, null::text, true),
+    ('missing_subscription', false, null::text, null::text, null::text, true)
+  ) as cases(
+    test_case,
+    has_subscription,
+    subscription_status,
+    stripe_customer_id,
+    stripe_subscription_id,
+    expected_issue
+  )
+),
+ownerless_shop_classification as (
+  select
+    *,
+    not (
+      has_subscription
+      and coalesce(subscription_status, '') in ('canceled', 'cancelled')
+      and nullif(trim(coalesce(stripe_customer_id, '')), '') is null
+      and nullif(trim(coalesce(stripe_subscription_id, '')), '') is null
+    ) as is_operational_issue
+  from ownerless_shop_inputs
+),
 integrity_checks as (
   select
     'job_orphan_rows' as check_name,
@@ -31,12 +84,28 @@ integrity_checks as (
   select
     'operational_shop_profiles_without_owner_member',
     count(*)::bigint,
-    coalesce(jsonb_agg(jsonb_build_object('shop_id', sp.shop_id, 'shop_name', sp.shop_name) order by sp.shop_id), '[]'::jsonb)
-  from public.shop_profiles sp
-  left join public.shop_members sm on sm.shop_id = sp.shop_id and sm.role = 'owner'
-  left join public.shop_subscriptions ss on ss.shop_id = sp.shop_id
-  where sm.id is null
-    and (ss.shop_id is null or ss.status not in ('canceled', 'cancelled'))
+    coalesce(jsonb_agg(jsonb_build_object(
+      'shop_id', case_id,
+      'shop_name', shop_name,
+      'subscription_status', subscription_status,
+      'has_stripe_customer', nullif(trim(coalesce(stripe_customer_id, '')), '') is not null,
+      'has_stripe_subscription', nullif(trim(coalesce(stripe_subscription_id, '')), '') is not null
+    ) order by case_id), '[]'::jsonb)
+  from ownerless_shop_classification
+  where source = 'production'
+    and is_operational_issue
+  union all
+  select
+    'ownerless_shop_classification_rule',
+    count(*)::bigint,
+    coalesce(jsonb_agg(jsonb_build_object(
+      'case', case_id,
+      'expected_issue', expected_issue,
+      'actual_issue', is_operational_issue
+    ) order by case_id), '[]'::jsonb)
+  from ownerless_shop_classification
+  where source = 'self_test'
+    and is_operational_issue is distinct from expected_issue
   union all
   select
     'shop_members_without_auth_user',
@@ -72,11 +141,48 @@ function runSupabaseQuery(sql) {
 
 function parseJsonEnvelope(output) {
   const trimmed = output.trim();
-  const jsonStart = trimmed.indexOf('{');
+  const jsonStart = trimmed.search(/[\[{]/);
   if (jsonStart === -1) {
     throw new Error(`Supabase query did not return JSON output.\n\n${output}`);
   }
-  return JSON.parse(trimmed.slice(jsonStart));
+
+  let inString = false;
+  let escaped = false;
+  let depth = 0;
+
+  for (let index = jsonStart; index < trimmed.length; index += 1) {
+    const character = trimmed[index];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === '\\') {
+        escaped = true;
+      } else if (character === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (character === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (character === '{' || character === '[') {
+      depth += 1;
+      continue;
+    }
+
+    if (character === '}' || character === ']') {
+      depth -= 1;
+      if (depth === 0) {
+        return JSON.parse(trimmed.slice(jsonStart, index + 1));
+      }
+    }
+  }
+
+  throw new Error(`Supabase query returned incomplete JSON output.\n\n${output}`);
 }
 
 let envelope;

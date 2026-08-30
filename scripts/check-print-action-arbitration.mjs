@@ -5,17 +5,18 @@ import { resolve } from 'node:path';
 const root = process.cwd();
 const read = (file) => readFileSync(resolve(root, file), 'utf8');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
+const communicationActions = read('src/modules/jobs/jobDetailCommunicationActions.js');
 const coordinator = read('src/modules/print/printRequestCoordinator.js');
 
 assert.match(jobDetail, /const printRequestSequenceRef = useRef\(0\);/, 'Job Detail must keep one print request sequence across both actions.');
 assert.match(
-  jobDetail,
-  /async function printJobSheet\(\)[\s\S]*?beginPrintRequest\(printRequestSequenceRef, 'job-sheet', document\.body\)[\s\S]*?await waitForJobSheetPrintReady\(\);[\s\S]*?!isCurrentPrintRequest\(printRequestSequenceRef, requestSequence, 'job-sheet', document\.body\)[\s\S]*?window\.print\(\);/,
+  communicationActions,
+  /async function printJobSheet\(\)[\s\S]*?beginPrintRequest\(printRequestSequenceRef, 'job-sheet', documentBody\)[\s\S]*?await waitForJobSheetPrintReady\(\);[\s\S]*?!isCurrentPrintRequest\(printRequestSequenceRef, requestSequence, 'job-sheet', documentBody\)[\s\S]*?window\.print\(\);/,
   'Job Sheet printing must invalidate and reject older asynchronous print actions.'
 );
 assert.match(
-  jobDetail,
-  /async function printCustomerReport\(\)[\s\S]*?beginPrintRequest\(printRequestSequenceRef, CUSTOMER_REPORT_PRINT_MODE, document\.body\)[\s\S]*?await waitForCustomerReportPrintReady\(\);[\s\S]*?!isCurrentPrintRequest\(printRequestSequenceRef, requestSequence, CUSTOMER_REPORT_PRINT_MODE, document\.body\)[\s\S]*?window\.print\(\);/,
+  communicationActions,
+  /async function printCustomerReport\(\)[\s\S]*?beginPrintRequest\(printRequestSequenceRef, CUSTOMER_REPORT_PRINT_MODE, documentBody\)[\s\S]*?await waitForCustomerReportPrintReady\(\);[\s\S]*?!isCurrentPrintRequest\(printRequestSequenceRef, requestSequence, CUSTOMER_REPORT_PRINT_MODE, documentBody\)[\s\S]*?window\.print\(\);/,
   'Customer report printing must verify that its request is still current after readiness settles.'
 );
 assert.match(coordinator, /requestSequenceRef\.current = requestSequence/, 'Starting a print action must advance the shared request sequence synchronously.');
