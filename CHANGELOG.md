@@ -4,6 +4,10 @@ Current version: `0.3.1`
 
 This file tracks product, reliability, security, and operational changes by release. Historical prerelease labels remain only in their original release records.
 
+## Unreleased
+
+- Reduced `InventoryPage.jsx` from a 953-line controller to a focused composition surface backed by separate data/history, part/stock, and vendor/purchase-order controller hooks, including stale-safe selected-part history loading.
+
 ## v0.3.1 - Current Stable Release
 
 - Reduced application-shell orchestration by moving PWA installation, theme preferences, sidebar persistence, and stale-safe assignable-member loading into focused hooks.

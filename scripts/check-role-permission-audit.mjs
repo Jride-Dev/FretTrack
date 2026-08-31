@@ -21,7 +21,11 @@ const appAccess = source('src/app/appAccess.js');
 const appAccessPanels = source('src/app/AppAccessPanels.jsx');
 const workspaceRouter = source('src/app/WorkspaceRouter.jsx');
 const workspaceNavigation = source('src/app/useWorkspaceNavigation.js');
-const inventory = source('src/modules/inventory/InventoryPage.jsx');
+const inventory = [
+  source('src/modules/inventory/InventoryPage.jsx'),
+  source('src/modules/inventory/useInventoryPartController.js'),
+  source('src/modules/inventory/useInventoryPurchasingController.js')
+].join('\n');
 const shipping = source('src/modules/shipping/ShippingDashboard.jsx');
 const scheduling = source('src/modules/scheduling/SchedulingPage.jsx');
 const scheduleEventDetails = source('src/modules/scheduling/ScheduleEventDetailsDialog.jsx');
