@@ -14,6 +14,9 @@ const inventoryPage = read(join(root, 'src/modules/inventory/InventoryPage.jsx')
 const inventoryPartEditor = read(join(root, 'src/modules/inventory/InventoryPartEditor.jsx'));
 const inventoryPartsList = read(join(root, 'src/modules/inventory/InventoryPartsList.jsx'));
 const inventoryService = read(join(root, 'src/modules/inventory/inventoryService.js'));
+const inventoryCatalog = read(join(root, 'src/modules/inventory/inventoryServiceCatalog.js'));
+const inventoryNormalization = read(join(root, 'src/modules/inventory/inventoryServiceNormalization.js'));
+const inventoryServiceSource = [inventoryService, inventoryCatalog, inventoryNormalization, inventoryPartsList].join('\n');
 const barcodeLabels = read(join(root, 'src/modules/inventory/BarcodeLabelSheet.jsx'));
 const shopSettings = read(join(root, 'src/modules/shops/ShopSettings.jsx'));
 const shopProfileService = read(join(root, 'src/modules/shops/shopProfileService.js'));
@@ -114,14 +117,14 @@ assert.doesNotMatch(inventoryPartEditor, new RegExp(`${staleVendorText}|${staleB
   "PART_IMAGES_BUCKET = 'part-images'",
   'createPartImageObjectUrl'
 ].forEach((snippet) => {
-  assert.ok(inventoryService.includes(snippet), `Inventory service must include: ${snippet}`);
+  assert.ok(inventoryServiceSource.includes(snippet), `Inventory service modules must include: ${snippet}`);
 });
 
 assert.ok(reportsService.includes('!isSpecialOrderPart(part)'), 'Advanced reports low-stock lists must exclude special-order parts.');
 assert.ok(barcodeLabels.includes('labelPreset'), 'Barcode label sheet must accept label presets.');
 assert.ok(barcodeLabels.includes('No UPC or part number'), 'Barcode label sheet must use UPC wording.');
 assert.doesNotMatch(barcodeLabels, /No SKU/, 'Barcode label sheet must not show SKU wording.');
-assert.doesNotMatch(inventoryService, /service_role|SERVICE_ROLE|SUPABASE_SERVICE_ROLE/i, 'Inventory service must not use service-role secrets.');
+assert.doesNotMatch(inventoryServiceSource, /service_role|SERVICE_ROLE|SUPABASE_SERVICE_ROLE/i, 'Inventory service must not use service-role secrets.');
 
 console.log('Inventory/vendor/shipping polish checks passed.');
 

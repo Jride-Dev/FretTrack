@@ -17,12 +17,13 @@ The completed job and inventory service facades remain stable. This release cont
 - Versioned customer synchronization preserves post-parent-save failures for the workspace notice path, while payment autosaves route stale-write conflicts through the same visible error surface.
 - `useJobInventoryParts.js` owns manual and inventory-backed job-part search, add, quantity update, removal, and authoritative refresh coordination.
 - `foundations.css`, `workspace.css`, and `styles.css` preserve the original stylesheet order while separating shared tokens/controls, workspace surfaces, and remaining feature/detail rules.
+- `InventoryPage.jsx` is now a focused composition surface. `useInventoryPageData.js` owns shop-scoped catalog/history loading, `useInventoryPartController.js` owns part, stock, image, and label workflows, and `useInventoryPurchasingController.js` owns vendor and purchase-order workflows.
 
 ## Current pressure points
 
 - `App.jsx` still coordinates session/shop bootstrap and non-job domains.
 - `JobDetail.jsx` still coordinates work-log, photo, communication, and section composition.
-- `InventoryPage.jsx` remains a large controller despite its focused presentation and service boundaries.
+- Inventory display components and service facades remain intentionally stable while the new controller hooks own their mutation domains.
 - Remaining source-text checks should become executable behavior checks when deterministic coverage is practical.
 
 Future extraction stays incremental. Compatibility facades, permission rules, optimistic concurrency, persistence order, print behavior, and responsive rendering must remain intact; no broad rewrite or schema change is justified solely for organization.

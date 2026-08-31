@@ -41,6 +41,8 @@ The first post-release work is deliberate spaghetti reduction without changing p
 5. Keep the global CSS split into ordered foundations, workspace surfaces, and remaining feature/detail styles, then continue moving rules into module-owned styles without redesigning the interface.
 6. Replace remaining source-text and dirty-diff assertions with executable behavior checks where practical.
 
+The first post-release controller slice reduced `InventoryPage.jsx` from 953 lines to a focused composition surface. `useInventoryPageData.js` now owns shop-scoped loading and stale-safe part history, `useInventoryPartController.js` owns parts, stock, images, and barcode-label selection, and `useInventoryPurchasingController.js` owns vendors, purchase orders, status changes, and receiving.
+
 The `0.3.1` version identifies this behavior-preserving maintainability release. Later version bumps remain deferred until each additional extraction slice holds under CI.
 
 The job-service split is complete behind a 21-line compatibility facade. Normalization, queries, mutations, messaging, and child synchronization now have focused owners, and the transitional duplicate implementations have been removed.
