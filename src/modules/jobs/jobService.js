@@ -16,6 +16,7 @@ export {
   ensureRemoteJob,
   isDuplicateWorkOrderError,
   recordJobPayment,
+  setJobEstimateState,
   setJobAccountingVoid,
   setJobInvoiceFinalization,
   updateJob

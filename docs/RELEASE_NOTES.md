@@ -1,5 +1,9 @@
 # Release Notes
 
+## Post-0.3.1 commerce hardening
+
+Work-order estimates now have an explicit, owner/admin-controlled lifecycle instead of relying on informal notes. Marking a draft estimate sent stores a server-calculated minor-unit snapshot, increments its revision, and locks parts, services, discounts, and tax settings. Staff can record approval or decline with an audit note, while revisions require returning the estimate to draft before editing and sending again. Sent or declined estimates cannot be finalized as invoices; approved estimates retain the exact customer-reviewed snapshot. Migration `20260831220418_job_estimate_approval_lifecycle.sql` supplies the version-checked RPC, database constraints, charge guards, and timeline events.
+
 ## GitHub Release Summary: v0.3.1
 
 FretTrack `0.3.1` is a behavior-preserving maintainability release. The app shell now delegates PWA/theme/sidebar preferences and stale-safe team-member loading to focused hooks. Job Detail delegates derived billing, measurement, payment, and service state to focused hooks. Global CSS is loaded in the same cascade order from smaller foundation, workspace, and feature/detail files.

@@ -89,6 +89,7 @@ function JobDetailWorkspace({
   const hydratedJobIdRef = useRef(job.id);
   const printRequestSequenceRef = useRef(0);
   activeJobIdRef.current = job.id;
+  const chargesLocked = Boolean(draftJob.invoiceFinalizedAt) || (draftJob.estimateStatus || 'draft') !== 'draft';
 
   const setIsDirty = useCallback((value) => {
     setDirty(value);
@@ -133,14 +134,11 @@ function JobDetailWorkspace({
     onDirtyChange?.(hasUnsavedChanges);
     return () => onDirtyChange?.(false);
   }, [hasUnsavedChanges, onDirtyChange]);
-
-
   useEffect(() => {
     return () => {
       cancelPrintRequests(printRequestSequenceRef, document.body);
     };
   }, []);
-
   useEffect(() => {
     function cleanupPrintMode() {
       document.body.classList.remove('customer-report-printing');
@@ -213,7 +211,6 @@ function JobDetailWorkspace({
     setWorkLogText,
     shopProfile
   });
-
   function patchJob(patch, saveImmediately = false) {
     if (!canWrite) {
       return;
@@ -227,12 +224,10 @@ function JobDetailWorkspace({
       return nextJob;
     });
   }
-
   function updateField(event) {
     const { name, value } = event.target;
     patchJob(buildJobFieldPatch(draftJob, name, value, jobs));
   }
-
   function unlinkCustomer() {
     if (!canWrite || !draftJob.customerId) {
       return;
@@ -245,30 +240,26 @@ function JobDetailWorkspace({
     }
     patchJob(buildUnlinkCustomerPatch(draftJob));
   }
-
   function updateDiscountField(event) {
-    if (!canManageJobCharges || draftJob.invoiceFinalizedAt) {
+    if (!canManageJobCharges || chargesLocked) {
       return;
     }
     const { name, value } = event.target;
     patchJob(buildDiscountFieldPatch(draftJob, name, value));
   }
-
   function updateTaxField(event) {
-    if (!canManageJobCharges || draftJob.invoiceFinalizedAt) {
+    if (!canManageJobCharges || chargesLocked) {
       return;
     }
     const { name, value, checked, type } = event.target;
     patchJob(buildTaxFieldPatch(draftJob, name, value, type, checked));
   }
-
   function useShopTaxRate() {
-    if (!canManageJobCharges || draftJob.invoiceFinalizedAt) {
+    if (!canManageJobCharges || chargesLocked) {
       return;
     }
     patchJob(buildShopTaxRatePatch(draftJob, getShopDefaultTaxRate(shopSettings)));
   }
-
   function setInstrumentType(instrumentType) {
     patchJob(buildInstrumentTypePatch(draftJob, instrumentType));
   }
@@ -345,14 +336,18 @@ function JobDetailWorkspace({
   const {
     addPayment,
     addService,
+    changeEstimateState,
     changeInvoiceFinalization,
+    estimateNote,
     finalizationReason,
+    isChangingEstimateState,
     isChangingInvoiceState,
     isRecordingPayment,
     payment,
     removeService,
     service,
     setFinalizationReason,
+    setEstimateNote,
     setPayment,
     setService,
     updateService
@@ -446,7 +441,7 @@ function JobDetailWorkspace({
     setPart,
     updatePart
   } = useJobInventoryParts({
-    canWrite: canWrite && canManageJobCharges && !draftJob.invoiceFinalizedAt,
+    canWrite: canWrite && canManageJobCharges && !chargesLocked,
     draftJob,
     isDirty,
     onRefresh,
@@ -552,7 +547,7 @@ function JobDetailWorkspace({
   const workSections = (
     <JobWorkSections
       canWrite={canWrite}
-      canManageJobCharges={canManageJobCharges && !draftJob.invoiceFinalizedAt}
+      canManageJobCharges={canManageJobCharges && !chargesLocked}
       draftJob={draftJob}
       hasPendingWorkLog={hasPendingWorkLog}
       isSavingWorkLog={isSavingWorkLog}
@@ -576,16 +571,19 @@ function JobDetailWorkspace({
     <JobBillingSections
       canSendEmail={canSendEmail}
       canWrite={canWrite}
-      canManageJobCharges={canManageJobCharges && !draftJob.invoiceFinalizedAt}
+      canManageJobCharges={canManageJobCharges && !chargesLocked}
       canRecordJobPayments={canRecordJobPayments}
       canIssuePaymentAdjustments={canIssuePaymentAdjustments}
       canFinalizeJobInvoices={canFinalizeJobInvoices}
+      changeEstimateState={changeEstimateState}
       changeInvoiceFinalization={changeInvoiceFinalization}
       draftJob={draftJob}
+      estimateNote={estimateNote}
       finalizationReason={finalizationReason}
       inventoryParts={inventoryParts}
       inventorySearch={inventorySearch}
       isInventoryLoading={isInventoryLoading}
+      isChangingEstimateState={isChangingEstimateState}
       isChangingInvoiceState={isChangingInvoiceState}
       isRecordingPayment={isRecordingPayment}
       onAddInventoryPart={addInventoryPart}
@@ -608,6 +606,7 @@ function JobDetailWorkspace({
       service={service}
       services={services}
       setInventorySearch={setInventorySearch}
+      setEstimateNote={setEstimateNote}
       setFinalizationReason={setFinalizationReason}
       setPart={setPart}
       setPayment={setPayment}

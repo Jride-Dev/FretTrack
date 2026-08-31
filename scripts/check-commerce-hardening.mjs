@@ -12,6 +12,7 @@ const accounting = read('src/modules/billing/accounting.js');
 const children = read('src/modules/jobs/jobServiceChildren.js');
 const specialistPurchasing = read('src/modules/inventory/SpecialistPurchasingPanel.jsx');
 const migration = read('supabase/migrations/20260831022005_job_commerce_finalization_and_payment_boundary.sql');
+const estimateMigration = read('supabase/migrations/20260831220418_job_estimate_approval_lifecycle.sql');
 
 for (const helper of ['canManageJobCharges', 'canRecordJobPayments', 'canIssuePaymentAdjustments', 'canFinalizeJobInvoices']) {
   assert.ok(permissions.includes(`export function ${helper}`), `${helper} must remain a centralized permission.`);
@@ -22,10 +23,11 @@ assert.ok(workspace.includes('canManageJobCharges={access.canManageJobCharges}')
 assert.ok(workspace.includes('canRecordJobPayments={access.canRecordJobPayments}'), 'Job Detail must receive the payment-recording permission.');
 assert.ok(billing.includes("recordJobPayment(draftJob.id"), 'Payments must use the guarded append-only RPC client.');
 assert.ok(billing.includes('setJobInvoiceFinalization'), 'Invoice finalization must use its guarded RPC client.');
+assert.ok(billing.includes('setJobEstimateState'), 'Estimate transitions must use their guarded RPC client.');
 assert.ok(!payments.includes('removePayment('), 'Saved payment history must not expose destructive removal controls.');
 assert.ok(!payments.includes('updatePayment('), 'Saved payment history must not expose mutation controls.');
 assert.ok(accounting.includes('job.invoiceSnapshot?.version'), 'Finalized invoices must render their stored server snapshot.');
-assert.ok(children.includes('if (!job.invoiceFinalizedAt)'), 'Ordinary job saves must not rewrite locked charge rows after finalization.');
+assert.ok(children.includes("if (!job.invoiceFinalizedAt && (job.estimateStatus || 'draft') === 'draft')"), 'Ordinary job saves must not rewrite finalized or estimate-locked charge rows.');
 assert.ok(specialistPurchasing.includes('!canAddToBilling'), 'Specialist fulfillment must respect the charge-management permission.');
 assert.match(migration, /create or replace function public\.record_job_payment[\s\S]*?private\.has_shop_role/, 'Payment RPC must enforce shop role server-side.');
 assert.match(migration, /clean_type in \('refund', 'void'\)[\s\S]*?array\['owner', 'admin'\]/, 'Refunds and voids must require owner/admin server-side.');
@@ -34,5 +36,12 @@ assert.ok(migration.includes('job_parts_guard_finalized_invoice'), 'Finalized in
 assert.ok(migration.includes('job_services_guard_finalized_invoice'), 'Finalized invoices must lock service rows.');
 assert.match(migration, /guard_finalized_job_charge_mutation[\s\S]*?pg_advisory_xact_lock/, 'Charge mutation and finalization must share a transaction lock.');
 assert.ok(migration.includes("revoke all on function public.record_job_payment"), 'Payment RPC must revoke public execution.');
+assert.match(estimateMigration, /create or replace function public\.set_job_estimate_state[\s\S]*?private\.calculate_job_invoice_snapshot/, 'Sending an estimate must calculate its snapshot in the database.');
+assert.match(estimateMigration, /target_job\.estimate_status = 'draft' and clean_status <> 'sent'/, 'Estimate decisions must not skip the sent state.');
+assert.ok(estimateMigration.includes('job_parts_guard_estimate'), 'Sent estimates must lock part rows.');
+assert.ok(estimateMigration.includes('job_services_guard_estimate'), 'Sent estimates must lock service rows.');
+assert.match(estimateMigration, /set_job_estimate_state[\s\S]*?pg_advisory_xact_lock[\s\S]*?calculate_job_invoice_snapshot/, 'Estimate snapshots and charge-row changes must share a transaction lock.');
+assert.ok(estimateMigration.includes("revoke all on function public.set_job_estimate_state"), 'Estimate RPC must revoke public execution.');
+assert.match(estimateMigration, /estimate_last_request_id = p_request_id[\s\S]*?return target_job/, 'Estimate retries must replay a stable request before stale-version rejection.');
 
 console.log('Commerce hardening checks passed.');
