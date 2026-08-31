@@ -48,18 +48,18 @@ test('Pro owner creates an amplifier work order and persists bench details throu
   await page.getByLabel('Payment method').selectOption('Card');
   await page.getByPlaceholder('Payment note').fill(paymentNote);
   const paymentSaved = page.waitForResponse((response) => (
-    response.url().includes('/rest/v1/work_logs')
-    && response.request().method() === 'DELETE'
+    response.url().includes('/rest/v1/rpc/record_job_payment')
+    && response.request().method() === 'POST'
     && response.ok()
   ));
   await page.getByRole('button', { name: 'Add Payment' }).click();
   await paymentSaved;
-  await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(paymentNote);
+  await expect(page.getByRole('cell', { name: paymentNote, exact: true })).toBeVisible();
 
   await page.reload();
   await expect(page.getByRole('tab', { name: 'Parts & Billing' })).toHaveAttribute('aria-selected', 'true');
   await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(partName);
-  await expect.poll(() => page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.value))).toContain(paymentNote);
+  await expect(page.getByRole('cell', { name: paymentNote, exact: true })).toBeVisible();
   await page.getByRole('tab', { name: 'Amplifier Inspection' }).click();
   await expect(page.getByLabel('Safety / Visual Condition')).toHaveValue(inspectionNote);
   await page.getByRole('button', { name: 'Amplifier Bench' }).click();
