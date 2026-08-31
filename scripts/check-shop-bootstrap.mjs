@@ -29,6 +29,7 @@ assert.ok(migrationName, 'Shop bootstrap reliability migration must exist.');
 
 const migration = read(`supabase/migrations/${migrationName}`);
 const app = read('src/app/App.jsx');
+const bootstrapController = read('src/app/useSessionShopBootstrap.js');
 const membershipService = read('src/modules/shops/shopMembershipService.js');
 
 assertIncludes(migration, 'drop function if exists public.bootstrap_current_user_as_owner(text);', 'Migration must remove the old one-argument bootstrap RPC.');
@@ -67,16 +68,18 @@ assertIncludes(membershipService, 'target_shop_name: shopName', 'Frontend bootst
 assertNotIncludes(membershipService.toLowerCase(), 'service_role', 'Frontend membership service must not expose service-role credentials.');
 assertNotIncludes(membershipService, ".from('shop_members')\n    .insert", 'Frontend must not insert bootstrap owner membership directly.');
 
-assertIncludes(app, 'async function loadShopAccess(preferredShopId = getSelectedShop().shopId, options = {})', 'Shop access loader must support rethrow for bootstrap verification.');
-assertIncludes(app, 'if (options.rethrow) {', 'Shop access loader must be able to fail bootstrap if real reload fails.');
-assertIncludes(app, 'async function handleBootstrapOwner()', 'Create Shop handler must exist.');
-assertMatches(app, /async function handleBootstrapOwner\(\)[\s\S]*?if \(isMembershipLoading\) \{\s*return;\s*\}/, 'Create Shop handler must block duplicate submit.');
-assertIncludes(app, 'await bootstrapCurrentUserAsOwner(shopId, shopNameValue);', 'Create Shop handler must pass the shop name to the RPC.');
-assertIncludes(app, 'await loadShopAccess(shopId, { rethrow: true });', 'Create Shop handler must reload real shop access after bootstrap.');
-assertNotIncludes(app, 'const ownerMembership = await bootstrapCurrentUserAsOwner(shopId);', 'Create Shop handler must not use the old one-argument RPC call.');
-assertNotIncludes(app, 'setMembership(ownerShop);', 'Create Shop handler must not fake final membership state.');
-assertNotIncludes(app, 'setMemberships([ownerShop]);', 'Create Shop handler must not fake final memberships state.');
-assertNotIncludes(app, 'setEntitlementSnapshot(getDefaultEntitlementSnapshot(ownerShop.shopId));', 'Create Shop handler must not fake final entitlement state.');
+assertIncludes(app, 'useSessionShopBootstrap({', 'App must delegate session and shop bootstrap coordination to its focused controller.');
+assertIncludes(bootstrapController, 'async function loadShopAccess(preferredShopId = getSelectedShop().shopId, options = {})', 'Shop access loader must support rethrow for bootstrap verification.');
+assertIncludes(bootstrapController, 'if (options.rethrow) {', 'Shop access loader must be able to fail bootstrap if real reload fails.');
+assertIncludes(bootstrapController, 'async function handleBootstrapOwner()', 'Create Shop handler must exist.');
+assertMatches(bootstrapController, /async function handleBootstrapOwner\(\)[\s\S]*?if \(isMembershipLoading\) \{\s*return;\s*\}/, 'Create Shop handler must block duplicate submit.');
+assertIncludes(bootstrapController, 'await bootstrapCurrentUserAsOwner(shopId, shopNameValue);', 'Create Shop handler must pass the shop name to the RPC.');
+assertIncludes(bootstrapController, 'await loadShopAccess(shopId, { rethrow: true });', 'Create Shop handler must reload real shop access after bootstrap.');
+assertNotIncludes(bootstrapController, 'const ownerMembership = await bootstrapCurrentUserAsOwner(shopId);', 'Create Shop handler must not use the old one-argument RPC call.');
+assertNotIncludes(bootstrapController, 'setMembership(ownerShop);', 'Create Shop handler must not fake final membership state.');
+assertNotIncludes(bootstrapController, 'setMemberships([ownerShop]);', 'Create Shop handler must not fake final memberships state.');
+assertNotIncludes(bootstrapController, 'setEntitlementSnapshot(getDefaultEntitlementSnapshot(ownerShop.shopId));', 'Create Shop handler must not fake final entitlement state.');
 assertNotIncludes(app.toLowerCase(), 'service_role', 'App must not expose service-role credentials.');
+assertNotIncludes(bootstrapController.toLowerCase(), 'service_role', 'Bootstrap controller must not expose service-role credentials.');
 
 console.log('Shop bootstrap reliability checks passed.');

@@ -37,7 +37,7 @@ The first post-release work is deliberate spaghetti reduction without changing p
 1. ESLint baseline is now in place for JavaScript, React hooks, import hygiene, and CI enforcement.
 2. Keep the completed `jobService.js` split stable across mapping, queries, mutations, messaging, child synchronization, and compatibility exports.
 3. Keep the completed `inventoryService.js` split stable across parts, vendors, purchase orders, receiving, specialist purchasing, and history operations.
-4. Continue reducing `App.jsx` and `JobDetail.jsx` orchestration through focused hooks and domain controllers. The first 0.3.1 slice moved app preferences/team loading and Job Detail derived billing/payment/service state into focused hooks.
+4. Continue reducing `App.jsx` and `JobDetail.jsx` orchestration through focused hooks and domain controllers. App preferences, team loading, session/shop bootstrap, and Job Detail derived billing/payment/service state now have focused owners; work-log, photo, and communication coordination is next.
 5. Keep the global CSS split into ordered foundations, workspace surfaces, and remaining feature/detail styles, then continue moving rules into module-owned styles without redesigning the interface.
 6. Replace remaining source-text and dirty-diff assertions with executable behavior checks where practical.
 
@@ -49,7 +49,7 @@ The job-service split is complete behind a 21-line compatibility facade. Normali
 
 The inventory-service split is complete behind its compatibility facade: shared normalization helpers, parts/vendor catalog helpers, purchase-order helpers, receiving/job-part helpers, and inventory history assembly now live in focused modules while existing imports remain intact.
 
-The app-shell extraction now includes access/status panels, pure runtime helpers, offline draft orchestration, stale-safe job/customer loading, and permission-aware online work-order actions. The remaining `App.jsx` work is centered on shop/session bootstrap and non-job domain coordination.
+The app-shell extraction now includes access/status panels, pure runtime helpers, offline draft orchestration, stale-safe job/customer loading, permission-aware online work-order actions, and session/shop bootstrap. The remaining `App.jsx` work is limited to smaller cross-domain composition concerns rather than authentication and tenant restoration.
 
 Each extraction must preserve the current facade, permissions, database behavior, and regression suite. No broad rewrite.
 
