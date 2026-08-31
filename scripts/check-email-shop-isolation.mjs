@@ -199,10 +199,11 @@ assertExcludes(emailDocuments, "|| 'FretTrack'", 'Document email shop name must 
 
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
 const jobDetailCommunication = read('src/modules/jobs/jobDetailCommunicationActions.js');
+const jobDetailCommunicationController = read('src/modules/jobs/useJobCommunicationController.js');
 assertIncludes(jobDetailCommunication, 'resolveScopedShopEmailSettings(jobToUse, shopProfile)', 'Job detail document email context must use the active job/shop profile.');
 assertIncludes(jobDetailCommunication, 'resolveDocumentEmailContext(draftJob)', 'Job detail document email drafts must resolve the active job/shop context.');
 assertIncludes(jobDetailCommunication, 'resolveDocumentEmailContext(jobToSend)', 'Job detail document email send path must re-resolve the active job/shop context.');
-assertIncludes(jobDetail, 'setDocumentEmailDraft(null);', 'Document email draft must reset when job/shop context changes.');
+assertIncludes(jobDetailCommunicationController, 'setDocumentEmailDraft(null);', 'Document email draft must reset when job/shop context changes.');
 assertIncludes(jobDetailCommunication, 'jobId: draftJob.id', 'Document email drafts must carry jobId.');
 assertIncludes(jobDetailCommunication, 'shopId: draftJob.shopId', 'Document email drafts must carry shopId.');
 

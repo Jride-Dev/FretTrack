@@ -85,8 +85,9 @@ assert.match(jobForm, /const measurementPreferences = getShopMeasurementOptions\
 assert.doesNotMatch(jobForm, /const measurementPreferences = getDefaultMeasurementPreferences\(shopProfile \|\| \{\}\);/, 'New jobs must not infer units from currency or locale when Shop Settings has an explicit preference.');
 assert.match(shopConfig, /measurementSystem:\s*normalizeMeasurementSystem\(mergedSettings\.measurementSystem/, 'Measurement resolution must use the explicit Shop Settings system.');
 assert.match(shopConfig, /lengthUnit:\s*normalizeLengthUnit\(mergedSettings\.lengthUnit/, 'Measurement resolution must use the explicit Shop Settings unit.');
-assert.match(jobDetail, /const measurementOptions = getShopMeasurementOptions\(shopSettings\);/, 'Job Detail must resolve its display unit from current Shop Settings.');
-assert.doesNotMatch(jobDetail, /measurementSystem: draftJob\.techDetails\.measurementSystem|lengthUnit: draftJob\.techDetails\.lengthUnit/, 'Stale job metadata must not override current Shop Settings.');
+const jobDetailDerivedState = readFileSync(resolve('src/modules/jobs/useJobDetailDerivedState.js'), 'utf8');
+assert.match(jobDetailDerivedState, /const measurementOptions = getShopMeasurementOptions\(shopSettings\);/, 'Job Detail derived state must resolve its display unit from current Shop Settings.');
+assert.doesNotMatch(jobDetailDerivedState, /measurementSystem: draftJob\.techDetails\.measurementSystem|lengthUnit: draftJob\.techDetails\.lengthUnit/, 'Stale job metadata must not override current Shop Settings.');
 assert.match(jobDetail, /lengthUnit: measurementOptions\.lengthUnit/, 'Document generation must receive the same resolved unit displayed by Job Detail.');
 assert.match(jobDetail, /return formatMeasurementChange\(initialValue, finalValue, unit\);/, 'Job Detail must use the shared measurement-change formatter.');
 assert.match(neckInspectionSection, /Measurement Unit \(Shop Settings\)/, 'Neck measurement entry must identify Shop Settings as the unit source.');

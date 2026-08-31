@@ -72,10 +72,10 @@ assert.ok(
   'Configured remote marker uploads must never silently fall back to a temporary preview.'
 );
 
-const jobDetailSource = readFileSync(resolve('src/modules/jobs/JobDetail.jsx'), 'utf8');
-const handlerStart = jobDetailSource.indexOf('async function handleDamageViewImageUpload');
-const handlerEnd = jobDetailSource.indexOf('function handleImageDelete', handlerStart);
-const handlerSource = jobDetailSource.slice(handlerStart, handlerEnd);
+const photoControllerSource = readFileSync(resolve('src/modules/jobs/useJobPhotoController.js'), 'utf8');
+const handlerStart = photoControllerSource.indexOf('async function handleDamageViewImageUpload');
+const handlerEnd = photoControllerSource.indexOf('function handleImageDelete', handlerStart);
+const handlerSource = photoControllerSource.slice(handlerStart, handlerEnd);
 assert.ok(handlerSource.includes('mergeUploadedJobImages'), 'Damage uploads must merge into the current draft.');
 assert.ok(!handlerSource.includes('setIsDirty(false)'), 'Damage uploads must not clear the unsaved Damage Map state.');
 

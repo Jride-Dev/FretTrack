@@ -37,7 +37,7 @@ The first post-release work is deliberate spaghetti reduction without changing p
 1. ESLint baseline is now in place for JavaScript, React hooks, import hygiene, and CI enforcement.
 2. Keep the completed `jobService.js` split stable across mapping, queries, mutations, messaging, child synchronization, and compatibility exports.
 3. Keep the completed `inventoryService.js` split stable across parts, vendors, purchase orders, receiving, specialist purchasing, and history operations.
-4. Continue reducing `App.jsx` and `JobDetail.jsx` orchestration through focused hooks and domain controllers. App preferences, team loading, session/shop bootstrap, and Job Detail derived billing/payment/service state now have focused owners; work-log, photo, and communication coordination is next.
+4. Continue reducing `App.jsx` and `JobDetail.jsx` orchestration through focused hooks and domain controllers. App preferences, team loading, session/shop bootstrap, and Job Detail billing, inventory, Work Note, photo, and communication coordination now have focused owners.
 5. Keep the global CSS split into ordered foundations, workspace surfaces, and remaining feature/detail styles, then continue moving rules into module-owned styles without redesigning the interface.
 6. Replace remaining source-text and dirty-diff assertions with executable behavior checks where practical.
 

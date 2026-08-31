@@ -30,6 +30,7 @@ const appAccessPanels = read('src/app/AppAccessPanels.jsx');
 const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
 const workspaceNavigation = read('src/app/useWorkspaceNavigation.js');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
+const jobPhotoController = read('src/modules/jobs/useJobPhotoController.js');
 const imagesSection = read('src/modules/jobs/ImagesSection.js');
 const photoGallery = read('src/modules/photos/PhotoGallery.jsx');
 const operatorDashboard = read('src/modules/operator/BetaOperatorDashboard.jsx');
@@ -60,10 +61,10 @@ assertIncludes(jobDetail, 'canUploadPhotos = canWrite', 'JobDetail should accept
 assertIncludes(jobDetail, 'canEditPhotos = canWrite', 'JobDetail should accept edit permission.');
 assertIncludes(jobDetail, 'canOverwritePhotos = canWrite', 'JobDetail should accept overwrite permission.');
 assertIncludes(jobDetail, 'canDeletePhotos = canWrite', 'JobDetail should accept delete permission.');
-assertIncludes(jobDetail, 'if (!canUploadPhotos)', 'Photo upload handler must enforce upload permission.');
-assertIncludes(jobDetail, 'if (!canDeletePhotos)', 'Photo delete handler must enforce delete permission.');
-assertIncludes(jobDetail, 'if (!canEditPhotos)', 'Photo edit save must enforce edit permission.');
-assertIncludes(jobDetail, 'if (!canOverwritePhotos)', 'Photo overwrite must enforce overwrite permission.');
+assertIncludes(jobPhotoController, 'if (!canUploadPhotos)', 'Photo upload handler must enforce upload permission.');
+assertIncludes(jobPhotoController, 'if (!canDeletePhotos)', 'Photo delete handler must enforce delete permission.');
+assertIncludes(jobPhotoController, 'if (!canEditPhotos)', 'Photo edit save must enforce edit permission.');
+assertIncludes(jobPhotoController, 'if (!canOverwritePhotos)', 'Photo overwrite must enforce overwrite permission.');
 assertIncludes(jobDetail, "throw new Error('Your shop role is read-only.')", 'Job save path must reject read-only writes.');
 
 assertIncludes(imagesSection, 'canUploadPhotos = canWrite', 'ImagesSection must accept granular upload permission.');
