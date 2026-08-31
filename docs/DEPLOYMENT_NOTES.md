@@ -5,11 +5,11 @@ Review this file before every production deploy and update it after app, public-
 ## Current status
 
 - FretTrack 0.3.1 is deployed as the current stable maintainability release over the Operational Shop Release.
-- The production app is Cloudflare Pages build `bcc1d845.frettrack.pages.dev`. The branded app URL and public root returned `200 OK`, and the live asset references exactly matched the guarded local production build.
+- The production app is Cloudflare Pages build `930bb29e.frettrack.pages.dev`. The branded app URL and immutable Pages build returned `200 OK`, both referenced `assets/index-BwoXHlZ2.js`, and that production asset returned `200 OK`.
 - Migration `20260829071930_access_application_side_effect_idempotency.sql` is applied in production. Repeated access submissions now retain one request identity/timestamp so email and archive retries reuse stable side-effect keys.
-- Production migration history matches the repository through `20260829071930_access_application_side_effect_idempotency.sql`; the linked dry run reports that the remote database is up to date.
+- Production migration history matches the repository through `20260831022005_job_commerce_finalization_and_payment_boundary.sql`; the linked dry run reports that the remote database is up to date.
 - The public landing/docs Worker is deployed as version `e25e1800-1b76-434b-b4a2-9dfc27d6dfd5` and serves stable 0.3.1 access, pricing, annual savings, Terms, Privacy, Support, product guides, community links, release notes, and legacy documentation aliases.
-- The 0.3.1 release branch passed the exact GitHub regression/build commands, 352 local pgTAP/RLS assertions, all 30 Playwright tests, the production deploy preflight, migration parity, and `npm audit` with zero vulnerabilities.
+- PR #241 passed the exact GitHub regression/build commands, 380 local pgTAP/RLS assertions, all 30 Playwright tests, focused photo/message/payment race checks, the production deploy preflight, migration parity, and `npm audit` with zero vulnerabilities. The deployed application prevents pending photo deletion from being reversed by upload completion, makes photo and message retries reuse stable operation identities, and routes payments/refunds through the guarded append-only commerce boundary without a conflicting full-draft save.
 - The two legacy ownerless shop profiles are formally classified as closed historical tenants because both subscriptions are canceled, neither has a Stripe customer/subscription ID, and neither has a member who could access the tenant. `B-U Music Garage` retains eight jobs and five customers for historical integrity; `Pv Music House` has no jobs or customers. The integrity gate requires an owner for every operational shop while preserving canceled historical tenants without assigning, deleting, or reactivating them.
 
 ## Commercial configuration
