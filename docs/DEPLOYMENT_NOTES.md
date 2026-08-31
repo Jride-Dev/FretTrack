@@ -5,11 +5,11 @@ Review this file before every production deploy and update it after app, public-
 ## Current status
 
 - FretTrack 0.3.1 is deployed as the current stable maintainability release over the Operational Shop Release.
-- The production app is Cloudflare Pages build `bcc1d845.frettrack.pages.dev`. The branded app URL and public root returned `200 OK`, and the live asset references exactly matched the guarded local production build.
-- Migration `20260829071930_access_application_side_effect_idempotency.sql` is applied in production. Repeated access submissions now retain one request identity/timestamp so email and archive retries reuse stable side-effect keys.
-- Production migration history matches the repository through `20260829071930_access_application_side_effect_idempotency.sql`; the linked dry run reports that the remote database is up to date.
+- The production app is Cloudflare Pages build `186b46a9.frettrack.pages.dev`. The branded app URL and exact build URL returned `200 OK`, and both referenced the guarded `index-BKhdYhhk.js` production bundle.
+- Migration `20260831022005_job_commerce_finalization_and_payment_boundary.sql` is applied in production. Work-order payments now use an append-only server boundary, monetary permissions are role-scoped, and finalized invoice totals are stored as server-calculated snapshots behind an audited reopen path.
+- Production migration history matches the repository through `20260831022005_job_commerce_finalization_and_payment_boundary.sql`; the linked dry run reports that the remote database is up to date.
 - The public landing/docs Worker is deployed as version `e25e1800-1b76-434b-b4a2-9dfc27d6dfd5` and serves stable 0.3.1 access, pricing, annual savings, Terms, Privacy, Support, product guides, community links, release notes, and legacy documentation aliases.
-- The 0.3.1 release branch passed the exact GitHub regression/build commands, 352 local pgTAP/RLS assertions, all 30 Playwright tests, the production deploy preflight, migration parity, and `npm audit` with zero vulnerabilities.
+- The current 0.3.1 main branch passed the exact GitHub regression/build commands, 379 local pgTAP/RLS assertions, all 30 Playwright tests, the production deploy preflight, migration parity, and `npm audit` with zero vulnerabilities.
 - The two legacy ownerless shop profiles are formally classified as closed historical tenants because both subscriptions are canceled, neither has a Stripe customer/subscription ID, and neither has a member who could access the tenant. `B-U Music Garage` retains eight jobs and five customers for historical integrity; `Pv Music House` has no jobs or customers. The integrity gate requires an owner for every operational shop while preserving canceled historical tenants without assigning, deleting, or reactivating them.
 
 ## Commercial configuration
