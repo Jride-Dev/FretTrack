@@ -16,7 +16,9 @@ const permissionService = read('src/modules/auth/permissionService.js');
 const app = read('src/app/App.jsx');
 const appAccess = read('src/app/appAccess.js');
 const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
+const workspaceActions = read('src/app/useJobWorkspaceActions.js');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
+const jobPhotoController = read('src/modules/jobs/useJobPhotoController.js');
 const imagesSection = read('src/modules/jobs/ImagesSection.js');
 const photoGallery = read('src/modules/photos/PhotoGallery.jsx');
 const photoUrls = read('src/modules/photos/photoUrls.js');
@@ -29,9 +31,9 @@ assertIncludes(appAccess, 'canUploadPhotosForRole(permissionContext)', 'App acce
 
 assertIncludes(app, 'canUploadPhotos,', 'App must pass the core photo upload permission across the workspace boundary.');
 assertIncludes(workspaceRouter, 'canUploadPhotos={access.canUploadPhotos}', 'Workspace router must pass the core photo upload permission into Job Detail.');
-assertIncludes(app, 'if (!canUploadPhotos)', 'App upload handler must retain a permission guard.');
+assertIncludes(workspaceActions, 'if (!access.canUploadPhotos)', 'App upload action boundary must retain a permission guard.');
 assertIncludes(jobDetail, 'canUploadPhotos={canUploadPhotos}', 'Job Detail must pass core upload permission into ImagesSection.');
-assertIncludes(jobDetail, 'if (!canUploadPhotos)', 'Job Detail upload handlers must retain a permission guard.');
+assertIncludes(jobPhotoController, 'if (!canUploadPhotos)', 'Job Detail photo controller must retain an upload permission guard.');
 assertIncludes(imagesSection, 'canUploadPhotos ? (', 'ImagesSection must render the normal uploader from the core upload permission.');
 assertIncludes(imagesSection, '<PhotoUploader', 'ImagesSection must retain the normal Take Photo and Import from Device uploader.');
 assertIncludes(imagesSection, 'canEdit={canEditPhotos}', 'Photo editing must remain separately permission-gated.');

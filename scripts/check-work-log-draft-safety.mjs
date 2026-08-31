@@ -7,6 +7,7 @@ const root = process.cwd();
 const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
 const appActions = read('src/app/useJobWorkspaceActions.js');
 const detail = read('src/modules/jobs/JobDetail.jsx');
+const workLogController = read('src/modules/jobs/useJobWorkLogController.js');
 const communicationActions = read('src/modules/jobs/jobDetailCommunicationActions.js');
 const workLogSection = read('src/modules/jobs/WorkLogSection.js');
 const packageJson = JSON.parse(read('package.json'));
@@ -70,17 +71,17 @@ assert.match(workLogSection, /Save Work Note/, 'The Work Log draft action must b
 assert.match(workLogSection, /Unsaved Work Note/, 'Pending Work Notes must have a visible unsaved-state warning.');
 assert.match(workLogSection, /Discard Draft/, 'Users must be able to deliberately discard a pending Work Note.');
 assert.match(detail, /hasUnsavedChanges = isDirty \|\| hasUnsettledWorkLog/, 'Pending and in-flight Work Notes must participate in page dirty-state protection.');
-assert.match(detail, /beforeunload/, 'Pending Work Notes must participate in browser close/refresh protection.');
+assert.match(workLogController, /beforeunload/, 'Pending Work Notes must participate in browser close/refresh protection.');
 assert.match(detail, /const saveRequest = hasPendingWorkLog \? savePendingWorkLog : saveDraftNow/, 'The global Save Job action must save a pending Work Note.');
-assert.match(detail, /const workLogSavePromiseRef = useRef\(null\)/, 'Work Note persistence must keep a synchronous in-flight save guard.');
-assert.match(detail, /const hasUnsettledWorkLog = hasPendingWorkLog \|\| isSavingWorkLog/, 'An in-flight Work Note save must remain protected as unsettled work.');
-assert.match(detail, /const didSwitchJobs = hydratedJobIdRef\.current !== job\.id[\s\S]*?if \(didSwitchJobs\) \{[\s\S]*?setWorkLogText\(''\);[\s\S]*?setIsSavingWorkLog\(false\);/, 'Switching jobs must give the new job an independent blank Work Note state.');
+assert.match(workLogController, /const workLogSavePromiseRef = useRef\(null\)/, 'Work Note persistence must keep a synchronous in-flight save guard.');
+assert.match(workLogController, /const hasUnsettledWorkLog = hasPendingWorkLog \|\| isSavingWorkLog/, 'An in-flight Work Note save must remain protected as unsettled work.');
+assert.match(workLogController, /const didSwitchJobs = hydratedJobIdRef\.current !== draftJob\.id[\s\S]*?if \(didSwitchJobs\) \{[\s\S]*?setWorkLogText\(''\);[\s\S]*?setIsSavingWorkLog\(false\);/, 'Switching jobs must give the new job an independent blank Work Note state.');
 assert.match(detail, /activeJobIdRef\.current === savingJobId[\s\S]*?setDraftJob\(savedJob \|\| jobToSave\);/, 'A completed save must update the draft only while its original job is still active.');
 assert.match(appActions, /if \(selectedJobIdRef\.current !== job\.id\) \{[\s\S]*?return savedJob;/, 'A completed save for a departed job must not refresh and overwrite the newly selected job.');
-assert.match(detail, /if \(workLogSavePromiseRef\.current\?\.jobId === draftJob\.id\) \{\s*return workLogSavePromiseRef\.current\.promise;/, 'Repeated Work Note submissions for the same job must coalesce onto the active save.');
-assert.match(detail, /workLogSavePromiseRef\.current = \{ jobId: submission\.jobId, promise: savePromise \}/, 'The active Work Note save must retain its job identity before another submission can start.');
-assert.match(detail, /getWorkLogSubmission\(workLogRetrySubmissionRef\.current/, 'Failed Work Note retries must reuse their original submission identity.');
-assert.match(detail, /workLogRetrySubmissionRef\.current = submission/, 'The retry identity must be retained before remote persistence starts.');
+assert.match(workLogController, /if \(workLogSavePromiseRef\.current\?\.jobId === draftJob\.id\) \{\s*return workLogSavePromiseRef\.current\.promise;/, 'Repeated Work Note submissions for the same job must coalesce onto the active save.');
+assert.match(workLogController, /workLogSavePromiseRef\.current = \{ jobId: submission\.jobId, promise: savePromise \}/, 'The active Work Note save must retain its job identity before another submission can start.');
+assert.match(workLogController, /getWorkLogSubmission\(workLogRetrySubmissionRef\.current/, 'Failed Work Note retries must reuse their original submission identity.');
+assert.match(workLogController, /workLogRetrySubmissionRef\.current = submission/, 'The retry identity must be retained before remote persistence starts.');
 assert.match(workLogSection, /!hasPendingWorkLog \|\| isSavingWorkLog/, 'The Work Note save control must remain disabled while persistence is in flight.');
 for (const actionName of ['printJobSheet', 'printCustomerReport', 'openWorkOrderEmail']) {
   const actionSource = communicationActions.match(new RegExp(`function ${actionName}\\(\\) \\{([\\s\\S]*?)\\n  \\}`))?.[1] || '';
@@ -88,7 +89,7 @@ for (const actionName of ['printJobSheet', 'printCustomerReport', 'openWorkOrder
 }
 assert.match(communicationActions, /if \(hasPendingWorkLog\) \{\s*return \{ ok: false, error: PENDING_WORK_LOG_MESSAGE \};/, 'The document send handler must defensively reject a pending Work Note.');
 assert.match(communicationActions, /PENDING_WORK_LOG_MESSAGE/, 'Customer document actions must explain how to resolve a pending Work Note.');
-assert.match(detail, /Work Note changes could not be saved/, 'Existing Work Note blur-save failures must be visible to the user.');
+assert.match(workLogController, /Work Note changes could not be saved/, 'Existing Work Note blur-save failures must be visible to the user.');
 assert.equal(packageJson.scripts['check:work-log-draft-safety'], 'node scripts/check-work-log-draft-safety.mjs');
 
 console.log('Work Log draft safety checks passed.');

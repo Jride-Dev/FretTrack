@@ -19,11 +19,12 @@ The completed job and inventory service facades remain stable. This release cont
 - `foundations.css`, `workspace.css`, and `styles.css` preserve the original stylesheet order while separating shared tokens/controls, workspace surfaces, and remaining feature/detail rules.
 - `InventoryPage.jsx` is now a focused composition surface. `useInventoryPageData.js` owns shop-scoped catalog/history loading, `useInventoryPartController.js` owns part, stock, image, and label workflows, and `useInventoryPurchasingController.js` owns vendor and purchase-order workflows.
 - `useSessionShopBootstrap.js` owns session restoration, auth events, approval/operator checks, stale-safe shop loading, first-shop creation, shop switching, profile refresh, and sign-out cleanup. `App.jsx` remains the state/composition surface required by downstream workspace hooks.
+- `useJobWorkLogController.js`, `useJobPhotoController.js`, and `useJobCommunicationController.js` own Work Note save/retry safety, photo upload/edit state, and document/message/timeline coordination. Timeline loads now reject stale responses after a job switch.
 
 ## Current pressure points
 
 - `App.jsx` still composes non-job domains, but no longer implements session or shop bootstrap workflows inline.
-- `JobDetail.jsx` still coordinates work-log, photo, communication, and section composition.
+- `JobDetail.jsx` still composes the job sections and core versioned draft save, but work-log, photo, communication, billing, inventory, and derived-state workflows now have focused owners.
 - Inventory display components and service facades remain intentionally stable while the new controller hooks own their mutation domains.
 - Remaining source-text checks should become executable behavior checks when deterministic coverage is practical.
 

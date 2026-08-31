@@ -8,6 +8,7 @@ This file tracks product, reliability, security, and operational changes by rele
 
 - Reduced `InventoryPage.jsx` from a 953-line controller to a focused composition surface backed by separate data/history, part/stock, and vendor/purchase-order controller hooks, including stale-safe selected-part history loading.
 - Reduced `App.jsx` from 1,117 to 838 lines by moving session restoration, approval/operator checks, stale-safe shop bootstrap, first-shop creation, shop switching, profile refresh, and sign-out cleanup into `useSessionShopBootstrap.js`.
+- Reduced `JobDetail.jsx` from 926 to 669 lines by extracting Work Note save/retry protection, photo upload/edit coordination, and message/document/timeline coordination into focused hooks, including stale-safe timeline refreshes.
 
 ## v0.3.1 - Current Stable Release
 

@@ -6,9 +6,6 @@ import {
   formatInstrumentLabel,
   normalizeInstrumentType
 } from '../instruments/instrumentService';
-import { getJobEvents } from './jobEventsService';
-import { overwriteJobImage, saveEditedJobImageCopy } from '../photos/photoService';
-import { mergeUploadedJobImages } from '../photos/photoState.js';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import JobInspectionSections from './JobInspectionSections.jsx';
 import JobWorkSections from './JobWorkSections.jsx';
@@ -21,36 +18,26 @@ import JobDetailShell from './JobDetailShell.jsx';
 import { cancelPrintRequests } from '../print/printRequestCoordinator.js';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import {
-  buildAppendImagePreviewsJob,
-  buildAssignmentJob,
   buildDamageMapJob,
   buildDiscountFieldPatch,
   buildInstrumentTypePatch,
   buildJobFieldPatch,
   buildMeasurementDisplay,
   buildNeckInspectionPatch,
-  buildRemoveImageJob,
   buildShopTaxRatePatch,
   buildStringCountPatch,
   buildStringGaugePatch,
   buildStringGaugesPatch,
   buildTaxFieldPatch,
   buildTechFieldPatch,
-  buildUnlinkCustomerPatch,
-  buildWorkOrderImageIdsPatch,
-  findNewDamageViewImage
+  buildUnlinkCustomerPatch
 } from './jobDetailFormatting.js';
-import { createJobDetailCommunicationActions } from './jobDetailCommunicationActions.js';
 import useJobDetailBillingActions from './useJobDetailBillingActions.js';
 import useJobDetailDerivedState from './useJobDetailDerivedState.js';
 import useJobInventoryParts from './useJobInventoryParts.js';
-import {
-  appendWorkLogDraft,
-  buildRemoveWorkLogEntryJob,
-  buildUpdateWorkLogEntryPatch,
-  getWorkLogSubmission,
-  hasPendingWorkLogDraft
-} from './workLogDraft.js';
+import useJobCommunicationController from './useJobCommunicationController.js';
+import useJobPhotoController from './useJobPhotoController.js';
+import useJobWorkLogController from './useJobWorkLogController.js';
 
 const intakeTypes = JOB_SOURCE_OPTIONS;
 export default function JobDetail(props) {
@@ -94,79 +81,55 @@ function JobDetailWorkspace({
   const [draftJob, setDraftJob] = useState(job);
   const { isDirty, setDirty, confirmIfDirty } = useUnsavedChanges();
   const [saveStatus, setSaveStatus] = useState('saved');
-  const [workLogText, setWorkLogText] = useState('');
-  const [isSavingWorkLog, setIsSavingWorkLog] = useState(false);
-  const [imageImportErrors, setImageImportErrors] = useState([]);
-  const [imageOptimizationNotices, setImageOptimizationNotices] = useState([]);
-  const [isImportingImages, setIsImportingImages] = useState(false);
-  const [subcontractorPickupJob, setSubcontractorPickupJob] = useState(null);
-  const [isSendingSubcontractorEmail, setIsSendingSubcontractorEmail] = useState(false);
-  const [timelineEvents, setTimelineEvents] = useState(job.events || []);
-  const [documentEmailDraft, setDocumentEmailDraft] = useState(null);
-  const [photoEditorImage, setPhotoEditorImage] = useState(null);
-  const [isSavingEditedPhoto, setIsSavingEditedPhoto] = useState(false);
-  const imageImportInputRef = useRef(null);
   const activeJobIdRef = useRef(job.id);
   const hydratedJobIdRef = useRef(job.id);
-  const workLogSavePromiseRef = useRef(null);
-  const workLogRetrySubmissionRef = useRef(null);
   const printRequestSequenceRef = useRef(0);
   activeJobIdRef.current = job.id;
-  const hasPendingWorkLog = hasPendingWorkLogDraft(workLogText);
-  const hasUnsettledWorkLog = hasPendingWorkLog || isSavingWorkLog;
-  const hasUnsavedChanges = isDirty || hasUnsettledWorkLog;
-  const displayedSaveStatus = hasPendingWorkLog && saveStatus === 'saved' ? 'unsaved' : saveStatus;
 
   const setIsDirty = useCallback((value) => {
     setDirty(value);
     setSaveStatus(value ? 'unsaved' : 'saved');
   }, [setDirty]);
 
+  const {
+    appendWorkLog,
+    discardWorkLogDraft,
+    hasPendingWorkLog,
+    hasUnsettledWorkLog,
+    isSavingWorkLog,
+    removeWorkLogEntry,
+    savePendingWorkLog,
+    saveWorkLogChanges,
+    setWorkLogText,
+    updateWorkLogEntry,
+    workLogText
+  } = useJobWorkLogController({
+    activeJobIdRef,
+    canWrite,
+    draftJob,
+    onNotice,
+    patchJob,
+    saveDraftNow,
+    setDraftJob
+  });
+  const hasUnsavedChanges = isDirty || hasUnsettledWorkLog;
+  const displayedSaveStatus = hasPendingWorkLog && saveStatus === 'saved' ? 'unsaved' : saveStatus;
+
   useEffect(() => {
     const didSwitchJobs = hydratedJobIdRef.current !== job.id;
     hydratedJobIdRef.current = job.id;
     setDraftJob(job);
-    setTimelineEvents(job.events || []);
-    setDocumentEmailDraft(null);
-    if (workLogRetrySubmissionRef.current?.jobId !== job.id) {
-      workLogRetrySubmissionRef.current = null;
-    }
     if (didSwitchJobs) {
       cancelPrintRequests(printRequestSequenceRef, document.body);
-      workLogSavePromiseRef.current = null;
-      setWorkLogText('');
-      setIsSavingWorkLog(false);
     }
     setIsDirty(false);
   }, [job, setIsDirty]);
-
-  useEffect(() => {
-    setDocumentEmailDraft(null);
-  }, [draftJob.id, draftJob.shopId, shopProfile?.shopId, shopProfile?.updatedAt]);
 
   useEffect(() => {
     onDirtyChange?.(hasUnsavedChanges);
     return () => onDirtyChange?.(false);
   }, [hasUnsavedChanges, onDirtyChange]);
 
-  useEffect(() => {
-    if (!hasUnsettledWorkLog) {
-      return undefined;
-    }
-
-    function handlePendingWorkLogBeforeUnload(event) {
-      event.preventDefault();
-      event.returnValue = 'You have an unsaved Work Note.';
-      return event.returnValue;
-    }
-
-    window.addEventListener('beforeunload', handlePendingWorkLogBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handlePendingWorkLogBeforeUnload);
-  }, [hasUnsettledWorkLog]);
-
-  useEffect(() => {
-    refreshTimelineEvents();
-  }, [job.id]);
 
   useEffect(() => {
     return () => {
@@ -198,51 +161,54 @@ function JobDetailWorkspace({
     workOrderImageIds,
     workOrderImages
   } = useJobDetailDerivedState(draftJob, shopProfile);
-  const communicationActions = createJobDetailCommunicationActions({
-    canWrite,
-    canSendEmail,
-    canScheduleEmail,
-    canSendSms,
-    entitlementMessage,
-    draftJob,
-    shopProfile,
-    measurementOptions,
-    dateOptions,
-    moneyOptions,
-    formatInstrumentLabel,
-    hasPendingWorkLog,
-    isDirty,
-    printRequestSequenceRef,
-    documentBody: document.body,
-    setDraftJob,
-    setDocumentEmailDraft,
-    setIsSendingSubcontractorEmail,
-    setSubcontractorPickupJob,
-    subcontractorPickupJob,
-    setIsDirty,
-    setWorkLogText,
-    patchJob,
-    onDirtyChange,
-    onClose,
-    confirmIfDirty,
-    saveDraftNow,
-    onNotice,
-    onRefresh,
-    refreshTimelineEvents
-  });
   const {
     closeDetail,
+    documentEmailDraft,
     finishJob,
+    handleAssignmentChanged,
     handleSendCustomerMessage,
     handleSendDocumentEmail,
+    isSendingSubcontractorEmail,
     openInvoiceEmail,
     openWorkOrderEmail,
     printCustomerReport,
     printJobSheet,
+    refreshTimelineEvents,
     sendSubcontractorPickupEmail,
+    setDocumentEmailDraft,
+    setSubcontractorPickupJob,
+    subcontractorPickupJob,
+    timelineEvents,
     updateContactPreference,
     updateMessageTemplate
-  } = communicationActions;
+  } = useJobCommunicationController({
+    canScheduleEmail,
+    canSendEmail,
+    canSendSms,
+    canWrite,
+    confirmIfDirty,
+    dateOptions,
+    draftJob,
+    entitlementMessage,
+    formatInstrumentLabel,
+    hasPendingWorkLog,
+    isDirty,
+    job,
+    measurementOptions,
+    moneyOptions,
+    onAssignmentChanged,
+    onClose,
+    onDirtyChange,
+    onNotice,
+    onRefresh,
+    patchJob,
+    printRequestSequenceRef,
+    saveDraftNow,
+    setDraftJob,
+    setIsDirty,
+    setWorkLogText,
+    shopProfile
+  });
 
   function patchJob(patch, saveImmediately = false) {
     if (!canWrite) {
@@ -325,36 +291,6 @@ function JobDetailWorkspace({
       });
       return { ...current, techDetails };
     });
-  }
-
-  function updateWorkLogEntry(entryId, text) {
-    patchJob(buildUpdateWorkLogEntryPatch(draftJob.workLog, entryId, text));
-  }
-
-  async function saveWorkLogChanges() {
-    if (!canWrite) {
-      return;
-    }
-    try {
-      await saveDraftNow();
-    } catch (error) {
-      onNotice?.({ type: 'error', message: error?.message || 'Work Note changes could not be saved.' });
-    }
-  }
-
-  async function removeWorkLogEntry(entryId) {
-    if (!canWrite) {
-      return;
-    }
-    const confirmed = window.confirm('Delete this work log entry?');
-    if (!confirmed) {
-      return;
-    }
-
-    const nextJob = buildRemoveWorkLogEntryJob(draftJob, entryId);
-
-    setDraftJob(nextJob);
-    await saveDraftNow(nextJob).catch(() => {});
   }
 
   async function saveDraftNow(jobToSave = draftJob) {
@@ -475,66 +411,6 @@ function JobDetailWorkspace({
     };
   });
 
-  async function appendWorkLog(event) {
-    event.preventDefault();
-    await savePendingWorkLog().catch(() => {});
-  }
-
-  async function savePendingWorkLog() {
-    if (!canWrite) {
-      throw new Error('Your shop role is read-only.');
-    }
-    if (workLogSavePromiseRef.current?.jobId === draftJob.id) {
-      return workLogSavePromiseRef.current.promise;
-    }
-    if (!hasPendingWorkLog) {
-      return saveDraftNow();
-    }
-    const submittedWorkLogText = workLogText;
-    const submission = getWorkLogSubmission(workLogRetrySubmissionRef.current, {
-      jobId: draftJob.id,
-      text: submittedWorkLogText,
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString()
-    });
-    workLogRetrySubmissionRef.current = submission;
-    const nextJob = appendWorkLogDraft(draftJob, submission.text, submission);
-
-    const savePromise = saveDraftNow(nextJob)
-      .then((savedJob) => {
-        if (activeJobIdRef.current === submission.jobId && workLogRetrySubmissionRef.current?.id === submission.id) {
-          workLogRetrySubmissionRef.current = null;
-        }
-        if (activeJobIdRef.current === submission.jobId) {
-          setWorkLogText((current) => current === submittedWorkLogText ? '' : current);
-        }
-        return savedJob;
-      })
-      .catch((error) => {
-        onNotice?.({ type: 'error', message: error?.message || 'Work Note could not be saved.' });
-        throw error;
-      })
-      .finally(() => {
-        if (workLogSavePromiseRef.current?.promise === savePromise) {
-          workLogSavePromiseRef.current = null;
-          if (activeJobIdRef.current === submission.jobId) {
-            setIsSavingWorkLog(false);
-          }
-        }
-      });
-
-    workLogSavePromiseRef.current = { jobId: submission.jobId, promise: savePromise };
-    setIsSavingWorkLog(true);
-    return savePromise;
-  }
-
-  function discardWorkLogDraft() {
-    if (!hasPendingWorkLog || window.confirm('Discard this unsaved Work Note?')) {
-      workLogRetrySubmissionRef.current = null;
-      setWorkLogText('');
-    }
-  }
-
   const {
     addInventoryPart,
     addPart,
@@ -559,173 +435,40 @@ function JobDetailWorkspace({
     setDraftJob,
     setIsDirty
   });
-
-  async function handleImageChange(event) {
-    const files = Array.from(event.target.files || []);
-    event.target.value = '';
-
-    if (!canUploadPhotos) {
-      onNotice?.({ type: 'error', message: 'Your shop role cannot upload photos.' });
-      return;
-    }
-
-    if (!files.length) {
-      return;
-    }
-
-    const previews = files
-      .filter((file) => file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name))
-      .map((file) => ({
-        id: `preview-${crypto.randomUUID()}`,
-        jobId: draftJob.id,
-        url: URL.createObjectURL(file),
-        fileName: file.name,
-        name: file.name,
-        originalFileName: file.name,
-        category: 'job',
-        uploadedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      }));
-
-    if (previews.length) {
-      setIsDirty(true);
-      setDraftJob((current) => buildAppendImagePreviewsJob(current, previews));
-    }
-
-    setImageImportErrors([]);
-    setImageOptimizationNotices([]);
-    setIsImportingImages(true);
-    const result = await onImageUpload(draftJob, files);
-    if (result?.job) {
-      setDraftJob(result.job);
-      setIsDirty(false);
-    }
-    setImageImportErrors(result?.errors || []);
-    setImageOptimizationNotices(result?.optimizationNotices || []);
-    setIsImportingImages(false);
-  }
-
-  async function handleDamageViewImageUpload(viewName, file, uploadOptions = {}) {
-    if (!canUploadPhotos) {
-      onNotice?.({ type: 'error', message: 'Your shop role cannot upload photos.' });
-      return null;
-    }
-
-    const category = uploadOptions.category || `damage-map-${viewName}`;
-    const existingImageIds = new Set((draftJob.images || []).map((image) => image.id));
-    const result = await onImageUpload(draftJob, [file], { category, skipRefresh: true });
-    if (result?.errors?.length) {
-      const uploadError = new Error(result.errors[0].message || 'Damage photo upload failed.');
-      uploadError.code = result.errors[0].code || '';
-      throw uploadError;
-    }
-    if (result?.job) {
-      const uploadedImages = result.job.images || [];
-      setDraftJob((current) => mergeUploadedJobImages(current, result.job));
-      return findNewDamageViewImage(uploadedImages, existingImageIds, category, file.name);
-    }
-    return null;
-  }
-
-  function handleImageDelete(image) {
-    if (!canDeletePhotos) {
-      onNotice?.({ type: 'error', message: 'Your shop role cannot delete photos.' });
-      return;
-    }
-
-    const confirmed = window.confirm('Delete this image from the job?');
-    if (!confirmed) {
-      return;
-    }
-
-    setDraftJob((current) => buildRemoveImageJob(current, image.id));
-    setIsDirty(true);
-    onImageDelete(draftJob, image);
-  }
-
-  function handleImageEdit(image) {
-    if (!canEditPhotos) {
-      onNotice?.({ type: 'error', message: 'Photo Editor is available in Pro.' });
-      return;
-    }
-
-    setPhotoEditorImage(image);
-  }
-
-  async function saveEditedPhotoCopy(file, editMetadata) {
-    if (!canEditPhotos) {
-      onNotice?.({ type: 'error', message: 'Your shop role cannot edit photos.' });
-      return;
-    }
-
-    setIsSavingEditedPhoto(true);
-    try {
-      const result = await saveEditedJobImageCopy(draftJob, photoEditorImage, file, editMetadata);
-      if (result?.job) {
-        setDraftJob(result.job);
-        setIsDirty(false);
-      }
-      setPhotoEditorImage(null);
-      onNotice?.({ type: 'success', message: 'Edited photo saved as a copy.' });
-      if (onRefresh) {
-        await onRefresh();
-      }
-    } catch (error) {
-      console.error('Edited photo save failed.', error);
-      onNotice?.({ type: 'error', message: error instanceof Error ? error.message : 'Edited photo save failed.' });
-    } finally {
-      setIsSavingEditedPhoto(false);
-    }
-  }
-
-  async function overwriteEditedPhoto(file, editMetadata) {
-    if (!canOverwritePhotos) {
-      onNotice?.({ type: 'error', message: 'Your shop role cannot overwrite photos.' });
-      return;
-    }
-
-    setIsSavingEditedPhoto(true);
-    try {
-      const result = await overwriteJobImage(draftJob, photoEditorImage, file, editMetadata);
-      if (result?.job) {
-        setDraftJob(result.job);
-        setIsDirty(false);
-      }
-      setPhotoEditorImage(null);
-      onNotice?.({ type: 'success', message: 'Original photo was overwritten with the edited PNG.' });
-      if (onRefresh) {
-        await onRefresh();
-      }
-    } catch (error) {
-      console.error('Edited photo overwrite failed.', error);
-      onNotice?.({ type: 'error', message: error instanceof Error ? error.message : 'Edited photo overwrite failed.' });
-    } finally {
-      setIsSavingEditedPhoto(false);
-    }
-  }
-
-  function updateWorkOrderImage(imageId, checked) {
-    if (!canWrite) {
-      return;
-    }
-    patchJob(buildWorkOrderImageIdsPatch(draftJob, workOrderImageIds, imageId, checked));
-  }
+  const {
+    handleDamageViewImageUpload,
+    handleImageChange,
+    handleImageDelete,
+    handleImageEdit,
+    imageImportErrors,
+    imageImportInputRef,
+    imageOptimizationNotices,
+    isImportingImages,
+    isSavingEditedPhoto,
+    overwriteEditedPhoto,
+    photoEditorImage,
+    saveEditedPhotoCopy,
+    setPhotoEditorImage,
+    updateWorkOrderImage
+  } = useJobPhotoController({
+    canDeletePhotos,
+    canEditPhotos,
+    canOverwritePhotos,
+    canUploadPhotos,
+    canWrite,
+    draftJob,
+    onImageDelete,
+    onImageUpload,
+    onNotice,
+    onRefresh,
+    patchJob,
+    setDraftJob,
+    setIsDirty,
+    workOrderImageIds
+  });
 
   function formatMeasurementDelta(initialValue, finalValue, unit = measurementOptions.lengthUnit) {
     return formatMeasurementChange(initialValue, finalValue, unit);
-  }
-
-  async function refreshTimelineEvents() {
-    const events = await getJobEvents(job.id);
-    setTimelineEvents(events);
-  }
-
-  function handleAssignmentChanged(assignment) {
-    setDraftJob((current) => buildAssignmentJob(current, assignment));
-    onAssignmentChanged?.(draftJob.id, assignment);
-    refreshTimelineEvents().catch((error) => {
-      console.warn('Assignment timeline refresh failed.', error);
-    });
   }
 
   const { printActions, printSections } = buildJobPrintSections({
