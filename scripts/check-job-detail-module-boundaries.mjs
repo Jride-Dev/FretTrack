@@ -108,8 +108,8 @@ assert.match(formatting, /function buildMergeJobMessageJob\(currentJob, message\
 assert.match(formatting, /function buildAssignmentJob\(currentJob, assignment\)[\s\S]*?assignedMemberId: assignment\.assignedMemberId \|\| ''[\s\S]*?assignmentUpdatedAt: assignment\.assignmentUpdatedAt \|\| null/, 'Assignment helper must preserve existing assignment fallback behavior.');
 assert.match(formatting, /function buildPickedUpJob\(currentJob, timestamp\)[\s\S]*?status: 'Picked Up'[\s\S]*?pickedUpAt: timestamp/, 'Picked-up helper must preserve the established finished-job status and timestamp fields.');
 assert.match(formatting, /function findNewDamageViewImage\(uploadedImages = \[\], existingImageIds = new Set\(\), category = '', fileName = ''\)[\s\S]*?originalFileName === fileName[\s\S]*?image\.category === category[\s\S]*?\|\| null/, 'Damage Map upload selection helper must prefer exact filename matches and fall back to category matches.');
-assert.match(billingActions, /recordJobPayment\(draftJob\.id, paymentToRecord, savedJob\?\.updatedAt \|\| draftJob\.updatedAt\)/, 'Hosted payments must use the guarded append-only payment boundary.');
-assert.match(billingActions, /buildAddPaymentJob\(savedJob \|\| draftJob, paymentToRecord, paymentToRecord\.id\)/, 'Offline payment fallback must use the extracted pure payment helper.');
+assert.match(billingActions, /recordJobPayment\(draftJob\.id, paymentToRecord, draftJob\.updatedAt\)/, 'Hosted payments must call the guarded append-only payment boundary without a preliminary full-job save.');
+assert.match(billingActions, /buildAddPaymentJob\(draftJob, paymentToRecord, paymentToRecord\.id\)/, 'Offline payment fallback must use the extracted pure payment helper.');
 assert.ok(!billingActions.includes('buildUpdatePaymentJob'), 'Saved hosted payments must not be edited in place.');
 assert.ok(!billingActions.includes('buildRemovePaymentJob'), 'Saved hosted payments must not be removed in place.');
 assert.match(inventoryActions, /patchJob\(buildAddManualPartPatch\(draftJob, parts, part, crypto\.randomUUID\(\)\)\)/, 'Adding manual parts must use the extracted pure line-item helper.');

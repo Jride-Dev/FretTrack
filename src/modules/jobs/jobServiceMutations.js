@@ -292,9 +292,19 @@ export async function ensureRemoteJob(job) {
 
 async function updateSupabaseJob(job, { expectedUpdatedAt = null } = {}) {
   const activeShopId = getActiveShopIdFromModule(job.shopId);
+  const { data: storedJob, error: storedJobError } = await supabase
+    .from('jobs')
+    .select('tech_details')
+    .eq('id', job.id)
+    .eq('shop_id', activeShopId)
+    .maybeSingle();
+  if (storedJobError) {
+    return { error: storedJobError };
+  }
+  const guardedPayload = preserveStoredPaymentHistory(toDbJobFromModule(job), storedJob?.tech_details);
   let updateQuery = supabase
     .from('jobs')
-    .update(toDbJobFromModule(job))
+    .update(guardedPayload)
     .eq('id', job.id)
     .eq('shop_id', activeShopId);
   if (expectedUpdatedAt) {
@@ -320,9 +330,10 @@ async function updateSupabaseJob(job, { expectedUpdatedAt = null } = {}) {
   }
 
   console.warn('Retrying job update with legacy Supabase payload.', error);
+  const guardedLegacyPayload = preserveStoredPaymentHistory(toLegacyDbJobFromModule(job), storedJob?.tech_details);
   let legacyUpdateQuery = supabase
     .from('jobs')
-    .update(toLegacyDbJobFromModule(job))
+    .update(guardedLegacyPayload)
     .eq('id', job.id)
     .eq('shop_id', activeShopId);
   if (expectedUpdatedAt) {
@@ -340,6 +351,17 @@ async function updateSupabaseJob(job, { expectedUpdatedAt = null } = {}) {
   }
 
   return { error };
+}
+
+function preserveStoredPaymentHistory(payload, storedTechDetails = {}) {
+  const storedPayments = Array.isArray(storedTechDetails?.payments) ? storedTechDetails.payments : [];
+  return {
+    ...payload,
+    tech_details: {
+      ...(payload.tech_details || {}),
+      payments: storedPayments
+    }
+  };
 }
 
 async function linkCustomerToVersionedJob(job, customerId) {

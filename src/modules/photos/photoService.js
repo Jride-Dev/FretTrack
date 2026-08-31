@@ -23,7 +23,8 @@ export async function uploadJobImages(job, files, options = {}) {
     try {
       const savedImageResult = await uploadJobImage(currentJob, fileList[index], {
         ...options,
-        index: index + 1
+        index: index + 1,
+        uploadId: options.uploadIds?.[index] || options.uploadId || crypto.randomUUID()
       });
 
       const savedJob = savedImageResult?.job || savedImageResult;
@@ -40,6 +41,7 @@ export async function uploadJobImages(job, files, options = {}) {
       console.error('Image import failed.', error);
       errors.push({
         fileName: fileList[index]?.name || `Image ${index + 1}`,
+        uploadId: options.uploadIds?.[index] || options.uploadId || '',
         code: error?.code || '',
         message: error instanceof Error ? error.message : 'Image import failed.'
       });
@@ -60,6 +62,7 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
   const originalFileName = file.name || 'imported-image';
   const uploadedAt = new Date().toISOString();
   const category = options.category || 'job';
+  const imageId = options.uploadId || crypto.randomUUID();
   const optimization = await optimizeImageForStorage(file, {
     preset: category.startsWith('damage-map') ? 'damage' : 'job',
     originalFileName
@@ -72,7 +75,7 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
       return null;
     }
     const image = {
-      id: crypto.randomUUID(),
+      id: imageId,
       jobId,
       url: await readFileAsDataUrl(uploadFile),
       fileName: uploadFile.name,
@@ -93,7 +96,15 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
     jobId = normalizedJob.id;
   }
 
-  const storedFileName = makeJobImageFileName(normalizedJob, options.index || 1);
+  const existingImage = await findExistingUploadedImage(jobId, imageId);
+  if (existingImage) {
+    if (job) {
+      return { job: mergePhotoIntoJob(normalizedJob, existingImage), image: existingImage, optimizationNotice: optimization.notice, replayed: true };
+    }
+    return { ...existingImage, optimizationNotice: optimization.notice, replayed: true };
+  }
+
+  const storedFileName = makeJobImageFileName(normalizedJob, imageId);
   const filePath = `${jobId}/${storedFileName}`;
   const shopId = requirePhotoShopId(normalizedJob?.shopId);
   await uploadPhotoObjectWithQuota({
@@ -104,14 +115,16 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
     usageKind: 'source_photo',
     uploadOptions: {
       contentType: uploadFile.type,
-      cacheControl: '31536000'
-    }
+      cacheControl: '31536000',
+      upsert: true
+    },
+    requestId: imageId
   });
 
   const imageUrl = await createJobImageSignedUrl(filePath);
 
   const image = {
-    id: crypto.randomUUID(),
+    id: imageId,
     jobId,
     url: imageUrl,
     fileName: storedFileName,
@@ -148,15 +161,25 @@ export async function uploadJobImage(jobOrId, file, options = {}) {
   });
 
   if (dbError) {
+    if (dbError.code === '23505') {
+      const replayedImage = await findExistingUploadedImage(jobId, imageId);
+      if (replayedImage) {
+        if (job) {
+          return { job: mergePhotoIntoJob(normalizedJob, replayedImage), image: replayedImage, optimizationNotice: optimization.notice, replayed: true };
+        }
+        return { ...replayedImage, optimizationNotice: optimization.notice, replayed: true };
+      }
+    }
     console.error('Image database insert failed.', dbError);
     await removeSettledPhotoObjectSafe({ shopId, bucket: JOB_IMAGES_BUCKET, path: filePath });
     throw new Error(`Image uploaded, but database photo record failed: ${dbError.message}`);
   }
 
   if (job) {
-    const savedJob = await updateJob({ ...normalizedJob, images: [...(normalizedJob.images || []), image] });
-    logImageUploaded(savedJob || normalizedJob, image);
-    return { job: savedJob, optimizationNotice: optimization.notice };
+    const savedJob = mergePhotoIntoJob(normalizedJob, image);
+    saveLocalJobs(getLocalJobs().map((item) => (item.id === savedJob.id ? savedJob : item)));
+    logImageUploaded(savedJob, image);
+    return { job: savedJob, image, optimizationNotice: optimization.notice };
   }
 
   logImageUploaded({ id: jobId, shopId: getCurrentShopId() }, image);
@@ -219,6 +242,36 @@ export async function deleteJobImage(job, image) {
 
   logImageDeleted(nextJob, image);
   return nextJob;
+}
+
+async function findExistingUploadedImage(jobId, imageId) {
+  const { data, error } = await supabase
+    .from('job_images')
+    .select('*')
+    .eq('id', imageId)
+    .eq('job_id', jobId)
+    .maybeSingle();
+  if (error) {
+    throw new Error(`Photo upload reconciliation failed: ${error.message}`);
+  }
+  if (!data) {
+    return null;
+  }
+  const storagePath = getJobImageStoragePath(data);
+  return normalizeImage({
+    ...data,
+    url: storagePath ? await createJobImageSignedUrl(storagePath) : ''
+  });
+}
+
+function mergePhotoIntoJob(job, image) {
+  if (!job) {
+    return null;
+  }
+  return {
+    ...job,
+    images: [...(job.images || []).filter((item) => item.id !== image.id), image]
+  };
 }
 
 function normalizePhotoJob(job) {
@@ -479,9 +532,9 @@ async function uploadPhotoObjectWithQuota({
   path,
   file,
   usageKind,
-  uploadOptions
+  uploadOptions,
+  requestId = crypto.randomUUID()
 }) {
-  const requestId = crypto.randomUUID();
   await reservePhotoUsage({
     shopId,
     requestId,
@@ -548,11 +601,9 @@ function imageMetadataToObject(metadata = {}) {
   };
 }
 
-function makeJobImageFileName(job, index = 1) {
-  const timestamp = compactTimestamp(new Date());
+function makeJobImageFileName(job, uploadId) {
   const jobNumber = safeStorageFileName(job?.jobNumber || job?.id || 'job').replace(/\.[^.]+$/, '');
-  const paddedIndex = String(index).padStart(3, '0');
-  return `job-${jobNumber}-${timestamp}-${paddedIndex}.jpg`;
+  return `job-${jobNumber}-${safeStorageFileName(uploadId)}.jpg`;
 }
 
 function compactTimestamp(date) {

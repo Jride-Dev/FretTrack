@@ -363,6 +363,7 @@ function JobDetailWorkspace({
     canRecordJobPayments,
     canWrite,
     draftJob,
+    isDirty,
     onNotice,
     onRefresh,
     patchJob,

@@ -85,6 +85,7 @@
     "check:reports": "node scripts/check-reports-load.mjs",
     "check:permissions": "node scripts/check-permission-hardening.mjs && node scripts/check-rpc-security.mjs",
     "check:commerce-hardening": "node scripts/check-commerce-hardening.mjs && node --test scripts/job-commerce-totals.test.mjs",
+    "check:workflow-race-hardening": "node scripts/check-workflow-race-hardening.mjs",
     "check:role-permissions": "node scripts/check-role-permission-audit.mjs",
     "check:tiers": "node scripts/check-tier-split.mjs",
     "check:landing-worker": "node scripts/check-landing-worker.mjs",

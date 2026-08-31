@@ -27,6 +27,7 @@ export default function MessagesPanel({
   const [smsMode, setSmsMode] = useState('checking');
   const [reconcileTick, setReconcileTick] = useState(0);
   const scheduleOperationRef = useRef(null);
+  const sendOperationRef = useRef(new Map());
   const reconciliationRef = useRef({ currentKey: '', inFlight: false, mounted: false, timerId: null });
   const dateOptions = getShopDateOptions(shopProfile || undefined);
   const messages = job.messages || [];
@@ -144,7 +145,14 @@ export default function MessagesPanel({
   }
 
   async function sendChannel(channel) {
-    return sendCustomerChannelMessage(onSendMessage, channel, templateKey, subject, body);
+    const operationKey = JSON.stringify([job.id, channel, templateKey, subject, body]);
+    const requestId = sendOperationRef.current.get(operationKey) || crypto.randomUUID();
+    sendOperationRef.current.set(operationKey, requestId);
+    const error = await sendCustomerChannelMessage(onSendMessage, channel, templateKey, subject, body, requestId);
+    if (!error) {
+      sendOperationRef.current.delete(operationKey);
+    }
+    return error;
   }
 
   async function handleSend(channel) {
@@ -166,14 +174,19 @@ export default function MessagesPanel({
     }
 
     const errors = [];
-    if (channel === 'email' || channel === 'both') {
-      const emailError = await sendChannel('email');
-      if (emailError) errors.push(`Email: ${emailError}`);
-    }
+    try {
+      if (channel === 'email' || channel === 'both') {
+        const emailError = await sendChannel('email');
+        if (emailError) errors.push(`Email: ${emailError}`);
+      }
 
-    if (smsEnabled && (channel === 'sms' || channel === 'both')) {
-      const smsError = await sendChannel('sms');
-      if (smsError) errors.push(`SMS: ${smsError}`);
+      if (smsEnabled && (channel === 'sms' || channel === 'both')) {
+        const smsError = await sendChannel('sms');
+        if (smsError) errors.push(`SMS: ${smsError}`);
+      }
+    } catch (error) {
+      setSendState({ sending: '', error: error?.message || 'Message status could not be confirmed. Retry will reuse the same request.', success: '' });
+      return;
     }
 
     if (errors.length) {

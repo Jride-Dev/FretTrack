@@ -30,6 +30,10 @@ export default function useJobPhotoController({
   const [photoEditorImage, setPhotoEditorImage] = useState(null);
   const [isSavingEditedPhoto, setIsSavingEditedPhoto] = useState(false);
   const imageImportInputRef = useRef(null);
+  const draftJobRef = useRef(draftJob);
+  const uploadIdentityRef = useRef(new Map());
+  const canceledUploadIdsRef = useRef(new Set());
+  draftJobRef.current = draftJob;
 
   async function handleImageChange(event) {
     const files = Array.from(event.target.files || []);
@@ -42,10 +46,18 @@ export default function useJobPhotoController({
       return;
     }
 
-    const previews = files
-      .filter((file) => file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name))
-      .map((file) => ({
-        id: `preview-${crypto.randomUUID()}`,
+    const uploads = files.map((file) => {
+      const identityKey = getFileUploadIdentity(draftJob.id, file);
+      const uploadId = uploadIdentityRef.current.get(identityKey) || crypto.randomUUID();
+      uploadIdentityRef.current.set(identityKey, uploadId);
+      return { file, identityKey, uploadId };
+    });
+    const uploadIds = uploads.map((upload) => upload.uploadId);
+    const previews = uploads
+      .filter(({ file }) => file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name))
+      .map(({ file, uploadId }) => ({
+        id: `preview-${uploadId}`,
+        uploadId,
         jobId: draftJob.id,
         url: URL.createObjectURL(file),
         fileName: file.name,
@@ -57,7 +69,6 @@ export default function useJobPhotoController({
       }));
 
     if (previews.length) {
-      setIsDirty(true);
       setDraftJob((current) => buildAppendImagePreviewsJob(current, previews));
     }
 
@@ -65,10 +76,28 @@ export default function useJobPhotoController({
     setImageOptimizationNotices([]);
     setIsImportingImages(true);
     try {
-      const result = await onImageUpload(draftJob, files);
+      const result = await onImageUpload(draftJobRef.current, files, { uploadIds });
       if (result?.job) {
-        setDraftJob(result.job);
-        setIsDirty(false);
+        const operationIds = new Set(uploadIds);
+        const uploadedImages = (result.job.images || []).filter((image) => operationIds.has(image.id));
+        const canceledImages = uploadedImages.filter((image) => canceledUploadIdsRef.current.has(image.id));
+        for (const image of canceledImages) {
+          await onImageDelete(result.job, image);
+        }
+        setDraftJob((current) => ({
+          ...current,
+          images: [
+            ...(current.images || []).filter((image) => !operationIds.has(image.uploadId) && !operationIds.has(image.id)),
+            ...uploadedImages.filter((image) => !canceledUploadIdsRef.current.has(image.id))
+          ]
+        }));
+        const failedIds = new Set((result.errors || []).map((error) => error.uploadId).filter(Boolean));
+        uploads.forEach(({ identityKey, uploadId }) => {
+          if (!failedIds.has(uploadId)) {
+            uploadIdentityRef.current.delete(identityKey);
+            canceledUploadIdsRef.current.delete(uploadId);
+          }
+        });
       }
       setImageImportErrors(result?.errors || []);
       setImageOptimizationNotices(result?.optimizationNotices || []);
@@ -106,9 +135,15 @@ export default function useJobPhotoController({
     if (!window.confirm('Delete this image from the job?')) {
       return;
     }
+    const pendingUploadId = image.uploadId || (String(image.id || '').startsWith('preview-') ? String(image.id).slice(8) : '');
+    if (pendingUploadId) {
+      canceledUploadIdsRef.current.add(pendingUploadId);
+      setDraftJob((current) => buildRemoveImageJob(current, image.id));
+      return;
+    }
     setDraftJob((current) => buildRemoveImageJob(current, image.id));
     setIsDirty(true);
-    onImageDelete(draftJob, image);
+    onImageDelete(draftJobRef.current, image);
   }
 
   function handleImageEdit(image) {
@@ -192,4 +227,8 @@ export default function useJobPhotoController({
     setPhotoEditorImage,
     updateWorkOrderImage
   };
+}
+
+function getFileUploadIdentity(jobId, file) {
+  return [jobId, file.name || '', file.size || 0, file.lastModified || 0, file.type || ''].join(':');
 }

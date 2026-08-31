@@ -10,6 +10,7 @@ This file tracks product, reliability, security, and operational changes by rele
 - Reduced `App.jsx` from 1,117 to 838 lines by moving session restoration, approval/operator checks, stale-safe shop bootstrap, first-shop creation, shop switching, profile refresh, and sign-out cleanup into `useSessionShopBootstrap.js`.
 - Reduced `JobDetail.jsx` from 926 to 669 lines by extracting Work Note save/retry protection, photo upload/edit coordination, and message/document/timeline coordination into focused hooks, including stale-safe timeline refreshes.
 - Added a guarded commerce boundary: technicians can append ordinary payments without receiving price, discount, tax, refund, or finalization authority; refunds and payment voids require owner/admin; saved payment rows are append-only; and invoice finalization stores a server-calculated minor-unit snapshot while locking charge rows until an audited reopen.
+- Hardened workflow retries around that boundary: pending photo deletion now survives upload completion, photo and customer-message retries reuse stable operation identities, confirmed sends and payments remain confirmed when a follow-up refresh fails, ordinary work-order saves preserve database-owned payment history, and payments or authorized refunds use the guarded append-only RPC without attempting a conflicting full draft save first.
 
 ## v0.3.1 - Current Stable Release
 

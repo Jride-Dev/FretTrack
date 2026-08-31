@@ -258,7 +258,15 @@ export function createJobDetailCommunicationActions({
       setDraftJob((current) => buildMergeJobMessageJob(current, result.message));
     }
     if (result.ok && onRefresh) {
-      await onRefresh();
+      try {
+        await onRefresh();
+      } catch (refreshError) {
+        console.warn('Customer message was accepted, but the work-order refresh failed.', refreshError);
+        return {
+          ...result,
+          refreshWarning: 'Message sent and logged. Refresh the work order to reconcile message history.'
+        };
+      }
     }
     return result;
   }

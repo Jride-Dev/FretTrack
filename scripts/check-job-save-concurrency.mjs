@@ -50,8 +50,13 @@ assert.match(
 );
 assert.match(
   billingActions,
-  /async function addPayment[\s\S]*?await saveDraftNow\(draftJob\)[\s\S]*?await recordJobPayment\([\s\S]*?catch \(error\) \{\s*reportCommerceError\(error, 'The payment could not be recorded\.'\);/,
+  /async function addPayment[\s\S]*?await recordJobPayment\(draftJob\.id, paymentToRecord, draftJob\.updatedAt\)[\s\S]*?catch \(error\) \{\s*reportCommerceError\(error, 'The payment could not be recorded\.'\);/,
   'Payment conflicts must be caught at the guarded payment boundary and routed to the user-facing notice handler.'
+);
+assert.doesNotMatch(
+  billingActions,
+  /await saveDraftNow\(draftJob\)[\s\S]*?await recordJobPayment/,
+  'Hosted payment recording must not serialize a full stale draft before the guarded payment RPC.'
 );
 assert.match(
   billingActions,
