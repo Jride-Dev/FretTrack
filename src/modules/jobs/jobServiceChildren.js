@@ -2,7 +2,7 @@ import { supabase } from '../../shared/lib/supabaseClient';
 import { getActiveShopId as getActiveShopIdFromModule } from './jobServiceNormalization.js';
 
 export async function syncJobChildren(job) {
-  if (!job.invoiceFinalizedAt) {
+  if (!job.invoiceFinalizedAt && (job.estimateStatus || 'draft') === 'draft') {
     const partRows = job.parts.map((part) => ({
       id: part.id,
       shop_id: getActiveShopIdFromModule(part.shopId || job.shopId),

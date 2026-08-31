@@ -174,3 +174,7 @@ npm run migration:check:strict
 `20260727231401_email_photo_usage_caps_foundation.sql` seeds the official Shop/Pro email, source-photo upload, and repair-photo storage limits; adds monthly usage, reservation, current-storage, and per-object ledger tables; adds atomic idempotent reserve/settle/release RPCs and a shop-scoped usage snapshot; backfills known `job-images` and `part-images` objects; and requires exact-path reservations in Storage upload/update policies. It is part of the deployed 0.3.0 schema baseline and does not add paid-overage behavior.
 
 `20260816004706_harden_email_provider_consistency.sql` adds durable email request and quota IDs, a scheduled-operation fingerprint, provider reconciliation metadata, and explicit `pending`/`canceling` states. Unique partial indexes prevent retry-history duplication and concurrent identical schedules, while tightened message policies keep those provider-owned fields unavailable to authenticated clients. Apply it before deploying the matching `send-email` function and app build.
+
+# Estimate lifecycle migration
+
+`20260831220418_job_estimate_approval_lifecycle.sql` adds draft, sent, approved, and declined estimate state to work orders. The guarded owner/admin RPC stores server-calculated sent snapshots, increments revisions, rejects stale transitions, records decision events, locks sent/decided charge rows, and requires an explicit audited return to draft before a revised estimate can be edited.

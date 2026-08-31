@@ -59,4 +59,6 @@ The first guarded work-order boundary now sits in front of payment recording and
 
 `set_job_invoice_finalization(...)` calculates a minor-unit charge and tax snapshot from the saved job, parts, and services on the server. A finalized invoice locks parts, services, discounts, and tax settings until an owner or admin reopens it with an audit reason. Later payments remain appendable because collecting a balance does not change the finalized charge snapshot.
 
-The older `transaction_events` and `payment_events` backbone is still not a general ledger and does not yet replace work-order payment storage. Estimate approval, processor-backed refunds, deeper tax profiles, and secure public invoice links remain separate follow-on slices.
+`set_job_estimate_state(...)` owns the estimate lifecycle. An owner or admin can send a saved draft, which creates a server-calculated minor-unit snapshot and locks its parts, services, discount, and tax settings. Approval or decline preserves that exact revision and adds an audited decision; changes require an explicit return to draft, and the next send creates a new revision. A sent or declined estimate cannot be finalized as an invoice until approval is recorded or the estimate is returned to draft.
+
+The older `transaction_events` and `payment_events` backbone is still not a general ledger and does not yet replace work-order payment storage. Processor-backed refunds, deeper tax profiles, and secure public invoice links remain separate follow-on slices.

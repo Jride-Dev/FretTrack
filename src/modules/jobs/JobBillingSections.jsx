@@ -9,12 +9,15 @@ export default function JobBillingSections({
   canRecordJobPayments,
   canIssuePaymentAdjustments,
   canFinalizeJobInvoices,
+  changeEstimateState,
   changeInvoiceFinalization,
   draftJob,
+  estimateNote,
   finalizationReason,
   inventoryParts,
   inventorySearch,
   isInventoryLoading,
+  isChangingEstimateState,
   isChangingInvoiceState,
   isRecordingPayment,
   onAddInventoryPart,
@@ -37,6 +40,7 @@ export default function JobBillingSections({
   service,
   services,
   setInventorySearch,
+  setEstimateNote,
   setFinalizationReason,
   setPart,
   setPayment,
@@ -78,16 +82,20 @@ export default function JobBillingSections({
         canRecordJobPayments={canRecordJobPayments}
         canIssuePaymentAdjustments={canIssuePaymentAdjustments}
         canFinalizeJobInvoices={canFinalizeJobInvoices}
+        changeEstimateState={changeEstimateState}
         changeInvoiceFinalization={changeInvoiceFinalization}
         addPayment={onAddPayment}
         draftJob={draftJob}
         emailInvoice={onEmailInvoice}
+        estimateNote={estimateNote}
         finalizationReason={finalizationReason}
+        isChangingEstimateState={isChangingEstimateState}
         isChangingInvoiceState={isChangingInvoiceState}
         isRecordingPayment={isRecordingPayment}
         payment={payment}
         payments={payments}
         setPayment={setPayment}
+        setEstimateNote={setEstimateNote}
         setFinalizationReason={setFinalizationReason}
         taxSettings={taxSettings}
         shopTaxRate={shopTaxRate}

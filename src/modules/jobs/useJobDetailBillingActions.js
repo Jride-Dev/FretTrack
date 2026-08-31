@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat.js';
-import { recordJobPayment, setJobInvoiceFinalization } from './jobService.js';
+import { recordJobPayment, setJobEstimateState, setJobInvoiceFinalization } from './jobService.js';
 import {
   buildAddPaymentJob,
   buildAddServicePatch,
@@ -33,8 +33,11 @@ export default function useJobDetailBillingActions({
   const [service, setService] = useState(EMPTY_SERVICE);
   const [payment, setPayment] = useState(createEmptyPayment);
   const [finalizationReason, setFinalizationReason] = useState('');
+  const [estimateNote, setEstimateNote] = useState('');
+  const [isChangingEstimateState, setIsChangingEstimateState] = useState(false);
   const [isChangingInvoiceState, setIsChangingInvoiceState] = useState(false);
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
+  const estimateOperationRef = useRef(new Map());
 
   function reportCommerceError(error, fallbackMessage) {
     onNotice?.({ type: 'error', message: error?.message || fallbackMessage });
@@ -116,9 +119,48 @@ export default function useJobDetailBillingActions({
     }
   }
 
+  async function changeEstimateState(status) {
+    if (!canFinalizeJobInvoices || isChangingEstimateState) {
+      return;
+    }
+    const note = estimateNote.trim();
+    if (note.length < 8) {
+      reportCommerceError(null, 'Enter an estimate audit note of at least 8 characters.');
+      return;
+    }
+    if (isDirty && status !== 'sent') {
+      reportCommerceError(null, 'Save the work order changes before changing estimate state.');
+      return;
+    }
+
+    setIsChangingEstimateState(true);
+    const operationKey = JSON.stringify([draftJob.id, status, note]);
+    const requestId = estimateOperationRef.current.get(operationKey) || crypto.randomUUID();
+    estimateOperationRef.current.set(operationKey, requestId);
+    try {
+      const savedJob = status === 'sent' ? await saveDraftNow(draftJob) : draftJob;
+      const result = await setJobEstimateState(savedJob.id, status, note, requestId, savedJob.updatedAt);
+      setDraftJob((current) => ({ ...current, ...result }));
+      setIsDirty(false);
+      setEstimateNote('');
+      estimateOperationRef.current.delete(operationKey);
+      onNotice?.({ type: 'success', message: getEstimateSuccessMessage(status) });
+      try {
+        await onRefresh?.();
+      } catch (refreshError) {
+        console.warn('Estimate state changed, but the work-order refresh failed.', refreshError);
+        onNotice?.({ type: 'warning', message: `${getEstimateSuccessMessage(status)} Refresh the work order to reconcile its history.` });
+      }
+    } catch (error) {
+      reportCommerceError(error, 'The estimate state could not be changed.');
+    } finally {
+      setIsChangingEstimateState(false);
+    }
+  }
+
   function addService(event) {
     event.preventDefault();
-    if (!canWrite || !canManageJobCharges || draftJob.invoiceFinalizedAt || !service.description.trim()) {
+    if (!canWrite || !canManageJobCharges || chargesAreLocked(draftJob) || !service.description.trim()) {
       return;
     }
     patchJob(buildAddServicePatch(draftJob, services, service, crypto.randomUUID()));
@@ -126,13 +168,13 @@ export default function useJobDetailBillingActions({
   }
 
   function updateService(serviceId, field, value) {
-    if (canWrite && canManageJobCharges && !draftJob.invoiceFinalizedAt) {
+    if (canWrite && canManageJobCharges && !chargesAreLocked(draftJob)) {
       patchJob(buildUpdateServicePatch(services, serviceId, field, value));
     }
   }
 
   function removeService(serviceId) {
-    if (canWrite && canManageJobCharges && !draftJob.invoiceFinalizedAt) {
+    if (canWrite && canManageJobCharges && !chargesAreLocked(draftJob)) {
       patchJob(buildRemoveServicePatch(services, serviceId));
     }
   }
@@ -140,16 +182,34 @@ export default function useJobDetailBillingActions({
   return {
     addPayment,
     addService,
+    changeEstimateState,
     changeInvoiceFinalization,
+    estimateNote,
     finalizationReason,
     isChangingInvoiceState,
+    isChangingEstimateState,
     isRecordingPayment,
     payment,
     removeService,
     service,
     setFinalizationReason,
+    setEstimateNote,
     setPayment,
     setService,
     updateService
   };
+}
+
+function chargesAreLocked(job) {
+  return Boolean(job.invoiceFinalizedAt) || (job.estimateStatus || 'draft') !== 'draft';
+}
+
+function getEstimateSuccessMessage(status) {
+  const messages = {
+    sent: 'Estimate marked sent and totals locked.',
+    approved: 'Estimate approval recorded.',
+    declined: 'Estimate decline recorded.',
+    draft: 'Estimate returned to draft for revision.'
+  };
+  return messages[status] || 'Estimate state updated.';
 }

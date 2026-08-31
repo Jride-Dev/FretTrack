@@ -242,6 +242,40 @@ export async function setJobInvoiceFinalization(jobId, finalized, reason) {
   };
 }
 
+export async function setJobEstimateState(jobId, status, note, requestId, expectedUpdatedAt = null) {
+  if (!jobId) {
+    throw new Error('A work order is required.');
+  }
+  if (!hasSupabaseConfig || !supabase) {
+    throw new Error('Estimate state requires the secured FretTrack database.');
+  }
+
+  const { data, error } = await supabase.rpc('set_job_estimate_state', {
+    p_job_id: jobId,
+    p_status: String(status || '').trim().toLowerCase(),
+    p_note: String(note || '').trim(),
+    p_expected_updated_at: expectedUpdatedAt || null,
+    p_request_id: requestId
+  });
+  if (error) {
+    throw new Error(error.message || 'The estimate state could not be changed.');
+  }
+
+  const saved = Array.isArray(data) ? data[0] : data;
+  return {
+    estimateStatus: saved?.estimate_status || 'draft',
+    estimateSnapshot: saved?.estimate_snapshot || null,
+    estimateRevision: Number(saved?.estimate_revision || 0),
+    estimateSentAt: saved?.estimate_sent_at || null,
+    estimateSentBy: saved?.estimate_sent_by || '',
+    estimateDecidedAt: saved?.estimate_decided_at || null,
+    estimateDecidedBy: saved?.estimate_decided_by || '',
+    estimateStatusNote: saved?.estimate_status_note || '',
+    estimateLastRequestId: saved?.estimate_last_request_id || '',
+    updatedAt: saved?.updated_at || null
+  };
+}
+
 export async function ensureRemoteJob(job) {
   const activeShopId = getActiveShopIdFromModule(job.shopId);
   const normalizedJob = normalizeJobFromModule({
