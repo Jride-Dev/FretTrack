@@ -1582,6 +1582,20 @@ th.internal-only {
   margin-bottom: 12px;
 }
 
+.invoice-finalization-controls {
+  align-items: end;
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  margin: 12px 0;
+  padding: 12px;
+}
+
+.invoice-finalization-controls label {
+  margin: 0;
+}
+
 .neck-inspection-grid {
   display: grid;
   gap: 12px;

@@ -35,6 +35,10 @@ const jobDetail = source('src/modules/jobs/JobDetail.jsx');
 for (const helperName of [
   'canAccessOperatorDashboard',
   'canManageBilling',
+  'canManageJobCharges',
+  'canRecordJobPayments',
+  'canIssuePaymentAdjustments',
+  'canFinalizeJobInvoices',
   'canManageShopSettings',
   'canManageTeamMembers',
   'canUseTeamAssignment',

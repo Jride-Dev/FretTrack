@@ -24,6 +24,26 @@ export function calculateJobTotals(job, resolvedTaxSettings = null) {
   const services = job.services || job.labor || [];
   const taxSettings = resolvedTaxSettings || job.techDetails?.tax || {};
   const payments = job.techDetails?.payments || [];
+  const paidTotal = payments.reduce((total, row) => total + signedPaymentAmount(row), 0);
+  const finalizedSnapshot = job.invoiceFinalizedAt && job.invoiceSnapshot?.version
+    ? job.invoiceSnapshot
+    : null;
+  if (finalizedSnapshot) {
+    const fromMinor = (value) => Number(value || 0) / 100;
+    const totalDue = fromMinor(finalizedSnapshot.totalMinor);
+    return {
+      partsTotal: fromMinor(finalizedSnapshot.partsMinor),
+      includedPartsTotal: fromMinor(finalizedSnapshot.includedPartsMinor),
+      servicesTotal: fromMinor(finalizedSnapshot.servicesMinor),
+      subtotal: fromMinor(finalizedSnapshot.subtotalMinor),
+      discountAmount: fromMinor(finalizedSnapshot.discountMinor),
+      taxableAmount: fromMinor(finalizedSnapshot.taxableMinor),
+      salesTaxAmount: fromMinor(finalizedSnapshot.taxMinor),
+      totalDue,
+      paidTotal,
+      balanceDue: Math.max(totalDue - paidTotal, 0)
+    };
+  }
   const billablePartsTotal = parts.reduce((total, row) => {
     return row.includedInService ? total : total + retailTotal(row);
   }, 0);
@@ -41,8 +61,6 @@ export function calculateJobTotals(job, resolvedTaxSettings = null) {
   const taxableAmount = (taxSettings.taxableParts ? billablePartsTotal : 0) + (taxSettings.taxableServices ? servicesTotal : 0);
   const salesTaxAmount = taxableAmount * ((Number(taxSettings.salesTaxRate) || 0) / 100);
   const totalDue = Math.max(subtotal - discountAmount, 0) + salesTaxAmount;
-  const paidTotal = payments.reduce((total, row) => total + signedPaymentAmount(row), 0);
-
   return {
     partsTotal: billablePartsTotal,
     includedPartsTotal,

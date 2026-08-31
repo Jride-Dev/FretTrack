@@ -5,22 +5,28 @@ import TotalsSection from './TotalsSection';
 export default function JobBillingSections({
   canSendEmail,
   canWrite,
+  canManageJobCharges,
+  canRecordJobPayments,
+  canIssuePaymentAdjustments,
+  canFinalizeJobInvoices,
+  changeInvoiceFinalization,
   draftJob,
+  finalizationReason,
   inventoryParts,
   inventorySearch,
   isInventoryLoading,
+  isChangingInvoiceState,
+  isRecordingPayment,
   onAddInventoryPart,
   onAddPart,
   onAddPayment,
   onAddService,
   onEmailInvoice,
   onRemovePart,
-  onRemovePayment,
   onRemoveService,
   onSearchInventoryParts,
   onUpdateDiscountField,
   onUpdatePart,
-  onUpdatePayment,
   onUpdateService,
   onUpdateTaxField,
   onUseShopTaxRate,
@@ -31,6 +37,7 @@ export default function JobBillingSections({
   service,
   services,
   setInventorySearch,
+  setFinalizationReason,
   setPart,
   setPayment,
   setService,
@@ -41,7 +48,7 @@ export default function JobBillingSections({
   return (
     <>
       <PartsList
-        canWrite={canWrite}
+        canWrite={canWrite && canManageJobCharges}
         inventoryParts={inventoryParts}
         inventorySearch={inventorySearch}
         isInventoryLoading={isInventoryLoading}
@@ -56,7 +63,7 @@ export default function JobBillingSections({
         onUpdatePart={onUpdatePart}
       />
       <ServicesList
-        canWrite={canWrite}
+        canWrite={canWrite && canManageJobCharges}
         services={services}
         service={service}
         setService={setService}
@@ -67,18 +74,25 @@ export default function JobBillingSections({
       <TotalsSection
         canSendEmail={canSendEmail}
         canWrite={canWrite}
+        canManageJobCharges={canManageJobCharges}
+        canRecordJobPayments={canRecordJobPayments}
+        canIssuePaymentAdjustments={canIssuePaymentAdjustments}
+        canFinalizeJobInvoices={canFinalizeJobInvoices}
+        changeInvoiceFinalization={changeInvoiceFinalization}
         addPayment={onAddPayment}
         draftJob={draftJob}
         emailInvoice={onEmailInvoice}
+        finalizationReason={finalizationReason}
+        isChangingInvoiceState={isChangingInvoiceState}
+        isRecordingPayment={isRecordingPayment}
         payment={payment}
         payments={payments}
-        removePayment={onRemovePayment}
         setPayment={setPayment}
+        setFinalizationReason={setFinalizationReason}
         taxSettings={taxSettings}
         shopTaxRate={shopTaxRate}
         totals={totals}
         updateDiscountField={onUpdateDiscountField}
-        updatePayment={onUpdatePayment}
         updateTaxField={onUpdateTaxField}
         useShopTaxRate={onUseShopTaxRate}
       />

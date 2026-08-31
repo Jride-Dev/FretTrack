@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat.js';
+import { recordJobPayment, setJobInvoiceFinalization } from './jobService.js';
 import {
   buildAddPaymentJob,
   buildAddServicePatch,
-  buildRemovePaymentJob,
   buildRemoveServicePatch,
-  buildUpdatePaymentJob,
   buildUpdateServicePatch
 } from './jobDetailFormatting.js';
 
@@ -16,9 +15,14 @@ function createEmptyPayment() {
 }
 
 export default function useJobDetailBillingActions({
+  canFinalizeJobInvoices,
+  canIssuePaymentAdjustments,
+  canManageJobCharges,
+  canRecordJobPayments,
   canWrite,
   draftJob,
   onNotice,
+  onRefresh,
   patchJob,
   saveDraftNow,
   services,
@@ -27,60 +31,85 @@ export default function useJobDetailBillingActions({
 }) {
   const [service, setService] = useState(EMPTY_SERVICE);
   const [payment, setPayment] = useState(createEmptyPayment);
-  const paymentAutosaveTimeoutRef = useRef(null);
+  const [finalizationReason, setFinalizationReason] = useState('');
+  const [isChangingInvoiceState, setIsChangingInvoiceState] = useState(false);
+  const [isRecordingPayment, setIsRecordingPayment] = useState(false);
 
-  useEffect(() => () => window.clearTimeout(paymentAutosaveTimeoutRef.current), []);
-
-  function reportPaymentSaveError(error) {
-    onNotice?.({
-      type: 'error',
-      message: error?.message || 'The payment change could not be saved.'
-    });
+  function reportCommerceError(error, fallbackMessage) {
+    onNotice?.({ type: 'error', message: error?.message || fallbackMessage });
   }
 
-  async function savePaymentChange(nextJob, { immediate = false } = {}) {
-    if (!canWrite) {
-      return;
-    }
-    window.clearTimeout(paymentAutosaveTimeoutRef.current);
-    setDraftJob(nextJob);
-    setIsDirty(true);
-
-    if (immediate) {
-      await saveDraftNow(nextJob).catch(reportPaymentSaveError);
-      return;
-    }
-
-    paymentAutosaveTimeoutRef.current = window.setTimeout(() => {
-      saveDraftNow(nextJob).catch(reportPaymentSaveError);
-    }, 700);
-  }
-
-  function addPayment(event) {
+  async function addPayment(event) {
     event.preventDefault();
-    if (!canWrite || !Number(payment.amount)) {
+    if (!canRecordJobPayments || isRecordingPayment || !Number(payment.amount)) {
+      return;
+    }
+    if (payment.type !== 'payment' && !canIssuePaymentAdjustments) {
+      reportCommerceError(null, 'Only a shop owner or admin can record refunds or payment voids.');
       return;
     }
 
-    savePaymentChange(buildAddPaymentJob(draftJob, payment, crypto.randomUUID()), { immediate: true });
-    setPayment(createEmptyPayment());
-  }
-
-  function updatePayment(paymentId, field, value) {
-    if (canWrite) {
-      savePaymentChange(buildUpdatePaymentJob(draftJob, paymentId, field, value));
+    setIsRecordingPayment(true);
+    const paymentToRecord = { ...payment, id: crypto.randomUUID() };
+    try {
+      const savedJob = await saveDraftNow(draftJob);
+      const result = await recordJobPayment(draftJob.id, paymentToRecord, savedJob?.updatedAt || draftJob.updatedAt);
+      if (!result) {
+        const localJob = buildAddPaymentJob(savedJob || draftJob, paymentToRecord, paymentToRecord.id);
+        await saveDraftNow(localJob);
+      } else {
+        setDraftJob((current) => ({
+          ...current,
+          updatedAt: result.updatedAt || current.updatedAt,
+          techDetails: {
+            ...(current.techDetails || {}),
+            payments: [
+              ...(current.techDetails?.payments || []).filter((row) => row.id !== result.payment.id),
+              result.payment
+            ]
+          }
+        }));
+        setIsDirty(false);
+        await onRefresh?.();
+      }
+      setPayment(createEmptyPayment());
+      onNotice?.({ type: 'success', message: paymentToRecord.type === 'payment' ? 'Payment recorded.' : 'Payment adjustment recorded.' });
+    } catch (error) {
+      reportCommerceError(error, 'The payment could not be recorded.');
+    } finally {
+      setIsRecordingPayment(false);
     }
   }
 
-  function removePayment(paymentId) {
-    if (canWrite) {
-      savePaymentChange(buildRemovePaymentJob(draftJob, paymentId), { immediate: true });
+  async function changeInvoiceFinalization(finalized) {
+    if (!canFinalizeJobInvoices || isChangingInvoiceState) {
+      return;
+    }
+    const reason = finalizationReason.trim();
+    if (reason.length < 8) {
+      reportCommerceError(null, 'Enter an audit reason of at least 8 characters.');
+      return;
+    }
+
+    setIsChangingInvoiceState(true);
+    try {
+      const savedJob = finalized ? await saveDraftNow(draftJob) : draftJob;
+      const result = await setJobInvoiceFinalization(savedJob.id, finalized, reason);
+      setDraftJob((current) => ({ ...current, ...result }));
+      setIsDirty(false);
+      setFinalizationReason('');
+      await onRefresh?.();
+      onNotice?.({ type: 'success', message: finalized ? 'Invoice finalized and totals locked.' : 'Invoice reopened for charge changes.' });
+    } catch (error) {
+      reportCommerceError(error, 'The invoice state could not be changed.');
+    } finally {
+      setIsChangingInvoiceState(false);
     }
   }
 
   function addService(event) {
     event.preventDefault();
-    if (!canWrite || !service.description.trim()) {
+    if (!canWrite || !canManageJobCharges || draftJob.invoiceFinalizedAt || !service.description.trim()) {
       return;
     }
     patchJob(buildAddServicePatch(draftJob, services, service, crypto.randomUUID()));
@@ -88,13 +117,13 @@ export default function useJobDetailBillingActions({
   }
 
   function updateService(serviceId, field, value) {
-    if (canWrite) {
+    if (canWrite && canManageJobCharges && !draftJob.invoiceFinalizedAt) {
       patchJob(buildUpdateServicePatch(services, serviceId, field, value));
     }
   }
 
   function removeService(serviceId) {
-    if (canWrite) {
+    if (canWrite && canManageJobCharges && !draftJob.invoiceFinalizedAt) {
       patchJob(buildRemoveServicePatch(services, serviceId));
     }
   }
@@ -102,13 +131,16 @@ export default function useJobDetailBillingActions({
   return {
     addPayment,
     addService,
+    changeInvoiceFinalization,
+    finalizationReason,
+    isChangingInvoiceState,
+    isRecordingPayment,
     payment,
-    removePayment,
     removeService,
     service,
+    setFinalizationReason,
     setPayment,
     setService,
-    updatePayment,
     updateService
   };
 }

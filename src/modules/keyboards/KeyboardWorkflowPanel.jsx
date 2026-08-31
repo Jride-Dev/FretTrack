@@ -48,6 +48,7 @@ export default function KeyboardWorkflowPanel({
   job,
   keyboard,
   canWrite,
+  canManageJobCharges = canWrite,
   canSendEmail,
   entitlementMessage,
   shopProfile,
@@ -402,7 +403,7 @@ export default function KeyboardWorkflowPanel({
                 </select>
               )}
               {request.inventoryPartId && ['requested', 'received'].includes(request.requestStatus) && (
-                <button type="button" className="button-tertiary" onClick={() => addRequestedPart(request)} disabled={!canWrite || isWorking}>Add to Work Order</button>
+                <button type="button" className="button-tertiary" onClick={() => addRequestedPart(request)} disabled={!canWrite || !canManageJobCharges || isWorking}>Add to Work Order</button>
               )}
             </div>
           ))}
@@ -412,6 +413,7 @@ export default function KeyboardWorkflowPanel({
       <SpecialistPurchasingPanel
         job={job}
         canWrite={canWrite}
+        canAddToBilling={canManageJobCharges && !job.invoiceFinalizedAt}
         keyboardPartRequests={workflow.partRequests}
         shopProfile={shopProfile}
         onInventoryPartAdded={onInventoryPartAdded}

@@ -3,6 +3,7 @@ import WorkLogSection from './WorkLogSection';
 
 export default function JobWorkSections({
   canWrite,
+  canManageJobCharges = canWrite,
   draftJob,
   hasPendingWorkLog,
   isSavingWorkLog,
@@ -36,7 +37,7 @@ export default function JobWorkSections({
         workLogText={workLogText}
       />
       <ServicesList
-        canWrite={canWrite}
+        canWrite={canWrite && canManageJobCharges}
         services={services}
         service={service}
         setService={setService}
