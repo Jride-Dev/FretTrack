@@ -2,32 +2,34 @@ import { supabase } from '../../shared/lib/supabaseClient';
 import { getActiveShopId as getActiveShopIdFromModule } from './jobServiceNormalization.js';
 
 export async function syncJobChildren(job) {
-  const partRows = job.parts.map((part) => ({
-    id: part.id,
-    shop_id: getActiveShopIdFromModule(part.shopId || job.shopId),
-    job_id: job.id,
-    part_id: part.partId || null,
-    name: part.name,
-    sku: part.sku || null,
-    quantity: Number(part.quantity || 1),
-    cost: Number(part.cost || 0),
-    retail: Number(part.retail || 0),
-    unit_cost: Number(part.cost || 0),
-    retail_price: Number(part.retail || 0),
-    created_at: part.createdAt
-  }));
-  await syncReplaceableJobChildren('job_parts', job.id, partRows, 'Billing parts');
+  if (!job.invoiceFinalizedAt) {
+    const partRows = job.parts.map((part) => ({
+      id: part.id,
+      shop_id: getActiveShopIdFromModule(part.shopId || job.shopId),
+      job_id: job.id,
+      part_id: part.partId || null,
+      name: part.name,
+      sku: part.sku || null,
+      quantity: Number(part.quantity || 1),
+      cost: Number(part.cost || 0),
+      retail: Number(part.retail || 0),
+      unit_cost: Number(part.cost || 0),
+      retail_price: Number(part.retail || 0),
+      created_at: part.createdAt
+    }));
+    await syncReplaceableJobChildren('job_parts', job.id, partRows, 'Billing parts');
 
-  const serviceRows = job.services.map((service) => ({
-    id: service.id,
-    job_id: job.id,
-    description: service.description,
-    quantity: Number(service.quantity || 1),
-    cost: Number(service.cost || 0),
-    retail: Number(service.retail || 0),
-    created_at: service.createdAt
-  }));
-  await syncReplaceableJobChildren('job_services', job.id, serviceRows, 'Billing services');
+    const serviceRows = job.services.map((service) => ({
+      id: service.id,
+      job_id: job.id,
+      description: service.description,
+      quantity: Number(service.quantity || 1),
+      cost: Number(service.cost || 0),
+      retail: Number(service.retail || 0),
+      created_at: service.createdAt
+    }));
+    await syncReplaceableJobChildren('job_services', job.id, serviceRows, 'Billing services');
+  }
 
   const workLogs = job.workLog.map((log) => ({
     id: log.id,

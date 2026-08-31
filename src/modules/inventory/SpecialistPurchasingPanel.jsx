@@ -35,6 +35,7 @@ function statusLabel(value) {
 export default function SpecialistPurchasingPanel({
   job,
   canWrite = false,
+  canAddToBilling = canWrite,
   keyboardPartRequests = [],
   shopProfile = null,
   onInventoryPartAdded,
@@ -262,7 +263,7 @@ export default function SpecialistPurchasingPanel({
             {item.jobPartId
               ? <span className="status-pill success">Added to billing</span>
               : item.quantityReceived > 0 && order.status !== 'cancelled' && (
-                <button type="button" onClick={() => addReceivedItem(item)} disabled={!canWrite || isSaving}>Add to Parts & Payments</button>
+                <button type="button" onClick={() => addReceivedItem(item)} disabled={!canWrite || !canAddToBilling || isSaving}>Add to Parts & Payments</button>
               )}
           </div>
         )))}

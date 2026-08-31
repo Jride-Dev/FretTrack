@@ -36,6 +36,7 @@ function mergeJobPart(job, jobPart) {
 export default function AmplifierJobDetail({
   job,
   canWrite = true,
+  canManageJobCharges = canWrite,
   dateOptions = {},
   onUpdate,
   onClose,
@@ -289,6 +290,7 @@ export default function AmplifierJobDetail({
       <SpecialistPurchasingPanel
         job={draft}
         canWrite={canWrite}
+        canAddToBilling={canManageJobCharges && !draft.invoiceFinalizedAt}
         shopProfile={shopProfile}
         onInventoryPartAdded={addInventoryPartToDraft}
         onOpenInventory={onOpenInventory}

@@ -18,6 +18,12 @@ Important constraints carried into implementation:
 - Accounting-excluded work orders remain stored and read-only. They are omitted from operational accounting and job metrics, while their customer, parts, services, messages, payment adjustments, and audit events remain available.
 - This remains operational tax-prep support, not payroll, reconciliation, balance sheet, depreciation, filing, or 1099 software.
 
+## Guarded invoice and payment boundary
+
+Work-order payments are append-only through a guarded database action. Technicians can record a customer payment, but only owners and admins can record a refund or payment void, change charge/tax settings, or finalize and reopen an invoice. Saved payment rows are displayed as history rather than editable form controls.
+
+Finalization stores a database-calculated minor-unit snapshot of billable and included parts, services, discount, taxable amount, tax rate and jurisdiction label, tax, and total. Finalized charge rows and tax/discount settings remain locked until an audited owner/admin reopen. Payments can still be appended after finalization because they settle the frozen amount rather than rewriting it.
+
 ## Accounting-safe work-order exclusion
 
 Migration `20260828022147_accounting_safe_job_void.sql` adds the owner/admin-only `set_job_accounting_void` boundary. It locks the work order, rechecks shop lifecycle state, requires a reason, rejects a nonzero payment ledger or an erased historical payment, and records exclusion/restoration in `job_events`. Excluded work orders cannot be changed through ordinary job updates. The UI provides explicit Refund and Payment Void rows so staff can preserve the financial trail instead of deleting a payment to make totals look clean.

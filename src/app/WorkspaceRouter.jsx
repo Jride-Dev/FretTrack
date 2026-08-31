@@ -268,6 +268,10 @@ function WorkspacePage({
             onClose={actions.onCloseJobDetail}
             onNotice={actions.onNotice}
             canWrite={access.canEditJobs}
+            canManageJobCharges={access.canManageJobCharges}
+            canRecordJobPayments={access.canRecordJobPayments}
+            canIssuePaymentAdjustments={access.canIssuePaymentAdjustments}
+            canFinalizeJobInvoices={access.canFinalizeJobInvoices}
             amplifierRepairEnabled={access.amplifierRepairEnabled}
             keyboardRepairEnabled={access.keyboardRepairEnabled}
             canUploadPhotos={access.canUploadPhotos}
@@ -340,6 +344,7 @@ function WorkspacePage({
           <AmplifierJobDetail
             job={selectedJob}
             canWrite={access.canEditAmplifierRepair && !selectedJob.accountingVoidedAt}
+            canManageJobCharges={access.canManageJobCharges}
             dateOptions={dateOptions}
             onUpdate={actions.onUpdateJob}
             onClose={actions.onCloseJobDetail}
@@ -369,6 +374,7 @@ function WorkspacePage({
           <KeyboardJobDetail
             job={selectedJob}
             canWrite={access.canEditKeyboardRepair && !selectedJob.accountingVoidedAt}
+            canManageJobCharges={access.canManageJobCharges}
             dateOptions={dateOptions}
             onUpdate={actions.onUpdateJob}
             onRefresh={actions.onRefreshJobs}

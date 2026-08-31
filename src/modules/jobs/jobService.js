@@ -15,7 +15,9 @@ export {
   addWorkLog,
   ensureRemoteJob,
   isDuplicateWorkOrderError,
+  recordJobPayment,
   setJobAccountingVoid,
+  setJobInvoiceFinalization,
   updateJob
 } from './jobServiceMutations.js';
 export { getSmsMode, sendCustomerMessage, smsEnabled } from './jobServiceMessaging.js';

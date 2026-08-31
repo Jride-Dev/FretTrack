@@ -77,6 +77,8 @@ set local "request.jwt.claim.role" = 'authenticated';
 select is((select count(*)::integer from public.loyalty_program_rules), 0, 'a non-Pro shop cannot read the gated loyalty rule');
 
 reset role;
+set local "request.jwt.claim.sub" = '';
+set local "request.jwt.claim.role" = '';
 
 insert into public.customers (id, shop_id, display_name, email, email_normalized)
 values

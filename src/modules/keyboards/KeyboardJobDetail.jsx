@@ -38,6 +38,7 @@ function mergeJobPart(job, jobPart) {
 export default function KeyboardJobDetail({
   job,
   canWrite = true,
+  canManageJobCharges = canWrite,
   dateOptions = {},
   onUpdate,
   onClose,
@@ -314,6 +315,7 @@ export default function KeyboardJobDetail({
         job={draft}
         keyboard={keyboard}
         canWrite={canWrite}
+        canManageJobCharges={canManageJobCharges && !draft.invoiceFinalizedAt}
         canSendEmail={canSendEmail}
         entitlementMessage={entitlementMessage}
         shopProfile={shopProfile}

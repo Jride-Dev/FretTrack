@@ -41,6 +41,22 @@ export function canManageBilling({ role, entitlementSnapshot } = {}) {
   return SHOP_OWNER_ROLES.has(normalizeRole(role)) && !isReadOnlyStatus(entitlementSnapshot);
 }
 
+export function canManageJobCharges({ role, entitlementSnapshot } = {}) {
+  return SHOP_MANAGE_ROLES.has(normalizeRole(role)) && !isReadOnlyStatus(entitlementSnapshot);
+}
+
+export function canRecordJobPayments({ role, entitlementSnapshot } = {}) {
+  return canWriteShop({ role, entitlementSnapshot });
+}
+
+export function canIssuePaymentAdjustments({ role, entitlementSnapshot } = {}) {
+  return SHOP_MANAGE_ROLES.has(normalizeRole(role)) && !isReadOnlyStatus(entitlementSnapshot);
+}
+
+export function canFinalizeJobInvoices({ role, entitlementSnapshot } = {}) {
+  return SHOP_MANAGE_ROLES.has(normalizeRole(role)) && !isReadOnlyStatus(entitlementSnapshot);
+}
+
 export function canAccessShopAsMember({ role, entitlementSnapshot } = {}) {
   const normalizedRole = normalizeRole(role);
   if (!normalizedRole) {
@@ -170,6 +186,10 @@ export function getCurrentAccessPermissions({ isOperator, role, entitlementSnaps
   return {
     canAccessOperatorDashboard: canAccessOperatorDashboard({ isOperator }),
     canManageBilling: canManageBilling(context),
+    canManageJobCharges: canManageJobCharges(context),
+    canRecordJobPayments: canRecordJobPayments(context),
+    canIssuePaymentAdjustments: canIssuePaymentAdjustments(context),
+    canFinalizeJobInvoices: canFinalizeJobInvoices(context),
     canManageCustodyEvents: canManageCustodyEvents(context),
     canManageInventory: canManageInventory(context),
     canManagePurchaseOrders: canManagePurchaseOrders(context),

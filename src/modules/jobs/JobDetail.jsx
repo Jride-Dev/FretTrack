@@ -65,6 +65,10 @@ function JobDetailWorkspace({
   canSendEmail = true,
   canScheduleEmail = false,
   canSendSms = true,
+  canManageJobCharges = canWrite,
+  canRecordJobPayments = canWrite,
+  canIssuePaymentAdjustments = canWrite,
+  canFinalizeJobInvoices = canWrite,
   entitlementMessage = '',
   shopProfile = null,
   membership = null,
@@ -243,16 +247,25 @@ function JobDetailWorkspace({
   }
 
   function updateDiscountField(event) {
+    if (!canManageJobCharges || draftJob.invoiceFinalizedAt) {
+      return;
+    }
     const { name, value } = event.target;
     patchJob(buildDiscountFieldPatch(draftJob, name, value));
   }
 
   function updateTaxField(event) {
+    if (!canManageJobCharges || draftJob.invoiceFinalizedAt) {
+      return;
+    }
     const { name, value, checked, type } = event.target;
     patchJob(buildTaxFieldPatch(draftJob, name, value, type, checked));
   }
 
   function useShopTaxRate() {
+    if (!canManageJobCharges || draftJob.invoiceFinalizedAt) {
+      return;
+    }
     patchJob(buildShopTaxRatePatch(draftJob, getShopDefaultTaxRate(shopSettings)));
   }
 
@@ -332,18 +345,26 @@ function JobDetailWorkspace({
   const {
     addPayment,
     addService,
+    changeInvoiceFinalization,
+    finalizationReason,
+    isChangingInvoiceState,
+    isRecordingPayment,
     payment,
-    removePayment,
     removeService,
     service,
+    setFinalizationReason,
     setPayment,
     setService,
-    updatePayment,
     updateService
   } = useJobDetailBillingActions({
+    canFinalizeJobInvoices,
+    canIssuePaymentAdjustments,
+    canManageJobCharges,
+    canRecordJobPayments,
     canWrite,
     draftJob,
     onNotice,
+    onRefresh,
     patchJob,
     saveDraftNow,
     services,
@@ -424,7 +445,7 @@ function JobDetailWorkspace({
     setPart,
     updatePart
   } = useJobInventoryParts({
-    canWrite,
+    canWrite: canWrite && canManageJobCharges && !draftJob.invoiceFinalizedAt,
     draftJob,
     isDirty,
     onRefresh,
@@ -530,6 +551,7 @@ function JobDetailWorkspace({
   const workSections = (
     <JobWorkSections
       canWrite={canWrite}
+      canManageJobCharges={canManageJobCharges && !draftJob.invoiceFinalizedAt}
       draftJob={draftJob}
       hasPendingWorkLog={hasPendingWorkLog}
       isSavingWorkLog={isSavingWorkLog}
@@ -553,22 +575,28 @@ function JobDetailWorkspace({
     <JobBillingSections
       canSendEmail={canSendEmail}
       canWrite={canWrite}
+      canManageJobCharges={canManageJobCharges && !draftJob.invoiceFinalizedAt}
+      canRecordJobPayments={canRecordJobPayments}
+      canIssuePaymentAdjustments={canIssuePaymentAdjustments}
+      canFinalizeJobInvoices={canFinalizeJobInvoices}
+      changeInvoiceFinalization={changeInvoiceFinalization}
       draftJob={draftJob}
+      finalizationReason={finalizationReason}
       inventoryParts={inventoryParts}
       inventorySearch={inventorySearch}
       isInventoryLoading={isInventoryLoading}
+      isChangingInvoiceState={isChangingInvoiceState}
+      isRecordingPayment={isRecordingPayment}
       onAddInventoryPart={addInventoryPart}
       onAddPart={addPart}
       onAddPayment={addPayment}
       onAddService={addService}
       onEmailInvoice={openInvoiceEmail}
       onRemovePart={removePart}
-      onRemovePayment={removePayment}
       onRemoveService={removeService}
       onSearchInventoryParts={searchInventoryParts}
       onUpdateDiscountField={updateDiscountField}
       onUpdatePart={updatePart}
-      onUpdatePayment={updatePayment}
       onUpdateService={updateService}
       onUpdateTaxField={updateTaxField}
       onUseShopTaxRate={useShopTaxRate}
@@ -579,6 +607,7 @@ function JobDetailWorkspace({
       service={service}
       services={services}
       setInventorySearch={setInventorySearch}
+      setFinalizationReason={setFinalizationReason}
       setPart={setPart}
       setPayment={setPayment}
       setService={setService}

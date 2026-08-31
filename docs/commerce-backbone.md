@@ -55,4 +55,8 @@ Updates and deletes are blocked by database triggers. Corrections should be ente
 
 ## Current Boundary
 
-This backbone is deliberately dormant until future modules use it. It does not replace the current job totals, payments array, parts rows, or trial workflows yet. The next step is to integrate one narrow flow at a time, starting with transaction creation around committed payments or work-order closeout.
+The first guarded work-order boundary now sits in front of payment recording and invoice finalization. Payment history is appended through `record_job_payment(...)`; technicians may record ordinary payments, while refunds and payment voids require an owner or admin. Existing payment rows are historical records and are no longer edited or removed in place.
+
+`set_job_invoice_finalization(...)` calculates a minor-unit charge and tax snapshot from the saved job, parts, and services on the server. A finalized invoice locks parts, services, discounts, and tax settings until an owner or admin reopens it with an audit reason. Later payments remain appendable because collecting a balance does not change the finalized charge snapshot.
+
+The older `transaction_events` and `payment_events` backbone is still not a general ledger and does not yet replace work-order payment storage. Estimate approval, processor-backed refunds, deeper tax profiles, and secure public invoice links remain separate follow-on slices.

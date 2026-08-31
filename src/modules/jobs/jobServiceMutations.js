@@ -180,6 +180,68 @@ export async function setJobAccountingVoid(jobId, voided, reason) {
   };
 }
 
+export async function recordJobPayment(jobId, payment, expectedUpdatedAt = null) {
+  if (!jobId || !payment?.id) {
+    throw new Error('A saved work order and payment request are required.');
+  }
+  if (!hasSupabaseConfig || !supabase) {
+    return null;
+  }
+
+  const amountMinor = Math.round(Number(payment.amount || 0) * 100);
+  const { data, error } = await supabase.rpc('record_job_payment', {
+    p_job_id: jobId,
+    p_payment_id: payment.id,
+    p_amount_minor: amountMinor,
+    p_payment_type: payment.type || 'payment',
+    p_method: payment.method || 'Other',
+    p_note: payment.note || '',
+    p_payment_date: payment.date || null,
+    p_expected_updated_at: expectedUpdatedAt || null
+  });
+
+  if (error) {
+    if (error.code === '40001') {
+      throw createJobSaveConflictError();
+    }
+    throw new Error(error.message || 'The payment could not be recorded.');
+  }
+
+  return {
+    payment: data?.payment || payment,
+    updatedAt: data?.updatedAt || expectedUpdatedAt,
+    replayed: Boolean(data?.replayed)
+  };
+}
+
+export async function setJobInvoiceFinalization(jobId, finalized, reason) {
+  if (!jobId) {
+    throw new Error('A work order is required.');
+  }
+  if (!hasSupabaseConfig || !supabase) {
+    throw new Error('Invoice finalization requires the secured FretTrack database.');
+  }
+
+  const { data, error } = await supabase.rpc('set_job_invoice_finalization', {
+    p_job_id: jobId,
+    p_finalize: Boolean(finalized),
+    p_reason: String(reason || '').trim()
+  });
+  if (error) {
+    throw new Error(error.message || 'The invoice finalization state could not be changed.');
+  }
+
+  const saved = Array.isArray(data) ? data[0] : data;
+  return {
+    invoiceFinalizedAt: saved?.invoice_finalized_at || null,
+    invoiceFinalizedBy: saved?.invoice_finalized_by || '',
+    invoiceSnapshot: saved?.invoice_snapshot || null,
+    invoiceRevision: Number(saved?.invoice_revision || 0),
+    invoiceFinalizationReason: saved?.invoice_finalization_reason || '',
+    updatedAt: saved?.updated_at || null
+  };
+}
+
 export async function ensureRemoteJob(job) {
   const activeShopId = getActiveShopIdFromModule(job.shopId);
   const normalizedJob = normalizeJobFromModule({
