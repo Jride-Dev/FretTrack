@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(27);
+select plan(28);
 
 select has_column('public', 'jobs', 'invoice_finalized_at', 'jobs record invoice finalization time');
 select has_column('public', 'jobs', 'invoice_snapshot', 'jobs store the server-calculated invoice snapshot');
@@ -121,6 +121,10 @@ select throws_like(
 select lives_ok(
   $$select public.record_job_payment('77000000-0000-4000-a000-000000000001', 'a7000000-0000-4000-a000-000000000004', 3800, 'payment', 'Card', 'Final payment', current_date, null)$$,
   'payments can still be appended after invoice finalization'
+);
+select lives_ok(
+  $$select public.record_job_payment('77000000-0000-4000-a000-000000000001', 'a7000000-0000-4000-a000-000000000005', 300, 'refund', 'Card', 'Post-finalization refund', current_date, null)$$,
+  'owner refunds can be appended after invoice finalization'
 );
 select lives_ok(
   $$select public.set_job_invoice_finalization('77000000-0000-4000-a000-000000000001', false, 'Customer requested charge correction')$$,

@@ -21,6 +21,7 @@ export default function useJobDetailBillingActions({
   canRecordJobPayments,
   canWrite,
   draftJob,
+  isDirty,
   onNotice,
   onRefresh,
   patchJob,
@@ -48,14 +49,17 @@ export default function useJobDetailBillingActions({
       reportCommerceError(null, 'Only a shop owner or admin can record refunds or payment voids.');
       return;
     }
+    if (isDirty) {
+      reportCommerceError(null, 'Save the work order changes before recording a payment or adjustment.');
+      return;
+    }
 
     setIsRecordingPayment(true);
     const paymentToRecord = { ...payment, id: crypto.randomUUID() };
     try {
-      const savedJob = await saveDraftNow(draftJob);
-      const result = await recordJobPayment(draftJob.id, paymentToRecord, savedJob?.updatedAt || draftJob.updatedAt);
+      const result = await recordJobPayment(draftJob.id, paymentToRecord, draftJob.updatedAt);
       if (!result) {
-        const localJob = buildAddPaymentJob(savedJob || draftJob, paymentToRecord, paymentToRecord.id);
+        const localJob = buildAddPaymentJob(draftJob, paymentToRecord, paymentToRecord.id);
         await saveDraftNow(localJob);
       } else {
         setDraftJob((current) => ({
@@ -70,10 +74,15 @@ export default function useJobDetailBillingActions({
           }
         }));
         setIsDirty(false);
-        await onRefresh?.();
       }
       setPayment(createEmptyPayment());
       onNotice?.({ type: 'success', message: paymentToRecord.type === 'payment' ? 'Payment recorded.' : 'Payment adjustment recorded.' });
+      try {
+        await onRefresh?.();
+      } catch (refreshError) {
+        console.warn('Payment was recorded, but the work-order refresh failed.', refreshError);
+        onNotice?.({ type: 'warning', message: 'Payment recorded. Refresh the work order to reconcile the latest balance.' });
+      }
     } catch (error) {
       reportCommerceError(error, 'The payment could not be recorded.');
     } finally {
