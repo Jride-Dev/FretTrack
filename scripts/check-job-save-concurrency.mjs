@@ -50,12 +50,12 @@ assert.match(
 );
 assert.match(
   billingActions,
-  /saveDraftNow\(nextJob\)\.catch\(reportPaymentSaveError\)/,
-  'Immediate and delayed payment conflicts must be routed to the user-facing notice handler.'
+  /async function addPayment[\s\S]*?await saveDraftNow\(draftJob\)[\s\S]*?await recordJobPayment\([\s\S]*?catch \(error\) \{\s*reportCommerceError\(error, 'The payment could not be recorded\.'\);/,
+  'Payment conflicts must be caught at the guarded payment boundary and routed to the user-facing notice handler.'
 );
 assert.match(
   billingActions,
-  /onNotice\?\.\(\{[\s\S]*?type: 'error',[\s\S]*?error\?\.message/,
+  /function reportCommerceError[\s\S]*?onNotice\?\.\(\{ type: 'error', message: error\?\.message \|\| fallbackMessage \}\)/,
   'Payment save failures must show the underlying conflict message.'
 );
 
