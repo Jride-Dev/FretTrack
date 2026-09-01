@@ -20,6 +20,8 @@ Inventory receiving and purchase-order work remain online-only until a future of
 
 Inventory parts may optionally describe how a vendor sells the item with a Purchase Unit and a positive whole-number Units per Purchase Unit value. Existing parts default to Each and 1. Purchase-order quantities and partial receipts are entered in purchase units, while stock adjustments and job usage remain individual inventory units.
 
+Purchase entry separates three values: the number of complete packages ordered, the number of individual items inside one package, and the vendor price for one whole package. For example, one five-pack priced at $19.40 is entered as 1 Pack, 5 items inside, and $19.40 for the whole Pack. The purchase-order vendor charge remains $19.40 and FretTrack derives a $3.88 inventory-each valuation. The exact package price is stored separately so it is not reconstructed by multiplying a rounded per-item cost.
+
 Each purchase-order line and receipt stores the conversion used at the time of the transaction. Editing a part from a 12-pack to a 10-pack later does not reinterpret an older order or receipt. Receiving two saved 12-packs adds 24 individual units to stock.
 
 ## Shop Inventory Presets

@@ -11,6 +11,7 @@ export const EMPTY_PART_FORM = {
   partNumber: '',
   purchaseUnit: 'each',
   unitsPerPurchaseUnit: '1',
+  purchaseUnitCost: '',
   unitCost: '',
   retailPrice: '',
   quantityOnHand: '0',

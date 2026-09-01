@@ -3,9 +3,13 @@ export function withAuthoritativeStockFields(partForm, part) {
     return partForm;
   }
 
-  return {
+  const nextForm = {
     ...partForm,
     quantityOnHand: String(part.quantityOnHand ?? 0),
     unitCost: String(part.unitCost ?? '')
   };
+  if (part.purchaseUnitCost !== null && part.purchaseUnitCost !== undefined) {
+    nextForm.purchaseUnitCost = String(part.purchaseUnitCost);
+  }
+  return nextForm;
 }

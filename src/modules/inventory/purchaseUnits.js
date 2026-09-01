@@ -42,3 +42,17 @@ export function purchaseConversionSummary(quantity, purchaseUnit, unitsPerPurcha
   }
   return `${quantity} ${purchaseUnitLabel(purchaseUnit, quantity)} × ${unitsPerPurchaseUnit} Each = ${inventoryQuantity} inventory units`;
 }
+
+export function purchaseUnitCostBreakdown(quantity, unitsPerPurchaseUnit, purchaseUnitCost) {
+  const purchaseQuantity = Number(quantity);
+  const conversion = Number(unitsPerPurchaseUnit);
+  const cost = Number(purchaseUnitCost);
+  if (!Number.isInteger(purchaseQuantity) || purchaseQuantity < 0 || !validUnitsPerPurchaseUnit(conversion) || !Number.isFinite(cost) || cost < 0) {
+    return null;
+  }
+  return {
+    inventoryQuantity: purchaseQuantity * conversion,
+    inventoryUnitCost: cost / conversion,
+    lineTotal: purchaseQuantity * cost
+  };
+}

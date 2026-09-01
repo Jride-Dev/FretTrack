@@ -179,6 +179,7 @@ export async function createPurchaseOrder(shopId = getCurrentShopId(), payload =
       vendorSku: cleanText(item.vendorSku || item.vendor_sku),
       purchaseUnit: normalizePurchaseUnit(item.purchaseUnit || item.purchase_unit),
       unitsPerPurchaseUnit,
+      purchaseUnitCost: moneyNumber(item.unitCost ?? item.unit_cost),
       unitCost: moneyNumber(item.unitCost ?? item.unit_cost) / unitsPerPurchaseUnit,
       retailPrice: 0,
       quantityOnHand: 0,
