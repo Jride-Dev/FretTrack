@@ -21,7 +21,7 @@ Use this checklist for the stable Operational Shop Release. It supplements autom
 
 ## Product smoke
 
-1. Account approval and first-shop bootstrap.
+1. Self-service registration, email confirmation, and first-shop bootstrap.
 2. Trial, Shop, and Pro plan labels and write boundaries.
 3. Guitar, Amplifier, and Keyboard benches plus the shared Parts &amp; Payments workspace.
 4. Customer creation, work-order creation, stale-save protection, work logs, parts, services, and payments.

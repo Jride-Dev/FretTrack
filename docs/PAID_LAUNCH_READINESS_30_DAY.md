@@ -10,9 +10,9 @@ This file began as a 30-day launch plan. Its recovery, billing, legal-copy, and 
 
 The Shop and Pro billing foundation is implemented and sandbox-validated. Checkout and Billing Portal are authenticated, the webhook verifies Stripe signatures, subscription state is server-owned, event claims are atomic and retryable, and annual lifecycle validation covers duplicates and out-of-order events.
 
-The approved catalog is Shop at $29.99 monthly or $299.99 yearly and Pro at $39.99 monthly or $399.99 yearly. New approved workspaces receive a non-converting 14-day Pro trial.
+The approved catalog is Shop at $29.99 monthly or $299.99 yearly and Pro at $39.99 monthly or $399.99 yearly. New email-confirmed users can create one workspace without manual approval and receive a non-converting 14-day Pro trial.
 
-Production enrollment must remain controlled until the first live subscription completes the live smoke checks below. This is an operational rollout safeguard, not beta product branding.
+Production enrollment is self-service. The first live subscription smoke checks remain part of operational monitoring rather than an enrollment gate.
 
 ## Completed foundation
 

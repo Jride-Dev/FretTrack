@@ -1,6 +1,6 @@
-# Account Access Approval
+# Account Registration and Historical Approval Records
 
-FretTrack uses controlled account approval before a new authenticated user can create or enter a shop workspace. Approval and the 14-day Pro trial are separate systems: approval controls account entry, while the trial or paid subscription controls shop features and write access.
+FretTrack now uses self-service registration. A new user creates an account, confirms the email address, creates one shop workspace, and immediately begins the standard non-converting 14-day Pro trial. No manual account approval is required.
 
 ## Flow
 
@@ -9,11 +9,12 @@ FretTrack uses controlled account approval before a new authenticated user can c
 - Pending or rejected users cannot bootstrap a shop or load protected shop data.
 - An operator approves or rejects the request from the internal Operator Dashboard.
 - Approval email delivery uses a durable claim, provider idempotency, and guarded finalization so retries do not send duplicate approval messages.
-- An approved, email-confirmed user can create the first shop. The bootstrap RPC atomically creates the shop profile, owner membership, and default non-converting 14-day Pro trial.
+- An email-confirmed user can create the first shop. The bootstrap RPC atomically creates the shop profile, owner membership, and default non-converting 14-day Pro trial.
+- One owner account cannot repeatedly create new trial workspaces.
 
 ## Compatibility identifiers
 
-Database objects and deployed function slugs retain names such as `beta_access_requests`, `submit_beta_access_request`, `notify-beta-access-request`, and `notify-beta-approval`. These are stable internal compatibility identifiers, not customer-facing product terminology. Renaming them would require a separate schema and deployment migration with no user benefit.
+Database objects and deployed function slugs retain names such as `beta_access_requests`, `submit_beta_access_request`, `notify-beta-access-request`, and `notify-beta-approval` for historical compatibility and audit records. They are no longer part of normal registration.
 
 ## Security boundary
 
@@ -25,7 +26,7 @@ Database objects and deployed function slugs retain names such as `beta_access_r
 
 ## Verification
 
-- A new user remains pending before approval.
+- A new user must confirm the signup email before creating a shop.
 - Pending users cannot load shop data or create a workspace.
 - The operator can approve the request.
 - Approval notification retries create at most one provider delivery.

@@ -10,36 +10,6 @@ import {
   isReadOnlyStatus
 } from '../modules/billing/entitlementService';
 
-export function PendingApprovalScreen({ betaAccess, email, onRetry, onSignOut }) {
-  const isRejected = betaAccess?.status === 'rejected';
-  const message = isRejected
-    ? 'Your FretTrack access request is not active. Contact support if you believe this is a mistake.'
-    : 'Your FretTrack access request has been received. Approval is required before shop setup unlocks.';
-
-  return (
-    <main className="app auth-shell">
-      <section className="panel auth-panel">
-        <h1>{isRejected ? 'Account Access Not Active' : 'Pending Approval'}</h1>
-        <p>{message}</p>
-        {!isRejected && (
-          <p className="muted-text">
-            You do not need to create a shop yet. Watch your email for the approval message, and check your spam or junk folder if it does not arrive.
-          </p>
-        )}
-        <p className="muted-text">{email || betaAccess?.email}</p>
-        <div className="mode-actions">
-          <button type="button" className="primary-action" onClick={onRetry}>
-            Retry Access Check
-          </button>
-          <button type="button" className="button-tertiary" onClick={onSignOut}>
-            Sign Out
-          </button>
-        </div>
-      </section>
-    </main>
-  );
-}
-
 export function InternalCurrentAccessPanel({ betaAccess, canWrite, entitlementSnapshot, isOperator, membership, permissions = {}, session }) {
   if (!canAccessOperatorDashboard({ isOperator })) {
     return null;

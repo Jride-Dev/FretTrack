@@ -20,7 +20,7 @@ Review this file before every production deploy and update it after app, public-
 - FretTrack is operated by Jeffrey Russell d/b/a Torrance Guitar Repair.
 - Shop is $29.99 monthly or $299.99 yearly.
 - Pro is $39.99 monthly or $399.99 yearly.
-- New approved workspaces receive a non-converting 14-day Pro trial with no card required.
+- New email-confirmed users can create one workspace without manual approval; it receives a non-converting 14-day Pro trial with no card required.
 - Production Stripe account: `acct_1U8kPt2mvRJalgin`.
 - Production webhook: `we_1U8lOW2mvRJalgincc2N7SPn`.
 - Production customer portal configuration: `bpc_1U8lui2mvRJalgineCPlaGoc`.
