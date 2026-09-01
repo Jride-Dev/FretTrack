@@ -131,7 +131,7 @@ export function buildTaxFieldPatch(currentJob, fieldName, fieldValue, inputType 
       tax: {
         ...(currentJob.techDetails.tax || {}),
         [fieldName]: inputType === 'checkbox' ? checked : fieldValue,
-        ...(fieldName === 'salesTaxRate' ? { rateSource: 'job' } : {})
+        ...(fieldName === 'salesTaxRate' ? { rateSource: 'job', calculationMode: 'manual' } : {})
       }
     }
   };
@@ -144,7 +144,8 @@ export function buildShopTaxRatePatch(currentJob, salesTaxRate) {
       tax: {
         ...(currentJob.techDetails.tax || {}),
         salesTaxRate,
-        rateSource: 'shop'
+        rateSource: 'shop',
+        calculationMode: 'manual'
       }
     }
   };

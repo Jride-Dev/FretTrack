@@ -715,9 +715,14 @@ function getStringCountSelectValue(form) {
 }
 
 function getDefaultTaxSettings(shopProfile = {}) {
+  const calculationMode = shopProfile?.taxCalculationMode === 'manual' ? 'manual' : 'disabled';
   return {
+    calculationMode,
+    rateSource: 'shop',
+    profileId: shopProfile?.defaultTaxProfileId || '',
+    profileRevision: Number(shopProfile?.taxProfileRevision || 1),
     state: shopProfile?.taxState || '',
-    salesTaxRate: shopProfile?.defaultTaxRate ?? shopProfile?.salesTaxRate ?? '',
+    salesTaxRate: calculationMode === 'manual' ? shopProfile?.defaultTaxRate ?? shopProfile?.salesTaxRate ?? '' : '0',
     taxLabel: shopProfile?.taxLabel || 'Sales Tax',
     taxRegistrationNumber: shopProfile?.taxRegistrationNumber || '',
     currencyCode: shopProfile?.currencyCode || 'USD',
@@ -725,8 +730,8 @@ function getDefaultTaxSettings(shopProfile = {}) {
     dateFormat: shopProfile?.dateFormat || '',
     measurementSystem: shopProfile?.measurementSystem || getDefaultMeasurementPreferences(shopProfile || {}).measurementSystem,
     lengthUnit: shopProfile?.lengthUnit || getDefaultMeasurementPreferences(shopProfile || {}).lengthUnit,
-    taxableParts: shopProfile?.taxablePartsDefault !== false,
-    taxableServices: Boolean(shopProfile?.taxableServicesDefault)
+    taxableParts: calculationMode === 'manual' && shopProfile?.taxablePartsDefault !== false,
+    taxableServices: calculationMode === 'manual' && Boolean(shopProfile?.taxableServicesDefault)
   };
 }
 

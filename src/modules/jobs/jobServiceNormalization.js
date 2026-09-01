@@ -86,6 +86,9 @@ const defaultTechDetails = {
     }
   },
   tax: {
+    calculationMode: 'disabled',
+    profileId: '',
+    profileRevision: 0,
     state: '',
     salesTaxRate: '',
     taxLabel: 'Sales Tax',
