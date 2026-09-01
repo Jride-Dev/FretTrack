@@ -5,8 +5,11 @@ alter table public.shop_profiles
 
 update public.shop_profiles
 set tax_calculation_mode = 'manual'
-where coalesce(sales_tax_rate, 0) > 0
-   or nullif(btrim(coalesce(tax_registration_number, '')), '') is not null;
+where (
+    coalesce(sales_tax_rate, 0) > 0
+    or nullif(btrim(coalesce(tax_registration_number, '')), '') is not null
+  )
+  and nullif(btrim(coalesce(tax_state, '')), '') is not null;
 
 do $$
 begin
