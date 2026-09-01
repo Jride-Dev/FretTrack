@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import {
   inventoryUnitsForPurchaseQuantity,
   purchaseConversionSummary,
+  purchaseUnitCostBreakdown,
   validUnitsPerPurchaseUnit
 } from '../src/modules/inventory/purchaseUnits.js';
 
@@ -27,6 +28,11 @@ assert.equal(
   purchaseConversionSummary(2, 'pack', 5),
   '2 Packs × 5 Each = 10 inventory units',
   'The purchase-order conversion summary must be explicit.'
+);
+assert.deepEqual(
+  purchaseUnitCostBreakdown(1, 2, 7.71),
+  { inventoryQuantity: 2, inventoryUnitCost: 3.855, lineTotal: 7.71 },
+  'One $7.71 two-pack must cost $3.855 per inventory each without doubling the PO line.'
 );
 for (const invalid of [0, -1, 1.5, Number.NaN, 'not-a-number']) {
   assert.equal(validUnitsPerPurchaseUnit(invalid), false, `Invalid conversion ${String(invalid)} must be rejected.`);
@@ -58,6 +64,9 @@ assert.match(partEditor, /Units per Purchase Unit/i, 'Inventory must expose conv
 assert.match(purchaseOrderEditor, /Purchase units ordered/i, 'PO details must distinguish purchase quantities.');
 assert.match(purchaseOrderEditor, /Inventory units ordered/i, 'PO details must show converted inventory quantities.');
 assert.match(purchaseOrderEditor, /Receive purchase quantity/i, 'Partial receiving must be entered in purchase units.');
+assert.match(purchaseOrderEditor, /How many \{purchaseUnitLabel\(item\.purchaseUnit, 2\)\}\?/, 'The PO editor must ask for package count, not item count.');
+assert.match(purchaseOrderEditor, /Price for one whole \{purchaseUnitLabel\(item\.purchaseUnit\)\}/, 'The PO editor must ask for the whole-package vendor price.');
+assert.match(purchaseOrderEditor, /Vendor charge:/, 'The PO editor must preview the actual vendor line charge.');
 assert.match(reportsPage, /Purchase Qty/i, 'Reports must distinguish purchase quantities.');
 assert.match(reportsPage, /Inventory Qty/i, 'Reports must show converted inventory quantities.');
 

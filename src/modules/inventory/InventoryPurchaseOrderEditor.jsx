@@ -1,7 +1,7 @@
 import { money } from '../../shared/utils/money';
 import { formatInventoryDate, formatInventoryStatus } from './inventoryFormatting.js';
 import { purchaseOrderTotals, remainingForPurchaseOrderItem } from './purchaseOrderCalculations.js';
-import { PURCHASE_UNIT_OPTIONS, purchaseConversionSummary, purchaseUnitLabel } from './purchaseUnits.js';
+import { PURCHASE_UNIT_OPTIONS, purchaseConversionSummary, purchaseUnitCostBreakdown, purchaseUnitLabel } from './purchaseUnits.js';
 
 export default function InventoryPurchaseOrderEditor({
   purchaseOrderForm,
@@ -76,17 +76,27 @@ export default function InventoryPurchaseOrderEditor({
                 </select>
                 <input disabled={!canWrite} placeholder="Description" value={item.description} onChange={(event) => onUpdateItem(index, 'description', event.target.value)} />
                 <input disabled={!canWrite} placeholder="Vendor UPC" value={item.vendorSku} onChange={(event) => onUpdateItem(index, 'vendorSku', event.target.value)} />
-                <input aria-label="Purchase quantity" disabled={!canWrite} type="number" min="1" step="1" placeholder="Purchase qty" value={item.quantityOrdered} onChange={(event) => onUpdateItem(index, 'quantityOrdered', event.target.value)} />
+                <label className="purchase-order-compact-field">
+                  <span>How many {purchaseUnitLabel(item.purchaseUnit, 2)}?</span>
+                  <input aria-label="Packages ordered" disabled={!canWrite} type="number" min="1" step="1" placeholder="Usually 1" value={item.quantityOrdered} onChange={(event) => onUpdateItem(index, 'quantityOrdered', event.target.value)} />
+                </label>
                 <select aria-label="Purchase unit" disabled={!canWrite || Boolean(item.partId)} value={item.purchaseUnit} onChange={(event) => onUpdateItem(index, 'purchaseUnit', event.target.value)}>
                   {PURCHASE_UNIT_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
-                <input aria-label="Units per purchase unit" disabled={!canWrite || Boolean(item.partId)} type="number" min="1" max="999999" step="1" placeholder="Units each" value={item.unitsPerPurchaseUnit} onChange={(event) => onUpdateItem(index, 'unitsPerPurchaseUnit', event.target.value)} />
-                <input aria-label="Cost per purchase unit" disabled={!canWrite} type="number" min="0" step="0.01" placeholder={`Cost per ${purchaseUnitLabel(item.purchaseUnit)}`} value={item.unitCost} onChange={(event) => onUpdateItem(index, 'unitCost', event.target.value)} />
+                <label className="purchase-order-compact-field">
+                  <span>Items inside one {purchaseUnitLabel(item.purchaseUnit)}</span>
+                  <input aria-label="Items inside one package" disabled={!canWrite || Boolean(item.partId)} type="number" min="1" max="999999" step="1" placeholder="Pack size, such as 5" value={item.unitsPerPurchaseUnit} onChange={(event) => onUpdateItem(index, 'unitsPerPurchaseUnit', event.target.value)} />
+                </label>
+                <label className="purchase-order-compact-field">
+                  <span>Price for one whole {purchaseUnitLabel(item.purchaseUnit)}</span>
+                  <input aria-label="Whole package price" disabled={!canWrite} type="number" min="0" step="0.01" placeholder={`Vendor price for the ${purchaseUnitLabel(item.purchaseUnit)}`} value={item.unitCost} onChange={(event) => onUpdateItem(index, 'unitCost', event.target.value)} />
+                </label>
                 {canWrite && <button type="button" onClick={() => onRemoveItem(index)}>Remove</button>}
               </div>
               <small className="purchase-conversion-summary">{purchaseConversionSummary(item.quantityOrdered || 0, item.purchaseUnit, item.unitsPerPurchaseUnit)}</small>
+              <PurchaseCostSummary item={item} moneyOptions={moneyOptions} />
             </div>
           ))}
         </div>
@@ -161,6 +171,27 @@ export default function InventoryPurchaseOrderEditor({
       )}
     </div>
   );
+}
+
+function PurchaseCostSummary({ item, moneyOptions }) {
+  const breakdown = purchaseUnitCostBreakdown(item.quantityOrdered || 0, item.unitsPerPurchaseUnit, item.unitCost);
+  if (!breakdown || item.unitCost === '') {
+    return null;
+  }
+  return (
+    <small className="purchase-cost-summary">
+      Order: {item.quantityOrdered} {purchaseUnitLabel(item.purchaseUnit, Number(item.quantityOrdered))}, {item.unitsPerPurchaseUnit} items in each ({breakdown.inventoryQuantity} inventory items total). Vendor charge: {money(breakdown.lineTotal, moneyOptions)}. Calculated inventory cost: {preciseMoney(breakdown.inventoryUnitCost, moneyOptions)} each.
+    </small>
+  );
+}
+
+function preciseMoney(value, options = {}) {
+  return new Intl.NumberFormat(options.locale || 'en-US', {
+    style: 'currency',
+    currency: options.currency || 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4
+  }).format(Number(value) || 0);
 }
 
 function PurchaseOrderSummary({ purchaseOrder, vendorsById, moneyOptions }) {

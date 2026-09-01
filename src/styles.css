@@ -3974,6 +3974,18 @@ th.internal-only {
   color: var(--text-muted);
 }
 
+.purchase-cost-summary {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.purchase-order-compact-field {
+  display: grid;
+  font-size: 0.72rem;
+  gap: 3px;
+  margin: 0;
+}
+
 .inventory-receive-list,
 .inventory-history-grid {
   display: grid;

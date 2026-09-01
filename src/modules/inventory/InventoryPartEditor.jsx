@@ -79,7 +79,6 @@ export default function InventoryPartEditor({
           <label>Barcode<input disabled={!canWrite} value={partForm.barcodeCode} onChange={(event) => onPartFormChange('barcodeCode', event.target.value)} /></label>
           <label>Manufacturer<input disabled={!canWrite} value={partForm.manufacturer} onChange={(event) => onPartFormChange('manufacturer', event.target.value)} /></label>
           <label>Manufacturer UPC<input disabled={!canWrite} value={partForm.sku} onChange={(event) => onPartFormChange('sku', event.target.value)} /></label>
-          {canWrite && <label>Unit Cost (Inventory Each)<input type="number" min="0" step="0.01" value={partForm.unitCost} onChange={(event) => onPartFormChange('unitCost', event.target.value)} /></label>}
           <label>Purchase Unit
             <select disabled={!canWrite} value={partForm.purchaseUnit} onChange={(event) => onPartFormChange('purchaseUnit', event.target.value)}>
               {PURCHASE_UNIT_OPTIONS.map((option) => (
@@ -98,6 +97,12 @@ export default function InventoryPartEditor({
               onChange={(event) => onPartFormChange('unitsPerPurchaseUnit', event.target.value)}
             />
           </label>
+          {canWrite && (
+            <label>Price for One Whole {purchaseUnitLabel(partForm.purchaseUnit)}
+              <input type="number" min="0" step="0.01" value={partForm.purchaseUnitCost} onChange={(event) => onPartFormChange('purchaseUnitCost', event.target.value)} />
+              <small>Enter the vendor price for the complete package. FretTrack calculates the inventory-each cost.</small>
+            </label>
+          )}
           <label>Retail Price<input disabled={!canWrite} type="number" min="0" step="0.01" value={partForm.retailPrice} onChange={(event) => onPartFormChange('retailPrice', event.target.value)} /></label>
           <label>QTY On Hand<input disabled={!canWrite} type="number" step="1" value={partForm.quantityOnHand} onChange={(event) => onPartFormChange('quantityOnHand', event.target.value)} /></label>
           <label>Reorder Point<input disabled={!canWrite} type="number" min="0" step="1" value={partForm.reorderPoint} onChange={(event) => onPartFormChange('reorderPoint', event.target.value)} /></label>
