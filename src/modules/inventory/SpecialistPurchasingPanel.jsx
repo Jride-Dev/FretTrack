@@ -8,7 +8,7 @@ import {
   listParts,
   listVendors
 } from './inventoryService.js';
-import { PURCHASE_UNIT_OPTIONS, purchaseConversionSummary } from './purchaseUnits.js';
+import { PURCHASE_UNIT_OPTIONS, purchaseConversionSummary, purchaseUnitCostBreakdown, purchaseUnitLabel } from './purchaseUnits.js';
 
 function newForm() {
   return {
@@ -218,7 +218,7 @@ export default function SpecialistPurchasingPanel({
           <label>Vendor SKU
             <input value={form.vendorSku} onChange={(event) => updateForm('vendorSku', event.target.value)} disabled={!canWrite || isSaving} />
           </label>
-          <label>Purchase Quantity
+          <label>How Many {purchaseUnitLabel(form.purchaseUnit, 2)}?
             <input type="number" min="1" max="999999" step="1" value={form.quantityOrdered} onChange={(event) => updateForm('quantityOrdered', event.target.value)} disabled={!canWrite || isSaving} />
           </label>
           <label>Purchase Unit
@@ -226,13 +226,13 @@ export default function SpecialistPurchasingPanel({
               {PURCHASE_UNIT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>
-          <label>Units per Purchase Unit
+          <label>Items Inside One {purchaseUnitLabel(form.purchaseUnit)}
             <input type="number" min="1" max="999999" step="1" value={form.unitsPerPurchaseUnit} onChange={(event) => updateForm('unitsPerPurchaseUnit', event.target.value)} disabled={!canWrite || isSaving || Boolean(form.partId)} />
           </label>
           <label>Quantity for This Job
             <input type="number" min="1" max="999999" step="1" value={form.jobQuantity} onChange={(event) => updateForm('jobQuantity', event.target.value)} disabled={!canWrite || isSaving || Boolean(form.keyboardPartRequestId)} />
           </label>
-          <label>Cost per Purchase Unit
+          <label>Price for One Whole {purchaseUnitLabel(form.purchaseUnit)}
             <input type="number" min="0" step="0.01" value={form.unitCost} onChange={(event) => updateForm('unitCost', event.target.value)} disabled={!canWrite || isSaving} />
           </label>
           <label>Customer Price per Unit
@@ -245,7 +245,7 @@ export default function SpecialistPurchasingPanel({
             <input value={form.notes} onChange={(event) => updateForm('notes', event.target.value)} disabled={!canWrite || isSaving} placeholder={`For work order ${job.jobNumber || ''}`} />
           </label>
         </div>
-        <p className="muted-text">{purchaseConversionSummary(form.quantityOrdered, form.purchaseUnit, form.unitsPerPurchaseUnit)}. {form.jobQuantity || 0} will be reserved for this work order after receipt.</p>
+        <p className="muted-text">{purchaseConversionSummary(form.quantityOrdered, form.purchaseUnit, form.unitsPerPurchaseUnit)}. {specialistCostSummary(form, moneyOptions)} {form.jobQuantity || 0} will be reserved for this work order after receipt.</p>
         {canWrite && <button type="submit" disabled={isSaving || isLoading || !vendors.length}>{isSaving ? 'Working…' : 'Create Linked Purchase Order'}</button>}
       </form>
 
@@ -270,4 +270,15 @@ export default function SpecialistPurchasingPanel({
       </div>
     </section>
   );
+}
+
+function specialistCostSummary(form, moneyOptions) {
+  const breakdown = purchaseUnitCostBreakdown(form.quantityOrdered, form.unitsPerPurchaseUnit, form.unitCost);
+  if (!breakdown || form.unitCost === '') {
+    return '';
+  }
+  const perEach = new Intl.NumberFormat(moneyOptions.locale || 'en-US', {
+    style: 'currency', currency: moneyOptions.currency || 'USD', minimumFractionDigits: 2, maximumFractionDigits: 4
+  }).format(breakdown.inventoryUnitCost);
+  return `Order: ${form.quantityOrdered} ${purchaseUnitLabel(form.purchaseUnit, Number(form.quantityOrdered))}, ${form.unitsPerPurchaseUnit} items in each (${breakdown.inventoryQuantity} inventory items total). Vendor charge: ${money(breakdown.lineTotal, moneyOptions)}. Calculated inventory cost: ${perEach} each.`;
 }

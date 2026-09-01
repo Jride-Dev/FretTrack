@@ -6,6 +6,7 @@ This file tracks product, reliability, security, and operational changes by rele
 
 ## Unreleased
 
+- Corrected vendor-package purchasing so staff enter the number of packages, the items inside one package, and the price of one whole package. FretTrack now preserves that exact package price separately, previews the actual vendor charge, and derives the inventory-each valuation without multiplying a pack price by its contents.
 - Reduced `InventoryPage.jsx` from a 953-line controller to a focused composition surface backed by separate data/history, part/stock, and vendor/purchase-order controller hooks, including stale-safe selected-part history loading.
 - Reduced `App.jsx` from 1,117 to 838 lines by moving session restoration, approval/operator checks, stale-safe shop bootstrap, first-shop creation, shop switching, profile refresh, and sign-out cleanup into `useSessionShopBootstrap.js`.
 - Reduced `JobDetail.jsx` from 926 to 669 lines by extracting Work Note save/retry protection, photo upload/edit coordination, and message/document/timeline coordination into focused hooks, including stale-safe timeline refreshes.

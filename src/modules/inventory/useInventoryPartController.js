@@ -133,6 +133,7 @@ export default function useInventoryPartController({
       partNumber: part.partNumber || '',
       purchaseUnit: part.purchaseUnit || 'each',
       unitsPerPurchaseUnit: String(part.unitsPerPurchaseUnit || 1),
+      purchaseUnitCost: String(part.purchaseUnitCost ?? ''),
       unitCost: String(part.unitCost ?? ''),
       retailPrice: String(part.retailPrice ?? ''),
       quantityOnHand: String(part.quantityOnHand ?? 0),

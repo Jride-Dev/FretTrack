@@ -30,6 +30,9 @@ export function toDbPart(shopId, payload = {}) {
   if (!validUnitsPerPurchaseUnit(unitsPerPurchaseUnit)) {
     throw new Error('Units per purchase unit must be a whole number of at least 1.');
   }
+  const rawPurchaseUnitCost = payload.purchaseUnitCost ?? payload.purchase_unit_cost;
+  const hasPurchaseUnitCost = rawPurchaseUnitCost !== undefined && rawPurchaseUnitCost !== null && String(rawPurchaseUnitCost).trim() !== '';
+  const purchaseUnitCost = hasPurchaseUnitCost ? moneyNumber(rawPurchaseUnitCost) : null;
   return {
     shop_id: shopId,
     vendor_id: cleanText(payload.vendorId || payload.vendor_id) || null,
@@ -44,7 +47,10 @@ export function toDbPart(shopId, payload = {}) {
     part_number: cleanText(payload.partNumber || payload.part_number) || null,
     purchase_unit: normalizePurchaseUnit(payload.purchaseUnit || payload.purchase_unit),
     units_per_purchase_unit: unitsPerPurchaseUnit,
-    unit_cost: moneyNumber(payload.unitCost ?? payload.unit_cost),
+    purchase_unit_cost: purchaseUnitCost,
+    unit_cost: purchaseUnitCost === null
+      ? moneyNumber(payload.unitCost ?? payload.unit_cost)
+      : purchaseUnitCost / unitsPerPurchaseUnit,
     retail_price: moneyNumber(payload.retailPrice ?? payload.retail_price),
     quantity_on_hand: integerNumber(payload.quantityOnHand ?? payload.quantity_on_hand),
     reorder_point: integerNumber(payload.reorderPoint ?? payload.reorder_point),
@@ -56,6 +62,8 @@ export function toDbPart(shopId, payload = {}) {
 }
 
 export function fromDbPart(row = {}) {
+  const unitsPerPurchaseUnit = integerNumber(row.units_per_purchase_unit, 1);
+  const unitCost = moneyNumber(row.unit_cost);
   return {
     id: row.id,
     shopId: row.shop_id,
@@ -71,8 +79,11 @@ export function fromDbPart(row = {}) {
     manufacturer: row.manufacturer || '',
     partNumber: row.part_number || '',
     purchaseUnit: normalizePurchaseUnit(row.purchase_unit),
-    unitsPerPurchaseUnit: integerNumber(row.units_per_purchase_unit, 1),
-    unitCost: moneyNumber(row.unit_cost),
+    unitsPerPurchaseUnit,
+    purchaseUnitCost: row.purchase_unit_cost === null || row.purchase_unit_cost === undefined
+      ? unitCost * unitsPerPurchaseUnit
+      : moneyNumber(row.purchase_unit_cost),
+    unitCost,
     retailPrice: moneyNumber(row.retail_price),
     quantityOnHand: integerNumber(row.quantity_on_hand),
     reorderPoint: integerNumber(row.reorder_point),

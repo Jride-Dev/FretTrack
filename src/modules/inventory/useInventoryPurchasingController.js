@@ -85,6 +85,7 @@ export default function useInventoryPurchasingController({
           const matchedPart = parts.find((part) => part.id === value);
           const unitsPerPurchaseUnit = matchedPart?.unitsPerPurchaseUnit || 1;
           const inventoryUnitCost = matchedPart?.lastCost ?? matchedPart?.unitCost;
+          const purchaseUnitCost = matchedPart?.purchaseUnitCost;
           return {
             ...item,
             partId: value,
@@ -92,9 +93,11 @@ export default function useInventoryPurchasingController({
             vendorSku: matchedPart?.vendorSku || item.vendorSku,
             purchaseUnit: matchedPart?.purchaseUnit || 'each',
             unitsPerPurchaseUnit: String(unitsPerPurchaseUnit),
-            unitCost: inventoryUnitCost === null || inventoryUnitCost === undefined
-              ? item.unitCost
-              : String(Number(inventoryUnitCost) * unitsPerPurchaseUnit)
+            unitCost: purchaseUnitCost !== null && purchaseUnitCost !== undefined
+              ? String(purchaseUnitCost)
+              : inventoryUnitCost === null || inventoryUnitCost === undefined
+                ? item.unitCost
+                : String(Number(inventoryUnitCost) * unitsPerPurchaseUnit)
           };
         }
         return { ...item, [field]: value };
