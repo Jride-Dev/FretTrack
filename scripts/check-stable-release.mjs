@@ -71,7 +71,8 @@ for (const [label, text] of publicReleaseSources) {
   assert.doesNotMatch(text, /\bbeta\b|\btesters?\b|workflow testing|testing checklist/i, `${label} still exposes retired pre-release messaging.`);
 }
 
-assert.match(landingPage, /Request Access/);
+assert.match(landingPage, /Start Free 14-Day Trial/);
+assert.doesNotMatch(landingPage, /Request Access/);
 assert.match(landingPage, /Release Notes/);
 assert.match(landingPage, /AmpTrack and MidiTrack add-on modules(?: that)? are planned later/i);
 assert.doesNotMatch(landingPage, /testing-checklist|workflow-testing|beta-tester/i);

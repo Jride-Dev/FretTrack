@@ -1170,10 +1170,10 @@ function landingPage() {
           <p class="hero-subtitle">Repair shop workflow from intake to pickup.</p>
           <p class="hero-copy">A focused operations workspace for guitar, bass, amplifier, and keyboard repair shops: customers, work orders, specialist bench records, inventory, scheduling, customer communication, billing, and job history.</p>
           <div class="hero-actions">
-            <a class="button primary" href="#application-modal" id="open-application">Request Access</a>
+            <a class="button primary" href="${APP_URL}/?signup=1">Start Free 14-Day Trial</a>
             <a class="button secondary" href="${APP_URL}">Open App Login</a>
           </div>
-          <p class="hero-note">Stable release 0.3.1 is available. Controlled workspace access is open, and Shop and Pro subscriptions use secure Stripe Checkout and self-service billing management.</p>
+          <p class="hero-note">Stable release 0.3.1 is available. Registration and shop setup are self-service, and Shop and Pro subscriptions use secure Stripe Checkout and self-service billing management.</p>
         </div>
 
         <div class="product-frame" aria-label="FretTrack app preview">
@@ -1290,8 +1290,8 @@ function landingPage() {
             <p>Supabase Auth, Row Level Security, membership roles, and guarded RPCs protect shop-scoped records.</p>
           </div>
           <div class="trust-item">
-            <strong>Operator approval</strong>
-            <p>Access applications create auditable requests and notify operators before workspace access is granted.</p>
+            <strong>Verified self-service setup</strong>
+            <p>Confirm your email, create your shop workspace, and begin the trial without waiting for manual approval.</p>
           </div>
           <div class="trust-item">
             <strong>Deployment discipline</strong>
@@ -1302,12 +1302,12 @@ function landingPage() {
 
       <section class="section" id="pricing">
         <h2>Start with Pro, then choose the plan that fits the shop.</h2>
-        <p class="section-lede">Every approved shop receives a 14-day Pro trial with no card required and no automatic conversion. Paid subscriptions are for business use and renew until canceled.</p>
+        <p class="section-lede">Every new shop receives a 14-day Pro trial with no card required and no automatic conversion. Paid subscriptions are for business use and renew until canceled.</p>
         <div class="plan-grid">
           <div class="plan">
             <strong>Trial</strong>
             <h3>14 days · $0</h3>
-            <p>Evaluate the complete Pro workflow after account approval.</p>
+            <p>Evaluate the complete Pro workflow immediately after email confirmation and shop setup.</p>
             <ul>
               <li>No card required</li>
               <li>Does not automatically convert</li>
@@ -1343,10 +1343,10 @@ function landingPage() {
         <div class="launch-panel">
           <div>
             <h2>Bring your repair shop to FretTrack.</h2>
-            <p>Request controlled workspace access, then watch your email for confirmation and approval messages. If you do not see a reply, check spam or junk mail.</p>
+            <p>Create your account, confirm your email, and create your shop. Your 14-day Pro trial starts when the workspace is created—no manual approval and no card required.</p>
           </div>
           <div class="hero-actions">
-            <a class="button" href="#application-modal">Request Access</a>
+            <a class="button" href="${APP_URL}/?signup=1">Start Free 14-Day Trial</a>
             <a class="button secondary" href="/docs/release-notes">Read the 0.3.1 Release Notes</a>
           </div>
         </div>

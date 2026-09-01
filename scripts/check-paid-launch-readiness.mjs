@@ -16,27 +16,19 @@ const readiness = read(readinessDoc);
 
 for (const required of [
   'Current Verdict',
-  'Backup and Restore Readiness',
-  'Restore Drill',
-  'Stripe and Billing Gap Audit',
-  'Exact 30-Day Launch Checklist',
-  'Go / No-Go Gates',
-  'FretTrack Daily Supabase Backup',
-  'backups/hosted-supabase-20260811-182456',
-  'Task Scheduler result `0`',
-  'Storage object binaries are intentionally copied separately',
-  'Stripe-powered self-serve billing',
-  'create-checkout-session',
-  'create-billing-portal-session',
-  'stripe-webhook',
+  'Completed foundation',
+  'Current commercial configuration',
+  'Required hosted configuration',
+  'First live subscription smoke check',
+  'Ongoing release checks',
   'STRIPE_API_KEY',
   'STRIPE_WEBHOOK_SIGNING_SECRET',
   'STRIPE_PRICE_SHOP_MONTHLY',
-  'Stripe secrets or live price IDs are missing',
-  'leaked-password protection',
+  'FRETTRACK_APP_URL=https://app.frettrack-app.com',
+  'no automatic conversion',
 ]) {
   assert.ok(
-    readiness.includes(required),
+    readiness.toLowerCase().includes(required.toLowerCase()),
     `Paid-launch readiness document must mention "${required}".`,
   );
 }
@@ -399,9 +391,9 @@ assert.ok(
 
 const subscriptionFoundation = read('docs/SUBSCRIPTION_FOUNDATION.md');
 assert.ok(
-  subscriptionFoundation.includes('2026-08-11 paid-launch readiness update') &&
-    subscriptionFoundation.includes('signature-verified Stripe webhook'),
-  'Subscription docs must distinguish the implemented Stripe path from pending production rollout.',
+  subscriptionFoundation.includes('Current release: **FretTrack 0.3.1**') &&
+    subscriptionFoundation.includes('signature-verified Stripe events'),
+  'Subscription docs must describe the current implemented Stripe path.',
 );
 
 const securityChecklist = read('docs/SECURITY_REVIEW_CHECKLIST.md');

@@ -6,9 +6,9 @@ FretTrack uses database-owned subscription state and entitlements. Stripe is the
 
 ## Access, trial, and paid state
 
-Account approval controls whether a new user may enter FretTrack. Subscription lifecycle controls whether an approved shop may write data and which features it may use. These are separate systems.
+Email-confirmed registration and shop membership control whether a user may enter a FretTrack workspace. Subscription lifecycle controls whether that shop may write data and which features it may use.
 
-New approved workspaces receive a non-converting 14-day Pro trial with no card required. Owners and admins may start a paid Shop or Pro subscription through Stripe Checkout. Only signature-verified Stripe events update the saved subscription state.
+New self-service workspaces receive a non-converting 14-day Pro trial with no card required. Owners and admins may start a paid Shop or Pro subscription through Stripe Checkout. Only signature-verified Stripe events update the saved subscription state.
 
 The supported customer-facing plan names are Shop and Pro. Trial is a lifecycle, not a third feature tier. Internal values including `free`, `solo`, `enterprise`, and `beta_bypass` remain only where compatibility with older records or migrations requires them.
 

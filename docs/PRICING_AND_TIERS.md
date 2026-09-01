@@ -15,9 +15,9 @@ Prices are in USD. Annual plans are billed once per year. There are no usage-bas
 
 ## Trial
 
-New approved workspaces receive a 14-day Pro trial. The trial requires no card and does not automatically convert into a paid subscription. A paid term begins only after an authorized owner or admin completes Stripe Checkout.
+New self-service workspaces receive a 14-day Pro trial after email confirmation. The trial requires no card and does not automatically convert into a paid subscription. A paid term begins only after an authorized owner or admin completes Stripe Checkout.
 
-Operator-granted extensions may be used for legitimate support needs. Account approval and subscription entitlement are separate: approval permits a user to enter FretTrack, while the trial or paid plan controls shop features and write access.
+Operator-granted extensions may be used for legitimate support needs. Registration is self-service; the trial or paid plan controls shop features and write access.
 
 ## Shop
 

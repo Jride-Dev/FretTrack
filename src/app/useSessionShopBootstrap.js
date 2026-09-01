@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { getCurrentSession, onAuthSessionChange, signOut } from '../modules/auth/authService';
-import { getOrCreateBetaAccessRequest } from '../modules/beta/betaAccessService';
 import {
   getDefaultEntitlementSnapshot,
   getShopEntitlementSnapshot
@@ -30,9 +29,7 @@ export default function useSessionShopBootstrap({
   const manualSignOutRef = useRef(false);
   const shopAccessRequestIdRef = useRef(0);
   const {
-    betaAccess,
     isMembershipLoading,
-    isOperator,
     newShopName,
     session
   } = accessState;
@@ -158,28 +155,13 @@ export default function useSessionShopBootstrap({
         return;
       }
 
-      const accessRequest = await getOrCreateBetaAccessRequest();
-      setBetaAccess(accessRequest);
+      setBetaAccess({ status: 'self-service' });
       setIsBetaAccessLoading(false);
-
-      if (accessRequest.status === 'approved') {
-        await loadShopAccess();
-        return;
-      }
-
-      setMembership(null);
-      setMemberships([]);
-      setShopProfile(null);
-      setEntitlementSnapshot(getDefaultEntitlementSnapshot());
-      setJobs([]);
-      setCustomers([]);
-      resetWorkspaceNavigation();
-      setSupabaseStatus('auth-required');
-      clearSelectedShop();
+      await loadShopAccess();
     } catch (error) {
-      console.error('Access approval check failed.', error);
+      console.error('Account bootstrap check failed.', error);
       setIsOperator(false);
-      setBetaAccess({ status: 'pending' });
+      setBetaAccess({ status: 'self-service' });
       onNotice({
         type: 'error',
         message: getErrorMessage(error, 'Unable to check account access.')
@@ -294,11 +276,6 @@ export default function useSessionShopBootstrap({
     const shopId = slugifyShopId(shopNameValue);
     if (!shopId) {
       onNotice({ type: 'error', message: 'Enter a valid shop name.' });
-      return;
-    }
-
-    if (hasSupabaseConfig && !isOperator && betaAccess?.status !== 'approved') {
-      onNotice({ type: 'error', message: 'FretTrack must approve your account access before you can create a shop.' });
       return;
     }
 

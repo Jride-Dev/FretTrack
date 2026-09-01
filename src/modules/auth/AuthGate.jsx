@@ -237,8 +237,8 @@ function copyForMode(mode) {
 
   if (mode === 'sign-up') {
     return {
-      description: 'Create a login account. Shop workspace access starts after FretTrack approval.',
-      submit: 'Create Login Account'
+      description: 'Create your account, confirm your email, and start a free 14-day Pro trial. No card is required.',
+      submit: 'Create Account'
     };
   }
 

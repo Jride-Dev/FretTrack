@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import AppNotice from '../shared/components/AppNotice.jsx';
 import NewJobSidebar from './NewJobSidebar.jsx';
-import { BillingStateBanner, InternalCurrentAccessPanel, PendingApprovalScreen } from './AppAccessPanels.jsx';
+import { BillingStateBanner, InternalCurrentAccessPanel } from './AppAccessPanels.jsx';
 import { getAppAccess } from './appAccess.js';
 import {
   getCurrentShopProfileFallback,
@@ -215,9 +215,7 @@ export default function App() {
     showShopPicker
   } = useSessionShopBootstrap({
     accessState: {
-      betaAccess,
       isMembershipLoading,
-      isOperator,
       newShopName,
       session
     },
@@ -377,7 +375,11 @@ export default function App() {
   if (hasSupabaseConfig && !session) {
     return (
       <>
-        <AuthGate onAuthCompleted={handleAuthCompleted} onNotice={setNotice} />
+        <AuthGate
+          initialMode={new URLSearchParams(window.location.search).get('signup') === '1' ? 'sign-up' : 'sign-in'}
+          onAuthCompleted={handleAuthCompleted}
+          onNotice={setNotice}
+        />
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       </>
     );
@@ -396,25 +398,11 @@ export default function App() {
     );
   }
 
-  if (hasSupabaseConfig && session && !isOperator && isBetaAccessLoading) {
+  if (hasSupabaseConfig && session && isBetaAccessLoading) {
     return (
       <main className="app auth-shell">
-        <section className="panel auth-panel">Checking account access...</section>
+        <section className="panel auth-panel">Loading account...</section>
       </main>
-    );
-  }
-
-  if (hasSupabaseConfig && session && !isOperator && betaAccess && betaAccess.status !== 'approved') {
-    return (
-      <>
-        <PendingApprovalScreen
-          betaAccess={betaAccess}
-          email={session.user?.email || ''}
-          onRetry={loadSessionAccess}
-          onSignOut={handleSignOut}
-        />
-        <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
-      </>
     );
   }
 
@@ -542,7 +530,7 @@ export default function App() {
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
         <section className="panel auth-panel">
           <h1>Create Shop</h1>
-          <p>{isMembershipLoading ? 'Checking shop membership...' : 'Your account is signed in, but it is not connected to a FretTrack shop yet.'}</p>
+          <p>{isMembershipLoading ? 'Checking shop membership...' : 'Create your workspace to begin a free 14-day Pro trial. No card is required and the trial does not automatically convert.'}</p>
           <p className="muted-text">{session.user?.email}</p>
           <label>
             Shop Name
@@ -554,7 +542,7 @@ export default function App() {
             />
           </label>
           <button type="button" className="primary-action" onClick={handleBootstrapOwner} disabled={isMembershipLoading}>
-            {isMembershipLoading ? 'Working...' : 'Create My Shop'}
+            {isMembershipLoading ? 'Working...' : 'Create Shop and Start Trial'}
           </button>
           <button type="button" className="button-tertiary" onClick={() => loadShopAccess()} disabled={isMembershipLoading}>
             Retry Access Check

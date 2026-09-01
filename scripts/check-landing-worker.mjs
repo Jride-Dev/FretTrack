@@ -146,7 +146,9 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.match(html, /<link rel="icon" href="\/favicon\.ico" sizes="any">/);
   assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png">/);
-  assert.match(html, /Request Access/);
+  assert.match(html, /Start Free 14-Day Trial/);
+  assert.match(html, /https:\/\/app\.frettrack-app\.com\/\?signup=1/);
+  assert.doesNotMatch(html, /Request Access/);
   assert.match(html, /Stable release 0\.3\.1 is available/);
   assert.match(html, /\/landing\/overview\.jpg/);
   assert.match(html, /Stripe Checkout and self-service billing management/);
