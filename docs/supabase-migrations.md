@@ -182,3 +182,7 @@ npm run migration:check:strict
 # Shop tax profile boundary migration
 
 `20260901025709_shop_tax_profile_boundary.sql` adds an explicit disabled/manual tax-calculation mode and stable versioned default profile to each shop. It synchronizes shop defaults into the shop-scoped `tax_profiles` record, preserves existing configured rates as manual only when the legacy profile also has a jurisdiction, and leaves incomplete legacy defaults disabled for owner review. It upgrades server-calculated estimate/invoice snapshots with tax profile identity, revision, rate source, jurisdiction, registration reference, taxable categories, and proportional invoice-discount allocation. Disabled mode is the safe default and calculates no tax for new work orders.
+
+# Specialist package price persistence migration
+
+`20260901080734_preserve_specialist_package_price.sql` replaces the guarded specialist purchase-order RPC without changing its signature or grants. Newly created pack, box, set, and other packaged inventory parts now retain the exact whole-package vendor price in `parts.purchase_unit_cost` while keeping `parts.unit_cost` as the separately rounded per-item inventory valuation. Existing-part selection and legacy reconstruction remain application concerns.
