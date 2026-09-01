@@ -270,7 +270,7 @@ export default function ShopSettings({
           </label>
           <label>
             Tax Jurisdiction
-            <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} required={requireCompletion || settings.taxCalculationMode === 'manual'} maxLength="80" />
+            <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} required={settings.taxCalculationMode === 'manual'} maxLength="80" />
           </label>
           <label>
             Default {settings.taxLabel || 'Tax'} %

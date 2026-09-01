@@ -18,6 +18,7 @@ assert.match(migration, /taxable_discount_minor := round/, 'Invoice-wide discoun
 assert.match(migration, /'taxProfileId'[\s\S]*?'taxProfileRevision'[\s\S]*?'taxRegistrationNumber'/, 'Final snapshots must preserve tax provenance.');
 assert.ok(settings.includes('Disabled — calculate no tax'), 'Shop Settings must make the disabled tax state explicit.');
 assert.ok(settings.includes('FretTrack does not determine registrations'), 'Shop Settings must preserve the tax responsibility disclaimer.');
+assert.ok(settings.includes("required={settings.taxCalculationMode === 'manual'}"), 'Disabled tax must not require a jurisdiction during shop onboarding.');
 assert.ok(profileService.includes('tax_calculation_mode'), 'Shop profile persistence must store the calculation mode.');
 assert.ok(jobForm.includes("rateSource: 'shop'"), 'New jobs must record the shop tax profile source.');
 
