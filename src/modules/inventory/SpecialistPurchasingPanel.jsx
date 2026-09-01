@@ -8,7 +8,13 @@ import {
   listParts,
   listVendors
 } from './inventoryService.js';
-import { PURCHASE_UNIT_OPTIONS, purchaseConversionSummary, purchaseUnitCostBreakdown, purchaseUnitLabel } from './purchaseUnits.js';
+import {
+  PURCHASE_UNIT_OPTIONS,
+  purchaseConversionSummary,
+  purchaseUnitCostBreakdown,
+  purchaseUnitLabel,
+  savedPurchaseUnitCost
+} from './purchaseUnits.js';
 
 function newForm() {
   return {
@@ -95,6 +101,7 @@ export default function SpecialistPurchasingPanel({
           next.vendorSku = part.vendorSku;
           next.purchaseUnit = part.purchaseUnit;
           next.unitsPerPurchaseUnit = part.unitsPerPurchaseUnit;
+          next.unitCost = String(savedPurchaseUnitCost(part));
           next.retailPrice = part.retailPrice;
           if (part.vendorId) next.vendorId = part.vendorId;
         }
@@ -110,6 +117,7 @@ export default function SpecialistPurchasingPanel({
             next.vendorSku = part.vendorSku;
             next.purchaseUnit = part.purchaseUnit;
             next.unitsPerPurchaseUnit = part.unitsPerPurchaseUnit;
+            next.unitCost = String(savedPurchaseUnitCost(part));
             next.retailPrice = part.retailPrice;
             if (part.vendorId) next.vendorId = part.vendorId;
           }

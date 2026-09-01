@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(30);
+select plan(32);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -113,9 +113,19 @@ select lives_ok($$
   select public.create_specialist_purchase_order(
     '57000000-0000-4000-a100-000000000002', '57000000-0000-4000-a400-000000000003',
     '57000000-0000-4000-a200-000000000001', null, '57000000-0000-4000-a300-000000000002',
-    '', 'KEY-SPRING', 1, 2, 'pack', 2, 4.00, 6.00, null, 'Cancelable keyboard order'
+    '', 'KEY-SPRING', 1, 2, 'pack', 2, 7.71, 6.00, null, 'Cancelable keyboard order'
   )
 $$, 'a second keyboard request can be linked');
+select is(
+  (select purchase_unit_cost from public.parts where id = (select part_id from public.purchase_order_items where specialist_request_key = '57000000-0000-4000-a400-000000000003')),
+  7.71::numeric,
+  'new specialist pack retains its exact whole-package vendor price'
+);
+select is(
+  (select unit_cost from public.parts where id = (select part_id from public.purchase_order_items where specialist_request_key = '57000000-0000-4000-a400-000000000003')),
+  3.86::numeric,
+  'new specialist pack retains the rounded per-item inventory valuation separately'
+);
 select lives_ok($$update public.purchase_orders set status = 'cancelled' where id = (select purchase_order_id from public.purchase_order_items where specialist_request_key = '57000000-0000-4000-a400-000000000003')$$, 'a linked unreceived keyboard PO can be cancelled');
 select ok((select request_status = 'requested' and purchase_order_item_id is null from public.keyboard_part_requests where id = '57000000-0000-4000-a300-000000000002'), 'cancelling releases and reopens the keyboard request');
 

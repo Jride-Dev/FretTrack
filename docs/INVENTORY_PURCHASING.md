@@ -154,7 +154,11 @@ Pro amplifier and keyboard benches can create an ordered vendor purchase order t
 
 Vendor purchasing quantity is deliberately separate from customer-job quantity. For example, one vendor Set may receive two inventory units while the linked repair bills one unit. Inventory receiving handles the full purchased package and ordinary stock/cost history; **Add to Parts & Payments** transfers only the saved `job_quantity` to the linked work order.
 
+The specialist form's price is the vendor price for one complete purchase unit. Selecting an existing part loads its saved `purchase_unit_cost`; older parts without that field reconstruct a package price from their per-item cost and package size. Newly created specialist parts save the exact package price separately from the rounded per-item inventory valuation, so a $7.71 two-pack remains $7.71 after reload while its inventory valuation remains $3.86 per item.
+
 Migration `20260822033718_specialist_purchasing_bridge.sql` adds the job, job quantity, fulfillment part, keyboard request, and idempotency links plus guarded creation and fulfillment RPCs. Purchase creation serializes calls sharing the same request key and returns the already-created order to a concurrent retry. Fulfillment requires a received item and returns the existing `job_parts` row on retry. The application refreshes the app-level selected job after fulfillment so the part and billing totals are visible immediately in the shared commercial workspace.
+
+Migration `20260901080734_preserve_specialist_package_price.sql` updates the specialist creation RPC to persist that exact package price on the new inventory part without changing the purchase-order line charge or request-key protections.
 
 ## Future Shipping Scope
 

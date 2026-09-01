@@ -6,6 +6,7 @@ import {
   inventoryUnitsForPurchaseQuantity,
   purchaseConversionSummary,
   purchaseUnitCostBreakdown,
+  savedPurchaseUnitCost,
   validUnitsPerPurchaseUnit
 } from '../src/modules/inventory/purchaseUnits.js';
 
@@ -13,6 +14,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
 const migrationPath = 'supabase/migrations/20260730145549_purchase_unit_conversion.sql';
 const migration = read(migrationPath);
+const specialistPackagePriceMigrationPath = 'supabase/migrations/20260901080734_preserve_specialist_package_price.sql';
+const specialistPackagePriceMigration = read(specialistPackagePriceMigrationPath);
 const service = [
   read('src/modules/inventory/inventoryService.js'),
   read('src/modules/inventory/inventoryServiceNormalization.js'),
@@ -20,6 +23,7 @@ const service = [
 ].join('\n');
 const partEditor = read('src/modules/inventory/InventoryPartEditor.jsx');
 const purchaseOrderEditor = read('src/modules/inventory/InventoryPurchaseOrderEditor.jsx');
+const specialistPurchasingPanel = read('src/modules/inventory/SpecialistPurchasingPanel.jsx');
 const reportsPage = read('src/modules/reports/AdvancedReportsPage.jsx');
 const packageJson = JSON.parse(read('package.json'));
 
@@ -34,6 +38,8 @@ assert.deepEqual(
   { inventoryQuantity: 2, inventoryUnitCost: 3.855, lineTotal: 7.71 },
   'One $7.71 two-pack must cost $3.855 per inventory each without doubling the PO line.'
 );
+assert.equal(savedPurchaseUnitCost({ purchaseUnitCost: 12.34, unitCost: 6.17, unitsPerPurchaseUnit: 2 }), 12.34, 'A saved package price must take precedence over reconstructed per-each cost.');
+assert.equal(savedPurchaseUnitCost({ unitCost: 3.86, unitsPerPurchaseUnit: 2 }), 7.72, 'Legacy parts must reconstruct a usable package price from per-each cost.');
 for (const invalid of [0, -1, 1.5, Number.NaN, 'not-a-number']) {
   assert.equal(validUnitsPerPurchaseUnit(invalid), false, `Invalid conversion ${String(invalid)} must be rejected.`);
 }
@@ -56,6 +62,9 @@ assert.match(migration, /quantity_received = quantity_received \+ safe_purchase_
 assert.match(migration, /inventory_quantity_received,\s*unit_cost,\s*base_unit_cost/i, 'Receipt rows must persist the converted quantity and cost snapshots.');
 assert.match(migration, /not private\.can_write_shop\(target_order\.shop_id\)/i, 'Existing shop-scoped write permission enforcement must remain.');
 assert.match(migration, /grant execute on function public\.receive_purchase_order_items\(uuid, jsonb, text\) to authenticated/i, 'Authenticated receiving grant must remain explicit.');
+assert.match(specialistPackagePriceMigration, /insert into public\.parts \([\s\S]*?purchase_unit_cost, unit_cost[\s\S]*?safe_unit_cost, round\(safe_unit_cost \/ safe_units, 2\)/i, 'Specialist-created parts must persist exact package cost separately from rounded per-each valuation.');
+assert.match(specialistPackagePriceMigration, /pg_advisory_xact_lock[\s\S]*?specialist_request_key = p_request_key/i, 'The package-price fix must retain concurrent request-key serialization.');
+assert.match(specialistPackagePriceMigration, /revoke all on function public\.create_specialist_purchase_order[\s\S]*?grant execute on function public\.create_specialist_purchase_order[\s\S]*?to authenticated/i, 'The replacement specialist RPC must retain its explicit authenticated-only grant.');
 
 assert.match(service, /purchase_unit: normalizePurchaseUnit/i, 'Part and PO persistence must map purchase units.');
 assert.match(service, /units_per_purchase_unit:/i, 'Part and PO persistence must map conversion factors.');
@@ -67,6 +76,7 @@ assert.match(purchaseOrderEditor, /Receive purchase quantity/i, 'Partial receivi
 assert.match(purchaseOrderEditor, /How many \{purchaseUnitLabel\(item\.purchaseUnit, 2\)\}\?/, 'The PO editor must ask for package count, not item count.');
 assert.match(purchaseOrderEditor, /Price for one whole \{purchaseUnitLabel\(item\.purchaseUnit\)\}/, 'The PO editor must ask for the whole-package vendor price.');
 assert.match(purchaseOrderEditor, /Vendor charge:/, 'The PO editor must preview the actual vendor line charge.');
+assert.match(specialistPurchasingPanel, /next\.unitCost = String\(savedPurchaseUnitCost\(part\)\)/, 'Selecting an existing specialist part must load its saved whole-package price.');
 assert.match(reportsPage, /Purchase Qty/i, 'Reports must distinguish purchase quantities.');
 assert.match(reportsPage, /Inventory Qty/i, 'Reports must show converted inventory quantities.');
 

@@ -56,3 +56,19 @@ export function purchaseUnitCostBreakdown(quantity, unitsPerPurchaseUnit, purcha
     lineTotal: purchaseQuantity * cost
   };
 }
+
+export function savedPurchaseUnitCost(part = {}) {
+  const explicitCost = part.purchaseUnitCost ?? part.purchase_unit_cost;
+  if (explicitCost !== null && explicitCost !== undefined && String(explicitCost).trim() !== '') {
+    const numericCost = Number(explicitCost);
+    return Number.isFinite(numericCost) && numericCost >= 0 ? numericCost : '';
+  }
+
+  const unitCost = Number(part.unitCost ?? part.unit_cost);
+  const unitsPerPurchaseUnit = Number(part.unitsPerPurchaseUnit ?? part.units_per_purchase_unit ?? 1);
+  if (!Number.isFinite(unitCost) || unitCost < 0 || !validUnitsPerPurchaseUnit(unitsPerPurchaseUnit)) {
+    return '';
+  }
+
+  return Math.round((unitCost * unitsPerPurchaseUnit + Number.EPSILON) * 100) / 100;
+}
