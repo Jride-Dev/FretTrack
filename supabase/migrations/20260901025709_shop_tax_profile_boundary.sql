@@ -4,9 +4,17 @@ alter table public.shop_profiles
   add column if not exists tax_profile_revision integer not null default 1;
 
 update public.shop_profiles
+set tax_calculation_mode = 'disabled'
+where tax_calculation_mode = 'manual'
+  and nullif(btrim(coalesce(tax_state, '')), '') is null;
+
+update public.shop_profiles
 set tax_calculation_mode = 'manual'
-where coalesce(sales_tax_rate, 0) > 0
-   or nullif(btrim(coalesce(tax_registration_number, '')), '') is not null;
+where (
+    coalesce(sales_tax_rate, 0) > 0
+    or nullif(btrim(coalesce(tax_registration_number, '')), '') is not null
+  )
+  and nullif(btrim(coalesce(tax_state, '')), '') is not null;
 
 do $$
 begin

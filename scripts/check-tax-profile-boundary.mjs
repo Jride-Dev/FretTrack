@@ -12,6 +12,8 @@ const billingActions = read('src/modules/jobs/useJobDetailBillingActions.js');
 const jobNormalization = read('src/modules/jobs/jobServiceNormalization.js');
 
 assert.match(migration, /tax_calculation_mode text not null default 'disabled'/, 'New shops must default to tax calculation disabled.');
+assert.match(migration, /set tax_calculation_mode = 'disabled'[\s\S]*?tax_state[\s\S]*?is null/, 'Migration retries must disable incomplete manual legacy profiles before synchronization.');
+assert.match(migration, /set tax_calculation_mode = 'manual'[\s\S]*?tax_state[\s\S]*?is not null/, 'Legacy tax defaults must have a jurisdiction before manual calculation is enabled.');
 assert.match(migration, /default_tax_profile_id uuid not null default gen_random_uuid/, 'Shop tax profiles must have a stable identity.');
 assert.match(migration, /tax_profile_revision := old\.tax_profile_revision \+ 1/, 'Tax profile changes must increment a revision.');
 assert.match(migration, /Default tax profile identity cannot be changed directly/, 'Stable tax profile identity must be database protected.');
