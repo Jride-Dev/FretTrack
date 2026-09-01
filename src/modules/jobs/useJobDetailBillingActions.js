@@ -28,7 +28,8 @@ export default function useJobDetailBillingActions({
   saveDraftNow,
   services,
   setDraftJob,
-  setIsDirty
+  setIsDirty,
+  taxSettings
 }) {
   const [service, setService] = useState(EMPTY_SERVICE);
   const [payment, setPayment] = useState(createEmptyPayment);
@@ -105,7 +106,7 @@ export default function useJobDetailBillingActions({
 
     setIsChangingInvoiceState(true);
     try {
-      const savedJob = finalized ? await saveDraftNow(draftJob) : draftJob;
+      const savedJob = finalized ? await saveDraftNow(withTaxSnapshot(draftJob, taxSettings)) : draftJob;
       const result = await setJobInvoiceFinalization(savedJob.id, finalized, reason);
       setDraftJob((current) => ({ ...current, ...result }));
       setIsDirty(false);
@@ -138,7 +139,7 @@ export default function useJobDetailBillingActions({
     const requestId = estimateOperationRef.current.get(operationKey) || crypto.randomUUID();
     estimateOperationRef.current.set(operationKey, requestId);
     try {
-      const savedJob = status === 'sent' ? await saveDraftNow(draftJob) : draftJob;
+      const savedJob = status === 'sent' ? await saveDraftNow(withTaxSnapshot(draftJob, taxSettings)) : draftJob;
       const result = await setJobEstimateState(savedJob.id, status, note, requestId, savedJob.updatedAt);
       setDraftJob((current) => ({ ...current, ...result }));
       setIsDirty(false);
@@ -197,6 +198,16 @@ export default function useJobDetailBillingActions({
     setPayment,
     setService,
     updateService
+  };
+}
+
+function withTaxSnapshot(job, taxSettings = {}) {
+  return {
+    ...job,
+    techDetails: {
+      ...(job.techDetails || {}),
+      tax: { ...taxSettings }
+    }
   };
 }
 

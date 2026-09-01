@@ -365,7 +365,7 @@ function JobDetailWorkspace({
     saveDraftNow,
     services,
     setDraftJob,
-    setIsDirty
+    setIsDirty, taxSettings
   });
 
   function exportJobJson() {
