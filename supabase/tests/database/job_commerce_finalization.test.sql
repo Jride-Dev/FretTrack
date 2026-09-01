@@ -104,8 +104,8 @@ select lives_ok(
 );
 select is(
   (select (invoice_snapshot ->> 'totalMinor')::bigint from public.jobs where id = '77000000-0000-4000-a000-000000000001'),
-  5000::bigint,
-  'the server snapshots billable parts, services, discount, and tax in minor units'
+  4950::bigint,
+  'the server snapshots billable parts, services, discount-adjusted tax, and total in minor units'
 );
 select is(
   (select (invoice_snapshot ->> 'includedPartsMinor')::bigint from public.jobs where id = '77000000-0000-4000-a000-000000000001'),

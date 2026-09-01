@@ -24,6 +24,7 @@ export default function TotalsSection({
   setEstimateNote,
   setFinalizationReason,
   setPayment,
+  shopTaxCalculationMode = 'disabled',
   shopTaxRate = '',
   taxSettings,
   totals,
@@ -39,6 +40,7 @@ export default function TotalsSection({
   const estimateStatus = draftJob.estimateStatus || 'draft';
   const estimateLocked = estimateStatus !== 'draft';
   const estimateBlocksFinalization = estimateStatus === 'sent' || estimateStatus === 'declined';
+  const taxEnabled = taxSettings.calculationMode === 'manual';
 
   return (
     <section>
@@ -66,26 +68,27 @@ export default function TotalsSection({
         </label>
         <label>
           State
-          <input name="state" value={taxSettings.state || ''} onChange={updateTaxField} disabled={!canWrite || !canManageJobCharges} />
+          <input name="state" value={taxSettings.state || ''} onChange={updateTaxField} disabled={!canWrite || !canManageJobCharges || !taxEnabled} />
         </label>
         <label>
           {taxLabel} %
-          <input type="number" min="0" step="0.001" name="salesTaxRate" value={taxSettings.salesTaxRate || ''} onChange={updateTaxField} disabled={!canWrite || !canManageJobCharges} />
+          <input type="number" min="0" max="100" step="0.001" name="salesTaxRate" value={taxSettings.salesTaxRate || ''} onChange={updateTaxField} disabled={!canWrite || !canManageJobCharges || !taxEnabled} />
         </label>
-        {taxSettings.rateSource === 'job' && shopTaxRate !== '' && (
+        {shopTaxCalculationMode === 'manual' && shopTaxRate !== '' && (
           <button type="button" className="button-tertiary" onClick={useShopTaxRate} disabled={!canWrite || !canManageJobCharges}>
-            Use Shop {taxLabel} ({shopTaxRate}%)
+            Apply Current Shop Tax Profile ({shopTaxRate}%)
           </button>
         )}
         <label className="checkline">
-          <input type="checkbox" name="taxableParts" checked={taxSettings.taxableParts !== false} onChange={updateTaxField} disabled={!canWrite || !canManageJobCharges} />
+          <input type="checkbox" name="taxableParts" checked={taxSettings.taxableParts !== false} onChange={updateTaxField} disabled={!canWrite || !canManageJobCharges || !taxEnabled} />
           Tax Parts
         </label>
         <label className="checkline">
-          <input type="checkbox" name="taxableServices" checked={Boolean(taxSettings.taxableServices)} onChange={updateTaxField} disabled={!canWrite || !canManageJobCharges} />
+          <input type="checkbox" name="taxableServices" checked={Boolean(taxSettings.taxableServices)} onChange={updateTaxField} disabled={!canWrite || !canManageJobCharges || !taxEnabled} />
           Tax Services
         </label>
       </div>
+      {!taxEnabled && <p className="muted-text">Tax calculation is disabled for this work order. Configure and enable manual tax in Shop Settings before applying tax.</p>}
       <PaymentsSection
         addPayment={addPayment}
         payment={payment}

@@ -64,6 +64,8 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  tax_fields_changed boolean := false;
 begin
   if new.tax_calculation_mode = 'manual'
     and nullif(btrim(coalesce(new.tax_state, '')), '') is null then
@@ -72,17 +74,30 @@ begin
   if new.sales_tax_rate < 0 or new.sales_tax_rate > 100 then
     raise exception 'The default tax rate must be between 0 and 100 percent.' using errcode = '22023';
   end if;
-  if tg_op = 'UPDATE' and (
-    new.tax_calculation_mode is distinct from old.tax_calculation_mode
+  if tg_op = 'INSERT' then
+    new.default_tax_profile_id := pg_catalog.gen_random_uuid();
+    new.tax_profile_revision := 1;
+  else
+    if new.default_tax_profile_id is distinct from old.default_tax_profile_id then
+      raise exception 'Default tax profile identity cannot be changed directly.' using errcode = '42501';
+    end if;
+    tax_fields_changed := (
+      new.tax_calculation_mode is distinct from old.tax_calculation_mode
     or new.tax_state is distinct from old.tax_state
     or new.sales_tax_rate is distinct from old.sales_tax_rate
     or new.tax_label is distinct from old.tax_label
     or new.tax_registration_number is distinct from old.tax_registration_number
     or new.taxable_parts_default is distinct from old.taxable_parts_default
     or new.taxable_services_default is distinct from old.taxable_services_default
-    or new.currency_code is distinct from old.currency_code
-  ) then
-    new.tax_profile_revision := old.tax_profile_revision + 1;
+      or new.currency_code is distinct from old.currency_code
+    );
+    if tax_fields_changed then
+      new.tax_profile_revision := old.tax_profile_revision + 1;
+    elsif new.tax_profile_revision is distinct from old.tax_profile_revision then
+      raise exception 'Tax profile revision is maintained by FretTrack.' using errcode = '42501';
+    else
+      new.tax_profile_revision := old.tax_profile_revision;
+    end if;
   end if;
   return new;
 end;
@@ -95,7 +110,8 @@ create trigger shop_profiles_prepare_tax_profile_insert
 drop trigger if exists shop_profiles_prepare_tax_profile_update on public.shop_profiles;
 create trigger shop_profiles_prepare_tax_profile_update
   before update of tax_calculation_mode, tax_state, sales_tax_rate, tax_label,
-    tax_registration_number, taxable_parts_default, taxable_services_default, currency_code
+    tax_registration_number, taxable_parts_default, taxable_services_default, currency_code,
+    default_tax_profile_id, tax_profile_revision
   on public.shop_profiles
   for each row execute function private.prepare_shop_tax_profile();
 
@@ -106,6 +122,12 @@ security definer
 set search_path = ''
 as $$
 begin
+  if exists (
+    select 1 from public.tax_profiles
+    where id = new.default_tax_profile_id and shop_id <> new.shop_id
+  ) then
+    raise exception 'Default tax profile identity belongs to another shop.' using errcode = '42501';
+  end if;
   insert into public.tax_profiles (
     id, shop_id, name, jurisdiction, tax_rate_basis_points, currency_code, active,
     tax_label, tax_registration_number, taxable_parts, taxable_services,
@@ -172,6 +194,8 @@ declare
   services_minor bigint := 0;
   subtotal_minor bigint := 0;
   discount_minor bigint := 0;
+  taxable_before_discount_minor bigint := 0;
+  taxable_discount_minor bigint := 0;
   taxable_minor bigint := 0;
   tax_minor bigint := 0;
   total_minor bigint := 0;
@@ -235,8 +259,14 @@ begin
     taxable_services := false;
   end if;
   currency_code := upper(coalesce(nullif(target_job.tech_details #>> '{tax,currencyCode}', ''), 'USD'));
-  taxable_minor := (case when taxable_parts then parts_minor else 0 end)
+  taxable_before_discount_minor := (case when taxable_parts then parts_minor else 0 end)
     + (case when taxable_services then services_minor else 0 end);
+  if subtotal_minor > 0 and discount_minor > 0 and taxable_before_discount_minor > 0 then
+    taxable_discount_minor := round(
+      discount_minor::numeric * taxable_before_discount_minor::numeric / subtotal_minor::numeric
+    )::bigint;
+  end if;
+  taxable_minor := greatest(taxable_before_discount_minor - taxable_discount_minor, 0);
   tax_minor := round(taxable_minor * tax_rate / 100)::bigint;
   total_minor := greatest(subtotal_minor - discount_minor, 0) + tax_minor;
 
@@ -261,6 +291,8 @@ begin
     'taxRegistrationNumber', coalesce(target_job.tech_details #>> '{tax,taxRegistrationNumber}', ''),
     'taxableParts', taxable_parts,
     'taxableServices', taxable_services,
+    'taxableBeforeDiscountMinor', taxable_before_discount_minor,
+    'taxableDiscountMinor', taxable_discount_minor,
     'taxMinor', tax_minor,
     'totalMinor', total_minor,
     'calculatedAt', pg_catalog.now()
@@ -270,6 +302,7 @@ $$;
 
 revoke all on function private.prepare_shop_tax_profile() from public, anon, authenticated, service_role;
 revoke all on function private.sync_shop_default_tax_profile() from public, anon, authenticated, service_role;
+revoke insert, update, delete on public.tax_profiles from authenticated;
 
 comment on column public.shop_profiles.tax_calculation_mode is
   'Manual means the shop intentionally configured its own tax defaults; disabled means FretTrack calculates no tax for new jobs.';

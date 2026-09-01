@@ -39,3 +39,43 @@ test('finalized work orders render the stored server snapshot with live payment 
     balanceDue: 35
   });
 });
+
+test('open work orders allocate invoice discounts proportionally across taxable charges', () => {
+  const totals = calculateJobTotals({
+    parts: [{ quantity: 1, retail: 100 }],
+    services: [{ quantity: 1, retail: 100 }],
+    discountType: 'dollar',
+    discountValue: 20,
+    techDetails: { payments: [] }
+  }, {
+    calculationMode: 'manual',
+    taxableParts: true,
+    taxableServices: false,
+    salesTaxRate: 8.25
+  });
+
+  assert.equal(totals.subtotal, 200);
+  assert.equal(totals.discountAmount, 20);
+  assert.equal(totals.taxableBeforeDiscount, 100);
+  assert.equal(totals.taxableDiscountAmount, 10);
+  assert.equal(totals.taxableAmount, 90);
+  assert.equal(totals.salesTaxAmount, 7.43);
+  assert.equal(totals.totalDue, 187.43);
+});
+
+test('disabled tax mode ignores stale rates and taxable flags', () => {
+  const totals = calculateJobTotals({
+    parts: [{ quantity: 1, retail: 100 }],
+    services: [],
+    techDetails: { payments: [] }
+  }, {
+    calculationMode: 'disabled',
+    taxableParts: true,
+    taxableServices: true,
+    salesTaxRate: 99
+  });
+
+  assert.equal(totals.taxableAmount, 0);
+  assert.equal(totals.salesTaxAmount, 0);
+  assert.equal(totals.totalDue, 100);
+});

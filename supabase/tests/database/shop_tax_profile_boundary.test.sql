@@ -1,12 +1,13 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(18);
+select plan(24);
 
 select has_column('public', 'shop_profiles', 'tax_calculation_mode', 'shops declare whether manual tax is enabled');
 select has_column('public', 'shop_profiles', 'default_tax_profile_id', 'shops have a stable default tax profile identity');
 select has_column('public', 'shop_profiles', 'tax_profile_revision', 'shops version tax defaults');
 select has_column('public', 'tax_profiles', 'calculation_mode', 'tax profiles record calculation mode');
+select ok(not has_table_privilege('authenticated', 'public.tax_profiles', 'UPDATE'), 'clients cannot bypass Shop Settings to rewrite synchronized tax profiles');
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -40,6 +41,13 @@ select is((select tax_profile_revision from public.shop_profiles where shop_id =
 select is((select tax_rate_basis_points from public.tax_profiles where shop_id = 'tax-profile-pgtap-shop' and is_default), 825, 'the default profile synchronizes the changed rate');
 
 select throws_like(
+  $$update public.shop_profiles set default_tax_profile_id = gen_random_uuid() where shop_id = 'tax-profile-pgtap-shop'$$,
+  '%identity cannot be changed directly%', 'the stable tax profile identity cannot be replaced directly');
+select throws_like(
+  $$update public.shop_profiles set tax_profile_revision = 99 where shop_id = 'tax-profile-pgtap-shop'$$,
+  '%revision is maintained by FretTrack%', 'the tax profile revision cannot be forged directly');
+
+select throws_like(
   $$update public.shop_profiles set tax_state = '', tax_calculation_mode = 'manual' where shop_id = 'tax-profile-pgtap-shop'$$,
   '%jurisdiction is required%', 'manual tax cannot be enabled without a jurisdiction');
 
@@ -50,7 +58,7 @@ insert into public.jobs (
   (
     '79000000-0000-4000-a000-000000000001', 'tax-profile-pgtap-shop', 'Manual Tax Customer',
     'TAX-1', 'Completed',
-    jsonb_build_object('payments', '[]'::jsonb, 'discountType', 'none', 'discountValue', '', 'tax', jsonb_build_object(
+    jsonb_build_object('payments', '[]'::jsonb, 'discountType', 'dollar', 'discountValue', '20', 'tax', jsonb_build_object(
       'calculationMode', 'manual',
       'profileId', (select default_tax_profile_id from public.shop_profiles where shop_id = 'tax-profile-pgtap-shop'),
       'profileRevision', 2,
@@ -72,10 +80,16 @@ values
   ('89000000-0000-4000-a000-000000000001', 'tax-profile-pgtap-shop', '79000000-0000-4000-a000-000000000001', 'Taxable Part', 1, 100, 100, 20, 20, now()),
   ('89000000-0000-4000-a000-000000000002', 'tax-profile-pgtap-shop', '79000000-0000-4000-a000-000000000002', 'Disabled Part', 1, 100, 100, 20, 20, now());
 
+insert into public.job_services (id, job_id, description, quantity, cost, retail, created_at)
+values ('99000000-0000-4000-a000-000000000001', '79000000-0000-4000-a000-000000000001', 'Non-taxable Labor', 1, 0, 100, now());
+
 select is((private.calculate_job_invoice_snapshot('79000000-0000-4000-a000-000000000001') ->> 'version')::integer, 2, 'new snapshots use the tax-provenance format');
 select is(private.calculate_job_invoice_snapshot('79000000-0000-4000-a000-000000000001') ->> 'taxCalculationMode', 'manual', 'manual calculation mode is frozen in the snapshot');
 select is((private.calculate_job_invoice_snapshot('79000000-0000-4000-a000-000000000001') ->> 'taxProfileRevision')::integer, 2, 'the applied tax profile revision is frozen');
-select is((private.calculate_job_invoice_snapshot('79000000-0000-4000-a000-000000000001') ->> 'taxMinor')::bigint, 825::bigint, 'manual tax is calculated in minor units');
+select is((private.calculate_job_invoice_snapshot('79000000-0000-4000-a000-000000000001') ->> 'taxableBeforeDiscountMinor')::bigint, 10000::bigint, 'the snapshot records the taxable subtotal before discount allocation');
+select is((private.calculate_job_invoice_snapshot('79000000-0000-4000-a000-000000000001') ->> 'taxableDiscountMinor')::bigint, 1000::bigint, 'an invoice-wide discount is allocated proportionally to taxable charges');
+select is((private.calculate_job_invoice_snapshot('79000000-0000-4000-a000-000000000001') ->> 'taxableMinor')::bigint, 9000::bigint, 'the discounted taxable base is frozen in minor units');
+select is((private.calculate_job_invoice_snapshot('79000000-0000-4000-a000-000000000001') ->> 'taxMinor')::bigint, 743::bigint, 'manual tax is rounded from the discounted taxable base');
 select is((private.calculate_job_invoice_snapshot('79000000-0000-4000-a000-000000000002') ->> 'taxMinor')::bigint, 0::bigint, 'disabled mode calculates no tax even when stale rate fields exist');
 
 update public.shop_profiles set tax_calculation_mode = 'disabled' where shop_id = 'tax-profile-pgtap-shop';

@@ -17,6 +17,7 @@ export function resolveJobTaxSettings(job = {}, shopSettings = {}) {
   const calculationMode = storedTaxSettings.calculationMode
     || (rateSource === 'shop' ? shopSettings.taxCalculationMode : '')
     || (Number(storedTaxSettings.salesTaxRate) > 0 ? 'manual' : 'disabled');
+  const storedTaxRate = hasValue(storedTaxSettings.salesTaxRate) ? String(storedTaxSettings.salesTaxRate) : '';
 
   return {
     ...storedTaxSettings,
@@ -26,15 +27,13 @@ export function resolveJobTaxSettings(job = {}, shopSettings = {}) {
     rateSource,
     salesTaxRate: calculationMode === 'disabled'
       ? '0'
-      : rateSource === 'shop' && hasValue(shopTaxRate)
-      ? shopTaxRate
-      : storedTaxSettings.salesTaxRate ?? '',
+      : storedTaxRate || shopTaxRate,
     taxableParts: calculationMode === 'disabled' ? false : storedTaxSettings.taxableParts !== false,
     taxableServices: calculationMode === 'disabled' ? false : Boolean(storedTaxSettings.taxableServices),
-    currencyCode: shopSettings.currencyCode || shopSettings.currency_code || storedTaxSettings.currencyCode,
-    locale: shopSettings.locale || storedTaxSettings.locale,
-    dateFormat: shopSettings.dateFormat || shopSettings.date_format || storedTaxSettings.dateFormat,
-    taxLabel: shopSettings.taxLabel || shopSettings.tax_label || storedTaxSettings.taxLabel
+    currencyCode: storedTaxSettings.currencyCode || shopSettings.currencyCode || shopSettings.currency_code,
+    locale: storedTaxSettings.locale || shopSettings.locale,
+    dateFormat: storedTaxSettings.dateFormat || shopSettings.dateFormat || shopSettings.date_format,
+    taxLabel: storedTaxSettings.taxLabel || shopSettings.taxLabel || shopSettings.tax_label
   };
 }
 

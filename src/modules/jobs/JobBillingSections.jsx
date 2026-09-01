@@ -45,6 +45,7 @@ export default function JobBillingSections({
   setPart,
   setPayment,
   setService,
+  shopTaxCalculationMode,
   shopTaxRate,
   taxSettings,
   totals
@@ -98,6 +99,7 @@ export default function JobBillingSections({
         setEstimateNote={setEstimateNote}
         setFinalizationReason={setFinalizationReason}
         taxSettings={taxSettings}
+        shopTaxCalculationMode={shopTaxCalculationMode}
         shopTaxRate={shopTaxRate}
         totals={totals}
         updateDiscountField={onUpdateDiscountField}
