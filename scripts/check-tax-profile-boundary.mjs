@@ -9,6 +9,7 @@ const profileService = read('src/modules/shops/shopProfileService.js');
 const jobForm = read('src/modules/jobs/JobForm.jsx');
 const localSeed = read('scripts/seed-local-test-shops.mjs');
 const billingActions = read('src/modules/jobs/useJobDetailBillingActions.js');
+const jobNormalization = read('src/modules/jobs/jobServiceNormalization.js');
 
 assert.match(migration, /tax_calculation_mode text not null default 'disabled'/, 'New shops must default to tax calculation disabled.');
 assert.match(migration, /default_tax_profile_id uuid not null default gen_random_uuid/, 'Shop tax profiles must have a stable identity.');
@@ -25,6 +26,7 @@ assert.ok(profileService.includes('tax_calculation_mode'), 'Shop profile persist
 assert.ok(jobForm.includes("rateSource: 'shop'"), 'New jobs must record the shop tax profile source.');
 assert.match(localSeed, /tax_calculation_mode[\s\S]*?'manual'/, 'Tax-enabled local fixtures must explicitly opt into manual calculation.');
 assert.match(billingActions, /saveDraftNow\(withTaxSnapshot\(draftJob, taxSettings\)\)/, 'Estimate and invoice finalization must persist the resolved tax snapshot first.');
+assert.match(jobNormalization, /Object\.keys\(techDetails\.tax\)\.length > 0[\s\S]*?\? \{ \.\.\.defaultTechDetails\.tax, \.\.\.techDetails\.tax \}[\s\S]*?: \{\}/, 'Repeated legacy job hydration must not invent a disabled tax snapshot.');
 
 assert.deepEqual(
   resolveJobTaxSettings({

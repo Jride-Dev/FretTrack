@@ -248,7 +248,7 @@ export function normalizeTechDetails(techDetails = {}, instrumentType = 'Guitar'
     stringCount,
     damageMap: normalizeDamageMap(techDetails.damageMap),
     neckInspection: normalizeNeckInspection(techDetails.neckInspection),
-    tax: techDetails.tax && typeof techDetails.tax === 'object'
+    tax: techDetails.tax && typeof techDetails.tax === 'object' && Object.keys(techDetails.tax).length > 0
       ? { ...defaultTechDetails.tax, ...techDetails.tax }
       : {},
     measurementSystem: normalizeMeasurementSystem(techDetails.measurementSystem, getDefaultMeasurementPreferences(techDetails.tax || {}).measurementSystem),
