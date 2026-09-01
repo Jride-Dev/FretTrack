@@ -258,7 +258,7 @@ function JobDetailWorkspace({
     if (!canManageJobCharges || chargesLocked) {
       return;
     }
-    patchJob(buildShopTaxRatePatch(draftJob, getShopDefaultTaxRate(shopSettings)));
+    patchJob(buildShopTaxRatePatch(draftJob, shopSettings));
   }
   function setInstrumentType(instrumentType) {
     patchJob(buildInstrumentTypePatch(draftJob, instrumentType));
@@ -365,7 +365,7 @@ function JobDetailWorkspace({
     saveDraftNow,
     services,
     setDraftJob,
-    setIsDirty
+    setIsDirty, taxSettings
   });
 
   function exportJobJson() {
@@ -611,6 +611,7 @@ function JobDetailWorkspace({
       setPart={setPart}
       setPayment={setPayment}
       setService={setService}
+      shopTaxCalculationMode={shopSettings.taxCalculationMode || 'disabled'}
       shopTaxRate={getShopDefaultTaxRate(shopSettings)}
       taxSettings={taxSettings}
       totals={totals}

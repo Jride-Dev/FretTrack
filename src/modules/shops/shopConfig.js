@@ -30,6 +30,9 @@ export const defaultShopSettings = {
   locale: DEFAULT_LOCALE,
   taxLabel: DEFAULT_TAX_LABEL,
   taxRegistrationNumber: '',
+  taxCalculationMode: 'disabled',
+  defaultTaxProfileId: '',
+  taxProfileRevision: 1,
   dateFormat: getDefaultDateFormatForLocale(DEFAULT_LOCALE),
   measurementSystem: DEFAULT_MEASUREMENT_SYSTEM,
   lengthUnit: DEFAULT_LENGTH_UNIT,
@@ -76,6 +79,9 @@ export function getShopSettings() {
     locale: savedSettingsMatchShop ? savedSettings.locale || DEFAULT_LOCALE : DEFAULT_LOCALE,
     taxLabel: savedSettingsMatchShop ? savedSettings.taxLabel || DEFAULT_TAX_LABEL : DEFAULT_TAX_LABEL,
     taxRegistrationNumber: savedSettingsMatchShop ? savedSettings.taxRegistrationNumber || '' : '',
+    taxCalculationMode: savedSettingsMatchShop ? savedSettings.taxCalculationMode || 'disabled' : 'disabled',
+    defaultTaxProfileId: savedSettingsMatchShop ? savedSettings.defaultTaxProfileId || '' : '',
+    taxProfileRevision: savedSettingsMatchShop ? Number(savedSettings.taxProfileRevision || 1) : 1,
     dateFormat: savedSettingsMatchShop
       ? normalizeDateFormat(savedSettings.dateFormat, savedSettings.locale || DEFAULT_LOCALE)
       : getDefaultDateFormatForLocale(DEFAULT_LOCALE),

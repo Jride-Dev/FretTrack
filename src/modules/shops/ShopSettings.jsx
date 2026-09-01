@@ -119,8 +119,8 @@ export default function ShopSettings({
       return;
     }
 
-    if (requireCompletion && !settings.taxState.trim()) {
-      onNotice?.({ type: 'error', message: 'Tax jurisdiction is required before using FretTrack.' });
+    if (settings.taxCalculationMode === 'manual' && !settings.taxState.trim()) {
+      onNotice?.({ type: 'error', message: 'Enter the tax jurisdiction before enabling manual tax calculation.' });
       return;
     }
 
@@ -248,8 +248,16 @@ export default function ShopSettings({
             </select>
           </label>
           <label>
+            Tax calculation
+            <select name="taxCalculationMode" value={settings.taxCalculationMode || 'disabled'} onChange={updateField} disabled={!canManageShop || isSaving}>
+              <option value="disabled">Disabled — calculate no tax</option>
+              <option value="manual">Manual shop-configured tax</option>
+            </select>
+            <small>FretTrack does not determine registrations, rates, exemptions, or filing obligations.</small>
+          </label>
+          <label>
             Tax/VAT Label
-            <input name="taxLabel" list="shop-tax-label-options" value={settings.taxLabel || ''} onChange={updateField} disabled={!canManageShop || isSaving} placeholder="Sales Tax, VAT, GST, or custom" />
+            <input name="taxLabel" list="shop-tax-label-options" value={settings.taxLabel || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} placeholder="Sales Tax, VAT, GST, or custom" />
             <datalist id="shop-tax-label-options">
               <option value="Sales Tax" />
               <option value="VAT" />
@@ -258,23 +266,23 @@ export default function ShopSettings({
           </label>
           <label>
             Tax/VAT Registration #
-            <input name="taxRegistrationNumber" value={settings.taxRegistrationNumber || ''} onChange={updateField} disabled={!canManageShop || isSaving} />
+            <input name="taxRegistrationNumber" value={settings.taxRegistrationNumber || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
           </label>
           <label>
             Tax Jurisdiction
-            <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving} required={requireCompletion} maxLength="80" />
+            <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} required={settings.taxCalculationMode === 'manual'} maxLength="80" />
           </label>
           <label>
             Default {settings.taxLabel || 'Tax'} %
-            <input type="number" min="0" max="100" step="0.001" name="defaultTaxRate" value={settings.defaultTaxRate ?? settings.salesTaxRate ?? ''} onChange={updateField} disabled={!canManageShop || isSaving} />
+            <input type="number" min="0" max="100" step="0.001" name="defaultTaxRate" value={settings.defaultTaxRate ?? settings.salesTaxRate ?? ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
             <small>This is a shop default for new jobs, not tax or legal advice. Existing job tax snapshots are unchanged.</small>
           </label>
           <label className="checkline">
-            <input type="checkbox" name="taxablePartsDefault" checked={settings.taxablePartsDefault !== false} onChange={updateField} disabled={!canManageShop || isSaving} />
+            <input type="checkbox" name="taxablePartsDefault" checked={settings.taxablePartsDefault !== false} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
             Parts taxable by default
           </label>
           <label className="checkline">
-            <input type="checkbox" name="taxableServicesDefault" checked={Boolean(settings.taxableServicesDefault)} onChange={updateField} disabled={!canManageShop || isSaving} />
+            <input type="checkbox" name="taxableServicesDefault" checked={Boolean(settings.taxableServicesDefault)} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
             Services taxable by default
           </label>
           <label className="wide">

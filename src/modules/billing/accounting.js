@@ -41,38 +41,54 @@ export function calculateJobTotals(job, resolvedTaxSettings = null) {
       salesTaxAmount: fromMinor(finalizedSnapshot.taxMinor),
       totalDue,
       paidTotal,
-      balanceDue: Math.max(totalDue - paidTotal, 0)
+      balanceDue: roundCurrency(Math.max(totalDue - paidTotal, 0))
     };
   }
   const billablePartsTotal = parts.reduce((total, row) => {
-    return row.includedInService ? total : total + retailTotal(row);
+    return row.includedInService ? total : total + roundCurrency(retailTotal(row));
   }, 0);
   const includedPartsTotal = parts.reduce((total, row) => {
-    return row.includedInService ? total + retailTotal(row) : total;
+    return row.includedInService ? total + roundCurrency(retailTotal(row)) : total;
   }, 0);
-  const servicesTotal = sumRows(services, 'retail');
-  const subtotal = billablePartsTotal + servicesTotal;
+  const servicesTotal = services.reduce((total, row) => total + roundCurrency((Number(row.retail) || 0) * rowQuantity(row)), 0);
+  const subtotal = roundCurrency(billablePartsTotal + servicesTotal);
   const discountValue = Number(job.discountValue || 0);
-  const discountAmount = job.discountType === 'percent'
+  const rawDiscountAmount = job.discountType === 'percent'
     ? subtotal * (Math.max(0, Math.min(discountValue, 100)) / 100)
     : job.discountType === 'dollar'
       ? Math.min(Math.max(discountValue, 0), subtotal)
       : 0;
-  const taxableAmount = (taxSettings.taxableParts ? billablePartsTotal : 0) + (taxSettings.taxableServices ? servicesTotal : 0);
-  const salesTaxAmount = taxableAmount * ((Number(taxSettings.salesTaxRate) || 0) / 100);
-  const totalDue = Math.max(subtotal - discountAmount, 0) + salesTaxAmount;
+  const discountAmount = roundCurrency(rawDiscountAmount);
+  const taxCalculationMode = taxSettings.calculationMode
+    || (Number(taxSettings.salesTaxRate) > 0 ? 'manual' : 'disabled');
+  const taxableBeforeDiscount = taxCalculationMode === 'manual'
+    ? (taxSettings.taxableParts ? billablePartsTotal : 0) + (taxSettings.taxableServices ? servicesTotal : 0)
+    : 0;
+  const taxableDiscountAmount = subtotal > 0
+    ? roundCurrency(discountAmount * (taxableBeforeDiscount / subtotal))
+    : 0;
+  const taxableAmount = Math.max(taxableBeforeDiscount - taxableDiscountAmount, 0);
+  const salesTaxRate = taxCalculationMode === 'manual' ? Number(taxSettings.salesTaxRate) || 0 : 0;
+  const salesTaxAmount = roundCurrency(taxableAmount * (salesTaxRate / 100));
+  const totalDue = roundCurrency(Math.max(subtotal - discountAmount, 0) + salesTaxAmount);
   return {
     partsTotal: billablePartsTotal,
     includedPartsTotal,
     servicesTotal,
     subtotal,
     discountAmount,
+    taxableBeforeDiscount,
+    taxableDiscountAmount,
     taxableAmount,
     salesTaxAmount,
     totalDue,
     paidTotal,
-    balanceDue: Math.max(totalDue - paidTotal, 0)
+    balanceDue: roundCurrency(Math.max(totalDue - paidTotal, 0))
   };
+}
+
+function roundCurrency(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 }
 
 export function calculateJobAccounting(job, resolvedTaxSettings = null) {

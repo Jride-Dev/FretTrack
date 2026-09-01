@@ -178,3 +178,7 @@ npm run migration:check:strict
 # Estimate lifecycle migration
 
 `20260831220418_job_estimate_approval_lifecycle.sql` adds draft, sent, approved, and declined estimate state to work orders. The guarded owner/admin RPC stores server-calculated sent snapshots, increments revisions, rejects stale transitions, records decision events, locks sent/decided charge rows, and requires an explicit audited return to draft before a revised estimate can be edited.
+
+# Shop tax profile boundary migration
+
+`20260901025709_shop_tax_profile_boundary.sql` adds an explicit disabled/manual tax-calculation mode and stable versioned default profile to each shop. It synchronizes shop defaults into the shop-scoped `tax_profiles` record, preserves existing configured nonzero rates as manual profiles, and upgrades server-calculated estimate/invoice snapshots with tax profile identity, revision, rate source, jurisdiction, registration reference, taxable categories, and proportional invoice-discount allocation. Disabled mode is the safe default and calculates no tax for new work orders.

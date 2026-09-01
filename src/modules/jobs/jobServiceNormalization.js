@@ -86,6 +86,9 @@ const defaultTechDetails = {
     }
   },
   tax: {
+    calculationMode: 'disabled',
+    profileId: '',
+    profileRevision: 0,
     state: '',
     salesTaxRate: '',
     taxLabel: 'Sales Tax',
@@ -245,10 +248,9 @@ export function normalizeTechDetails(techDetails = {}, instrumentType = 'Guitar'
     stringCount,
     damageMap: normalizeDamageMap(techDetails.damageMap),
     neckInspection: normalizeNeckInspection(techDetails.neckInspection),
-    tax: {
-      ...defaultTechDetails.tax,
-      ...(techDetails.tax || {})
-    },
+    tax: techDetails.tax && typeof techDetails.tax === 'object' && Object.keys(techDetails.tax).length > 0
+      ? { ...defaultTechDetails.tax, ...techDetails.tax }
+      : {},
     measurementSystem: normalizeMeasurementSystem(techDetails.measurementSystem, getDefaultMeasurementPreferences(techDetails.tax || {}).measurementSystem),
     lengthUnit: normalizeLengthUnit(techDetails.lengthUnit, getDefaultMeasurementPreferences(techDetails.tax || {}).lengthUnit),
     payments: Array.isArray(techDetails.payments) ? techDetails.payments.map(normalizePayment) : [],

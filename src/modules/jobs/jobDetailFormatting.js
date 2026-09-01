@@ -131,20 +131,32 @@ export function buildTaxFieldPatch(currentJob, fieldName, fieldValue, inputType 
       tax: {
         ...(currentJob.techDetails.tax || {}),
         [fieldName]: inputType === 'checkbox' ? checked : fieldValue,
-        ...(fieldName === 'salesTaxRate' ? { rateSource: 'job' } : {})
+        ...(fieldName === 'salesTaxRate' ? { rateSource: 'job', calculationMode: 'manual' } : {})
       }
     }
   };
 }
 
-export function buildShopTaxRatePatch(currentJob, salesTaxRate) {
+export function buildShopTaxRatePatch(currentJob, shopSettings = {}) {
+  const calculationMode = shopSettings.taxCalculationMode === 'manual' ? 'manual' : 'disabled';
   return {
     techDetails: {
       ...currentJob.techDetails,
       tax: {
         ...(currentJob.techDetails.tax || {}),
-        salesTaxRate,
-        rateSource: 'shop'
+        calculationMode,
+        profileId: shopSettings.defaultTaxProfileId || '',
+        profileRevision: Number(shopSettings.taxProfileRevision || 0),
+        state: shopSettings.taxState || '',
+        salesTaxRate: calculationMode === 'manual'
+          ? shopSettings.defaultTaxRate ?? shopSettings.salesTaxRate ?? ''
+          : '0',
+        taxLabel: shopSettings.taxLabel || 'Sales Tax',
+        taxRegistrationNumber: shopSettings.taxRegistrationNumber || '',
+        currencyCode: shopSettings.currencyCode || 'USD',
+        taxableParts: calculationMode === 'manual' && shopSettings.taxablePartsDefault !== false,
+        taxableServices: calculationMode === 'manual' && Boolean(shopSettings.taxableServicesDefault),
+        rateSource: 'shop',
       }
     }
   };

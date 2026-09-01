@@ -4,6 +4,8 @@
 
 Work-order estimates now have an explicit, owner/admin-controlled lifecycle instead of relying on informal notes. Marking a draft estimate sent stores a server-calculated minor-unit snapshot, increments its revision, and locks parts, services, discounts, and tax settings. Staff can record approval or decline with an audit note, while revisions require returning the estimate to draft before editing and sending again. Sent or declined estimates cannot be finalized as invoices; approved estimates retain the exact customer-reviewed snapshot. Migration `20260831220418_job_estimate_approval_lifecycle.sql` supplies the version-checked RPC, database constraints, charge guards, and timeline events.
 
+Shop tax defaults now require an explicit calculation choice. Tax calculation is disabled by default; an owner/admin may enable manual shop-configured tax after entering a jurisdiction and remains responsible for registrations, rates, exemptions, filing, and legal treatment. FretTrack versions the default profile and preserves the applied mode, profile identity/revision, registration reference, jurisdiction, and taxable categories in new estimate and invoice snapshots. This is calculation and bookkeeping support, not a tax engine or filing service.
+
 ## GitHub Release Summary: v0.3.1
 
 FretTrack `0.3.1` is a behavior-preserving maintainability release. The app shell now delegates PWA/theme/sidebar preferences and stale-safe team-member loading to focused hooks. Job Detail delegates derived billing, measurement, payment, and service state to focused hooks. Global CSS is loaded in the same cascade order from smaller foundation, workspace, and feature/detail files.

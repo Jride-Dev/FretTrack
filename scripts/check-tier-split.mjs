@@ -22,6 +22,7 @@ const app = read('src/app/App.jsx');
 const appAccess = read('src/app/appAccess.js');
 const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
+const jobPhotoController = read('src/modules/jobs/useJobPhotoController.js');
 const photoGallery = read('src/modules/photos/PhotoGallery.jsx');
 const shopMembersPanel = read('src/modules/shops/ShopMembersPanel.jsx');
 const membershipService = read('src/modules/shops/shopMembershipService.js');
@@ -114,7 +115,7 @@ assertIncludes(app, 'effectiveMemberAccess === false', 'App must detect locked m
 assertIncludes(app, 'Shop Access Locked', 'Locked staff accounts must get a clear screen.');
 assertIncludes(appAccess, 'canManageTeamMembersForRole', 'App access must derive team management permission centrally.');
 
-assertIncludes(jobDetail, "message: 'Photo Editor is available in Pro.'", 'Photo editor launch must be guarded with Pro wording.');
+assertIncludes(jobPhotoController, "message: 'Photo Editor is available in Pro.'", 'Photo editor launch must be guarded with Pro wording.');
 assertIncludes(photoGallery, 'Photo Editor - Available in Pro', 'Photo gallery must show Pro lock state.');
 assertIncludes(shopMembersPanel, 'Team Members - Available in Pro', 'Team member settings must show Pro lock state.');
 assertIncludes(shopMembersPanel, 'canManageTeamMembers', 'Team member controls must use the entitlement gate.');
