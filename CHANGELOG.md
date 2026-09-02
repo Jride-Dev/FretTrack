@@ -6,6 +6,8 @@ This file tracks product, reliability, security, and operational changes by rele
 
 ## Unreleased
 
+- Fixed the public free-trial URL so it opens account creation at the real top-level authentication gate, and added a dedicated retry screen when a newly created workspace is safe in the database but its profile reload fails.
+- Added a provider-neutral customer correspondence backend: durable shop/customer/channel threads, direct shop scoping, inbound/outbound direction, read state, explicit customer-report selection, idempotent inbound provider identities, ambiguous-message routing without guessing a work order, narrow guarded RPCs, and cross-shop pgTAP coverage. This does not yet enable inbound email, SMS, Realtime, or a conversation UI.
 - Hardened Stripe Checkout so any open subscription on a shop's connected Stripe customer blocks a second subscription, including legacy or manually repaired subscriptions with missing shop metadata.
 - Removed the retired access-application modal from the public landing page and aligned README, support, FAQ, and account documentation with confirmed-email self-service registration and the one-time 14-day Pro trial.
 - Fixed specialist purchasing so selecting an existing packaged part fills its saved whole-package vendor price, and newly created packaged parts retain the exact package price after reload instead of reconstructing it from a rounded per-item cost.

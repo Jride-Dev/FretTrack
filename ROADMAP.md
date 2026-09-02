@@ -8,7 +8,7 @@ The Operational Shop Release establishes one dependable intake-to-pickup system 
 
 Shipped product boundaries include:
 
-- controlled account approval and non-converting 14-day Pro trials;
+- self-service email-confirmed registration and non-converting 14-day Pro trials;
 - Shop and Pro subscriptions through Stripe Checkout and the Billing Portal;
 - customers, subcontractors, focused repair benches, work logs, parts, services, payments, and history;
 - inventory, vendors, purchase orders, receiving, landed costs, barcode labels, and specialist purchasing;
@@ -26,7 +26,7 @@ Known product boundaries:
 - Existing-job edits do not have full offline synchronization.
 - Public invoice and work-order links are not implemented.
 - Customer instruments are stored with work orders rather than in an independent asset registry.
-- Advanced accounting permissions and locked/finalized totals need deeper design.
+- Customer correspondence has a provider-neutral backend, but inbound provider adapters, a two-way conversation UI, Realtime updates, and customer-report selection controls are not enabled.
 - Supplier APIs, carrier labels/rates, vendor returns, forecasting, and automated customer shipping remain future work.
 - Paid usage overages and multi-shop subscription administration are not implemented.
 
@@ -55,13 +55,21 @@ Each extraction must preserve the current facade, permissions, database behavior
 
 ## v0.3.x: Commerce hardening
 
-- estimate approval and lifecycle clarity;
-- stronger monetary-edit permissions and finalized-total audit behavior (implemented locally for the next commerce release: role-separated payment/adjustment controls, append-only payment history, server-calculated invoice snapshots, and audited finalization/reopen locking);
+- estimate approval and lifecycle clarity (implemented);
+- stronger monetary-edit permissions and finalized-total audit behavior (implemented with role-separated payment/adjustment controls, append-only payment history, server-calculated invoice snapshots, and audited finalization/reopen locking);
 - invoice and transaction numbering review;
 - deeper payment/refund support tooling;
 - tax-profile and sales-history improvements;
 - public invoice or work-order links only after a secure token and revocation design;
 - billing reconciliation and operator support tools.
+
+## v0.3.x: Correspondence and interface cohesion
+
+- keep the provider-neutral customer correspondence schema and repository stable under shop-isolation and replay tests;
+- add a focused conversation interface, unassigned inbound queue, read state, and explicit customer-report selection without duplicating Message History state;
+- add inbound email or SMS adapters one provider at a time only after signature, consent, opt-out, routing, retry, and cost controls are complete;
+- establish shared visual tokens and reusable form, panel, table, empty-state, action, feedback, and responsive-layout primitives;
+- update major workspaces in measured slices so the product looks intentional and consistent without changing proven workflow behavior during the visual pass.
 
 ## v0.4.x: Operations
 

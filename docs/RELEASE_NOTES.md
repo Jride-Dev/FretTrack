@@ -2,6 +2,10 @@
 
 ## Post-0.3.1 commerce hardening
 
+The public Start Free Trial link now opens Create Account through the application's actual top-level authentication gate. If shop creation succeeds but the authoritative profile reload is temporarily unavailable, FretTrack clearly says the workspace was created and offers a safe profile reload instead of sending the user back through shop creation.
+
+The next customer-communication slice now has a provider-neutral storage boundary. Existing outbound Message History rows are grouped into durable shop/customer/channel threads, while the schema can safely represent received messages, read state, ambiguous work-order routing, and explicit customer-report selection. Shop isolation, immutable routing, provider replay identity, and the two narrow staff actions are database-enforced. This is backend groundwork only: inbound email, SMS delivery, Realtime updates, the conversation interface, and report rendering controls are not enabled yet.
+
 Stripe Checkout now treats the connected Stripe customer as shop-owned billing identity and blocks a second Checkout whenever that customer already has any open subscription. This closes the duplicate-charge path for legacy or manually repaired subscriptions whose shop metadata is missing, while retaining pagination across the complete Stripe subscription list.
 
 Public onboarding now consistently directs a new user to create an account, confirm the email address, create one shop, and begin the non-converting 14-day Pro trial. The retired access-application modal is no longer rendered, and current README, support, FAQ, and account documentation no longer imply operator approval is required.

@@ -29,6 +29,7 @@ assert.ok(migrationName, 'Shop bootstrap reliability migration must exist.');
 
 const migration = read(`supabase/migrations/${migrationName}`);
 const app = read('src/app/App.jsx');
+const appBootstrap = read('src/app/AppBootstrap.jsx');
 const bootstrapController = read('src/app/useSessionShopBootstrap.js');
 const membershipService = read('src/modules/shops/shopMembershipService.js');
 const authGate = read('src/modules/auth/AuthGate.jsx');
@@ -74,12 +75,18 @@ assertNotIncludes(membershipService.toLowerCase(), 'service_role', 'Frontend mem
 assertNotIncludes(membershipService, ".from('shop_members')\n    .insert", 'Frontend must not insert bootstrap owner membership directly.');
 
 assertIncludes(app, 'useSessionShopBootstrap({', 'App must delegate session and shop bootstrap coordination to its focused controller.');
+assertIncludes(appBootstrap, "new URLSearchParams(window.location.search).get('signup') === '1'", 'The top-level unauthenticated gate must honor the public signup query.');
+assertIncludes(appBootstrap, '<AuthGate initialMode={initialAuthMode}', 'The top-level unauthenticated gate must open account creation for signup links.');
 assertIncludes(bootstrapController, 'async function loadShopAccess(preferredShopId = getSelectedShop().shopId, options = {})', 'Shop access loader must support rethrow for bootstrap verification.');
 assertIncludes(bootstrapController, 'if (options.rethrow) {', 'Shop access loader must be able to fail bootstrap if real reload fails.');
 assertIncludes(bootstrapController, 'async function handleBootstrapOwner()', 'Create Shop handler must exist.');
 assertMatches(bootstrapController, /async function handleBootstrapOwner\(\)[\s\S]*?if \(isMembershipLoading\) \{\s*return;\s*\}/, 'Create Shop handler must block duplicate submit.');
 assertIncludes(bootstrapController, 'await bootstrapCurrentUserAsOwner(shopId, shopNameValue);', 'Create Shop handler must pass the shop name to the RPC.');
 assertIncludes(bootstrapController, 'await loadShopAccess(shopId, { rethrow: true });', 'Create Shop handler must reload real shop access after bootstrap.');
+assertIncludes(bootstrapController, "setShopProfileLoadError(getErrorMessage(error, 'The shop profile could not be loaded.'));", 'Profile reload failures must remain available to a dedicated recovery screen.');
+assertIncludes(bootstrapController, 'Your workspace was created, but its profile could not be loaded.', 'Post-create reload failures must not be reported as failed workspace creation.');
+assertIncludes(app, 'Retry Workspace Load', 'A committed workspace with a failed profile reload must offer a dedicated retry action.');
+assertIncludes(app, 'loadShopAccess(membership.shopId)', 'Workspace recovery must reload authoritative access without invoking shop creation again.');
 assertNotIncludes(bootstrapController, 'getOrCreateBetaAccessRequest', 'Session bootstrap must not create a beta approval request.');
 assertNotIncludes(bootstrapController, 'must approve your account access', 'Shop creation must not retain the beta approval blocker.');
 assertNotIncludes(bootstrapController, 'const ownerMembership = await bootstrapCurrentUserAsOwner(shopId);', 'Create Shop handler must not use the old one-argument RPC call.');
@@ -99,6 +106,7 @@ assertNotIncludes(accountAccessDocs, 'approved access or operator status', 'Acco
 assertIncludes(landingWorker, 'href="${APP_URL}/?signup=1">Start Free 14-Day Trial', 'Landing CTA must open self-service sign-up.');
 assertNotIncludes(landingWorker, 'id="application-modal"', 'Landing page must not render the retired access application modal.');
 assertIncludes(landingWorker, "env.LEGACY_ACCESS_APPLICATION_ENABLED !== 'true'", 'Legacy application submissions must fail closed unless explicitly enabled.');
+assertIncludes(publicSupport, 'Retry Workspace Load', 'Public support must explain safe recovery after a committed workspace profile reload fails.');
 for (const [label, publicCopy] of [
   ['support', publicSupport],
   ['FAQ', publicFaq],

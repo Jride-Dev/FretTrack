@@ -7,6 +7,7 @@ import {
   getSelectedCustomerReportCorrespondence,
   isCustomerReportEligible,
   normalizeCorrespondenceMessage,
+  normalizeCorrespondenceThread,
   sortCorrespondence
 } from '../src/modules/messaging/customerCorrespondence.js';
 
@@ -79,6 +80,30 @@ test('correspondence sorting does not mutate its source array', () => {
 
   assert.deepEqual(sorted.map((item) => item.id), ['newer', 'older']);
   assert.deepEqual(messages.map((item) => item.id), ['older', 'newer']);
+});
+
+test('conversation threads normalize provider-neutral storage fields', () => {
+  const thread = normalizeCorrespondenceThread({
+    id: 'thread-1',
+    shop_id: 'shop-1',
+    customer_id: 'customer-1',
+    channel: 'sms',
+    contact_address: '+13105550100',
+    status: 'archived',
+    created_at: '2026-09-02T01:00:00.000Z',
+    updated_at: '2026-09-02T02:00:00.000Z'
+  });
+
+  assert.deepEqual(thread, {
+    id: 'thread-1',
+    shopId: 'shop-1',
+    customerId: 'customer-1',
+    channel: 'sms',
+    contactAddress: '+13105550100',
+    status: 'archived',
+    createdAt: '2026-09-02T01:00:00.000Z',
+    updatedAt: '2026-09-02T02:00:00.000Z'
+  });
 });
 
 function message(id, status, includeInCustomerReport, createdAt, body = 'Customer-facing message') {

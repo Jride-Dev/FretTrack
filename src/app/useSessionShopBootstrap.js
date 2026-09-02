@@ -59,6 +59,7 @@ export default function useSessionShopBootstrap({
     setSession,
     setShopName,
     setShopProfile,
+    setShopProfileLoadError,
     setShowOperatorDashboard,
     setSupabaseStatus
   } = stateSetters;
@@ -83,6 +84,7 @@ export default function useSessionShopBootstrap({
     const isCurrentRequest = () => requestId === shopAccessRequestIdRef.current;
     setIsMembershipLoading(true);
     setJobsReadyShopId('');
+    setShopProfileLoadError('');
     try {
       const availableMemberships = await getCurrentUserShopMemberships();
       if (!isCurrentRequest()) return null;
@@ -101,9 +103,18 @@ export default function useSessionShopBootstrap({
       if (!isCurrentRequest()) return null;
       setEntitlementSnapshot(currentEntitlements);
       setIsShopProfileLoading(true);
-      const currentShopProfile = await getCurrentShopProfile(currentMembership.shopId);
+      let currentShopProfile;
+      try {
+        currentShopProfile = await getCurrentShopProfile(currentMembership.shopId);
+      } catch (error) {
+        if (isCurrentRequest()) {
+          setShopProfileLoadError(getErrorMessage(error, 'The shop profile could not be loaded.'));
+        }
+        throw error;
+      }
       if (!isCurrentRequest()) return null;
       setShopProfile(currentShopProfile);
+      setShopProfileLoadError('');
       if (currentShopProfile?.shopName) {
         setShopName(currentShopProfile.shopName);
       }
@@ -223,6 +234,7 @@ export default function useSessionShopBootstrap({
           setMembership(null);
           setMemberships([]);
           setShopProfile(null);
+          setShopProfileLoadError('');
           setIsOperator(false);
           setBetaAccess(null);
           setShowOperatorDashboard(false);
@@ -283,7 +295,15 @@ export default function useSessionShopBootstrap({
     onNotice(null);
     try {
       await bootstrapCurrentUserAsOwner(shopId, shopNameValue);
-      await loadShopAccess(shopId, { rethrow: true });
+      try {
+        await loadShopAccess(shopId, { rethrow: true });
+      } catch (error) {
+        onNotice({
+          type: 'error',
+          message: 'Your workspace was created, but its profile could not be loaded. Use Retry Workspace Load; do not create it again.'
+        });
+        return;
+      }
       setNewShopName('');
       onNotice({ type: 'success', message: 'Shop owner access created.' });
     } catch (error) {
@@ -308,6 +328,7 @@ export default function useSessionShopBootstrap({
     setMembership(null);
     setMemberships([]);
     setShopProfile(null);
+    setShopProfileLoadError('');
     setIsOperator(false);
     setBetaAccess(null);
     setIsBetaAccessLoading(false);
@@ -356,6 +377,7 @@ export default function useSessionShopBootstrap({
     setCustomers([]);
     setSelectedJobId(null);
     setShopProfile(null);
+    setShopProfileLoadError('');
     setShowOperatorDashboard(false);
     setEntitlementSnapshot(getDefaultEntitlementSnapshot(selectedMembership.shopId));
     setMembership(selectedMembership);
@@ -375,6 +397,7 @@ export default function useSessionShopBootstrap({
     setCustomers([]);
     setSelectedJobId(null);
     setShopProfile(null);
+    setShopProfileLoadError('');
     setMembership(null);
     setShowOperatorDashboard(false);
     setEntitlementSnapshot(getDefaultEntitlementSnapshot());

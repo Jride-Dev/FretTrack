@@ -22,6 +22,9 @@ export default function AppBootstrap() {
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(hasSupabaseConfig);
   const [notice, setNotice] = useState(null);
+  const initialAuthMode = new URLSearchParams(window.location.search).get('signup') === '1'
+    ? 'sign-up'
+    : 'sign-in';
 
   useEffect(() => {
     logLegacyDebug('app bootstrap started');
@@ -112,7 +115,7 @@ export default function AppBootstrap() {
   } else if (hasSupabaseConfig && !session) {
     content = (
       <Fragment>
-        <AuthGate onAuthCompleted={setSession} onNotice={setNotice} />
+        <AuthGate initialMode={initialAuthMode} onAuthCompleted={setSession} onNotice={setNotice} />
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
       </Fragment>
     );

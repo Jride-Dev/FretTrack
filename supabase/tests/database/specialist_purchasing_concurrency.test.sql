@@ -145,6 +145,7 @@ select extensions.dblink_exec('setup', $$delete from public.parts where id = '58
 select extensions.dblink_exec('setup', $$delete from public.vendors where id = '58000000-0000-4000-a200-000000000001'$$);
 select extensions.dblink_exec('setup', $$delete from public.jobs where id = '58000000-0000-4000-a100-000000000001'$$);
 select extensions.dblink_exec('setup', $$delete from public.shop_members where shop_id = 'specialist-concurrency-shop'$$);
+select extensions.dblink_exec('setup', $$delete from public.tax_profiles where shop_id = 'specialist-concurrency-shop'$$);
 select extensions.dblink_exec('setup', $$delete from public.shop_profiles where shop_id = 'specialist-concurrency-shop'$$);
 select extensions.dblink_exec('setup', $$delete from auth.users where id = '58000000-0000-4000-a000-000000000001'$$);
 
