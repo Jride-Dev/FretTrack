@@ -1422,54 +1422,7 @@ function landingPage() {
       </div>
     </footer>
 
-    <div class="modal-backdrop" id="application-modal" role="presentation">
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="application-title">
-        <div class="modal-header">
-          <div>
-            <h2 id="application-title">FretTrack access application</h2>
-            <p>Tell us a little about your shop so onboarding stays useful and controlled.</p>
-          </div>
-          <a class="modal-close" href="#" id="close-application" aria-label="Close application">X</a>
-        </div>
-        <form class="application-form" id="application-form">
-          <label>
-            Name
-            <input name="name" autocomplete="name" required>
-          </label>
-          <label>
-            State
-            <input name="state" autocomplete="address-level1" required>
-          </label>
-          <label>
-            Shop Name
-            <input name="shopName" autocomplete="organization" required>
-          </label>
-          <label>
-            How many people work at your shop?
-            <input name="teamSize" inputmode="numeric" required>
-          </label>
-          <label>
-            What are you using now to track your bench work?
-            <textarea name="currentTracking" required></textarea>
-          </label>
-          <label>
-            Email address
-            <input name="email" type="email" autocomplete="email" required>
-          </label>
-          <p class="form-note">After submitting, check your inbox and spam or junk folder for FretTrack email.</p>
-          <button class="button" type="submit">Submit Application</button>
-          <p class="form-status" id="application-status" aria-live="polite"></p>
-        </form>
-      </div>
-    </div>
-
     <script>
-      const body = document.body;
-      const openButtons = document.querySelectorAll('a[href="#application-modal"]');
-      const closeButton = document.getElementById('close-application');
-      const modal = document.getElementById('application-modal');
-      const form = document.getElementById('application-form');
-      const status = document.getElementById('application-status');
       const publicStatus = document.getElementById('public-system-status');
       const publicStatusLabel = document.getElementById('public-system-status-label');
       const publicStatusTitle = document.getElementById('public-system-status-title');
@@ -1524,101 +1477,6 @@ function landingPage() {
         if (publicStatusSnapshot) publicStatusDuration.textContent = formatStatusDuration(publicStatusSnapshot);
       }, 60000);
 
-      function openModal() {
-        body.classList.add('modal-open');
-        status.textContent = '';
-        status.className = 'form-status';
-        const firstField = form.elements.name;
-        if (firstField) firstField.focus();
-      }
-
-      function closeModal() {
-        body.classList.remove('modal-open');
-        if (window.location.hash === '#application-modal' && window.history && history.pushState) {
-          history.pushState('', document.title, window.location.pathname + window.location.search);
-        }
-        const firstOpenButton = openButtons[0];
-        if (firstOpenButton) firstOpenButton.focus();
-      }
-
-      openButtons.forEach((button) => {
-        button.addEventListener('click', openModal);
-      });
-      closeButton.addEventListener('click', (event) => {
-        event.preventDefault();
-        closeModal();
-      });
-      window.addEventListener('hashchange', () => {
-        if (window.location.hash === '#application-modal') {
-          openModal();
-        } else {
-          body.classList.remove('modal-open');
-        }
-      });
-      modal.addEventListener('click', (event) => {
-        if (event.target === modal) closeModal();
-      });
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && body.classList.contains('modal-open')) closeModal();
-      });
-
-      if (window.location.hash === '#application-modal') {
-        openModal();
-      }
-
-      form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const submitButton = form.querySelector('button[type="submit"]');
-        const payload = {};
-        new FormData(form).forEach(function(value, key) {
-          payload[key] = value;
-        });
-
-        submitButton.disabled = true;
-        status.textContent = 'Submitting...';
-        status.className = 'form-status';
-
-        try {
-          const response = await fetch('/api/access-application', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          const result = await parseApplicationResponse(response);
-          if (!response.ok || !result.ok) {
-            throw new Error(result.error || 'Unable to submit right now.');
-          }
-          form.reset();
-          const delivery = result.emailDelivery || {};
-          const applicantEmailStatus = delivery.applicant === 'sent'
-            ? ' Confirmation email sent. If you do not see it, check your spam or junk folder.'
-            : delivery.applicant === 'failed'
-              ? ' Confirmation email failed; your application was still saved.'
-              : '';
-          status.textContent = result.warning
-            ? result.message + applicantEmailStatus + ' ' + result.warning
-            : (result.message || 'Application received. You will be contacted or approved before workspace access is enabled.') + applicantEmailStatus;
-          status.className = 'form-status success';
-        } catch (error) {
-          status.textContent = error.message || 'Unable to submit right now.';
-          status.className = 'form-status error';
-        } finally {
-          submitButton.disabled = false;
-        }
-      });
-
-      async function parseApplicationResponse(response) {
-        try {
-          return await response.json();
-        } catch (error) {
-          return {
-            ok: false,
-            error: response.ok
-              ? 'The application response was unreadable. Please contact support.'
-              : 'The application service is temporarily unavailable. Please try again.'
-          };
-        }
-      }
     </script>
   </body>
 </html>`;
@@ -1721,6 +1579,14 @@ function getPublicStatusLabel(status) {
 }
 
 async function saveAccessApplication(request, env) {
+  if (env.LEGACY_ACCESS_APPLICATION_ENABLED !== 'true') {
+    return jsonResponse({
+      ok: false,
+      error: 'The access application is retired. Create an account to start a free trial.',
+      signupUrl: `${APP_URL}/?signup=1`
+    }, 410);
+  }
+
   const contentType = request.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
     return jsonResponse({ ok: false, error: 'Invalid request.' }, 400);

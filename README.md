@@ -14,9 +14,9 @@ FretTrack is professional workflow software for guitar, bass, amplifier, and key
 
 ## Access and plans
 
-[Request FretTrack Access](https://frettrack-app.com)
+[Start a Free 14-Day Trial](https://app.frettrack-app.com/?signup=1)
 
-New approved workspaces receive a non-converting 14-day Pro trial with no card required. Shop is $29.99 monthly or $299.99 yearly. Pro is $39.99 monthly or $399.99 yearly. Paid enrollment and subscription management use Stripe Checkout and the Stripe Billing Portal.
+New email-confirmed accounts can create one workspace and receive a non-converting 14-day Pro trial with no card required. Shop is $29.99 monthly or $299.99 yearly. Pro is $39.99 monthly or $399.99 yearly. Paid enrollment and subscription management use Stripe Checkout and the Stripe Billing Portal.
 
 Public product documentation, release notes, support, privacy, and terms are available at [frettrack-app.com/docs](https://frettrack-app.com/docs).
 
