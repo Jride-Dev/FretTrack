@@ -5,10 +5,10 @@ Review this file before every production deploy and update it after app, public-
 ## Current status
 
 - FretTrack 0.3.1 is deployed as the current stable maintainability release over the Operational Shop Release.
-- The production app is Cloudflare Pages build `c07a0402.frettrack.pages.dev`. The branded app URL and immutable Pages build returned `200 OK`; the deployed application includes the purchase-package correction and guarded shop tax-profile boundary.
+- The production app is Cloudflare Pages build `ef46ccfd.frettrack.pages.dev`. The branded signup URL now opens account creation when `?signup=1` is present, and failed post-creation workspace profile reloads have a dedicated retry path that does not create a second workspace.
 - Migration `20260829071930_access_application_side_effect_idempotency.sql` is applied in production. Repeated access submissions now retain one request identity/timestamp so email and archive retries reuse stable side-effect keys.
-- Production migration history matches the repository through `20260901025709_shop_tax_profile_boundary.sql`; the linked migration check and post-deploy dry run report that the remote database is up to date.
-- The public landing/docs Worker is deployed as version `c420169b-9971-4b38-9bfa-a955d2d19984` and serves stable 0.3.1 self-service registration, pricing, annual savings, Terms, Privacy, Support, product guides, community links, release notes, tax responsibility guidance, and legacy documentation aliases. The retired application modal is absent, and legacy application submissions fail closed unless the historical compatibility switch is explicitly enabled.
+- Production migration history matches the repository through `20260902082416_customer_correspondence_backend.sql`; the linked migration check reports that the remote database is up to date, and the production read-only data-integrity gate passes.
+- The public landing/docs Worker is deployed as version `5a5a29f9-4ade-40ea-a894-6b2f5f0c1def` and serves stable 0.3.1 self-service registration, pricing, annual savings, Terms, Privacy, Support, product guides, community links, release notes, tax responsibility guidance, correspondence-framework boundaries, and legacy documentation aliases. The retired application modal is absent, and legacy application submissions fail closed unless the historical compatibility switch is explicitly enabled.
 - PR #258 merged at `3209f2c` after regression/build, npm audit, and the full local database/browser workflow passed. Production `create-checkout-session` version 14 now blocks a second Checkout whenever the shop-owned connected Stripe customer has any open subscription, including legacy subscriptions with missing or mismatched shop metadata and subscriptions beyond Stripe's first result page. No database migration or webhook deployment was required, and the deployed unauthenticated endpoint returned `401` as expected.
 - PR #256 passed regression/build, npm audit, and the full local database/browser workflow. Production smoke checks returned `200` for landing, Support, and FAQ; confirmed the direct `?signup=1` account CTA and confirmed-email copy; confirmed the retired modal is absent; and confirmed the legacy application endpoint returns `410 Gone` without accepting a submission.
 - PR #247 and follow-up PR #248 passed GitHub regression/build, the full local database/browser job, and `npm audit`. Local validation passed 438 pgTAP/RLS assertions, public/private schema lint, focused tax and commerce checks, permission/tier gates, the production deploy preflight, and a zero-vulnerability audit. Tax calculation now defaults disabled, requires an explicit manual jurisdiction, versions the shop profile, freezes applied tax provenance in estimate/invoice snapshots, discounts the taxable base proportionally, preserves legacy work-order inheritance, and safely disables incomplete legacy shop defaults for owner review.
@@ -66,6 +66,16 @@ Review this file before every production deploy and update it after app, public-
 - Verified CSP and MIME-sniffing protection on the app and public root, retained Discord, GitHub, Reddit, Product Hunt, and Torrance Guitar Repair links, and found no public beta-testing call to action.
 - Confirmed unauthenticated Checkout, Billing Portal, and approval-notification requests return `401`.
 - No database migration or Edge Function deployment was required; production migration history remained aligned through `20260829071930_access_application_side_effect_idempotency.sql`.
+
+## Customer correspondence and onboarding deployment
+
+- Merged PR #261 at `8000560` after GitHub regression/build, npm audit, and the full local database/browser workflow passed.
+- Completed the pre-migration hosted snapshot at `backups/hosted-supabase-20260902-021609`. It contains database, migration-history, manifest, checksum, comparison-report, 238 Storage-object, and local Docker-volume artifacts with no `FAILED.txt`; the comparison report found no schema, migration-history, or row-count drift from the preceding snapshot.
+- Applied production migration `20260902082416_customer_correspondence_backend.sql`, verified local/remote migration parity, and passed the linked read-only data-integrity check. No Edge Function deployment was required.
+- Deployed Cloudflare Pages build `https://ef46ccfd.frettrack.pages.dev` and public Worker version `5a5a29f9-4ade-40ea-a894-6b2f5f0c1def`.
+- Verified the live `https://app.frettrack-app.com/?signup=1` route renders Create Account and Confirm Password rather than Sign In.
+- Verified `200 OK` for the public root, Support, Getting Started, Release Notes, and Shops and Accounts pages; confirmed the live workspace-retry guidance, v0.3.1 release copy, and planned AmpTrack/MidiTrack add-on wording.
+- The correspondence release establishes provider-neutral thread/history ownership and report-selection controls only. Inbound adapters, SMS delivery, Realtime subscriptions, and the future conversation interface remain disabled until separately implemented and reviewed.
 
 ## Standard app deployment
 
