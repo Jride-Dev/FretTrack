@@ -13,6 +13,12 @@ export const CORRESPONDENCE_THREAD_STATUSES = Object.freeze({
   ARCHIVED: 'archived'
 });
 
+export function clampCorrespondenceLimit(limit = 200) {
+  const numericLimit = Number(limit);
+  const resolvedLimit = Number.isFinite(numericLimit) ? Math.trunc(numericLimit) : 200;
+  return Math.min(Math.max(resolvedLimit, 1), 500);
+}
+
 const supportedStatuses = new Set([
   'pending',
   'sent',
