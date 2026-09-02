@@ -96,6 +96,21 @@ export function filterAndSortCurrentJobs(jobs = [], filters = {}, now = new Date
   });
 }
 
+export function summarizeCurrentJobs(jobs = []) {
+  const activeJobs = jobs.filter(isCurrentJob);
+  const priorities = activeJobs.reduce((summary, job) => {
+    const priority = normalizeJobPriority(job.priority || job.techDetails?.priority);
+    summary[priority] = (summary[priority] || 0) + 1;
+    return summary;
+  }, { high: 0, medium: 0, regular: 0 });
+  const nextDue = activeJobs
+    .map(getJobDueDate)
+    .filter((value) => value && !Number.isNaN(new Date(value).getTime()))
+    .sort((left, right) => new Date(left).getTime() - new Date(right).getTime())[0] || '';
+
+  return { activeCount: activeJobs.length, nextDue, priorities };
+}
+
 function compareDueDates(left, right) {
   if (!left && !right) return 0;
   if (!left) return 1;
@@ -105,6 +120,7 @@ function compareDueDates(left, right) {
 
 export default function CurrentJobsPage({
   jobs = [],
+  onCreateJob,
   onSelectJob,
   shopProfile = null,
   assignableMembers = [],
@@ -122,6 +138,7 @@ export default function CurrentJobsPage({
   });
   const dateOptions = getShopDateOptions(shopProfile || undefined);
   const visibleJobs = useMemo(() => filterAndSortCurrentJobs(jobs, filters), [jobs, filters]);
+  const summary = useMemo(() => summarizeCurrentJobs(jobs), [jobs]);
   const shopId = jobs.find((job) => job.shopId)?.shopId || shopProfile?.shopId || '';
   const assignmentChoices = useMemo(
     () => listAssignableShopMembers(assignableMembers, shopId),
@@ -137,16 +154,43 @@ export default function CurrentJobsPage({
   }
 
   return (
-    <section className="panel current-jobs-page">
-      <div className="section-header">
+    <section className="current-jobs-page">
+      <div className="section-header current-jobs-titlebar">
         <div>
           <h2>Current Jobs</h2>
           <p className="muted-text">Review active shop work, priorities, statuses, and due dates.</p>
         </div>
-        <strong>{visibleJobs.length} job{visibleJobs.length === 1 ? '' : 's'}</strong>
+        {onCreateJob && (
+          <button type="button" className="primary-action" aria-label="New Job" onClick={() => onCreateJob()}>
+            <span aria-hidden="true">+</span> New Work Order
+          </button>
+        )}
       </div>
 
-      <div className="current-jobs-filters no-print">
+      <div className="current-jobs-metrics" aria-label="Current job summary">
+        <article className="current-jobs-metric current-jobs-metric-primary">
+          <strong>{summary.activeCount}</strong>
+          <span>Active jobs</span>
+        </article>
+        <article className="current-jobs-metric priority-high-metric">
+          <strong>{summary.priorities.high}</strong>
+          <span>High priority</span>
+        </article>
+        <article className="current-jobs-metric priority-medium-metric">
+          <strong>{summary.priorities.medium}</strong>
+          <span>Medium priority</span>
+        </article>
+        <article className="current-jobs-metric priority-regular-metric">
+          <strong>{summary.priorities.regular}</strong>
+          <span>Regular priority</span>
+        </article>
+        <article className="current-jobs-metric current-jobs-next-due">
+          <span>Next due</span>
+          <strong>{formatShopDate(summary.nextDue, dateOptions) || 'Not scheduled'}</strong>
+        </article>
+      </div>
+
+      <div className="current-jobs-filters panel no-print">
         <label className="current-jobs-search">
           Search
           <input
@@ -213,7 +257,7 @@ export default function CurrentJobsPage({
         </label>
       </div>
 
-      <div className="current-jobs-table" role="table" aria-label="Current jobs">
+      <div className="current-jobs-table panel" role="table" aria-label="Current jobs">
         <div className="current-jobs-heading" role="row">
           <span>Priority</span><span>Status</span><span>Job</span><span>Customer</span><span>Instrument</span><span>Assigned Technician</span><span>Received</span><span>Due</span>
         </div>
@@ -231,7 +275,11 @@ export default function CurrentJobsPage({
               aria-label={`Open job ${job.jobNumber || ''} for ${job.customerName || 'customer'}`}
             >
               <span role="cell" data-label="Priority"><span className={`priority-badge ${priority.className}`}>{getJobPriorityShortLabel(job.priority || job.techDetails?.priority)}</span></span>
-              <span role="cell" data-label="Status">{job.accountingVoidedAt ? 'Accounting Excluded' : job.status || '-'}</span>
+              <span role="cell" data-label="Status">
+                <span className={`job-status-badge status-${cleanText(job.status).replace(/[^a-z0-9]+/g, '-')}`}>
+                  {job.accountingVoidedAt ? 'Accounting Excluded' : job.status || '-'}
+                </span>
+              </span>
               <strong role="cell" data-label="Job">#{job.jobNumber || '-'}</strong>
               <span role="cell" data-label="Customer">{job.customerName || '-'}</span>
               <span role="cell" data-label="Instrument">{[formatInstrumentLabel(job), job.guitarBrand, job.model].filter(Boolean).join(' ') || '-'}</span>

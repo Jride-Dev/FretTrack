@@ -83,6 +83,7 @@ try {
   await testLandingPageIncludesLaunchAssets();
   await testBundledFaviconAssetRoute();
   await testCommunityAssetRoutes();
+  await testWorkspaceScreenshotAssetRoutes();
   await testReleaseDocumentationRoutes();
   await testRetiredApplicationByDefault();
   await testSuccessfulApplication();
@@ -152,6 +153,9 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.doesNotMatch(html, /Request Access/);
   assert.match(html, /Stable release 0\.3\.1 is available/);
   assert.match(html, /\/landing\/overview\.jpg/);
+  assert.match(html, /\/landing\/current-jobs-bench-dark\.png/);
+  assert.match(html, /\/landing\/current-jobs-shop-light\.png/);
+  assert.match(html, /Screenshots show a sample workspace with fictional customer and shop data\./);
   assert.match(html, /Stripe Checkout and self-service billing management/);
   assert.match(html, /\$29\.99 monthly/);
   assert.match(html, /\$39\.99 monthly/);
@@ -238,6 +242,30 @@ async function testCommunityAssetRoutes() {
     assert.match(response.headers.get('content-type') || '', /image\/(jpeg|png)/, pathname);
     assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable', pathname);
     assert.equal(await response.text(), 'community-image-bytes', pathname);
+  }
+}
+
+async function testWorkspaceScreenshotAssetRoutes() {
+  for (const pathname of [
+    '/landing/current-jobs-bench-dark.png',
+    '/landing/current-jobs-shop-light.png'
+  ]) {
+    const response = await worker.fetch(new Request(`https://frettrack-app.com${pathname}`), {
+      ...baseEnv(),
+      LANDING_ASSETS: {
+        async fetch(request) {
+          assert.equal(new URL(request.url).pathname, pathname);
+          return new Response('workspace-screenshot-bytes', {
+            headers: { 'content-type': 'image/png' }
+          });
+        }
+      }
+    });
+
+    assert.equal(response.status, 200, pathname);
+    assert.equal(await response.text(), 'workspace-screenshot-bytes', pathname);
+    assert.match(response.headers.get('content-type') || '', /image\/png/, pathname);
+    assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable', pathname);
   }
 }
 

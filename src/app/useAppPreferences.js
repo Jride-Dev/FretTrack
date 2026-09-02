@@ -20,8 +20,21 @@ export default function useAppPreferences({ onNotice }) {
   );
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    const colorScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const applyTheme = () => {
+      document.documentElement.dataset.theme = theme === 'system'
+        ? (colorScheme.matches ? 'bench-dark' : 'shop-light')
+        : theme;
+      document.documentElement.dataset.themePreference = theme;
+    };
+
+    applyTheme();
     localStorage.setItem(THEME_STORAGE_KEY, theme);
+    if (theme === 'system') {
+      colorScheme.addEventListener?.('change', applyTheme);
+    }
+
+    return () => colorScheme.removeEventListener?.('change', applyTheme);
   }, [theme]);
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 export const THEME_STORAGE_KEY = 'frettrack_theme';
 export const defaultTheme = 'bench-dark';
 export const themes = [
+  { value: 'system', label: 'Use Device Theme' },
   { value: 'bench-dark', label: 'Bench Dark' },
   { value: 'shop-light', label: 'Shop Light' },
   { value: 'amber-tube', label: 'Amber Tube' },

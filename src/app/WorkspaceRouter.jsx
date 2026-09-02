@@ -69,6 +69,7 @@ function WorkspacePage({
     return (
       <CurrentJobsPage
         jobs={jobs}
+        onCreateJob={actions.onOpenNewJob}
         onSelectJob={actions.onSelectJob}
         shopProfile={shopProfile}
         assignableMembers={assignableMembers}

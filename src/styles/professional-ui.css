@@ -1,0 +1,642 @@
+:root {
+  --radius-control: 6px;
+  --radius-panel: 8px;
+  --workspace-nav-width: 236px;
+  --workspace-gutter: clamp(14px, 2vw, 28px);
+  --shadow: 0 12px 30px color-mix(in srgb, var(--bg) 68%, transparent);
+}
+
+body {
+  font-family: "Segoe UI Variable", "Segoe UI", Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+button,
+.button,
+a.button-link {
+  background: var(--button-bg);
+  border-color: var(--button-border);
+  border-radius: var(--radius-control);
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 650;
+  min-height: 36px;
+  padding: 8px 12px;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+button:hover:not(:disabled),
+.button:hover:not(:disabled),
+a.button-link:hover {
+  background: var(--surface-3);
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+  box-shadow: none;
+  color: var(--text);
+}
+
+.primary-action,
+.button-primary,
+form.panel > button[type="submit"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: none;
+  color: var(--button-primary-text);
+}
+
+.primary-action:hover:not(:disabled),
+.button-primary:hover:not(:disabled),
+form.panel > button[type="submit"]:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--button-primary-text);
+}
+
+.button-secondary {
+  background: transparent;
+  border-color: var(--border);
+}
+
+.button-tertiary {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+input,
+select,
+textarea {
+  border-radius: var(--radius-control);
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 0;
+}
+
+.panel,
+.card,
+.surface,
+.surface-raised {
+  border-radius: var(--radius-panel);
+  box-shadow: none;
+}
+
+main.app-shell {
+  display: grid;
+  grid-template-columns: var(--workspace-nav-width) minmax(0, 1fr);
+  min-height: 100vh;
+  min-width: 0;
+  padding: 0;
+}
+
+.app-shell > :not(.workspace-shell-header) {
+  grid-column: 2;
+  margin-left: var(--workspace-gutter);
+  margin-right: var(--workspace-gutter);
+}
+
+.app-shell > .workspace-shell-header {
+  grid-column: 1;
+  grid-row: 1 / span 30;
+}
+
+.workspace-shell-header {
+  align-items: stretch;
+  align-self: start;
+  background: color-mix(in srgb, var(--surface) 94%, var(--bg));
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100vh;
+  justify-content: flex-start;
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 18px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.workspace-brand {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 42px minmax(0, 1fr);
+}
+
+.workspace-brand img {
+  background: #050608;
+  border: 1px solid color-mix(in srgb, var(--accent) 46%, var(--border));
+  border-radius: var(--radius-panel);
+  height: 42px;
+  object-fit: contain;
+  padding: 4px;
+  width: 42px;
+}
+
+.workspace-brand > div {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.workspace-brand strong {
+  color: var(--accent);
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.workspace-brand span {
+  color: var(--text-muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-plan-context {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  padding-bottom: 14px;
+}
+
+.workspace-plan-context small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.workspace-quick-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.workspace-quick-actions button {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.workspace-primary-nav {
+  display: grid;
+  gap: 18px;
+}
+
+.workspace-nav-group {
+  display: grid;
+  gap: 3px;
+}
+
+.workspace-nav-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  padding: 0 10px 4px;
+  text-transform: uppercase;
+}
+
+.workspace-nav-button {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  justify-content: flex-start;
+  min-height: 36px;
+  padding: 7px 10px;
+  text-align: left;
+  width: 100%;
+  -webkit-text-fill-color: var(--text-muted);
+}
+
+.workspace-nav-button:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+  -webkit-text-fill-color: var(--text);
+}
+
+.workspace-nav-button.active,
+.workspace-nav-button.active:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  color: var(--text);
+  position: relative;
+  -webkit-text-fill-color: var(--text);
+}
+
+.workspace-nav-button.active::before {
+  background: var(--accent);
+  border-radius: 2px;
+  bottom: 7px;
+  content: "";
+  left: -1px;
+  position: absolute;
+  top: 7px;
+  width: 3px;
+}
+
+.workspace-nav-footer {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 9px;
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.workspace-nav-footer > button,
+.workspace-nav-footer .feedback-button {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.workspace-theme-picker {
+  display: grid;
+  gap: 5px;
+}
+
+.workspace-theme-picker > span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.workspace-theme-picker select {
+  font-size: 12px;
+}
+
+.workspace-connection-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.connection-status {
+  background: transparent;
+  border-color: var(--border);
+  border-radius: var(--radius-control);
+  color: var(--text-muted);
+}
+
+.app-shell > .pwa-install-banner,
+.app-shell > .offline-banner,
+.app-shell > .system-announcements,
+.app-shell > .billing-state-banner,
+.app-shell > .app-notice {
+  margin-bottom: 12px;
+  margin-top: 12px;
+}
+
+.app-shell > .layout {
+  margin-bottom: var(--workspace-gutter);
+  margin-top: var(--workspace-gutter);
+}
+
+.section-header h2,
+.current-jobs-titlebar h2 {
+  font-size: clamp(24px, 2.2vw, 32px);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin-bottom: 4px;
+}
+
+.current-jobs-page {
+  gap: 14px;
+  overflow: visible;
+}
+
+.current-jobs-titlebar {
+  align-items: center;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.current-jobs-titlebar .primary-action {
+  min-height: 42px;
+  padding-inline: 16px;
+}
+
+.current-jobs-metrics {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(110px, 1fr)) minmax(150px, 1.25fr);
+  overflow: hidden;
+}
+
+.current-jobs-metric {
+  align-content: center;
+  border-right: 1px solid var(--border);
+  display: grid;
+  gap: 2px;
+  min-height: 76px;
+  padding: 14px 18px;
+}
+
+.current-jobs-metric:last-child {
+  border-right: 0;
+}
+
+.current-jobs-metric strong {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.current-jobs-metric span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.current-jobs-metric-primary strong {
+  color: var(--accent);
+}
+
+.priority-high-metric strong {
+  color: var(--danger);
+}
+
+.priority-medium-metric strong {
+  color: var(--warning);
+}
+
+.priority-regular-metric strong {
+  color: var(--success);
+}
+
+.current-jobs-next-due strong {
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.current-jobs-filters.panel {
+  padding: 12px;
+}
+
+.current-jobs-filters label {
+  color: var(--text-muted);
+  display: grid;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 5px;
+}
+
+.current-jobs-table.panel {
+  padding: 0;
+}
+
+.current-jobs-heading {
+  background: color-mix(in srgb, var(--surface-2) 72%, var(--surface));
+  letter-spacing: 0.02em;
+  padding-bottom: 11px;
+  padding-top: 11px;
+}
+
+.current-job-row {
+  font-weight: 400;
+  min-height: 54px;
+  transition: background-color 100ms ease;
+}
+
+.current-job-row strong,
+.current-job-row .priority-badge,
+.current-job-row .job-status-badge {
+  font-weight: 700;
+}
+
+.current-job-row:hover,
+.current-job-row:focus-visible {
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-2));
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.current-job-row strong[data-label="Job"] {
+  font-variant-numeric: tabular-nums;
+}
+
+.job-status-badge {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  line-height: 1.2;
+  padding: 4px 6px;
+  text-transform: uppercase;
+}
+
+.job-status-badge.status-checked-in,
+.job-status-badge.status-in-progress,
+.job-status-badge.status-ready-for-pickup {
+  background: color-mix(in srgb, var(--success) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--success) 44%, var(--border));
+  color: var(--success);
+}
+
+.job-status-badge.status-waiting-parts,
+.job-status-badge.status-waiting-for-parts {
+  background: color-mix(in srgb, var(--warning) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--warning) 44%, var(--border));
+  color: var(--warning);
+}
+
+.current-jobs-page .priority-high {
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--danger) 44%, var(--border));
+  color: var(--danger);
+}
+
+.current-jobs-page .priority-medium {
+  background: color-mix(in srgb, var(--warning) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--warning) 44%, var(--border));
+  color: var(--warning);
+}
+
+.current-jobs-page .priority-regular {
+  background: color-mix(in srgb, var(--success) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--success) 44%, var(--border));
+  color: var(--success);
+}
+
+@media (max-width: 1080px) {
+  main.app-shell {
+    display: block;
+  }
+
+  .app-shell > :not(.workspace-shell-header) {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .workspace-shell-header {
+    border-bottom: 1px solid var(--border);
+    border-right: 0;
+    display: grid;
+    grid-template-columns: minmax(190px, 1fr) auto;
+    height: auto;
+    overflow: visible;
+    padding: 12px 14px;
+    position: static;
+  }
+
+  .workspace-plan-context {
+    border-bottom: 0;
+    justify-content: flex-end;
+    padding-bottom: 0;
+  }
+
+  .workspace-quick-actions {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workspace-primary-nav {
+    display: flex;
+    gap: 6px;
+    grid-column: 1 / -1;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .workspace-nav-group {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+
+  .workspace-nav-label {
+    display: none;
+  }
+
+  .workspace-nav-button {
+    white-space: nowrap;
+    width: auto;
+  }
+
+  .workspace-nav-footer {
+    align-items: end;
+    display: flex;
+    flex-wrap: wrap;
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+
+  .workspace-theme-picker {
+    min-width: 170px;
+  }
+
+  .workspace-nav-footer > button,
+  .workspace-nav-footer .feedback-button {
+    width: auto;
+  }
+
+  .current-jobs-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .current-jobs-metric:nth-child(3) {
+    border-right: 0;
+  }
+
+  .current-jobs-metric:nth-child(n + 4) {
+    border-top: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 760px) {
+  .workspace-shell-header {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-plan-context,
+  .workspace-quick-actions,
+  .workspace-primary-nav,
+  .workspace-nav-footer {
+    grid-column: 1;
+  }
+
+  .workspace-plan-context {
+    justify-content: flex-start;
+  }
+
+  .workspace-nav-footer {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workspace-theme-picker,
+  .workspace-connection-row {
+    grid-column: 1 / -1;
+  }
+
+  .workspace-nav-footer > button,
+  .workspace-nav-footer .feedback-button {
+    width: 100%;
+  }
+
+  .current-jobs-titlebar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .current-jobs-titlebar .primary-action {
+    width: 100%;
+  }
+
+  .current-jobs-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .current-jobs-metric,
+  .current-jobs-metric:nth-child(3) {
+    border-right: 1px solid var(--border);
+  }
+
+  .current-jobs-metric:nth-child(even) {
+    border-right: 0;
+  }
+
+  .current-jobs-metric:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
+  }
+
+  .current-jobs-next-due {
+    grid-column: 1 / -1;
+  }
+
+  .current-job-row [data-label="Instrument"],
+  .current-job-row [data-label="Assigned Technician"] {
+    grid-column: 1 / -1;
+  }
+
+  .current-job-row [data-label] {
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media print {
+  main.app-shell {
+    display: block;
+  }
+
+  .app-shell > :not(.workspace-shell-header) {
+    margin: 0;
+  }
+}

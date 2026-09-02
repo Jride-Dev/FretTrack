@@ -2,6 +2,12 @@
 
 FretTrack 0.3.1 includes persistent shop-level localization and a full Current Jobs workspace. The implementation incorporates practical workflow feedback from Aleks at Sell Us Your Guitar.
 
+The professional workspace shell groups navigation by Workspace, Repair, Operations, Insights, and Administration, while retaining visible New Work Order and Save Work Order actions. Current Jobs begins with an operational summary for active, high-, medium-, and regular-priority work plus the next due date. The existing queue filters and assignment controls remain available below it.
+
+The interface supports **Use Device Theme** plus Bench Dark, Shop Light, Amber Tube, Seafoam, Blackguard, Burgundy Burst, Blue Steel, and High Contrast. Device mode follows the operating-system light/dark preference and responds when that preference changes. Theme choice is presentation-only and does not alter shop data, permissions, billing, or print output.
+
+Public launch and help pages use sanitized, real application screenshots from the Bench Dark and Shop Light variants. Those images contain fictional shop and customer names rather than production records.
+
 ## Shop Settings
 
 Owners and admins can configure these values in Shop Settings:

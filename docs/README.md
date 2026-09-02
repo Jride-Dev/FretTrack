@@ -48,6 +48,7 @@ Customer-facing help is published at [frettrack-app.com/docs](https://frettrack-
 - [Reports](REPORTS.md)
 - [Photo Editor](PHOTO_EDITOR.md)
 - [Shop Localization and Current Jobs](SHOP_LOCALIZATION_AND_CURRENT_JOBS.md)
+- [Professional Workspace UI](PROFESSIONAL_WORKSPACE_UI.md)
 - [Pro Team Assignment](PRO_TEAM_ASSIGNMENT_FOUNDATION.md)
 - [Accounting-Safe Work-Order Exclusion](ACCOUNTING_SAFE_JOB_VOID.md)
 - [Customer Import](CUSTOMER_IMPORT.md)
