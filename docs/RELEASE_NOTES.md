@@ -2,6 +2,8 @@
 
 ## Post-0.3.1 commerce hardening
 
+Public onboarding now consistently directs a new user to create an account, confirm the email address, create one shop, and begin the non-converting 14-day Pro trial. The retired access-application modal is no longer rendered, and current README, support, FAQ, and account documentation no longer imply operator approval is required.
+
 Specialist purchasing now reloads the saved whole-package vendor price when an existing inventory part is selected. Newly created packaged parts also preserve the exact package price separately from the rounded per-item inventory valuation, so a $7.71 two-pack stays $7.71 on future orders instead of reappearing as $7.72.
 
 Work-order estimates now have an explicit, owner/admin-controlled lifecycle instead of relying on informal notes. Marking a draft estimate sent stores a server-calculated minor-unit snapshot, increments its revision, and locks parts, services, discounts, and tax settings. Staff can record approval or decline with an audit note, while revisions require returning the estimate to draft before editing and sending again. Sent or declined estimates cannot be finalized as invoices; approved estimates retain the exact customer-reviewed snapshot. Migration `20260831220418_job_estimate_approval_lifecycle.sql` supplies the version-checked RPC, database constraints, charge guards, and timeline events.

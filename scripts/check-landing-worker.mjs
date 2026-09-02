@@ -84,6 +84,7 @@ try {
   await testBundledFaviconAssetRoute();
   await testCommunityAssetRoutes();
   await testReleaseDocumentationRoutes();
+  await testRetiredApplicationByDefault();
   await testSuccessfulApplication();
   await testRetryUsesStableSideEffectIdentity();
   await testSupabaseFailureBlocksSuccess();
@@ -416,6 +417,22 @@ async function testSuccessfulApplication() {
   assert.match(r2Writes[0].key, /^access-applications\/by-request\/[0-9a-f-]+\.json$/);
 }
 
+async function testRetiredApplicationByDefault() {
+  const calls = [];
+  globalThis.fetch = mockFetch(calls);
+
+  const response = await postApplication(VALID_BODY, {
+    LEGACY_ACCESS_APPLICATION_ENABLED: 'false'
+  });
+  const body = await response.json();
+
+  assert.equal(response.status, 410);
+  assert.equal(body.ok, false);
+  assert.match(body.error, /application is retired/i);
+  assert.equal(body.signupUrl, 'https://app.frettrack-app.com/?signup=1');
+  assert.equal(calls.length, 0, 'Retired application requests must not reach Supabase, Resend, or R2.');
+}
+
 async function testRetryUsesStableSideEffectIdentity() {
   const calls = [];
   const r2Writes = [];
@@ -549,6 +566,7 @@ async function postApplication(body, envOverrides = {}) {
 
 function baseEnv() {
   return {
+    LEGACY_ACCESS_APPLICATION_ENABLED: 'true',
     SUPABASE_URL: 'https://example.supabase.co',
     SUPABASE_ANON_KEY: 'anon-key',
     RESEND_API_KEY: 'resend-key',

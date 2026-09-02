@@ -31,6 +31,13 @@ const migration = read(`supabase/migrations/${migrationName}`);
 const app = read('src/app/App.jsx');
 const bootstrapController = read('src/app/useSessionShopBootstrap.js');
 const membershipService = read('src/modules/shops/shopMembershipService.js');
+const authGate = read('src/modules/auth/AuthGate.jsx');
+const readme = read('README.md');
+const accountAccessDocs = read('docs/ACCOUNT_ACCESS_APPROVAL.md');
+const landingWorker = read('cloudflare/frettrack-coming-soon/src/index.js');
+const publicSupport = read('cloudflare/frettrack-coming-soon/public/support.html');
+const publicFaq = read('cloudflare/frettrack-coming-soon/public/docs/faq.html');
+const publicShopAccounts = read('cloudflare/frettrack-coming-soon/public/docs/shops-and-accounts.html');
 
 assertMatches(migration, /create or replace function public\.bootstrap_current_user_as_owner\(\s*target_shop_id text,\s*target_shop_name text default null\s*\)/i, 'Bootstrap RPC must accept shop id and shop name.');
 assertIncludes(migration, 'security definer', 'Bootstrap RPC must remain SECURITY DEFINER.');
@@ -81,5 +88,24 @@ assertNotIncludes(bootstrapController, 'setMemberships([ownerShop]);', 'Create S
 assertNotIncludes(bootstrapController, 'setEntitlementSnapshot(getDefaultEntitlementSnapshot(ownerShop.shopId));', 'Create Shop handler must not fake final entitlement state.');
 assertNotIncludes(app.toLowerCase(), 'service_role', 'App must not expose service-role credentials.');
 assertNotIncludes(bootstrapController.toLowerCase(), 'service_role', 'Bootstrap controller must not expose service-role credentials.');
+
+assertIncludes(authGate, 'Create your account, confirm your email, and start a free 14-day Pro trial.', 'Sign-up must explain confirmation and the standard trial.');
+assertIncludes(readme, 'https://app.frettrack-app.com/?signup=1', 'README access CTA must open self-service sign-up.');
+assertNotIncludes(readme, 'Request FretTrack Access', 'README must not advertise the retired application flow.');
+assertNotIncludes(readme, 'New approved workspaces', 'README must not imply manual workspace approval.');
+assertIncludes(accountAccessDocs, 'No manual account approval is required.', 'Account docs must identify self-service registration as current.');
+assertNotIncludes(accountAccessDocs, 'An operator approves or rejects the request', 'Account docs must not describe legacy approval as the current flow.');
+assertNotIncludes(accountAccessDocs, 'approved access or operator status', 'Account docs must not retain the old bootstrap approval condition.');
+assertIncludes(landingWorker, 'href="${APP_URL}/?signup=1">Start Free 14-Day Trial', 'Landing CTA must open self-service sign-up.');
+assertNotIncludes(landingWorker, 'id="application-modal"', 'Landing page must not render the retired access application modal.');
+assertIncludes(landingWorker, "env.LEGACY_ACCESS_APPLICATION_ENABLED !== 'true'", 'Legacy application submissions must fail closed unless explicitly enabled.');
+for (const [label, publicCopy] of [
+  ['support', publicSupport],
+  ['FAQ', publicFaq],
+  ['shop/account guide', publicShopAccounts]
+]) {
+  assertNotIncludes(publicCopy, 'email address approved for FretTrack access', `${label} copy must not imply manual email approval.`);
+  assertNotIncludes(publicCopy, 'How do I request FretTrack access?', `${label} copy must describe account creation, not an access request.`);
+}
 
 console.log('Shop bootstrap reliability checks passed.');
