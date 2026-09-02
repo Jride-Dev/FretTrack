@@ -14,6 +14,7 @@ const jobDetailHeader = read('src/modules/jobs/JobDetailHeader.jsx');
 const jobDetailTabs = read('src/modules/jobs/components/JobDetailTabs.jsx');
 const pageHeader = read('src/shared/components/WorkspacePageHeader.jsx');
 const section = read('src/shared/components/WorkspaceSection.jsx');
+const router = read('src/app/WorkspaceRouter.jsx');
 
 assert.match(app, /<WorkspaceShellHeader/, 'The application must use the shared professional workspace shell.');
 assert.match(shell, /aria-label="FretTrack workspace"/, 'The workspace navigation must be explicitly labeled.');
@@ -39,6 +40,8 @@ assert.match(jobDetailTabs, /role="tabpanel"/, 'Job Detail must expose the activ
 assert.match(jobDetailTabs, /aria-controls=\{`job-tab-panel-\$\{tab\.key\}`\}/, 'Each Job Detail tab must target the active panel.');
 assert.match(pageHeader, /workspace-page-header/, 'The shared page-heading primitive must retain its styling contract.');
 assert.match(section, /workspace-section-body/, 'The shared section primitive must retain its content boundary.');
+assert.doesNotMatch(router, /Enter a new job on the left/, 'New Work Order must not retain the obsolete left-column instruction.');
+assert.match(router, /Select Show sections to reopen New Work Order\./, 'Collapsed intake must explain how to reopen the form.');
 assert.match(styles, /grid-template-columns: var\(--workspace-nav-width\) minmax\(0, 1fr\)/, 'Desktop workspace chrome must use the restrained navigation rail.');
 assert.match(styles, /\.work-order-form\.panel/, 'Professional New Work Order styling must remain in the final override layer.');
 assert.match(styles, /\.workspace-detail-shell \.job-tab-bar button\.active/, 'Professional Job Detail tabs must retain their restrained active state.');

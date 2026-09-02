@@ -58,11 +58,9 @@ function WorkspacePage({
   } = data;
 
   if (mode === 'new') {
-    return (
-      <section className="panel empty-state">
-        {actions.isNewJobSidebarCollapsed ? 'Show sections to enter a new job.' : 'Enter a new job on the left, then click Save Job.'}
-      </section>
-    );
+    return actions.isNewJobSidebarCollapsed
+      ? <section className="panel empty-state">Select Show sections to reopen New Work Order.</section>
+      : null;
   }
 
   if (mode === 'list') {
