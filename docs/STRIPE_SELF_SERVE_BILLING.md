@@ -124,15 +124,15 @@ Do not use `--no-verify-jwt` for the Checkout or Portal functions.
 
 ## Production Rollout Evidence
 
-As of 2026-08-27:
+As of 2026-09-01:
 
 - migration `20260814041144_stripe_billing_concurrency_guards.sql` is recorded in the linked production migration history;
-- migrations through `20260827194500_stripe_webhook_claim_lease_recovery.sql` are recorded in the linked production history;
+- migrations through `20260901215126_self_service_shop_onboarding.sql` are recorded in the linked production history;
 - `stripe-webhook` version 24 is active with gateway JWT verification disabled only for Stripe delivery;
-- `create-checkout-session` version 13 is active with gateway JWT verification retained;
+- `create-checkout-session` version 14 is active with gateway JWT verification retained;
 - an authenticated-anon probe receives HTTP 401 from both the synchronization cursor table and `begin_stripe_subscription_sync`;
 - a webhook request without `stripe-signature` reaches the function and fails closed with HTTP 400;
-- `npm run check:stripe-edge-functions` passes all 14 executable lifecycle/concurrency/launch-gate tests;
+- `npm run check:stripe-edge-functions` passes all 15 executable lifecycle/concurrency/launch-gate tests, including connected-customer subscription pagination and missing legacy shop metadata;
 - `npm run test:stripe-sandbox` passes annual Checkout, signed subscription activation, Billing Portal, Shop-to-Pro, period-end cancellation, final cancellation, and signed duplicate/out-of-order replay against local Supabase; and
 - the stable production launch has `STRIPE_BILLING_ENABLED=true`, required Terms acceptance enabled, and an empty pilot allowlist, opening Checkout to eligible owners/admins without altering the hosted live API key.
 
