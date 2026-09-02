@@ -2,6 +2,8 @@
 
 ## Post-0.3.1 commerce hardening
 
+Stripe Checkout now treats the connected Stripe customer as shop-owned billing identity and blocks a second Checkout whenever that customer already has any open subscription. This closes the duplicate-charge path for legacy or manually repaired subscriptions whose shop metadata is missing, while retaining pagination across the complete Stripe subscription list.
+
 Public onboarding now consistently directs a new user to create an account, confirm the email address, create one shop, and begin the non-converting 14-day Pro trial. The retired access-application modal is no longer rendered, and current README, support, FAQ, and account documentation no longer imply operator approval is required.
 
 Specialist purchasing now reloads the saved whole-package vendor price when an existing inventory part is selected. Newly created packaged parts also preserve the exact package price separately from the rounded per-item inventory valuation, so a $7.71 two-pack stays $7.71 on future orders instead of reappearing as $7.72.

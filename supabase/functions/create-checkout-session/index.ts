@@ -3,7 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import {
   getCheckoutIdempotencyKey,
   hasBlockingStripeSubscription,
-  hasOpenShopSubscriptionAcrossPages,
+  hasOpenCustomerSubscriptionAcrossPages,
   isStripeIdempotencyConflict,
   isTerminalStripeSubscriptionStatus,
 } from '../_shared/stripeSubscriptionState.ts';
@@ -81,7 +81,7 @@ Deno.serve(async (request) => {
 
     const billingEmail = normalizeText(payload.billingEmail || payload.billing_email || subscription?.billing_email || profile.email || userResult.user.email);
     const customerId = normalizeText(subscription?.stripe_customer_id);
-    if (customerId && await customerHasOpenShopSubscription(customerId, shopId)) {
+    if (customerId && await customerHasOpenSubscription(customerId)) {
       return existingSubscriptionResponse();
     }
 
@@ -173,9 +173,8 @@ function getStripeSecretKey() {
   return Deno.env.get('STRIPE_SECRET_KEY') || Deno.env.get('STRIPE_API_KEY') || '';
 }
 
-async function customerHasOpenShopSubscription(customerId: string, shopId: string) {
-  return hasOpenShopSubscriptionAcrossPages(
-    shopId,
+async function customerHasOpenSubscription(customerId: string) {
+  return hasOpenCustomerSubscriptionAcrossPages(
     (startingAfter) => stripe.subscriptions.list({
       customer: customerId,
       status: 'all',

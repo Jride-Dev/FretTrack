@@ -6,6 +6,7 @@ This file tracks product, reliability, security, and operational changes by rele
 
 ## Unreleased
 
+- Hardened Stripe Checkout so any open subscription on a shop's connected Stripe customer blocks a second subscription, including legacy or manually repaired subscriptions with missing shop metadata.
 - Removed the retired access-application modal from the public landing page and aligned README, support, FAQ, and account documentation with confirmed-email self-service registration and the one-time 14-day Pro trial.
 - Fixed specialist purchasing so selecting an existing packaged part fills its saved whole-package vendor price, and newly created packaged parts retain the exact package price after reload instead of reconstructing it from a rounded per-item cost.
 - Corrected vendor-package purchasing so staff enter the number of packages, the items inside one package, and the price of one whole package. FretTrack now preserves that exact package price separately, previews the actual vendor charge, and derives the inventory-each valuation without multiplying a pack price by its contents.

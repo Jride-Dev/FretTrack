@@ -73,8 +73,8 @@ assert.ok(/if \(!launchAccess\.allowed\)[\s\S]*?503/.test(checkoutFunction), 'Cl
 assert.ok(checkoutFunction.includes('client_reference_id: shopId'), 'Checkout function must bind Checkout sessions to a shop id.');
 assert.ok(checkoutFunction.includes('customer_email'), 'Checkout must let Stripe create a customer only as part of confirmed subscription Checkout.');
 assert.ok(checkoutFunction.includes('hasBlockingStripeSubscription'), 'Checkout must block duplicate subscriptions for a shop with a non-terminal Stripe subscription.');
-assert.ok(checkoutFunction.includes('customerHasOpenShopSubscription'), 'Checkout must check Stripe for an existing open shop subscription before creating another session.');
-assert.ok(checkoutFunction.includes('hasOpenShopSubscriptionAcrossPages'), 'Checkout must paginate the Stripe subscription lookup before allowing another session.');
+assert.ok(checkoutFunction.includes('customerHasOpenSubscription'), 'Checkout must check Stripe for an existing open connected-customer subscription before creating another session.');
+assert.ok(checkoutFunction.includes('hasOpenCustomerSubscriptionAcrossPages'), 'Checkout must paginate the connected Stripe customer subscription lookup before allowing another session.');
 assert.ok(checkoutFunction.includes('Use Manage Billing Portal'), 'Duplicate Checkout attempts must direct existing subscribers to the Billing Portal.');
 assert.ok(checkoutFunction.includes('getCheckoutIdempotencyKey'), 'Checkout must derive a stable shop-generation idempotency key.');
 assert.ok(
@@ -186,7 +186,8 @@ assert.ok(/\[\s*["']past_due["'],\s*["']past_due["']\s*\]/.test(webhookLifecycle
 assert.ok(/\[\s*["']canceled["'],\s*["']canceled["']\s*\]/.test(webhookLifecycleTest), 'Stripe lifecycle tests must cover cancellation state.');
 assert.ok(webhookLifecycleTest.includes('toProfileSubscriptionStatus("past_due"), "active"'), 'Stripe lifecycle tests must cover the coarse profile mirror for failed-payment grace access.');
 assert.ok(webhookLifecycleTest.includes('concurrent Checkout requests share one shop-generation idempotency key'), 'Stripe lifecycle tests must cover concurrent Checkout idempotency.');
-assert.ok(webhookLifecycleTest.includes('existing Stripe subscription lookup checks later pages before allowing Checkout'), 'Stripe lifecycle tests must cover an open subscription beyond Stripe\'s first page.');
+assert.ok(webhookLifecycleTest.includes('existing Stripe customer subscription lookup checks later pages before allowing Checkout'), 'Stripe lifecycle tests must cover an open subscription beyond Stripe\'s first page.');
+assert.ok(webhookLifecycleTest.includes('an open connected-customer subscription blocks Checkout even without matching metadata'), 'Stripe lifecycle tests must cover legacy subscriptions without matching shop metadata.');
 assert.ok(webhookLifecycleTest.includes('itemless subscription payloads are handled without dereferencing missing data'), 'Stripe lifecycle tests must cover itemless subscription payloads.');
 
 const billingPage = read('src/modules/billing/BillingPage.jsx');

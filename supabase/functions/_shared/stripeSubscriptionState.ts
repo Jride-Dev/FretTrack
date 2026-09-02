@@ -26,18 +26,15 @@ export function hasBlockingStripeSubscription(subscription: StoredSubscriptionSt
   return !isTerminalStripeSubscriptionStatus(subscription?.providerStatus || subscription?.status);
 }
 
-export async function hasOpenShopSubscriptionAcrossPages(
-  shopId: unknown,
+export async function hasOpenCustomerSubscriptionAcrossPages(
   loadPage: (startingAfter?: string) => Promise<StripeSubscriptionPage>,
 ) {
-  const expectedShopId = String(shopId || "").trim();
   let startingAfter: string | undefined;
 
   while (true) {
     const page = await loadPage(startingAfter);
     const subscriptions = Array.isArray(page?.data) ? page.data : [];
     if (subscriptions.some((subscription) =>
-      String(subscription.metadata?.shop_id || "").trim() === expectedShopId &&
       !isTerminalStripeSubscriptionStatus(subscription.status)
     )) {
       return true;

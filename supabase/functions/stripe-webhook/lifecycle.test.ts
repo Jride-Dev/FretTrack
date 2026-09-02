@@ -12,7 +12,7 @@ import {
 import {
   getCheckoutIdempotencyKey,
   hasBlockingStripeSubscription,
-  hasOpenShopSubscriptionAcrossPages,
+  hasOpenCustomerSubscriptionAcrossPages,
   isStripeIdempotencyConflict,
   shouldApplyStripeSubscriptionEvent,
 } from "../_shared/stripeSubscriptionState.ts";
@@ -176,14 +176,14 @@ Deno.test("an existing non-terminal Stripe subscription blocks another Checkout"
   }), false);
 });
 
-Deno.test("existing Stripe subscription lookup checks later pages before allowing Checkout", async () => {
+Deno.test("existing Stripe customer subscription lookup checks later pages before allowing Checkout", async () => {
   const requestedCursors: Array<string | undefined> = [];
   const pages = [
     {
       data: Array.from({ length: 100 }, (_, index) => ({
         id: `sub_other_${index}`,
         metadata: { shop_id: "another-shop" },
-        status: "active",
+        status: "canceled",
       })),
       has_more: true,
     },
@@ -197,8 +197,7 @@ Deno.test("existing Stripe subscription lookup checks later pages before allowin
     },
   ];
 
-  const hasOpenSubscription = await hasOpenShopSubscriptionAcrossPages(
-    "shop-one",
+  const hasOpenSubscription = await hasOpenCustomerSubscriptionAcrossPages(
     async (startingAfter) => {
       requestedCursors.push(startingAfter);
       const page = pages.shift();
@@ -209,6 +208,21 @@ Deno.test("existing Stripe subscription lookup checks later pages before allowin
 
   strictEqual(hasOpenSubscription, true);
   deepStrictEqual(requestedCursors, [undefined, "sub_other_99"]);
+});
+
+Deno.test("an open connected-customer subscription blocks Checkout even without matching metadata", async () => {
+  for (const metadata of [undefined, {}, { shop_id: "legacy-shop-id" }]) {
+    const hasOpenSubscription = await hasOpenCustomerSubscriptionAcrossPages(async () => ({
+      data: [{
+        id: "sub_existing",
+        metadata,
+        status: "active",
+      }],
+      has_more: false,
+    }));
+
+    strictEqual(hasOpenSubscription, true);
+  }
 });
 
 Deno.test("concurrent Checkout requests share one shop-generation idempotency key", async () => {
