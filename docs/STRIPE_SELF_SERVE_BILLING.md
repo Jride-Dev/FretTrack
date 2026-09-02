@@ -35,7 +35,7 @@ Checkout always collects a billing address and enables business tax-ID collectio
 
 Before setting `STRIPE_REQUIRE_TERMS_ACCEPTANCE=true`, configure the live and sandbox Stripe account Public details with `https://frettrack-app.com/terms` and `https://frettrack-app.com/privacy`. When enabled, Checkout requires affirmative acceptance of those Terms. The environment switch prevents a missing Stripe Dashboard URL from breaking Checkout during local development.
 
-For an existing Stripe customer, FretTrack checks every page of that customer's subscriptions before creating Checkout. An open subscription linked to the shop therefore blocks another Checkout even when it appears beyond Stripe's first 100 records.
+For an existing Stripe customer, FretTrack checks every page of that customer's subscriptions before creating Checkout. Any open subscription on that shop-owned customer blocks another Checkout, even when legacy or manually repaired subscription metadata is missing or when the subscription appears beyond Stripe's first 100 records.
 
 ## Launch Switch and Enrollment Access
 
