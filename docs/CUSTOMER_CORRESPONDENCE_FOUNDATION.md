@@ -1,38 +1,42 @@
 # Customer Correspondence Foundation
 
-FretTrack's customer correspondence foundation is intentionally headless. It defines the application-level message contract while leaving user-interface work, inbound provider webhooks, Realtime subscriptions, and database expansion for a later focused release.
+FretTrack now has a provider-neutral database and repository foundation for keeping customer correspondence attached to the correct shop and customer. The foundation is intentionally headless: it prepares safe storage and application boundaries without presenting an unfinished conversation interface or enabling inbound email or SMS.
 
-## Current Boundary
+## Implemented Boundary
 
-`src/modules/messaging/customerCorrespondence.js` owns correspondence normalization, chronological sorting, direction and channel constants, and customer-report eligibility rules. Existing outbound email and SMS rows from `public.customer_messages` continue to work without a schema change. `jobService.js` consumes this boundary instead of maintaining a second private message mapper.
+Migration `20260902082416_customer_correspondence_backend.sql` adds one durable `customer_conversation_threads` row per shop, customer, and channel. Existing `customer_messages` rows are backfilled as outbound correspondence and gain direct shop scope, thread identity, direction, sender, received/read timestamps, and explicit customer-report selection.
 
-This foundation does not add a conversation panel, alter printing, enable SMS, receive provider webhooks, subscribe to Realtime, add tables or columns, apply a migration, or change any plan entitlement.
+`src/modules/messaging/customerCorrespondence.js` owns provider-neutral normalization, chronological sorting, direction and channel constants, thread normalization, and customer-report eligibility rules. `src/modules/messaging/customerCorrespondenceRepository.js` supplies narrow read and mutation operations for future UI consumers. Existing Message History and outbound email behavior remain unchanged.
 
-## Future Database Contract
+## Routing and History Safety
 
-When two-way correspondence is scheduled for implementation, create a reviewed migration for a shop/customer conversation thread and extend message records with the minimum durable fields required for `thread_id`, `shop_id`, `direction`, `sender_address`, `received_at`, `read_at`, and `include_in_customer_report`. Existing rows must backfill as outbound. Provider message identifiers must remain unique enough to make webhook retries idempotent.
+Every job-linked message derives and validates its shop and customer from the work order. A message cannot later be moved to another shop, customer, job, thread, channel, or direction. Existing outbound messages sharing a shop, customer, and channel are grouped into the same thread.
 
-Do not attach an inbound message to the newest work order by assumption. Route it to an unassigned correspondence queue whenever a shop/customer has more than one plausible active work order.
+Incoming provider messages may be stored without a work-order assignment. Provider adapters must not attach an inbound message to the newest work order by assumption. When routing is ambiguous, the message belongs in the shop's future unassigned correspondence queue until a staff member deliberately assigns it.
 
-## Future Provider Adapters
+Inbound provider IDs have a partial unique index so a provider retry cannot create duplicate inbound history. The future adapter must still verify the provider signature before inserting any row.
 
-Provider code belongs behind narrow Edge Function boundaries:
+## Access and Report Selection
 
-- outbound email continues through Resend;
-- inbound email, if enabled, requires verified Resend receiving webhooks and deterministic reply routing;
-- outbound SMS continues through Twilio only after the product entitlement and cost model are finalized;
-- inbound SMS and delivery callbacks require Twilio signature verification, provider-ID replay protection, opt-out handling, and explicit shop/customer routing.
+Conversation threads and messages remain protected by shop membership and work-order access. Anonymous callers receive no table or RPC access. Authenticated browser clients cannot forge inbound provider messages or directly rewrite provider-owned delivery state.
 
-Provider secrets and service-role credentials must never enter the browser bundle.
+Two security-definer RPCs expose only the staff actions the future interface needs:
 
-## Future UI and Reports
+- `set_customer_message_report_inclusion` changes the explicit report-selection flag after checking shop or work-order write access and completed customer-facing eligibility.
+- `mark_customer_message_read` records read state only for received inbound correspondence after the same access checks.
 
-The existing Message History surface should eventually consume the normalized correspondence contract. A customer report may include only explicitly selected, customer-facing sent/delivered or received messages. Failed, pending, scheduled, canceling, canceled, blank, internal, and unselected records are ineligible by default.
+Customer reports may include only explicitly selected, nonblank sent/delivered outbound or received inbound correspondence. Failed, pending, scheduled, canceling, canceled, internal, and unselected records remain ineligible.
 
-## Release Order
+## Not Yet Enabled
 
-1. Finalize Shop and Pro pricing, yearly discounts, trial behavior, tax treatment, cancellation terms, and refund policy.
-2. Continue extracting high-churn responsibilities from oversized application and job-service modules.
-3. Add the reviewed correspondence migration and provider-neutral repository.
-4. Add the correspondence UI and customer-report controls.
-5. Add inbound provider adapters, Realtime delivery, compliance behavior, and adversarial tests.
+This foundation does not add a conversation panel, change current printing, receive inbound provider webhooks, subscribe the browser to Realtime, or enable SMS delivery. Resend and Twilio secrets remain server-only. Existing immediate email, Scheduled Email, Automated Service Reminders, and Message History continue to behave as before.
+
+## Next Delivery Order
+
+1. Add a focused correspondence UI that consumes the repository without duplicating message state.
+2. Add deliberate staff controls for unassigned inbound routing, read state, and customer-report selection.
+3. Extend the isolated Customer Service Report renderer to consume only eligible selected correspondence.
+4. Add one signed and replay-safe inbound provider adapter at a time.
+5. Add Realtime delivery only after authorization, reconnect, ordering, and duplicate-event behavior have executable tests.
+
+Database coverage lives in `supabase/tests/database/customer_correspondence_backend.test.sql`; provider-neutral normalization coverage lives in `scripts/customer-correspondence.test.mjs`.

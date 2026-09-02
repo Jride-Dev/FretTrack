@@ -37,6 +37,7 @@ Customer-facing help is published at [frettrack-app.com/docs](https://frettrack-
 - [Pro Scheduled Email](PRO_EMAIL_SCHEDULING.md)
 - [Pro Automated Service Reminders](PRO_AUTOMATED_SERVICE_REMINDERS.md)
 - [Pro Loyalty Program](PRO_LOYALTY_PROGRAM.md)
+- [Customer Correspondence Foundation](CUSTOMER_CORRESPONDENCE_FOUNDATION.md)
 
 ## Repair and shop workflows
 

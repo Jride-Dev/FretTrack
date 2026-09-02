@@ -42,6 +42,7 @@ FretTrack is a business-use software service operated by Jeffrey Russell d/b/a T
 ## Known boundaries
 
 - SMS is not enabled.
+- The provider-neutral correspondence schema is in place, but inbound email, two-way conversation UI, Realtime updates, and customer-report correspondence controls are not enabled yet.
 - Existing-job edits do not have full offline synchronization; offline continuity is limited to new-job drafts.
 - Public invoice and work-order links are not implemented.
 - Customer-owned instruments do not yet have an independent asset/profile table outside work orders.

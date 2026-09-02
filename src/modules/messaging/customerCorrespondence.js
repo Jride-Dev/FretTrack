@@ -8,6 +8,11 @@ export const CORRESPONDENCE_DIRECTIONS = Object.freeze({
   OUTBOUND: 'outbound'
 });
 
+export const CORRESPONDENCE_THREAD_STATUSES = Object.freeze({
+  ACTIVE: 'active',
+  ARCHIVED: 'archived'
+});
+
 const supportedStatuses = new Set([
   'pending',
   'sent',
@@ -60,6 +65,23 @@ export function normalizeCorrespondenceMessage(message = {}) {
 
 export function fromDbCorrespondenceMessage(message = {}) {
   return normalizeCorrespondenceMessage(message);
+}
+
+export function normalizeCorrespondenceThread(thread = {}) {
+  return {
+    id: thread.id || '',
+    shopId: thread.shopId || thread.shop_id || '',
+    customerId: thread.customerId || thread.customer_id || '',
+    channel: thread.channel === CORRESPONDENCE_CHANNELS.SMS
+      ? CORRESPONDENCE_CHANNELS.SMS
+      : CORRESPONDENCE_CHANNELS.EMAIL,
+    contactAddress: thread.contactAddress || thread.contact_address || '',
+    status: thread.status === CORRESPONDENCE_THREAD_STATUSES.ARCHIVED
+      ? CORRESPONDENCE_THREAD_STATUSES.ARCHIVED
+      : CORRESPONDENCE_THREAD_STATUSES.ACTIVE,
+    createdAt: thread.createdAt || thread.created_at || '',
+    updatedAt: thread.updatedAt || thread.updated_at || ''
+  };
 }
 
 export function sortCorrespondence(messages = [], direction = 'desc') {

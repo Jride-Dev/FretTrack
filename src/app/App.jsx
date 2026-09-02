@@ -51,6 +51,7 @@ export default function App() {
   const [shopProfile, setShopProfile] = useState(null);
   const [entitlementSnapshot, setEntitlementSnapshot] = useState(() => getDefaultEntitlementSnapshot());
   const [isShopProfileLoading, setIsShopProfileLoading] = useState(false);
+  const [shopProfileLoadError, setShopProfileLoadError] = useState('');
   const [isOperator, setIsOperator] = useState(false);
   const [isOperatorLoading, setIsOperatorLoading] = useState(false);
   const [betaAccess, setBetaAccess] = useState(null);
@@ -246,6 +247,7 @@ export default function App() {
       setSession,
       setShopName,
       setShopProfile,
+      setShopProfileLoadError,
       setShowOperatorDashboard,
       setSupabaseStatus
     },
@@ -560,8 +562,22 @@ export default function App() {
       <main className="app auth-shell">
         <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
         <section className="panel auth-panel onboarding-panel">
-          {isShopProfileLoading ? (
+          {isMembershipLoading || isShopProfileLoading ? (
             <p>Loading shop setup...</p>
+          ) : shopProfileLoadError ? (
+            <>
+              <h1>Workspace Created</h1>
+              <p>Your workspace is safe, but FretTrack could not finish loading its shop profile.</p>
+              <p className="muted-text">{shopProfileLoadError}</p>
+              <button
+                type="button"
+                className="primary-action"
+                onClick={() => loadShopAccess(membership.shopId)}
+                disabled={isMembershipLoading}
+              >
+                {isMembershipLoading ? 'Retrying...' : 'Retry Workspace Load'}
+              </button>
+            </>
           ) : (
             <ShopSettings
               canManageShop={canEditShopSettings}
