@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  clampCorrespondenceLimit,
   CORRESPONDENCE_DIRECTIONS,
   fromDbCorrespondenceMessage,
   getSelectedCustomerReportCorrespondence,
@@ -10,6 +11,16 @@ import {
   normalizeCorrespondenceThread,
   sortCorrespondence
 } from '../src/modules/messaging/customerCorrespondence.js';
+
+test('correspondence limits preserve zero long enough to enforce the minimum', () => {
+  assert.equal(clampCorrespondenceLimit(0), 1);
+  assert.equal(clampCorrespondenceLimit('0'), 1);
+  assert.equal(clampCorrespondenceLimit(-12), 1);
+  assert.equal(clampCorrespondenceLimit(32.9), 32);
+  assert.equal(clampCorrespondenceLimit(900), 500);
+  assert.equal(clampCorrespondenceLimit('not-a-number'), 200);
+  assert.equal(clampCorrespondenceLimit(), 200);
+});
 
 test('existing outbound message rows retain their current application shape', () => {
   const message = fromDbCorrespondenceMessage({

@@ -1,5 +1,6 @@
 import { hasSupabaseConfig, supabase } from '../../shared/lib/supabaseClient';
 import {
+  clampCorrespondenceLimit,
   normalizeCorrespondenceMessage,
   normalizeCorrespondenceThread,
   sortCorrespondence
@@ -42,7 +43,7 @@ export async function listCustomerCorrespondence({
     .select('*')
     .eq('shop_id', shopId)
     .order('created_at', { ascending: false })
-    .limit(Math.min(Math.max(Number(limit) || 200, 1), 500));
+    .limit(clampCorrespondenceLimit(limit));
 
   if (threadId) query = query.eq('thread_id', threadId);
   if (customerId) query = query.eq('customer_id', customerId);
