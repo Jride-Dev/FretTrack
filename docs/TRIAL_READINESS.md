@@ -76,7 +76,7 @@ Apply all current schema changes, including:
 
 ## Paid Access Trial Test
 
-Account approval is separate from paid access trial state. A user may be approved for FretTrack and still have an expired or inactive shop trial.
+Self-service registration no longer requires operator approval. A newly email-confirmed owner receives one standard non-converting 14-day Pro trial when the first shop is created. The operator controls below remain available for support testing and deliberate trial repair or extension.
 
 1. Sign in as a platform operator.
 2. Open the internal Operator Dashboard.
