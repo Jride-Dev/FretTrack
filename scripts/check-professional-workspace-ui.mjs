@@ -47,6 +47,7 @@ assert.match(styles, /\.work-order-form\.panel/, 'Professional New Work Order st
 assert.match(styles, /\.workspace-detail-shell \.job-tab-bar button\.active/, 'Professional Job Detail tabs must retain their restrained active state.');
 assert.match(styles, /@media \(max-width: 1080px\)/, 'The workspace chrome must include a tablet navigation layout.');
 assert.match(styles, /@media \(max-width: 760px\)/, 'The workspace chrome must include a mobile navigation layout.');
+assert.match(styles, /\.current-job-row\s*\{\s*white-space: normal;/, 'Mobile job cards must override the global nowrap button rule.');
 assert.doesNotMatch(styles, /linear-gradient|radial-gradient|border-radius:\s*999px/, 'The professional UI layer must not reintroduce decorative gradients or pill controls.');
 
 console.log('Professional workspace UI checks passed.');

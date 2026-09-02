@@ -925,9 +925,14 @@ main.app-shell {
     grid-column: 1 / -1;
   }
 
+  .current-job-row {
+    white-space: normal;
+  }
+
   .current-job-row [data-label] {
     overflow: hidden;
     overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .workspace-page-header,

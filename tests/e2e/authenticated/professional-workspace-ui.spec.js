@@ -33,6 +33,28 @@ test('professional workspace remains contained on a narrow screen', async ({ pag
   const firstRow = page.getByRole('row', { name: /Open job/ }).first();
   await expect(firstRow.locator('[data-label="Instrument"]')).toBeVisible();
   await expect(firstRow.locator('[data-label="Assigned Technician"]')).toBeVisible();
+
+  const longValue = 'Alexandria Montgomery-Worthington Custom Extended Workshop Assignment';
+  for (const label of ['Customer', 'Instrument', 'Assigned Technician']) {
+    await firstRow.locator(`[data-label="${label}"]`).evaluate((element, value) => {
+      element.textContent = value;
+    }, longValue);
+  }
+
+  const wrapping = await firstRow.evaluate((row) => ({
+    rowWhiteSpace: window.getComputedStyle(row).whiteSpace,
+    values: [...row.querySelectorAll('[data-label="Customer"], [data-label="Instrument"], [data-label="Assigned Technician"]')]
+      .map((element) => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+        whiteSpace: window.getComputedStyle(element).whiteSpace
+      }))
+  }));
+  expect(wrapping.rowWhiteSpace).toBe('normal');
+  for (const value of wrapping.values) {
+    expect(value.whiteSpace).toBe('normal');
+    expect(value.scrollWidth).toBeLessThanOrEqual(value.clientWidth);
+  }
 });
 
 test('new work order and shared job detail use the professional workspace hierarchy', async ({ page }) => {
