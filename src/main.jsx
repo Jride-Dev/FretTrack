@@ -6,6 +6,7 @@ import ErrorBoundary from './shared/components/ErrorBoundary.jsx';
 import './styles/foundations.css';
 import './styles/workspace.css';
 import './styles.css';
+import './styles/professional-ui.css';
 import { registerPwaServiceWorker } from './shared/pwa/pwaSupport';
 import { installVitePreloadRecovery } from './shared/pwa/preloadRecovery';
 

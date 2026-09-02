@@ -73,6 +73,7 @@
     "check:loyalty-program": "node scripts/check-loyalty-program.mjs",
     "check:automated-service-reminders": "node scripts/check-automated-service-reminders.mjs",
     "check:customer-correspondence": "node --test scripts/customer-correspondence.test.mjs",
+    "check:professional-workspace-ui": "node scripts/check-professional-workspace-ui.mjs",
     "check:commercial-launch-terms": "node scripts/check-commercial-launch-terms.mjs",
     "check:work-log-draft-safety": "node scripts/check-work-log-draft-safety.mjs",
     "check:job-save-concurrency": "node scripts/check-job-save-concurrency.mjs",

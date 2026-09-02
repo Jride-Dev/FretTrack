@@ -486,6 +486,22 @@ h3 {
   padding: 13px 15px 15px;
 }
 
+.theme-showcase {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.theme-showcase .figure-card {
+  min-width: 0;
+}
+
+.sample-data-note {
+  color: var(--quiet);
+  font-size: 0.84rem;
+}
+
 .full-width {
   grid-column: 1 / -1;
 }
@@ -596,6 +612,7 @@ footer {
   .toc-grid,
   .split,
   .figure-grid,
+  .theme-showcase,
   .chapter-nav {
     grid-template-columns: 1fr;
   }

@@ -499,6 +499,59 @@ function landingPage() {
         padding: 11px 13px;
       }
 
+      .workspace-showcase {
+        display: grid;
+        gap: 24px;
+      }
+
+      .workspace-showcase-copy {
+        align-items: end;
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
+      }
+
+      .workspace-showcase-copy p {
+        color: var(--paper-muted);
+        margin: 0;
+      }
+
+      .workspace-showcase-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .workspace-shot {
+        background: #101722;
+        border: 1px solid #cbd2dc;
+        border-radius: 9px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14);
+        margin: 0;
+        overflow: hidden;
+      }
+
+      .workspace-shot img {
+        display: block;
+        height: auto;
+        width: 100%;
+      }
+
+      .workspace-shot figcaption {
+        color: #dbe5ef;
+        font-size: 13px;
+        font-weight: 800;
+        padding: 12px 14px;
+      }
+
+      .workspace-shot.light {
+        background: #ffffff;
+      }
+
+      .workspace-shot.light figcaption {
+        color: #253244;
+      }
+
       .trust-grid,
       .plan-grid {
         display: grid;
@@ -1016,6 +1069,7 @@ function landingPage() {
       @media (max-width: 980px) {
         .hero,
         .feature-layout,
+        .workspace-showcase-copy,
         .launch-panel,
         .discord-spotlight {
           grid-template-columns: 1fr;
@@ -1078,6 +1132,7 @@ function landingPage() {
         }
 
         .hero-proof,
+        .workspace-showcase-grid,
         .trust-grid,
         .plan-grid,
         .workflow,
@@ -1242,6 +1297,27 @@ function landingPage() {
             <p>Print or email clean work order and invoice documents with the right customer-facing details.</p>
           </div>
         </div>
+      </section>
+
+      <section class="section workspace-showcase" aria-labelledby="workspace-showcase-title">
+        <div class="workspace-showcase-copy">
+          <div>
+            <h2 id="workspace-showcase-title">A shop workspace that stays out of the way.</h2>
+            <p class="section-lede">Current work, priorities, due dates, repair benches, inventory, customers, reporting, and administration use one restrained navigation system.</p>
+          </div>
+          <p>Choose a purpose-built FretTrack theme or let the app follow your device. The layout remains consistent across the dark and light options.</p>
+        </div>
+        <div class="workspace-showcase-grid">
+          <figure class="workspace-shot">
+            <img src="/landing/current-jobs-bench-dark.png" alt="FretTrack Current Jobs workspace in the Bench Dark theme, showing the navigation rail, queue summary, filters, and active work orders." loading="lazy">
+            <figcaption>Bench Dark keeps dense shop information readable without turning every control into a competing card.</figcaption>
+          </figure>
+          <figure class="workspace-shot light">
+            <img src="/landing/current-jobs-shop-light.png" alt="FretTrack Current Jobs workspace in the Shop Light theme with the same navigation, metrics, filters, and work-order queue." loading="lazy">
+            <figcaption>Shop Light uses the same hierarchy for bright workspaces and daylight screens.</figcaption>
+          </figure>
+        </div>
+        <p class="section-lede">Screenshots show a sample workspace with fictional customer and shop data.</p>
       </section>
 
       <section class="dark-band">

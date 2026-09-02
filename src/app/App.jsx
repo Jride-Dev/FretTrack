@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AppNotice from '../shared/components/AppNotice.jsx';
 import NewJobSidebar from './NewJobSidebar.jsx';
+import WorkspaceShellHeader from './WorkspaceShellHeader.jsx';
 import { BillingStateBanner, InternalCurrentAccessPanel } from './AppAccessPanels.jsx';
 import { getAppAccess } from './appAccess.js';
 import {
@@ -18,7 +19,6 @@ import useSessionShopBootstrap from './useSessionShopBootstrap.js';
 import AuthGate from '../modules/auth/AuthGate.jsx';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
-import FeedbackReporter from '../modules/system/FeedbackReporter.jsx';
 import SystemAnnouncements from '../modules/system/SystemAnnouncements.jsx';
 import { hasSupabaseConfig } from '../shared/lib/supabaseClient';
 import {
@@ -606,98 +606,38 @@ export default function App() {
   }
 
   const isJobMode = ['new', 'detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(mode);
-  const getHeaderNavClass = (targetMode, baseClass = '') => [
-    baseClass,
-    mode === targetMode ? 'header-nav-active' : ''
-  ].filter(Boolean).join(' ') || undefined;
-  const saveJobButtonClass = isJobMode ? 'primary-action header-nav-active' : 'button-tertiary';
 
   return (
     <main className="app app-shell">
-      <header>
-        <div className="brand-header">
-          <img
-            src={planStatus.emblemSrc}
-            alt=""
-            aria-hidden="true"
-            className={planStatus.emblemClassName}
-          />
-          <div className="brand-copy">
-            <h1>{planStatus.headerLabel || APP_NAME}</h1>
-            <small>{APP_TAGLINE}</small>
-            <strong>{shopName}</strong>
-            <span className="plan-line">
-              <span className={`plan-badge ${planStatus.badgeTone}`}>{planStatus.planLabel || 'Trial'}</span>
-              {planStatus.countdownLabel && <span>{planStatus.countdownLabel}</span>}
-            </span>
-            <span className="app-version">{appVersionText}</span>
-          </div>
-        </div>
-        <div className="mode-actions no-print header-actions">
-          <span className={`connection-status ${supabaseStatus}`} title={statusText}>
-            <span className="connection-status-dot" aria-hidden="true" />
-            Database
-          </span>
-          {!isOnline && (
-            <span className="connection-status offline" title="Browser offline">
-              Offline
-            </span>
-          )}
-          <div className="theme-settings">
-            <label className="theme-picker">
-              Theme
-              <select value={theme} onChange={(event) => setTheme(event.target.value)}>
-                {themes.map((themeOption) => (
-                  <option key={themeOption.value} value={themeOption.value}>{themeOption.label}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-          {shouldShowPwaInstallButton && (
-            <button type="button" onClick={handleInstallApp}>Install App</button>
-          )}
-          <button type="button" className={saveJobButtonClass} onClick={saveCurrentJob} disabled={isSaving || !canWrite}>
-            {isSaving ? 'Saving...' : 'Save Job'}
-          </button>
-          <button type="button" className={getHeaderNavClass('new')} onClick={() => showNewJob()}>New Job</button>
-          <button type="button" className={getHeaderNavClass('list')} onClick={() => navigateTo('list')}>Current Jobs</button>
-          <button
-            type="button"
-            className={['amplifiers', 'amplifier-detail'].includes(mode) ? 'header-nav-active' : undefined}
-            onClick={() => navigateTo('amplifiers')}
-          >
-            Amplifier Repair
-          </button>
-          <button
-            type="button"
-            className={['keyboards', 'keyboard-detail'].includes(mode) ? 'header-nav-active' : undefined}
-            onClick={() => navigateTo('keyboards')}
-          >
-            Keyboard Repair
-          </button>
-          <button type="button" className={getHeaderNavClass('customers')} onClick={() => navigateTo('customers')}>Customers</button>
-          <button type="button" className={getHeaderNavClass('inventory')} onClick={() => navigateTo('inventory')}>Inventory</button>
-          <button type="button" className={getHeaderNavClass('shipping')} onClick={() => navigateTo('shipping')}>Shipping</button>
-          <button type="button" className={getHeaderNavClass('scheduling')} onClick={() => navigateTo('scheduling')}>Scheduling</button>
-          <button type="button" className={getHeaderNavClass('reports')} onClick={() => navigateTo('reports')}>Reports</button>
-          <button type="button" className={getHeaderNavClass('accounting')} onClick={() => navigateTo('accounting')}>Accounting / Reports</button>
-          {(canWrite || offlineDraftCount > 0) && (
-            <button type="button" className={getHeaderNavClass('drafts')} onClick={() => navigateTo('drafts')}>Local Drafts{offlineDraftCount ? ` (${offlineDraftCount})` : ''}</button>
-          )}
-          <button type="button" className={getHeaderNavClass('settings')} onClick={() => navigateTo('settings')}>Shop Settings</button>
-          {canViewBilling && <button type="button" className={getHeaderNavClass('billing')} onClick={() => navigateTo('billing')}>Billing</button>}
-          {canAccessOperatorDashboard({ isOperator }) && <button type="button" className={getHeaderNavClass('operator')} onClick={() => navigateTo('operator')}>Operator</button>}
-          {session && (
-            <FeedbackReporter selectedJob={selectedJob} onNotice={setNotice} />
-          )}
-          {memberships.length > 1 && (
-            <button type="button" onClick={showShopPicker}>Switch Shop</button>
-          )}
-          {session && (
-            <button type="button" onClick={handleSignOut}>Sign Out</button>
-          )}
-        </div>
-      </header>
+      <WorkspaceShellHeader
+        appVersionText={appVersionText}
+        canViewBilling={canViewBilling}
+        canViewOperator={canAccessOperatorDashboard({ isOperator })}
+        canWrite={canWrite}
+        handleInstallApp={handleInstallApp}
+        handleSignOut={handleSignOut}
+        isJobMode={isJobMode}
+        isOnline={isOnline}
+        isSaving={isSaving}
+        memberships={memberships}
+        mode={mode}
+        navigateTo={navigateTo}
+        offlineDraftCount={offlineDraftCount}
+        planStatus={planStatus}
+        saveCurrentJob={saveCurrentJob}
+        selectedJob={selectedJob}
+        session={session}
+        setNotice={setNotice}
+        setTheme={setTheme}
+        shopName={shopName}
+        shouldShowPwaInstallButton={shouldShowPwaInstallButton}
+        showNewJob={showNewJob}
+        showShopPicker={showShopPicker}
+        statusText={statusText}
+        supabaseStatus={supabaseStatus}
+        theme={theme}
+        themes={themes}
+      />
       {shouldShowIosInstallHelp && (
         <section className="pwa-install-banner no-print">
           <div>
@@ -830,6 +770,7 @@ export default function App() {
               onImageUpload: handleImageUpload,
               onNotice: setNotice,
               onOpenCurrentJobsForAssignee: openCurrentJobsForAssignee,
+              onOpenNewJob: showNewJob,
               onOpenInventory: () => navigateTo('inventory'),
               onRefreshJobs: refreshJobs,
               onSelectJob: handleSelectJob,
