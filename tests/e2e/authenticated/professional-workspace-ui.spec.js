@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openSeededJob } from '../helpers/jobNavigation.js';
 
 test('professional workspace navigation and theme choice persist', async ({ page }) => {
   await page.goto('/');
@@ -32,4 +33,24 @@ test('professional workspace remains contained on a narrow screen', async ({ pag
   const firstRow = page.getByRole('row', { name: /Open job/ }).first();
   await expect(firstRow.locator('[data-label="Instrument"]')).toBeVisible();
   await expect(firstRow.locator('[data-label="Assigned Technician"]')).toBeVisible();
+});
+
+test('new work order and shared job detail use the professional workspace hierarchy', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'New Job', exact: true }).first().click();
+
+  const intake = page.getByLabel('New job sections');
+  await expect(intake.getByRole('heading', { name: 'New Work Order' })).toBeVisible();
+  for (const heading of ['Customer', 'Instrument', 'Shop workflow', 'Customer request']) {
+    await expect(intake.getByRole('heading', { name: heading, exact: true })).toBeVisible();
+  }
+  await expect(intake.getByRole('button', { name: 'Save Job' })).toContainText('Create Work Order');
+
+  await openSeededJob(page, 1);
+  await expect(page.getByText(/work order ·/i).first()).toBeVisible();
+  const tabs = page.getByRole('tablist', { name: 'Job workspace tabs' });
+  await expect(tabs).toBeVisible();
+  await tabs.getByRole('tab', { name: 'Parts & Billing' }).click();
+  await expect(page.getByRole('tabpanel').getByRole('heading', { name: 'Parts', exact: true })).toBeVisible();
+  await expect(page.getByRole('tabpanel').getByRole('heading', { name: 'Totals', exact: true })).toBeVisible();
 });

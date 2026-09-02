@@ -120,10 +120,10 @@ function testPublicDocsCopyDenyList() {
 function testManualScreenshotsOpenAtFullSize() {
   const manualPath = path.resolve('cloudflare/frettrack-coming-soon/public/docs/how-to-use-frettrack.html');
   const html = fs.readFileSync(manualPath, 'utf8');
-  const screenshotImages = [...html.matchAll(/<img src="(\/docs\/screenshots\/[^"]+)"/g)];
-  const screenshotLinks = [...html.matchAll(/<a class="screenshot-link" href="(\/docs\/screenshots\/[^"]+)" target="_blank" rel="noopener">/g)];
+  const screenshotImages = [...html.matchAll(/<img src="((?:\/docs\/screenshots|\/landing)\/[^"]+)"/g)];
+  const screenshotLinks = [...html.matchAll(/<a class="screenshot-link" href="((?:\/docs\/screenshots|\/landing)\/[^"]+)" target="_blank" rel="noopener">/g)];
 
-  assert.equal(screenshotImages.length, 21, 'The complete manual must retain all 21 screenshots.');
+  assert.equal(screenshotImages.length, 22, 'The complete manual must retain its legacy examples and current professional-workspace screenshots.');
   assert.equal(screenshotLinks.length, screenshotImages.length, 'Every manual screenshot must link to its original file in a new tab.');
   assert.deepEqual(
     screenshotLinks.map((match) => match[1]),

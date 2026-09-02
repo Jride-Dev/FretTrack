@@ -22,10 +22,6 @@ Instrument data is attached to each job. A separate customer-owned instrument re
 
 Customer documents can be printed or emailed from authenticated shop workflows. Public tokenized invoice or work-order links need an explicit expiration, revocation, authorization, and access-log design.
 
-### Monetary edits use broad work-order write roles
-
-Owners, admins, and technicians with work-order write access can edit applicable parts, services, discounts, and payments. More granular accounting permissions and finalized-total locking remain future commerce hardening.
-
 ### Customer import is not enabled
 
 Import parsing and preview foundations exist, but reviewed batch persistence, duplicate merge decisions, and rollback are not available in the product UI.

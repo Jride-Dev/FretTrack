@@ -473,6 +473,302 @@ main.app-shell {
   color: var(--success);
 }
 
+.workspace-page-header {
+  align-items: end;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.workspace-page-titleblock {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.workspace-page-eyebrow {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.workspace-page-titleblock h1,
+.workspace-page-titleblock h2 {
+  font-size: clamp(22px, 2vw, 30px);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.workspace-page-titleblock p,
+.workspace-section-heading p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.workspace-page-actions {
+  flex: 0 0 min(240px, 38%);
+}
+
+.workspace-page-actions label {
+  width: 100%;
+}
+
+.workspace-section {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.workspace-section-heading {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.workspace-section-heading > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.workspace-section-heading h3 {
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.workspace-section-heading p {
+  font-size: 12px;
+}
+
+.workspace-section-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.work-order-form.panel,
+.workspace-detail-shell.panel {
+  overflow: hidden;
+  padding: 0;
+}
+
+.work-order-form > .workspace-page-header {
+  border-bottom: 1px solid var(--border);
+  padding: 18px;
+}
+
+.work-order-form > .muted-text {
+  margin: 14px 18px 0;
+}
+
+.work-order-section-stack {
+  display: grid;
+}
+
+.work-order-form-section {
+  border-bottom: 1px solid var(--border);
+  padding: 18px;
+}
+
+.work-order-form-section.customer-lookup {
+  background: transparent;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+}
+
+.work-order-form-section .form-grid {
+  gap: 14px;
+}
+
+.work-order-form-section label {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.work-order-form-section label input,
+.work-order-form-section label select,
+.work-order-form-section label textarea {
+  color: var(--text);
+}
+
+.work-order-form-section .checkline {
+  align-content: end;
+  align-items: center;
+  color: var(--text);
+  grid-template-columns: auto 1fr;
+  min-height: 38px;
+}
+
+.work-order-form-section .instrument-selector > span,
+.work-order-form-section .instrument-intake-section legend {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.work-order-form-section .segmented-control.instrument-type-control {
+  background: var(--border);
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  max-width: none;
+}
+
+.work-order-form-section .segmented-control.instrument-type-control button + button {
+  border-left: 0;
+}
+
+.work-order-form-section .instrument-intake-section {
+  margin-top: 6px;
+}
+
+.work-order-form-actions {
+  align-items: center;
+  background: color-mix(in srgb, var(--surface-2) 72%, var(--surface));
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+
+.work-order-form-actions > span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.work-order-form-actions button {
+  flex: 0 0 auto;
+}
+
+.app-layout.new-job-active:not(.sidebar-collapsed) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.new-job-active:not(.sidebar-collapsed) > .new-job-sidebar {
+  grid-column: 1;
+}
+
+.new-job-active:not(.sidebar-collapsed) > .empty-state {
+  display: none;
+}
+
+.new-job-active:not(.sidebar-collapsed) .new-job-sidebar-content {
+  align-items: start;
+  grid-template-columns: minmax(520px, 1.7fr) minmax(280px, 0.8fr);
+}
+
+.new-job-active:not(.sidebar-collapsed) .new-work-order-form {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+}
+
+.new-job-sidebar .work-order-form-actions {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.new-job-sidebar .work-order-form-actions button {
+  width: 100%;
+}
+
+.workspace-detail-shell > .workspace-page-header {
+  border-bottom: 1px solid var(--border);
+  padding: 20px;
+}
+
+.workspace-detail-shell > .job-assignment-control,
+.workspace-detail-shell > .accounting-void-control,
+.workspace-detail-shell > .save-status {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.workspace-detail-shell > .job-assignment-control {
+  margin-top: 16px;
+}
+
+.workspace-detail-shell .job-workspace {
+  gap: 0;
+}
+
+.workspace-detail-shell .job-tab-bar {
+  background: color-mix(in srgb, var(--surface) 96%, var(--bg));
+  gap: 0;
+  overflow-x: auto;
+  padding: 0 20px;
+  top: 0;
+}
+
+.workspace-detail-shell .job-tab-bar button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--text-muted);
+  flex: 0 0 auto;
+  min-height: 46px;
+  padding: 10px 13px 8px;
+}
+
+.workspace-detail-shell .job-tab-bar button:hover:not(:disabled) {
+  background: transparent;
+  border-bottom-color: var(--border-strong);
+  color: var(--text);
+}
+
+.workspace-detail-shell .job-tab-bar button.active,
+.workspace-detail-shell .job-tab-bar button.active:hover:not(:disabled) {
+  background: transparent;
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}
+
+.job-tab-content {
+  min-width: 0;
+}
+
+.workspace-detail-shell .job-tab-panel {
+  background: color-mix(in srgb, var(--surface-2) 38%, var(--surface));
+  padding: 20px;
+}
+
+.workspace-detail-shell .job-tab-panel > section,
+.workspace-detail-shell .job-tab-panel > .work-order-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  min-width: 0;
+  padding: 16px;
+}
+
+.workspace-detail-shell .job-tab-panel > section > h3,
+.billing-workspace-section > h3 {
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+}
+
+.billing-workspace-section {
+  display: grid;
+  gap: 12px;
+}
+
+.billing-workspace-section table {
+  margin-top: 2px;
+}
+
+.totals-workspace-section .totals {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 14px;
+}
+
 @media (max-width: 1080px) {
   main.app-shell {
     display: block;
@@ -556,6 +852,10 @@ main.app-shell {
   .current-jobs-metric:nth-child(n + 4) {
     border-top: 1px solid var(--border);
   }
+
+  .new-job-active:not(.sidebar-collapsed) .new-job-sidebar-content {
+    grid-template-columns: minmax(430px, 1.4fr) minmax(260px, 0.8fr);
+  }
 }
 
 @media (max-width: 760px) {
@@ -628,6 +928,37 @@ main.app-shell {
   .current-job-row [data-label] {
     overflow: hidden;
     overflow-wrap: anywhere;
+  }
+
+  .workspace-page-header,
+  .workspace-section-heading,
+  .work-order-form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .new-job-active:not(.sidebar-collapsed) .new-job-sidebar-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .new-job-active:not(.sidebar-collapsed) .new-work-order-form {
+    grid-row: auto;
+  }
+
+  .workspace-page-actions {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .work-order-form-actions button {
+    width: 100%;
+  }
+
+  .workspace-detail-shell .job-tab-bar,
+  .workspace-detail-shell .job-tab-panel {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 }
 

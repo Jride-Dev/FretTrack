@@ -1316,6 +1316,14 @@ function landingPage() {
             <img src="/landing/current-jobs-shop-light.png" alt="FretTrack Current Jobs workspace in the Shop Light theme with the same navigation, metrics, filters, and work-order queue." loading="lazy">
             <figcaption>Shop Light uses the same hierarchy for bright workspaces and daylight screens.</figcaption>
           </figure>
+          <figure class="workspace-shot">
+            <img src="/landing/new-work-order-bench-dark.png" alt="FretTrack New Work Order workspace showing grouped customer, instrument, shop workflow, and customer request sections." loading="lazy">
+            <figcaption>Intake keeps the customer, instrument, workflow, and request organized without turning the form into a wall of fields.</figcaption>
+          </figure>
+          <figure class="workspace-shot">
+            <img src="/landing/work-order-billing-bench-dark.png" alt="FretTrack Work Order Parts and Billing workspace showing job status, assignment, parts, services, and totals." loading="lazy">
+            <figcaption>The same work order carries parts, services, payments, tax, and invoice controls through one permission-aware workspace.</figcaption>
+          </figure>
         </div>
         <p class="section-lede">Screenshots show a sample workspace with fictional customer and shop data.</p>
       </section>

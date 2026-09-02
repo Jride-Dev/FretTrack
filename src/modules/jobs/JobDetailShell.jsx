@@ -45,7 +45,7 @@ export default function JobDetailShell({
   workSections
 }) {
   return (
-    <section className="panel detail job-detail">
+    <section className="panel detail job-detail workspace-detail-shell">
       <JobDetailDialogs
         documentEmailDraft={documentEmailDraft}
         subcontractorPickupJob={subcontractorPickupJob}

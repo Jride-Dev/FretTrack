@@ -32,7 +32,7 @@ export default function ServicesList({ services, service, setService, onAddServi
   }
 
   return (
-    <section>
+    <section className="work-order-section billing-workspace-section">
       <h3>Services</h3>
       <label className="service-preset no-print">
         Service Preset

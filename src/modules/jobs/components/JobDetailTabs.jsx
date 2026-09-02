@@ -62,7 +62,9 @@ export default function JobDetailTabs({
             type="button"
             role="tab"
             aria-selected={activeTab === tab.key}
+            aria-controls={`job-tab-panel-${tab.key}`}
             className={activeTab === tab.key ? 'active' : ''}
+            data-workspace-tab={tab.key}
             onClick={() => setActiveTab(tab.key)}
           >
             {tab.label}
@@ -70,17 +72,19 @@ export default function JobDetailTabs({
         ))}
       </div>
 
-      {activeTab === 'overview' && (
-        <OverviewTab canWrite={canWrite} draftJob={draftJob} isDirty={isDirty} updateField={updateField} printActions={printActions} />
-      )}
-      {activeTab === 'intake' && <IntakeTab>{intakeSection}</IntakeTab>}
-      {activeTab === 'inspection' && <InspectionTab>{inspectionSections}</InspectionTab>}
-      {activeTab === 'work' && <WorkTab>{workSections}</WorkTab>}
-      {activeTab === 'billing' && <PartsBillingTab>{billingSections}</PartsBillingTab>}
-      {activeTab === 'scheduling' && <TimelineTab>{schedulingSection}</TimelineTab>}
-      {activeTab === 'photos' && <PhotosTab>{imagesSection}</PhotosTab>}
-      {activeTab === 'print' && <PrintCustomerTab>{printActions}{messagesPanel}</PrintCustomerTab>}
-      {activeTab === 'timeline' && <TimelineTab>{activityTimeline}</TimelineTab>}
+      <div id={`job-tab-panel-${activeTab}`} className="job-tab-content" role="tabpanel">
+        {activeTab === 'overview' && (
+          <OverviewTab canWrite={canWrite} draftJob={draftJob} isDirty={isDirty} updateField={updateField} printActions={printActions} />
+        )}
+        {activeTab === 'intake' && <IntakeTab>{intakeSection}</IntakeTab>}
+        {activeTab === 'inspection' && <InspectionTab>{inspectionSections}</InspectionTab>}
+        {activeTab === 'work' && <WorkTab>{workSections}</WorkTab>}
+        {activeTab === 'billing' && <PartsBillingTab>{billingSections}</PartsBillingTab>}
+        {activeTab === 'scheduling' && <TimelineTab>{schedulingSection}</TimelineTab>}
+        {activeTab === 'photos' && <PhotosTab>{imagesSection}</PhotosTab>}
+        {activeTab === 'print' && <PrintCustomerTab>{printActions}{messagesPanel}</PrintCustomerTab>}
+        {activeTab === 'timeline' && <TimelineTab>{activityTimeline}</TimelineTab>}
+      </div>
 
       <div className="print-only">
         {printSections}

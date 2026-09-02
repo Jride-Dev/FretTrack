@@ -43,7 +43,7 @@ export default function TotalsSection({
   const taxEnabled = taxSettings.calculationMode === 'manual';
 
   return (
-    <section>
+    <section className="work-order-section billing-workspace-section totals-workspace-section">
       <h3>Totals</h3>
       <div className="discount-controls no-print">
         <label>
