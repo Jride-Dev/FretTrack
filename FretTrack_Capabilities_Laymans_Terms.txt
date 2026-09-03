@@ -110,7 +110,7 @@ Send customer emails
 - Send email notifications to customers.
 - Use plain-text templates for common messages, including:
   - Check-in
-  - Estimate ready
+  - Estimate ready (available only when a real estimate revision exists; use Email Estimate for the locked estimate document)
   - Approval needed
   - Work started
   - Repair complete
