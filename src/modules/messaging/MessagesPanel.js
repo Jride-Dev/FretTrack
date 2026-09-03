@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatShopDateTime, toLocalDateTimeInputValue } from '../../shared/utils/dateFormat';
-import { getShopDateOptions } from '../shops/shopConfig';
+import { getShopDateOptions, getShopMoneyOptions } from '../shops/shopConfig';
 import { buildShopSignature, defaultTemplateKey, instrumentName, messageTemplates, renderTemplate } from './messageTemplates';
 import { sendCustomerChannelMessage, smsDisabledMessage, smsEnabled } from './messageService';
+import { fromMinorUnits, money } from '../../shared/utils/money.js';
 
 const RECONCILIATION_RETRY_MS = 30_000;
 
@@ -47,7 +48,11 @@ export default function MessagesPanel({
     instrument: instrumentName(job),
     appointment_datetime: formatShopDateTime(job.dropOffAt, dateOptions) || 'the agreed date and time',
     shop_name: shopProfile?.shopName || '',
-    shop_signature: buildShopSignature(shopProfile || {})
+    shop_signature: buildShopSignature(shopProfile || {}),
+    estimate_revision: String(job.estimateRevision || 1),
+    estimate_total: job.estimateSnapshot
+      ? money(fromMinorUnits(job.estimateSnapshot.totalMinor || 0, job.estimateSnapshot.currencyCode || shopProfile?.currencyCode || 'USD'), getShopMoneyOptions(shopProfile || {}))
+      : 'not available yet'
   }), [dateOptions.dateFormat, dateOptions.locale, job, shopProfile]);
 
   useEffect(() => {
@@ -156,6 +161,10 @@ export default function MessagesPanel({
   }
 
   async function handleSend(channel) {
+    if (templateKey === 'estimate_ready' && !['sent', 'approved'].includes(job.estimateStatus || 'draft')) {
+      setSendState({ sending: '', error: 'Mark the estimate sent and use Email Estimate to send the actual priced estimate.', success: '' });
+      return;
+    }
     setSendState({ sending: channel, error: '', success: '' });
 
     if (!smsEnabled && (channel === 'sms' || channel === 'both')) {

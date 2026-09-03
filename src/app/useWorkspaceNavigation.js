@@ -160,6 +160,7 @@ export function isAllowedWorkspaceMode(mode, {
   return [
     'new',
     'list',
+    'estimates',
     'detail',
     'guitar-detail',
     'amplifiers',

@@ -48,7 +48,7 @@ export default function JobDocumentEmailDialog({
   const trimmedRecipient = recipient.trim();
   const recipientValid = isValidEmailAddress(trimmedRecipient);
   const canSend = recipientValid && subject.trim() && body.trim() && !sendState.sending;
-  const title = kind === 'invoice' ? 'Email Invoice' : 'Email Work Order';
+  const title = kind === 'estimate' ? 'Email Estimate' : kind === 'invoice' ? 'Email Invoice' : 'Email Work Order';
   const invalidRecipientMessage = !trimmedRecipient
     ? 'Add a recipient email before sending.'
     : recipientValid

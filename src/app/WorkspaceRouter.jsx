@@ -14,6 +14,7 @@ const BillingPage = lazy(() => import('../modules/billing/BillingPage.jsx'));
 const CustomerManager = lazy(() => import('../modules/customers/CustomerManager.jsx'));
 const InventoryPage = lazy(() => import('../modules/inventory/InventoryPage.jsx'));
 const CurrentJobsPage = lazy(() => import('../modules/jobs/CurrentJobsPage.jsx'));
+const EstimatesPage = lazy(() => import('../modules/jobs/EstimatesPage.jsx'));
 const GuitarJobDetail = lazy(() => import('../modules/guitars/GuitarJobDetail.jsx'));
 const JobDetail = lazy(() => import('../modules/jobs/JobDetail.jsx'));
 const OfflineDraftQueue = lazy(() => import('../modules/jobs/OfflineDraftQueue.jsx'));
@@ -94,6 +95,10 @@ function WorkspacePage({
         initialAssigneeFilter={currentJobsAssigneeFilter}
       />
     );
+  }
+
+  if (mode === 'estimates') {
+    return <EstimatesPage jobs={jobs} moneyOptions={moneyOptions} dateOptions={dateOptions} onOpenJob={actions.onSelectJob} />;
   }
 
   if (mode === 'amplifiers') {

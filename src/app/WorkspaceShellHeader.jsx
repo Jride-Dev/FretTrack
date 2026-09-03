@@ -73,6 +73,7 @@ export default function WorkspaceShellHeader({
       <nav className="workspace-primary-nav" aria-label="FretTrack workspace">
         <NavGroup label="Workspace">
           <button type="button" className={navClass('list')} onClick={() => navigateTo('list')}>Current Jobs</button>
+          <button type="button" className={navClass('estimates')} onClick={() => navigateTo('estimates')}>Estimates</button>
           <button type="button" className={navClass('scheduling')} onClick={() => navigateTo('scheduling')}>Calendar</button>
         </NavGroup>
 

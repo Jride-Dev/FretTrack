@@ -684,6 +684,33 @@ main.app-shell {
   width: 100%;
 }
 
+.estimates-page > .workspace-page-header {
+  margin-bottom: 18px;
+}
+
+.estimates-page .table-wrap {
+  overflow-x: auto;
+}
+
+.estimates-page .table-wrap table {
+  min-width: 920px;
+}
+
+.estimate-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-control);
+  padding: 4px 9px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.estimate-status-draft { background: #eef0f3; color: #4d5661; }
+.estimate-status-sent { background: #e8f0fe; color: #2457a6; }
+.estimate-status-approved { background: #e6f4ea; color: #1e6b3a; }
+.estimate-status-declined { background: #fce8e6; color: #a33a2b; }
+
 .workspace-detail-shell > .workspace-page-header {
   border-bottom: 1px solid var(--border);
   padding: 20px;

@@ -10,9 +10,13 @@ The desktop rail groups destinations into Workspace, Repair, Operations, Insight
 
 The page begins with active-job, priority, and next-due summaries. Existing search, priority, status, due-date, assigned-technician, scope, and sort controls remain authoritative. Selecting a result opens the appropriate Guitar, Amplifier, or Keyboard work order through the shared workspace router.
 
+## Estimates
+
+Estimates has a dedicated full-width queue for draft, sent, approved, and declined revisions. Each row shows the revision and locked total when available and opens the existing work-order billing surface for guarded edits, decisions, and Email Estimate delivery.
+
 ## Work orders
 
-New Work Order and the shared Work Order, Parts & Payments view use the same page-heading, section, and action hierarchy. New Work Order now occupies the full-width content workspace without the legacy left-side job list, while intake remains grouped into Customer, Instrument, Shop workflow, and Customer request sections without changing any field validation or save behavior. Saved jobs use a restrained tab bar and contained content panels; billing tables, permissions, finalization, payment, and tax handlers remain the established commerce paths.
+New Work Order and the shared Work Order, Parts & Payments view use the same page-heading, section, and action hierarchy. New Work Order now occupies the full-width content workspace without the legacy left-side job list, while intake remains grouped into Customer, Instrument, Shop workflow, and Customer request sections without changing any field validation or save behavior. Saved jobs use a restrained tab bar and contained content panels; billing tables, permissions, finalization, payment, tax, and estimate handlers remain the established commerce paths. Estimate revisions can be emailed from the locked Estimate action with their actual service/part line items, server-calculated totals, tax, revision, and message-history audit; the generic Estimate ready message is blocked until that revision exists.
 
 The shared presentation primitives live in `src/shared/components/WorkspacePageHeader.jsx` and `src/shared/components/WorkspaceSection.jsx`. They carry layout and accessibility structure only. They do not load data, choose a shop, decide entitlements, or persist a record.
 

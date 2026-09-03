@@ -1,6 +1,6 @@
 import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateFormat.js';
 import { formatMeasurementChange, getLengthUnitLabel } from '../../shared/utils/measurements.js';
-import { money } from '../../shared/utils/money.js';
+import { fromMinorUnits, money } from '../../shared/utils/money.js';
 import { getJobSourceLabel } from './jobSources.js';
 import { retailTotal, rowQuantity } from '../billing/accounting.js';
 
@@ -135,6 +135,90 @@ export function buildInvoiceEmailDraft(job, context = {}) {
     summaryTitle: 'Included Invoice Summary',
     summaryLines
   };
+}
+
+export function buildEstimateEmailDraft(job, context = {}) {
+  const base = buildBaseContext(job, context);
+  const snapshot = job.estimateSnapshot || job.estimate_snapshot;
+  if (!snapshot || !['sent', 'approved'].includes(job.estimateStatus || job.estimate_status)) {
+    throw new Error('Mark the estimate sent before emailing the estimate.');
+  }
+
+  const estimateRevision = Number(job.estimateRevision || job.estimate_revision || 0) || 1;
+  const total = fromMinorUnits(snapshot.totalMinor || 0, base.moneyOptions.currency);
+  const subject = `${base.shopName} estimate revision ${estimateRevision} for ${base.customerName}`;
+  const summaryLines = [
+    ['Shop', base.shopContactLine],
+    ['Job', base.jobNumberLabel],
+    ['Customer', base.customerName],
+    ['Instrument', base.instrumentLabel],
+    ['Revision', String(estimateRevision)],
+    ['Estimated Total', money(total, base.moneyOptions)],
+    ['Tax', money(fromMinorUnits(snapshot.taxMinor || 0, base.moneyOptions.currency), base.moneyOptions)]
+  ];
+
+  return {
+    type: 'estimate',
+    recipient: base.recipient,
+    subject,
+    body: [
+      `Hi ${base.customerGreeting},`,
+      '',
+      `Your estimate for ${base.instrumentLabel} is ready. This is estimate revision ${estimateRevision}.`,
+      '',
+      `Estimated total: ${money(total, base.moneyOptions)}`,
+      '',
+      'Please review the line items below and reply with your approval or any questions.',
+      '',
+      base.shopSignature
+    ].join('\n'),
+    summaryTitle: 'Included Estimate',
+    summaryLines
+  };
+}
+
+export function buildEstimateEmailContent(job, context = {}) {
+  const base = buildBaseContext(job, context);
+  const snapshot = job.estimateSnapshot || job.estimate_snapshot || {};
+  const estimateRevision = Number(job.estimateRevision || job.estimate_revision || 0) || 1;
+  const moneyOptions = base.moneyOptions;
+  const services = (job.services || job.labor || []).map((row) => [
+    cleanText(row.description) || 'Service',
+    String(row.quantity || 1),
+    money(Number(row.retail) || 0, moneyOptions),
+    money((Number(row.retail) || 0) * rowQuantity(row), moneyOptions)
+  ]);
+  const parts = (job.parts || []).map((row) => [
+    cleanText(row.sku ? `${row.sku} - ${row.name || 'Part'}` : row.name) || 'Part',
+    String(row.quantity || 1),
+    money(Number(row.retail) || 0, moneyOptions),
+    row.includedInService ? 'Included' : money(retailTotal(row), moneyOptions)
+  ]);
+  const total = fromMinorUnits(snapshot.totalMinor || 0, moneyOptions.currency);
+  const tax = fromMinorUnits(snapshot.taxMinor || 0, moneyOptions.currency);
+  const discount = fromMinorUnits(snapshot.discountMinor || 0, moneyOptions.currency);
+  const taxLabel = cleanText(snapshot.taxLabel) || context.taxLabel || 'Sales Tax';
+
+  return buildEmailSection({
+    title: `Estimate Revision ${estimateRevision}`,
+    fields: [
+      ['Shop', base.shopContactLine],
+      ['Job', base.jobNumberLabel],
+      ['Customer', base.customerName],
+      ['Instrument', base.instrumentLabel],
+      ['Estimate Status', formatEstimateStatus(job.estimateStatus || job.estimate_status || 'sent')]
+    ],
+    tables: [
+      { title: 'Services', headers: ['Service', 'Qty', 'Unit Price', 'Line Total'], rows: services, emptyText: 'No services were included.' },
+      { title: 'Parts', headers: ['Part', 'Qty', 'Unit Price', 'Line Total'], rows: parts, emptyText: 'No parts were included.' }
+    ],
+    footerFields: [
+      ['Subtotal', money(fromMinorUnits(snapshot.subtotalMinor || 0, moneyOptions.currency), moneyOptions)],
+      ['Discount', `-${money(discount, moneyOptions)}`],
+      [taxLabel, money(tax, moneyOptions)],
+      ['Estimated Total', money(total, moneyOptions)]
+    ]
+  });
 }
 
 export function buildSelectedDocumentEmailContent(job, context = {}, options = {}) {
@@ -473,4 +557,9 @@ function lastNonEmpty(values = []) {
 
 function cleanText(value) {
   return String(value || '').trim();
+}
+
+function formatEstimateStatus(status) {
+  const value = String(status || 'sent');
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

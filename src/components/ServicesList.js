@@ -1,6 +1,7 @@
 import { servicePresets } from '../data/servicePresets';
 import { money } from '../shared/utils/money';
 import { getShopMoneyOptions } from '../modules/shops/shopConfig';
+import { normalizeServiceQuantityInput } from '../modules/jobs/serviceQuantity.js';
 
 function margin(row) {
   const quantity = Number(row.quantity || 1);
@@ -46,7 +47,7 @@ export default function ServicesList({ services, service, setService, onAddServi
       </label>
       <form className="row-form price-form" onSubmit={onAddService}>
         <input disabled={!canWrite} placeholder="Service or labor description" value={service.description} onChange={(event) => setService((current) => ({ ...current, description: event.target.value }))} />
-        <input disabled={!canWrite} type="number" min="0" step="0.01" placeholder="Qty / Hours" value={service.quantity} onChange={(event) => setService((current) => ({ ...current, quantity: event.target.value }))} />
+        <input disabled={!canWrite} type="number" min="1" max="9999" step="1" inputMode="numeric" placeholder="Qty" value={service.quantity} onChange={(event) => setService((current) => ({ ...current, quantity: normalizeServiceQuantityInput(event.target.value) }))} />
         <input disabled={!canWrite} type="number" min="0" step="0.01" placeholder="Internal cost" value={service.cost} onChange={(event) => setService((current) => ({ ...current, cost: event.target.value }))} />
         <input disabled={!canWrite} type="number" min="0" step="0.01" placeholder="Price / Rate" value={service.retail} onChange={(event) => setService((current) => ({ ...current, retail: event.target.value }))} />
         <button type="submit" disabled={!canWrite}>Add Service</button>
@@ -69,7 +70,7 @@ export default function ServicesList({ services, service, setService, onAddServi
                 <input disabled={!canWrite} value={row.description} onChange={(event) => onUpdateService(row.id, 'description', event.target.value)} />
               </td>
               <td>
-                <input disabled={!canWrite} type="number" min="0" step="0.01" value={row.quantity || 1} onChange={(event) => onUpdateService(row.id, 'quantity', event.target.value)} />
+                <input disabled={!canWrite} type="number" min="1" max="9999" step="1" inputMode="numeric" value={row.quantity || 1} onChange={(event) => onUpdateService(row.id, 'quantity', normalizeServiceQuantityInput(event.target.value))} />
               </td>
               <td className="internal-only">
                 <input disabled={!canWrite} type="number" min="0" step="0.01" value={row.cost} onChange={(event) => onUpdateService(row.id, 'cost', event.target.value)} />

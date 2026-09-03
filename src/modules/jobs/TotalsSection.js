@@ -14,6 +14,7 @@ export default function TotalsSection({
   addPayment,
   draftJob,
   emailInvoice,
+  emailEstimate,
   estimateNote = '',
   payment,
   payments,
@@ -156,6 +157,9 @@ export default function TotalsSection({
         </div>
       )}
       <div className="mode-actions no-print totals-actions">
+        {['sent', 'approved'].includes(estimateStatus) && (
+          <button type="button" onClick={emailEstimate} disabled={!canWrite || !canSendEmail}>Email Estimate</button>
+        )}
         <button type="button" onClick={emailInvoice} disabled={!canWrite || !canSendEmail}>Email Invoice</button>
       </div>
       <div className="totals">
