@@ -14,7 +14,7 @@ assert.match(inventoryPage, /<InventoryTabs/, 'Inventory must retain its tabbed 
 assert.match(inventoryPage, /canWrite && activeTab === 'parts'/, 'Add Part must retain its write gate.');
 assert.match(parts, /Search name, manufacturer UPC/, 'Inventory search must retain the established product identity fields.');
 assert.match(parts, /onClick=\{\(\) => onSelectPart\(part\)\}/, 'Inventory row selection must retain its existing handler.');
-assert.match(app, /\['list', 'customers', 'inventory',/, 'Inventory must use the full-width workspace instead of retaining the intake sidebar.');
+assert.match(app, /\[(?:'new', )?'list', 'customers', 'inventory',/, 'Inventory must use the full-width workspace instead of retaining the intake sidebar.');
 assert.match(styles, /\.inventory-page > \.workspace-page-header/, 'Professional inventory styling must include the page heading boundary.');
 assert.match(styles, /\.inventory-page > \.inventory-tabs/, 'Professional inventory styling must include restrained tabs.');
 assert.match(styles, /\.inventory-page \.inventory-table-wrap/, 'Professional inventory tables must use contained scrolling panels.');

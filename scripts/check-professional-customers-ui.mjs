@@ -22,7 +22,7 @@ for (const heading of ['Account overview', 'Contact & account', 'Job history', '
 }
 assert.match(detail, /canWrite && onEditCustomer/, 'Customer profile editing must retain its write gate.');
 assert.match(detail, /canWrite && onCreateJob/, 'Create Job must retain its write gate.');
-assert.match(app, /\['list', 'customers',/, 'Customers must use the full-width workspace instead of retaining the intake sidebar.');
+assert.match(app, /\[(?:'new', )?'list', 'customers',/, 'Customers must use the full-width workspace instead of retaining the intake sidebar.');
 assert.match(router, /canWrite=\{access\.canEditCustomers\}/, 'Customers must keep the centralized customer permission boundary.');
 assert.match(router, /canPreviewCustomerImport=\{access\.canPreviewCustomerImport\}/, 'CSV preview must keep the centralized permission boundary.');
 assert.match(styles, /\.customer-directory-controls/, 'Professional customer search controls must have a restrained panel treatment.');
