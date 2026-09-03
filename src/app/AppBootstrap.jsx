@@ -7,6 +7,7 @@ import LegacyDebugPanel from '../shared/legacy/LegacyDebugPanel.jsx';
 import { getErrorMessage, logLegacyDebug } from '../shared/legacy/legacyDebug';
 
 const AuthenticatedApp = lazy(() => import('./App.jsx'));
+const PublicEstimatePage = lazy(() => import('../modules/jobs/PublicEstimatePage.jsx'));
 const SESSION_CHECK_TIMEOUT_MS = 5000;
 
 function LoadingScreen({ message = 'Loading FretTrack...' }) {
@@ -18,9 +19,11 @@ function LoadingScreen({ message = 'Loading FretTrack...' }) {
 }
 
 export default function AppBootstrap() {
+  const publicEstimateToken = new URLSearchParams(window.location.search).get('estimate') || '';
+  const isPublicEstimate = Boolean(publicEstimateToken);
   const [session, setSession] = useState(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
-  const [isLoadingSession, setIsLoadingSession] = useState(hasSupabaseConfig);
+  const [isLoadingSession, setIsLoadingSession] = useState(hasSupabaseConfig && !isPublicEstimate);
   const [notice, setNotice] = useState(null);
   const initialAuthMode = new URLSearchParams(window.location.search).get('signup') === '1'
     ? 'sign-up'
@@ -28,6 +31,12 @@ export default function AppBootstrap() {
 
   useEffect(() => {
     logLegacyDebug('app bootstrap started');
+
+    if (isPublicEstimate) {
+      logLegacyDebug('session check skipped', 'Public estimate route does not require a shop session.');
+      setIsLoadingSession(false);
+      return undefined;
+    }
 
     if (!hasSupabaseConfig) {
       logLegacyDebug('session check skipped', 'Supabase config is not present.');
@@ -95,11 +104,17 @@ export default function AppBootstrap() {
       window.clearTimeout(sessionTimeoutId);
       unsubscribe();
     };
-  }, []);
+  }, [isPublicEstimate]);
 
   let content;
 
-  if (isLoadingSession) {
+  if (isPublicEstimate) {
+    content = (
+      <Suspense fallback={<LoadingScreen message="Opening estimate..." />}>
+        <PublicEstimatePage token={publicEstimateToken} />
+      </Suspense>
+    );
+  } else if (isLoadingSession) {
     content = <LoadingScreen />;
   } else if (hasSupabaseConfig && isPasswordRecovery) {
     content = (

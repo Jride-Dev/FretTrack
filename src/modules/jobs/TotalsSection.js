@@ -10,16 +10,19 @@ export default function TotalsSection({
   canIssuePaymentAdjustments = canWrite,
   canFinalizeJobInvoices = false,
   changeEstimateState,
+  createEstimateLink,
   changeInvoiceFinalization,
   addPayment,
   draftJob,
   emailInvoice,
   emailEstimate,
+  publicEstimateLink = '',
   estimateNote = '',
   payment,
   payments,
   finalizationReason = '',
   isChangingEstimateState = false,
+  isCreatingPublicEstimateLink = false,
   isChangingInvoiceState = false,
   isRecordingPayment = false,
   setEstimateNote,
@@ -158,10 +161,23 @@ export default function TotalsSection({
       )}
       <div className="mode-actions no-print totals-actions">
         {['sent', 'approved'].includes(estimateStatus) && (
-          <button type="button" onClick={emailEstimate} disabled={!canWrite || !canSendEmail}>Email Estimate</button>
+          <>
+            <button type="button" onClick={emailEstimate} disabled={!canWrite || !canSendEmail}>Email Estimate</button>
+            {canFinalizeJobInvoices && <button type="button" className="button-tertiary" onClick={createEstimateLink} disabled={isCreatingPublicEstimateLink}>{isCreatingPublicEstimateLink ? 'Creating link…' : 'Create Customer Link'}</button>}
+          </>
         )}
         <button type="button" onClick={emailInvoice} disabled={!canWrite || !canSendEmail}>Email Invoice</button>
       </div>
+      {publicEstimateLink && (
+        <div className="public-estimate-link-control no-print">
+          <label>
+            Customer estimate link
+            <input value={publicEstimateLink} readOnly onFocus={(event) => event.target.select()} aria-label="Customer estimate link" />
+          </label>
+          <a href={publicEstimateLink} target="_blank" rel="noreferrer">Open customer view</a>
+          <small>This link is bound to revision {draftJob.estimateRevision || 1} and expires automatically.</small>
+        </div>
+      )}
       <div className="totals">
         <span>Billable Parts</span>
         <strong>{money(totals.partsTotal, moneyOptions)}</strong>

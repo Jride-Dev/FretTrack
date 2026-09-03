@@ -336,14 +336,12 @@ function JobDetailWorkspace({
   const {
     addPayment,
     addService,
-    changeEstimateState,
-    changeInvoiceFinalization,
+    changeEstimateState, createEstimateLink, changeInvoiceFinalization,
     estimateNote,
     finalizationReason,
     isChangingEstimateState,
     isChangingInvoiceState,
-    isRecordingPayment,
-    payment,
+    isRecordingPayment, isCreatingPublicEstimateLink, payment, publicEstimateLink,
     removeService,
     service,
     setFinalizationReason,
@@ -575,7 +573,7 @@ function JobDetailWorkspace({
       canRecordJobPayments={canRecordJobPayments}
       canIssuePaymentAdjustments={canIssuePaymentAdjustments}
       canFinalizeJobInvoices={canFinalizeJobInvoices}
-      changeEstimateState={changeEstimateState}
+      changeEstimateState={changeEstimateState} createEstimateLink={createEstimateLink}
       changeInvoiceFinalization={changeInvoiceFinalization}
       draftJob={draftJob}
       estimateNote={estimateNote}
@@ -583,7 +581,7 @@ function JobDetailWorkspace({
       inventoryParts={inventoryParts}
       inventorySearch={inventorySearch}
       isInventoryLoading={isInventoryLoading}
-      isChangingEstimateState={isChangingEstimateState}
+      isChangingEstimateState={isChangingEstimateState} isCreatingPublicEstimateLink={isCreatingPublicEstimateLink}
       isChangingInvoiceState={isChangingInvoiceState}
       isRecordingPayment={isRecordingPayment}
       onAddInventoryPart={addInventoryPart}
@@ -591,6 +589,7 @@ function JobDetailWorkspace({
       onAddPayment={addPayment}
       onAddService={addService}
       onEmailInvoice={openInvoiceEmail} onEmailEstimate={openEstimateEmail}
+      publicEstimateLink={publicEstimateLink}
       onRemovePart={removePart}
       onRemoveService={removeService}
       onSearchInventoryParts={searchInventoryParts}

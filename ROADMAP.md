@@ -60,7 +60,7 @@ Each extraction must preserve the current facade, permissions, database behavior
 - invoice and transaction numbering review;
 - deeper payment/refund support tooling;
 - tax-profile and sales-history improvements;
-- public invoice or work-order links only after a secure token and revocation design;
+- public estimate links with secure hashed tokens, expiry, revocation, revision binding, and customer decisions (implemented); public invoice or work-order links remain deferred;
 - billing reconciliation and operator support tools.
 
 ## v0.3.x: Correspondence and interface cohesion
