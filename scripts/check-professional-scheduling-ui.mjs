@@ -11,7 +11,7 @@ const publicDocs = read('cloudflare/frettrack-coming-soon/public/docs/scheduling
 assert.match(scheduling, /<WorkspacePageHeader/, 'Scheduling must use the shared professional page heading.');
 assert.match(scheduling, /className="schedule-toolbar"/, 'Scheduling must retain its filter toolbar.');
 assert.match(scheduling, /className="week-grid"/, 'Scheduling must retain the week grid.');
-assert.match(app, /\[(?:'new', )?(?:'estimates', )?'list', 'customers', 'inventory', 'scheduling',/, 'Scheduling must use the full-width workspace.');
+assert.match(app, /app-layout[\s\S]*full-content/, 'Scheduling must use the full-width workspace.');
 assert.match(styles, /\.scheduling-page > \.workspace-page-header/, 'Professional scheduling styling must include the page heading boundary.');
 assert.match(styles, /\.scheduling-page \.schedule-layout/, 'Professional scheduling styling must contain the week/editor layout.');
 assert.match(styles, /\.scheduling-page \.schedule-card/, 'Professional scheduling styling must contain event cards.');

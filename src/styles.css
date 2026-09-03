@@ -3299,17 +3299,8 @@ th.internal-only {
     flex-wrap: wrap;
   }
 
-  .layout,
-  .app-layout.sidebar-collapsed {
+  .layout {
     grid-template-columns: 1fr;
-  }
-
-  .new-job-sidebar-controls {
-    justify-content: flex-start;
-  }
-
-  .new-job-sidebar-toggle {
-    width: auto;
   }
 
   .app-layout.detail-active .content {

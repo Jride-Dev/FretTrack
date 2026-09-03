@@ -11,7 +11,6 @@ const jobWorkspaceDataPath = path.join(root, 'src', 'app', 'useJobWorkspaceData.
 const jobWorkspaceActionsPath = path.join(root, 'src', 'app', 'useJobWorkspaceActions.js');
 const sessionShopBootstrapPath = path.join(root, 'src', 'app', 'useSessionShopBootstrap.js');
 const workspaceStatePath = path.join(root, 'src', 'app', 'workspaceState.js');
-const sidebarPath = path.join(root, 'src', 'app', 'NewJobSidebar.jsx');
 const appAccessPath = path.join(root, 'src', 'app', 'appAccess.js');
 const appSource = fs.readFileSync(appPath, 'utf8');
 const routerSource = fs.readFileSync(routerPath, 'utf8');
@@ -19,7 +18,6 @@ const navigationSource = fs.readFileSync(navigationPath, 'utf8');
 const jobWorkspaceDataSource = fs.readFileSync(jobWorkspaceDataPath, 'utf8');
 const jobWorkspaceActionsSource = fs.readFileSync(jobWorkspaceActionsPath, 'utf8');
 const sessionShopBootstrapSource = fs.readFileSync(sessionShopBootstrapPath, 'utf8');
-const sidebarSource = fs.readFileSync(sidebarPath, 'utf8');
 const appAccessSource = fs.readFileSync(appAccessPath, 'utf8');
 const { resolveStoredWorkspaceState } = await import(pathToFileURL(workspaceStatePath));
 
@@ -34,18 +32,14 @@ assert.match(appSource, /import useJobWorkspaceActions from ['"]\.\/useJobWorksp
 assert.match(appSource, /import useSessionShopBootstrap from ['"]\.\/useSessionShopBootstrap\.js['"]/, 'App must use the session and shop bootstrap boundary.');
 assert.ok(appSource.split(/\r?\n/).length < 900, 'App must remain a composition surface instead of regaining session and shop bootstrap implementation.');
 assert.doesNotMatch(appSource, /getCurrentSession|onAuthSessionChange|bootstrapCurrentUserAsOwner|getCurrentUserShopMemberships/, 'Session and shop bootstrap service calls must stay behind the focused controller.');
-assert.match(appSource, /import NewJobSidebar from ['"]\.\/NewJobSidebar\.jsx['"]/, 'App must use the New Job sidebar boundary.');
 assert.match(appSource, /import \{ getAppAccess \} from ['"]\.\/appAccess\.js['"]/, 'App must use the derived access boundary.');
 assert.match(appSource, /getAppAccess\(\{ membership, billingAccess, betaApproved, hasSupabaseConfig \}\)/, 'App must derive feature access through one boundary.');
 assert.doesNotMatch(appSource, /canEditJobsForRole|canManageInventoryForRole|canUploadPhotosForRole/, 'App must not derive individual feature permissions inline.');
 for (const accessRule of ['canEditJobsForRole', 'canManageInventoryForRole', 'canManageShipmentsForRole', 'canEditSchedulingForRole', 'canUploadPhotosForRole']) {
   assert.match(appAccessSource, new RegExp(accessRule), `App access must preserve ${accessRule}.`);
 }
-assert.match(appSource, /<NewJobSidebar[\s\S]*?onSelectJob=\{handleSelectJob\}/, 'App must connect the established job-selection handler to the sidebar boundary.');
 assert.doesNotMatch(appSource, /<JobForm\b|<JobList\b|<UpcomingSchedulePanel\b/, 'App must not render sidebar module internals directly.');
-for (const sidebarFeature of ['JobForm', 'JobList', 'UpcomingSchedulePanel', 'Till Summary']) {
-  assert.match(sidebarSource, new RegExp(sidebarFeature), `New Job sidebar must retain ${sidebarFeature}.`);
-}
+assert.doesNotMatch(appSource, /NewJobSidebar|new-job-sidebar/, 'The retired legacy sidebar must not be mounted.');
 assert.match(appSource, /useWorkspaceNavigation\(\{/, 'App must obtain workspace state from the navigation hook.');
 assert.match(appSource, /jobsReadyShopId === membership\.shopId[\s\S]*?!isWorkspaceReady[\s\S]*?Loading shop workspace/, 'Hosted workspace restoration must wait for current-shop jobs and navigation hydration instead of flashing the generic workspace.');
 assert.match(jobWorkspaceDataSource, /if \(selectedShopId !== requestedShopId\) \{[\s\S]*?return null;[\s\S]*?const requestId = \+\+jobsRequestIdRef\.current;[\s\S]*?requestId !== jobsRequestIdRef\.current \|\| activeShopId !== requestedShopId[\s\S]*?return null;[\s\S]*?setJobs\(sortedJobs\);[\s\S]*?setJobsReadyShopId\(requestedShopId\)/, 'Only the latest response for the selected shop may publish jobs or mark the workspace ready.');
@@ -56,7 +50,7 @@ assert.match(jobWorkspaceActionsSource, /if \(!access\.canEditShopSettings\)[\s\
 assert.match(jobWorkspaceActionsSource, /if \(!access\.canUploadPhotos\)[\s\S]*?uploadJobImages\(job, files, \{ category: 'job'/, 'Photo upload actions must preserve entitlement enforcement and job image persistence.');
 assert.doesNotMatch(appSource, /useState\(['"]new['"]\)/, 'App must not own workspace mode state directly.');
 assert.doesNotMatch(appSource, /jobDetailReturnModeRef/, 'App must not own Job Detail return navigation state directly.');
-assert.match(navigationSource, /function navigateTo\(nextMode\)/, 'Workspace navigation must own permission-aware page transitions.');
+assert.match(navigationSource, /function navigateTo\(nextMode, \{ skipDirtyGuard = false \} = \{\}\)/, 'Workspace navigation must own permission-aware page transitions.');
 assert.match(navigationSource, /function selectJob\(jobId, detailMode = 'detail', \{ skipDirtyGuard = false \} = \{\}\)/, 'Workspace navigation must own job-detail selection transitions, focused detail targets, and explicit safe post-save transitions.');
 assert.match(navigationSource, /function closeJobDetail\(\)/, 'Workspace navigation must own Job Detail close transitions.');
 assert.match(navigationSource, /saveWorkspaceState\(shopId, \{ mode, selectedJobId \}\)/, 'Workspace navigation must persist page and selection state.');

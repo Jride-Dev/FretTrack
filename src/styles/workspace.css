@@ -127,41 +127,8 @@ aside {
   gap: 16px;
 }
 
-.app-layout.sidebar-collapsed {
-  grid-template-columns: 144px minmax(0, 1fr);
-}
-
 .app-layout.full-content {
   grid-template-columns: minmax(0, 1fr);
-}
-
-.new-job-sidebar {
-  min-width: 0;
-}
-
-.new-job-sidebar-controls {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 8px;
-}
-
-.new-job-sidebar-content {
-  display: grid;
-  gap: 16px;
-}
-
-.new-job-sidebar-content[hidden] {
-  display: none;
-}
-
-.new-job-sidebar-toggle {
-  min-height: 36px;
-  white-space: normal;
-  width: 100%;
-}
-
-.sidebar-collapsed .new-job-sidebar-controls {
-  margin-bottom: 0;
 }
 
 .panel {
