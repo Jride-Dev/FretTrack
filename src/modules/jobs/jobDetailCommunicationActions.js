@@ -304,7 +304,7 @@ export function createJobDetailCommunicationActions({
     return result;
   }
 
-  async function handleSendDocumentEmail({ type, recipient, subject, body, includeJobSheet, includeCustomerReport }) {
+  async function handleSendDocumentEmail({ type, recipient, subject, body, includeJobSheet, includeCustomerReport, requestId }) {
     if (!canWrite) {
       return { ok: false, error: 'Your shop role is read-only.' };
     }
@@ -355,7 +355,8 @@ export function createJobDetailCommunicationActions({
       to: recipient,
       subject,
       body: emailBody,
-      html: documentContent.html ? buildDocumentEmailHtml(body.trim(), documentContent.html) : ''
+      html: documentContent.html ? buildDocumentEmailHtml(body.trim(), documentContent.html) : '',
+      requestId
     });
 
     if (result.message) {

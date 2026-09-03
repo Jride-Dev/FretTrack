@@ -181,6 +181,8 @@ npm run migration:check:strict
 
 `20260903071814_public_estimate_approval_links.sql` adds hashed, private bearer tokens bound to one estimate revision. Owner/admin creation revokes the prior active link and limits expiry to 90 days; anonymous reads expose only the locked estimate document and shop contact fields; customer approval/decline updates the existing lifecycle through a guarded source-aware path and records a timeline event without a fabricated staff identity. Returning an estimate to draft or sending a newer revision makes older links unusable.
 
+Estimate email retry hardening is application-level and uses the existing `send-email` request identity; it does not require a new migration. The document dialog retains the same request ID for retryable provider-confirmation failures so the existing Message History claim and provider idempotency key can reconcile one delivery.
+
 # Shop tax profile boundary migration
 
 `20260901025709_shop_tax_profile_boundary.sql` adds an explicit disabled/manual tax-calculation mode and stable versioned default profile to each shop. It synchronizes shop defaults into the shop-scoped `tax_profiles` record, preserves existing configured rates as manual only when the legacy profile also has a jurisdiction, and leaves incomplete legacy defaults disabled for owner review. It upgrades server-calculated estimate/invoice snapshots with tax profile identity, revision, rate source, jurisdiction, registration reference, taxable categories, and proportional invoice-discount allocation. Disabled mode is the safe default and calculates no tax for new work orders.

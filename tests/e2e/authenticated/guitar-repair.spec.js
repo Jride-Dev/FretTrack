@@ -35,6 +35,27 @@ test('opens the dedicated estimates queue', async ({ page }) => {
 });
 
 test('records an audited estimate decision and unlocks only through a new draft', async ({ page }) => {
+  const emailRequests = [];
+  await page.route('**/functions/v1/send-email', async (route) => {
+    const payload = route.request().postDataJSON();
+    if (payload.template_key !== 'estimate_email') {
+      await route.continue();
+      return;
+    }
+    emailRequests.push(payload);
+    await route.fulfill({
+      status: emailRequests.length === 1 ? 503 : 200,
+      contentType: 'application/json',
+      body: JSON.stringify(emailRequests.length === 1
+        ? {
+          success: false,
+          code: 'EMAIL_PROVIDER_CONFIRMATION_PENDING',
+          error: 'Provider confirmation is still pending.'
+        }
+        : { success: true, id: 'estimate-provider-message-1' })
+    });
+  });
+
   await page.goto('/');
   await page.getByRole('button', { name: 'Current Jobs', exact: true }).click();
   await page.getByRole('row', { name: /Open job .* for FicticiousJoe Customer 2$/ }).click();
@@ -51,9 +72,16 @@ test('records an audited estimate decision and unlocks only through a new draft'
   await expect(page.getByRole('link', { name: 'Open customer view' })).toHaveAttribute('href', /\?estimate=[0-9a-f]{64}$/);
   await expect(page.getByRole('button', { name: 'Email Estimate' })).toBeVisible();
   await page.getByRole('button', { name: 'Email Estimate' }).click();
-  await expect(page.getByRole('dialog', { name: 'Email Estimate' })).toBeVisible();
-  await expect(page.getByRole('dialog', { name: 'Email Estimate' }).getByText('Included Estimate').first()).toBeVisible();
-  await page.getByRole('button', { name: 'Close Email Estimate' }).click();
+  const emailDialog = page.getByRole('dialog', { name: 'Email Estimate' });
+  await expect(emailDialog).toBeVisible();
+  await expect(emailDialog.getByText('Included Estimate').first()).toBeVisible();
+  await emailDialog.getByRole('button', { name: 'Email Estimate', exact: true }).click();
+  await expect(emailDialog.getByText('Provider confirmation is still pending.')).toBeVisible();
+  await emailDialog.getByRole('button', { name: 'Email Estimate', exact: true }).click();
+  await expect(emailDialog).toHaveCount(0);
+  expect(emailRequests).toHaveLength(2);
+  expect(emailRequests[0].request_id).toBeTruthy();
+  expect(emailRequests[1].request_id).toBe(emailRequests[0].request_id);
   await expect(page.getByPlaceholder('Part name or description')).toBeDisabled();
 
   await estimateNote.fill('Customer approved by telephone');

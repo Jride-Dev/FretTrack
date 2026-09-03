@@ -30,6 +30,7 @@ FretTrack `v0.3.1` is the current stable maintenance release over the Operationa
 - inventory, vendors, purchase orders, receiving, landed costs, barcode labels, and specialist purchasing;
 - Scheduling and Current Jobs workspaces;
 - immediate email, Pro Scheduled Email, opted-in Automated Service Reminders, and Message History;
+- locked estimate revisions with exact Email Estimate documents, retry-safe delivery identity, and customer approval links;
 - Pro Loyalty, Team Members, Team Assignment, Photo Editor, and Advanced Reporting;
 - isolated Customer Service and Condition Report and invoice-style Job Sheet print renderers;
 - accounting-safe work-order exclusion with payment-history safeguards;
@@ -44,7 +45,7 @@ FretTrack is a business-use software service operated by Jeffrey Russell d/b/a T
 - SMS is not enabled.
 - The provider-neutral correspondence schema is in place, but inbound email, two-way conversation UI, Realtime updates, and customer-report correspondence controls are not enabled yet.
 - Existing-job edits do not have full offline synchronization; offline continuity is limited to new-job drafts.
-- Public invoice and work-order links are not implemented.
+- Public invoice and work-order links are not implemented; estimate links are available for sent and approved revisions.
 - Customer-owned instruments do not yet have an independent asset/profile table outside work orders.
 - Advanced supplier, carrier, forecasting, vendor-return, and customer-shipping integrations remain future work.
 - FretTrack does not replace professional accounting, tax, or legal advice.

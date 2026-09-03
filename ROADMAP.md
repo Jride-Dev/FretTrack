@@ -55,7 +55,7 @@ Each extraction must preserve the current facade, permissions, database behavior
 
 ## v0.3.x: Commerce hardening
 
-- estimate approval and lifecycle clarity (implemented);
+- estimate approval and lifecycle clarity, including retry-safe estimate email delivery (implemented);
 - stronger monetary-edit permissions and finalized-total audit behavior (implemented with role-separated payment/adjustment controls, append-only payment history, server-calculated invoice snapshots, and audited finalization/reopen locking);
 - invoice and transaction numbering review;
 - deeper payment/refund support tooling;
