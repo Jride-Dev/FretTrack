@@ -156,6 +156,7 @@ async function testLandingPageIncludesLaunchAssets() {
   assert.match(html, /\/landing\/current-jobs-bench-dark\.png/);
   assert.match(html, /\/landing\/current-jobs-shop-light\.png/);
   assert.match(html, /\/landing\/customers-bench-dark\.png/);
+  assert.match(html, /\/landing\/inventory-bench-dark\.png/);
   assert.match(html, /Screenshots show a sample workspace with fictional customer and shop data\./);
   assert.match(html, /Stripe Checkout and self-service billing management/);
   assert.match(html, /\$29\.99 monthly/);
@@ -250,7 +251,8 @@ async function testWorkspaceScreenshotAssetRoutes() {
   for (const pathname of [
     '/landing/current-jobs-bench-dark.png',
     '/landing/current-jobs-shop-light.png',
-    '/landing/customers-bench-dark.png'
+    '/landing/customers-bench-dark.png',
+    '/landing/inventory-bench-dark.png'
   ]) {
     const response = await worker.fetch(new Request(`https://frettrack-app.com${pathname}`), {
       ...baseEnv(),
