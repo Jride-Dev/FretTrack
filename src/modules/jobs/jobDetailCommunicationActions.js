@@ -5,6 +5,8 @@ import { shouldOfferPvmhPickupEmail } from './SubcontractorPickupEmailDialog.jsx
 import {
   SHOP_EMAIL_CONTEXT_ERROR,
   buildDocumentEmailHtml,
+  buildEstimateEmailContent,
+  buildEstimateEmailDraft,
   buildInvoiceEmailDraft,
   buildSelectedDocumentEmailContent,
   buildWorkOrderEmailDraft,
@@ -179,6 +181,37 @@ export function createJobDetailCommunicationActions({
     }
   }
 
+  function openEstimateEmail() {
+    if (!canWrite || !canSendEmail) {
+      return;
+    }
+    if (!['sent', 'approved'].includes(draftJob.estimateStatus || 'draft')) {
+      onNotice?.({ type: 'error', message: 'Mark the estimate sent before emailing the estimate.' });
+      return;
+    }
+    if (!guardPendingWorkLogDocumentAction()) {
+      return;
+    }
+    try {
+      const documentContext = resolveDocumentEmailContext(draftJob);
+      setDocumentEmailDraft({
+        kind: 'estimate',
+        jobId: draftJob.id,
+        shopId: draftJob.shopId,
+        ...buildEstimateEmailDraft(draftJob, {
+          shopSettings: documentContext.scopedShopSettings,
+          dateOptions: documentContext.dateOptions,
+          moneyOptions: documentContext.moneyOptions,
+          totals: documentContext.totals,
+          taxLabel: documentContext.taxLabel,
+          instrumentLabel: documentContext.instrumentLabel
+        })
+      });
+    } catch (error) {
+      onNotice?.({ type: 'error', message: error?.message || SHOP_EMAIL_CONTEXT_ERROR });
+    }
+  }
+
   function updateContactPreference(field, value) {
     patchJob(buildContactPreferencePatch(field, value));
   }
@@ -295,7 +328,7 @@ export function createJobDetailCommunicationActions({
     let documentContext;
     try {
       documentContext = resolveDocumentEmailContext(jobToSend);
-      documentContent = buildSelectedDocumentEmailContent(documentContext.jobWithCurrentTax, {
+      const contentContext = {
         shopSettings: documentContext.scopedShopSettings,
         lengthUnit: documentContext.measurementUnit,
         dateOptions: documentContext.dateOptions,
@@ -303,10 +336,13 @@ export function createJobDetailCommunicationActions({
         totals: documentContext.totals,
         taxLabel: documentContext.taxLabel,
         instrumentLabel: documentContext.instrumentLabel
-      }, {
-        includeJobSheet,
-        includeCustomerReport
-      });
+      };
+      documentContent = type === 'estimate'
+        ? buildEstimateEmailContent(documentContext.jobWithCurrentTax, contentContext)
+        : buildSelectedDocumentEmailContent(documentContext.jobWithCurrentTax, contentContext, {
+          includeJobSheet,
+          includeCustomerReport
+        });
     } catch (error) {
       return { ok: false, error: error?.message || SHOP_EMAIL_CONTEXT_ERROR };
     }
@@ -315,7 +351,7 @@ export function createJobDetailCommunicationActions({
     const result = await sendCustomerMessage(jobToSend, {
       channel: 'email',
       customerId: jobToSend.customerId || null,
-      templateKey: type === 'invoice' ? 'invoice_email' : 'work_order_email',
+      templateKey: type === 'estimate' ? 'estimate_email' : type === 'invoice' ? 'invoice_email' : 'work_order_email',
       to: recipient,
       subject,
       body: emailBody,
@@ -332,14 +368,14 @@ export function createJobDetailCommunicationActions({
 
     onNotice?.({
       type: 'success',
-      message: type === 'invoice' ? 'Invoice email sent.' : 'Work order email sent.'
+      message: type === 'estimate' ? 'Estimate email sent and logged.' : type === 'invoice' ? 'Invoice email sent.' : 'Work order email sent.'
     });
 
     logJobEventSafe({
       shopId: jobToSend.shopId,
       jobId: jobToSend.id,
-      eventType: type === 'invoice' ? 'invoice_emailed' : 'work_order_emailed',
-      eventLabel: type === 'invoice' ? 'Invoice emailed' : 'Work order emailed',
+      eventType: type === 'estimate' ? 'estimate_emailed' : type === 'invoice' ? 'invoice_emailed' : 'work_order_emailed',
+      eventLabel: type === 'estimate' ? 'Estimate emailed' : type === 'invoice' ? 'Invoice emailed' : 'Work order emailed',
       eventNote: recipient,
       eventData: {
         recipient,
@@ -369,6 +405,7 @@ export function createJobDetailCommunicationActions({
     handleSendCustomerMessage,
     handleSendDocumentEmail,
     openInvoiceEmail,
+    openEstimateEmail,
     openWorkOrderEmail,
     printCustomerReport,
     printJobSheet,

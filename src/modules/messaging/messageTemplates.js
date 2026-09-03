@@ -14,7 +14,7 @@ export const messageTemplates = {
   estimate_ready: {
     label: 'Estimate ready',
     subject: 'Estimate ready for your {{instrument}} (Job #{{job_number}})',
-    body: "Hi {{customer_name}},\n\nI've looked over your {{instrument}} and the estimate is ready.\n\nTake a look and let me know if you'd like me to move forward.\n\nJob #: {{job_number}}\n\n{{shop_signature}}"
+    body: "Hi {{customer_name}},\n\nYour estimate revision {{estimate_revision}} for {{instrument}} is ready. The estimated total is {{estimate_total}}.\n\nPlease review the line-by-line estimate using the Email Estimate action in the work order, then let me know if you'd like me to move forward.\n\nJob #: {{job_number}}\n\n{{shop_signature}}"
   },
   approval_needed: {
     label: 'Approval needed',

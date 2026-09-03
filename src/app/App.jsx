@@ -674,8 +674,8 @@ export default function App() {
         />
       )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
-      <div className={`layout app-layout${mode === 'new' ? ' new-job-active' : ''}${['detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(mode) && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${['new', 'list', 'customers', 'inventory', 'scheduling', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) ? ' full-content' : ''}`}>
-        {!['new', 'list', 'customers', 'inventory', 'scheduling', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) && (
+        <div className={`layout app-layout${mode === 'new' ? ' new-job-active' : ''}${['detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(mode) && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${['new', 'estimates', 'list', 'customers', 'inventory', 'scheduling', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) ? ' full-content' : ''}`}>
+        {!['new', 'estimates', 'list', 'customers', 'inventory', 'scheduling', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) && (
           <NewJobSidebar
             isCollapsed={isNewJobSidebarCollapsed}
             onToggle={toggleNewJobSidebar}

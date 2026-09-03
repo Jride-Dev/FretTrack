@@ -100,6 +100,9 @@ async function assertRequiredSchema() {
 async function deleteExistingTestData() {
   const shopIds = shops.map((shop) => shop.id);
   await sql.begin(async (tx) => {
+    // Test resets are allowed to remove seeded sent estimates, but production
+    // callers must continue using the guarded estimate RPC.
+    await tx`select set_config('frettrack.estimate_rpc', 'on', true)`;
     await tx`delete from job_events where shop_id = any(${shopIds})`;
     await tx`delete from job_images where job_id in (select id from jobs where shop_id = any(${shopIds}))`;
     await tx`delete from work_logs where job_id in (select id from jobs where shop_id = any(${shopIds}))`;

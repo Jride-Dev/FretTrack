@@ -25,6 +25,7 @@ export default function JobBillingSections({
   onAddPayment,
   onAddService,
   onEmailInvoice,
+  onEmailEstimate,
   onRemovePart,
   onRemoveService,
   onSearchInventoryParts,
@@ -88,6 +89,7 @@ export default function JobBillingSections({
         addPayment={onAddPayment}
         draftJob={draftJob}
         emailInvoice={onEmailInvoice}
+        emailEstimate={onEmailEstimate}
         estimateNote={estimateNote}
         finalizationReason={finalizationReason}
         isChangingEstimateState={isChangingEstimateState}

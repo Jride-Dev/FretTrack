@@ -2,12 +2,17 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(31);
+select plan(32);
 
 select has_column('public', 'jobs', 'estimate_status', 'jobs record estimate state');
 select has_column('public', 'jobs', 'estimate_snapshot', 'jobs store a sent estimate snapshot');
 select has_column('public', 'jobs', 'estimate_revision', 'jobs track estimate revisions');
 select has_column('public', 'jobs', 'estimate_decided_at', 'jobs record estimate decisions');
+select ok(exists (
+  select 1 from pg_catalog.pg_constraint
+  where conname = 'job_services_quantity_whole_check'
+    and conrelid = 'public.job_services'::regclass
+), 'service quantities have a whole-number database guard');
 select has_function('public', 'set_job_estimate_state', array['uuid', 'text', 'text', 'timestamp with time zone', 'uuid'], 'guarded estimate RPC exists');
 select ok(has_function_privilege('authenticated', 'public.set_job_estimate_state(uuid, text, text, timestamptz, uuid)', 'execute'), 'authenticated users may call the estimate RPC');
 select ok(not has_function_privilege('anon', 'public.set_job_estimate_state(uuid, text, text, timestamptz, uuid)', 'execute'), 'anonymous users cannot change estimate state');

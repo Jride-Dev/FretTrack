@@ -3,6 +3,7 @@ import { getInstrumentStringCount, normalizeInstrumentType, resizeStringGauges }
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat';
 import { getDefaultMeasurementPreferences, normalizeLengthUnit, normalizeMeasurementSystem } from '../../shared/utils/measurements';
 import { formatJobNumber, generateJobNumber, getJobDayCode } from './jobNumber';
+import { normalizeServiceQuantity } from './serviceQuantity.js';
 import { getCurrentShopId } from '../shops/shopConfig';
 import { normalizeJobPriority } from './jobPriority';
 import { normalizeJobSource } from './jobSources';
@@ -460,7 +461,7 @@ export function normalizeService(service) {
     id: service.id || crypto.randomUUID(),
     jobId: service.jobId || service.job_id || '',
     description: service.description || '',
-    quantity: Number(service.quantity || 1),
+    quantity: normalizeServiceQuantity(service.quantity),
     cost: Number(service.cost || 0),
     retail: Number(service.retail || 0),
     createdAt: service.createdAt || service.created_at || new Date().toISOString()
@@ -714,7 +715,7 @@ export function fromDbJob(job) {
       id: service.id,
       jobId: service.job_id,
       description: service.description,
-      quantity: Number(service.quantity || 1),
+      quantity: normalizeServiceQuantity(service.quantity),
       cost: Number(service.cost || 0),
       retail: Number(service.retail || 0),
       createdAt: service.created_at

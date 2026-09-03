@@ -30,10 +30,12 @@ assertIncludes(dialog, 'onClick={(event) => event.stopPropagation()}', 'Document
 assertIncludes(dialog, '<button type="button" className="button-tertiary" onClick={onClose}>', 'Cancel must remain reachable regardless of send state.');
 assert.ok(!dialog.includes('onClick={onClose} disabled={sendState.sending}'), 'Cancel must not stay disabled after a send settles.');
 assertIncludes(dialog, 'disabled={!canSend}', 'Send control must still prevent duplicate sends while busy.');
-assertIncludes(communicationActions, "message: type === 'invoice' ? 'Invoice email sent.' : 'Work order email sent.'", 'Successful sends must leave a visible app-level confirmation after modal close.');
+assertIncludes(communicationActions, "message: type === 'estimate' ? 'Estimate email sent and logged.'", 'Successful sends must leave a visible app-level confirmation after modal close.');
 assertIncludes(communicationActions, "import { logJobEventSafe } from './jobEventsService.js';", 'Document email audit logging must import the safe job-event helper.');
 assertIncludes(communicationActions, 'logJobEventSafe({', 'Successful document sends must retain non-blocking job-event logging.');
 assertIncludes(communicationActions, 'buildSelectedDocumentEmailContent', 'Document email send path must build selected document content.');
+assertIncludes(communicationActions, 'buildEstimateEmailContent', 'Estimate emails must include the priced estimate document.');
+assertIncludes(communicationActions, "templateKey: type === 'estimate' ? 'estimate_email'", 'Estimate emails must be logged with an explicit estimate template key.');
 assertIncludes(communicationActions, 'buildDocumentEmailHtml', 'Document email send path must use formatted HTML when documents are selected.');
 assertIncludes(styles, '.document-email-option input[type="checkbox"]', 'Document email checkbox sizing must stay scoped to the dialog.');
 assertIncludes(styles, 'width: auto;', 'Document email checkboxes must override full-width text input styling.');
@@ -41,6 +43,7 @@ assertIncludes(styles, 'width: auto;', 'Document email checkboxes must override 
 const emailDocuments = readFileSync(join(root, 'src/modules/jobs/emailDocuments.js'), 'utf8');
 assertIncludes(emailDocuments, 'buildJobSheetEmailSection', 'Document email helper must build the Job Sheet content.');
 assertIncludes(emailDocuments, 'buildCustomerReportEmailSection', 'Document email helper must build the Customer Report content.');
+assertIncludes(emailDocuments, 'buildEstimateEmailContent', 'Document email helper must build the Estimate content.');
 assertIncludes(emailDocuments, 'escapeHtml', 'Document email helper must escape customer and job text before rendering HTML.');
 
 const jobMessaging = readFileSync(join(root, 'src/modules/jobs/jobServiceMessaging.js'), 'utf8');

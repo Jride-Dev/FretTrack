@@ -10,6 +10,7 @@ import {
   stringCountForInstrument
 } from '../instruments/instrumentService.js';
 import { generateJobNumber } from './jobNumber.js';
+import { normalizeServiceQuantity } from './serviceQuantity.js';
 
 export function getInstrumentSelectionPatch(currentJob, instrumentType) {
   const normalizedInstrumentType = normalizeInstrumentType(instrumentType);
@@ -383,7 +384,7 @@ export function buildAddServicePatch(currentJob, services, service, serviceId) {
         id: serviceId,
         jobId: currentJob.id,
         description: service.description,
-        quantity: service.quantity || '1',
+        quantity: normalizeServiceQuantity(service.quantity),
         cost: service.cost,
         retail: service.retail
       }
@@ -392,9 +393,8 @@ export function buildAddServicePatch(currentJob, services, service, serviceId) {
 }
 
 export function buildUpdateServicePatch(services, serviceId, fieldName, value) {
-  return {
-    services: services.map((row) => (row.id === serviceId ? { ...row, [fieldName]: value } : row))
-  };
+  const nextValue = fieldName === 'quantity' ? normalizeServiceQuantity(value) : value;
+  return { services: services.map((row) => (row.id === serviceId ? { ...row, [fieldName]: nextValue } : row)) };
 }
 
 export function buildRemoveServicePatch(services, serviceId) {
