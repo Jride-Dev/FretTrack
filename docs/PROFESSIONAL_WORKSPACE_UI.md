@@ -24,6 +24,10 @@ Customers uses a full-width workspace with the shared page-heading and section h
 
 Inventory now uses a full-width workspace with a restrained Parts, Vendors, Purchase Orders, Purchase History, and Barcode Labels tab rail. Parts search and label selection stay above a contained, horizontally scrollable table beside the existing editor; vendor and purchase-order detail retain the same pattern. Add Part, receiving, stock adjustments, vendor saves, purchase-order status changes, label printing, and all shop-scoped inventory services remain unchanged.
 
+## Scheduling
+
+Scheduling uses a full-width week workspace with the shared page heading, date navigation, filters, contained day columns, and a companion event editor. Long event details remain clipped inside their day cards and the editor stacks above the week view on smaller screens; event creation, status changes, linked jobs/customers, dirty-state protection, and shop-scoped scheduling services remain unchanged.
+
 ## Themes
 
 The selector supports Use Device Theme, Bench Dark, Shop Light, Amber Tube, Seafoam, Blackguard, Burgundy Burst, Blue Steel, and High Contrast. Device mode resolves to the appropriate light or dark base and follows operating-system changes. The selected preference is persisted locally. Print documents continue to use their isolated white customer-document canvas regardless of the interactive theme.
@@ -45,4 +49,4 @@ Run `npm run capture:professional-work-orders` against the disposable local test
 
 ## Validation
 
-Run `npm run check:professional-workspace-ui` and `npm run check:professional-customers-ui` for the static UI contracts. Run `npx playwright test tests/e2e/authenticated/professional-workspace-ui.spec.js --project=owner-chromium` for authenticated desktop, work-order and customer hierarchy, theme-persistence, and mobile-containment coverage.
+Run `npm run check:professional-workspace-ui`, `npm run check:professional-customers-ui`, and `npm run check:professional-scheduling-ui` for the static UI contracts. Run `npx playwright test tests/e2e/authenticated/professional-workspace-ui.spec.js --project=owner-chromium` for authenticated desktop, work-order, customer, inventory, scheduling, theme-persistence, and mobile-containment coverage.

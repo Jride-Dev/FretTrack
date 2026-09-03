@@ -68,8 +68,9 @@ assert.ok(
   'Only the later usage-cap send-email integration may change an Edge Function.'
 );
 assert.ok(
-  !changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')),
-  'Landing Worker files must not change for Scheduling layout polish.'
+  !changed.some((file) => file.startsWith('cloudflare/frettrack-coming-soon/')
+    && file !== 'cloudflare/frettrack-coming-soon/public/docs/scheduling.html'),
+  'Landing Worker source/assets must not change for Scheduling layout polish.'
 );
 assert.ok(
   !changed.some((file) => file.startsWith('src/modules/billing/')

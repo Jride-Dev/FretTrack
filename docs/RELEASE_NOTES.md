@@ -10,6 +10,8 @@ Customers now follows that same professional hierarchy with a dedicated search-a
 
 Inventory now uses the same full-width workspace treatment. Parts, Vendors, Purchase Orders, Purchase History, and Barcode Labels are grouped in a restrained tab rail, while dense tables stay contained beside the established editors. Inventory search, receiving, stock adjustments, purchasing, label printing, shop scope, and write permissions are unchanged.
 
+Scheduling now uses the same full-width workspace treatment. Date navigation and filters sit above contained week columns with a companion event editor that stacks cleanly on smaller screens. Event creation, linked jobs/customers, status actions, dirty-state protection, shop scope, and write permissions are unchanged.
+
 The public Start Free Trial link now opens Create Account through the application's actual top-level authentication gate. If shop creation succeeds but the authoritative profile reload is temporarily unavailable, FretTrack clearly says the workspace was created and offers a safe profile reload instead of sending the user back through shop creation.
 
 The next customer-communication slice now has a provider-neutral storage boundary. Existing outbound Message History rows are grouped into durable shop/customer/channel threads, while the schema can safely represent received messages, read state, ambiguous work-order routing, and explicit customer-report selection. Shop isolation, immutable routing, provider replay identity, and the two narrow staff actions are database-enforced. This is backend groundwork only: inbound email, SMS delivery, Realtime updates, the conversation interface, and report rendering controls are not enabled yet.
