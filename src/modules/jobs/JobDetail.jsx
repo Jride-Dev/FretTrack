@@ -171,8 +171,7 @@ function JobDetailWorkspace({
     handleSendCustomerMessage,
     handleSendDocumentEmail,
     isSendingSubcontractorEmail,
-    openInvoiceEmail,
-    openEstimateEmail,
+    openInvoiceEmail, openEstimateEmail,
     openWorkOrderEmail,
     printCustomerReport,
     printJobSheet,
@@ -591,8 +590,7 @@ function JobDetailWorkspace({
       onAddPart={addPart}
       onAddPayment={addPayment}
       onAddService={addService}
-      onEmailInvoice={openInvoiceEmail}
-      onEmailEstimate={openEstimateEmail}
+      onEmailInvoice={openInvoiceEmail} onEmailEstimate={openEstimateEmail}
       onRemovePart={removePart}
       onRemoveService={removeService}
       onSearchInventoryParts={searchInventoryParts}
