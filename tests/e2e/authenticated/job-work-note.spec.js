@@ -63,7 +63,8 @@ test('keeps an in-flight work note scoped to its original job', async ({ page })
     await saveStarted;
 
     page.once('dialog', (dialog) => dialog.accept());
-    await page.getByRole('button', { name: /^#.* FicticiousJoe Customer 2 \|/ }).click();
+    await page.getByRole('button', { name: 'Current Jobs', exact: true }).click();
+    await page.getByRole('row', { name: /Open job .* FicticiousJoe Customer 2$/ }).click();
     await expect(page.getByText('Guitar work order', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Work Order, Parts & Payments' }).click();
     await expect(page.getByRole('heading', { name: 'FicticiousJoe Customer 2' })).toBeVisible();
