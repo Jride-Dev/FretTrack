@@ -8,6 +8,7 @@ import InventoryPartsList from './InventoryPartsList.jsx';
 import InventoryPurchaseOrderEditor from './InventoryPurchaseOrderEditor.jsx';
 import InventoryPurchaseOrdersList from './InventoryPurchaseOrdersList.jsx';
 import InventoryVendorsTab from './InventoryVendorsTab.jsx';
+import WorkspacePageHeader from '../../shared/components/WorkspacePageHeader.jsx';
 import {
   PURCHASE_ORDER_FILTER_OPTIONS,
   PURCHASE_ORDER_STATUSES,
@@ -180,13 +181,12 @@ export default function InventoryPage({ canWrite = true, shopId = getCurrentShop
 
   return (
     <section className="panel inventory-page">
-      <div className="section-header">
-        <div>
-          <h2>Inventory</h2>
-          <p className="muted-text">Shop-scoped parts, vendors, purchase orders, receiving, barcode identity, and job-ready retail pricing.</p>
-        </div>
-        {canWrite && activeTab === 'parts' && <button type="button" onClick={() => resetForm()}>Add Part</button>}
-      </div>
+      <WorkspacePageHeader
+        eyebrow="Parts & purchasing"
+        title="Inventory"
+        description="Shop-scoped parts, vendors, purchase orders, receiving, barcode identity, and job-ready retail pricing."
+        actions={canWrite && activeTab === 'parts' ? <button type="button" className="primary-action" onClick={() => resetForm()}>Add Part</button> : null}
+      />
 
       <InventoryTabs activeTab={activeTab} onSelectTab={setActiveTab} />
       {activeTab === 'parts' && (

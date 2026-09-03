@@ -946,6 +946,106 @@ main.app-shell {
   margin: 0;
 }
 
+.inventory-page {
+  gap: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.inventory-page > .workspace-page-header {
+  border-bottom: 1px solid var(--border);
+  padding: 18px 20px;
+}
+
+.inventory-page > .inventory-tabs {
+  background: color-mix(in srgb, var(--surface) 96%, var(--bg));
+  border-bottom: 1px solid var(--border);
+  gap: 0;
+  overflow-x: auto;
+  padding: 0 20px;
+}
+
+.inventory-page > .inventory-tabs button {
+  border-bottom-width: 2px;
+  min-height: 46px;
+  padding: 10px 13px 8px;
+  white-space: nowrap;
+}
+
+.inventory-page > .inventory-tabs button:hover,
+.inventory-page > .inventory-tabs button:focus-visible,
+.inventory-page > .inventory-tabs button.active {
+  background: transparent;
+}
+
+.inventory-page > .inventory-search,
+.inventory-page > .inventory-label-toolbar,
+.inventory-page > .inventory-layout,
+.inventory-page > .inventory-layout-wide,
+.inventory-page > .inventory-history-grid,
+.inventory-page > .inventory-label-panel {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.inventory-page > .inventory-search {
+  align-items: end;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 14px 20px;
+}
+
+.inventory-page > .inventory-search input {
+  min-width: 0;
+}
+
+.inventory-page > .inventory-label-toolbar {
+  padding: 14px 0 4px;
+}
+
+.inventory-page .inventory-layout,
+.inventory-page .inventory-layout-wide,
+.inventory-page .inventory-history-grid {
+  margin-bottom: 20px;
+  margin-top: 10px;
+}
+
+.inventory-page .inventory-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  min-width: 0;
+}
+
+.inventory-page .inventory-table-wrap table {
+  margin: 0;
+  min-width: 900px;
+}
+
+.inventory-page .inventory-table-wrap th {
+  background: var(--surface-2);
+  white-space: nowrap;
+}
+
+.inventory-page .inventory-table-wrap td,
+.inventory-page .inventory-table-wrap th {
+  padding: 10px;
+}
+
+.inventory-page .inventory-editor {
+  border-radius: var(--radius-panel);
+  min-width: 0;
+}
+
+.inventory-page .inventory-tabs + .inventory-layout-wide,
+.inventory-page .inventory-tabs + .inventory-history-grid,
+.inventory-page .inventory-tabs + .inventory-label-panel {
+  margin-top: 18px;
+}
+
 @media (max-width: 1080px) {
   main.app-shell {
     display: block;
