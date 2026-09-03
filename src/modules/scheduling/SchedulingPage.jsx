@@ -3,6 +3,7 @@ import { formatShopDate, formatShopDateTime } from '../../shared/utils/dateForma
 import { getCurrentShopId, getShopDateOptions } from '../shops/shopConfig';
 import useUnsavedChanges from '../../hooks/useUnsavedChanges';
 import UnsavedChangesBadge from '../../shared/components/UnsavedChangesBadge.jsx';
+import WorkspacePageHeader from '../../shared/components/WorkspacePageHeader.jsx';
 import ScheduleEventDetailsDialog from './ScheduleEventDetailsDialog.jsx';
 import {
   cancelScheduleEvent,
@@ -299,18 +300,19 @@ export default function SchedulingPage({
 
   return (
     <section className="panel scheduling-page">
-      <div className="section-header">
-        <div>
-          <h2>Scheduling</h2>
-          <p className="muted-text">Week view for intake, pickup, due dates, follow-ups, and shop blocks.</p>
-        </div>
-        <div className="mode-actions">
+      <WorkspacePageHeader
+        eyebrow="Operations"
+        title="Scheduling"
+        description="Week view for intake, pickup, due dates, follow-ups, and shop blocks."
+        actions={(
+          <div className="mode-actions scheduling-page-actions">
           <button type="button" onClick={() => setWeekStart(startOfWeek(new Date()))}>Today</button>
           <button type="button" onClick={() => setWeekStart(addDays(weekStart, -7))}>Previous Week</button>
           <button type="button" onClick={() => setWeekStart(addDays(weekStart, 7))}>Next Week</button>
           {canWrite && <button type="button" className="primary-action" onClick={() => startNewEvent(new Date())}>Add Event</button>}
-        </div>
-      </div>
+          </div>
+        )}
+      />
 
       <div className="schedule-toolbar">
         <strong>{formatShopDate(weekStart, dateOptions)} - {formatShopDate(addDays(weekEnd, -1), dateOptions)}</strong>

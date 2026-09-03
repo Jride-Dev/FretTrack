@@ -76,6 +76,7 @@
     "check:professional-workspace-ui": "node scripts/check-professional-workspace-ui.mjs",
     "check:professional-customers-ui": "node scripts/check-professional-customers-ui.mjs",
     "check:professional-inventory-ui": "node scripts/check-professional-inventory-ui.mjs",
+    "check:professional-scheduling-ui": "node scripts/check-professional-scheduling-ui.mjs",
     "capture:professional-customers": "node scripts/capture-professional-customer-screenshot.mjs",
     "capture:professional-inventory": "node scripts/capture-professional-inventory-screenshot.mjs",
     "capture:professional-work-orders": "node scripts/capture-professional-work-order-screenshots.mjs",

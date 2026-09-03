@@ -145,3 +145,30 @@ test('inventory remains contained on a narrow screen', async ({ page }) => {
   expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.innerWidth);
   await expect(inventory.locator('.inventory-table-wrap').first()).toBeVisible();
 });
+
+test('scheduling uses the professional full-width week workspace', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Calendar', exact: true }).click();
+
+  const scheduling = page.locator('.scheduling-page');
+  await expect(scheduling.getByRole('heading', { name: 'Scheduling', exact: true })).toBeVisible();
+  await expect(scheduling.locator('.schedule-toolbar')).toBeVisible();
+  await expect(scheduling.locator('.week-grid')).toBeVisible();
+  await expect(scheduling.getByRole('heading', { name: 'Add Event', exact: true })).toBeVisible();
+  await expect(scheduling.getByRole('button', { name: 'Add Event', exact: true })).toBeVisible();
+});
+
+test('scheduling remains contained on a narrow screen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Calendar', exact: true }).click();
+  const scheduling = page.locator('.scheduling-page');
+  await expect(scheduling.getByRole('heading', { name: 'Scheduling', exact: true })).toBeVisible();
+
+  const viewport = await page.evaluate(() => ({
+    innerWidth: window.innerWidth,
+    scrollWidth: document.documentElement.scrollWidth
+  }));
+  expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.innerWidth);
+  await expect(scheduling.locator('.schedule-editor')).toBeVisible();
+});
