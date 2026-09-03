@@ -11,5 +11,5 @@ test('Shop owner can see the amplifier upgrade surface but cannot create amplifi
 
   await page.getByRole('button', { name: 'New Job' }).click();
   await expect(page.getByRole('group', { name: 'Instrument Type' }).getByRole('button', { name: 'Amplifier' })).toHaveCount(0);
-  await expect(page.getByLabel('New job sections').getByRole('button', { name: 'Save Job' })).toBeEnabled();
+  await expect(page.getByLabel('New work order').getByRole('button', { name: 'Save Job' })).toBeEnabled();
 });
