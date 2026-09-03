@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import AppNotice from '../shared/components/AppNotice.jsx';
-import NewJobSidebar from './NewJobSidebar.jsx';
 import WorkspaceShellHeader from './WorkspaceShellHeader.jsx';
 import { BillingStateBanner, InternalCurrentAccessPanel } from './AppAccessPanels.jsx';
 import { getAppAccess } from './appAccess.js';
@@ -65,13 +64,11 @@ export default function App() {
   const {
     dismissInstallHelp,
     installApp: handleInstallApp,
-    isNewJobSidebarCollapsed,
     setTheme,
     shouldShowIosInstallHelp,
     shouldShowPwaInstallButton,
     theme,
     themes,
-    toggleNewJobSidebar
   } = useAppPreferences({ onNotice: setNotice });
   const {
     members: assignableMembers,
@@ -674,33 +671,7 @@ export default function App() {
         />
       )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
-        <div className={`layout app-layout${mode === 'new' ? ' new-job-active' : ''}${['detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(mode) && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${['new', 'estimates', 'list', 'customers', 'inventory', 'scheduling', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) ? ' full-content' : ''}`}>
-        {!['new', 'estimates', 'list', 'customers', 'inventory', 'scheduling', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) && (
-          <NewJobSidebar
-            isCollapsed={isNewJobSidebarCollapsed}
-            onToggle={toggleNewJobSidebar}
-            jobs={jobs}
-            customers={customers}
-            selectedJobId={selectedJobId}
-            shopProfile={shopProfile}
-            membership={membership}
-            assignableMembers={assignableMembers}
-            billingAccess={billingAccess}
-            betaApproved={betaApproved}
-            canEditJobs={canEditJobs}
-            amplifierRepairEnabled={amplifierRepairEnabled}
-            keyboardRepairEnabled={keyboardRepairEnabled}
-            pendingNewJobCustomer={pendingNewJobCustomer}
-            tillSummary={tillSummary}
-            moneyOptions={moneyOptions}
-            onJobSaved={handleJobSaved}
-            onOfflineDraftSaved={handleOfflineDraftSaved}
-            onSelectJob={handleSelectJob}
-            onOpenCurrentJobs={() => navigateTo('list')}
-            onOpenSchedule={() => navigateTo('scheduling')}
-            onNotice={setNotice}
-          />
-        )}
+        <div className={`layout app-layout${mode === 'new' ? ' new-job-active' : ''}${['detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(mode) && selectedJob ? ' detail-active' : ''} full-content`}>
         <div className="content">
           <WorkspaceRouter
             mode={mode}
@@ -757,7 +728,6 @@ export default function App() {
               isOperator
             }}
             actions={{
-              isNewJobSidebarCollapsed,
               onAssignmentChanged: handleAssignmentChanged,
               onAccountingVoidChange: handleAccountingVoidChange,
               onCloseJobDetail: closeJobDetail,

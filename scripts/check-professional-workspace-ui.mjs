@@ -45,7 +45,8 @@ assert.match(pageHeader, /workspace-page-header/, 'The shared page-heading primi
 assert.match(section, /workspace-section-body/, 'The shared section primitive must retain its content boundary.');
 assert.doesNotMatch(router, /Enter a new job on the left/, 'New Work Order must not retain the obsolete left-column instruction.');
 assert.match(router, /className="new-work-order-page"/, 'New Work Order must render as a full-width workspace page.');
-assert.match(app, /!\['new', 'estimates', 'list', 'customers',/, 'New Work Order and Estimates must not mount the legacy left-side sidebar.');
+assert.doesNotMatch(app, /NewJobSidebar|new-job-sidebar/, 'The application must not mount the retired legacy left-side sidebar.');
+assert.match(app, /full-content`}>/, 'Every workspace mode must render in the full-width content shell.');
 assert.match(bootstrap, /isPublicEstimate/, 'Customer estimate links must bypass the authenticated workspace shell.');
 assert.match(bootstrap, /<PublicEstimatePage token=\{publicEstimateToken\} \/>/, 'Customer estimate links must render the public estimate page.');
 assert.match(publicEstimate, /Approve Estimate/, 'Customers must be able to approve a sent estimate from its public view.');

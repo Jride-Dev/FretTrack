@@ -72,6 +72,8 @@ test('new work order and shared job detail use the professional workspace hierar
 
   await page.getByRole('button', { name: 'Current Jobs', exact: true }).click();
   await openSeededJob(page, 1);
+  await expect(page.locator('.new-job-sidebar')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /sections$/ })).toHaveCount(0);
   await expect(page.getByText(/work order ·/i).first()).toBeVisible();
   const tabs = page.getByRole('tablist', { name: 'Job workspace tabs' });
   await expect(tabs).toBeVisible();
