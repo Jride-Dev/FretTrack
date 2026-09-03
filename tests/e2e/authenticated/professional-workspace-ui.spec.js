@@ -80,6 +80,19 @@ test('new work order and shared job detail use the professional workspace hierar
   await expect(page.getByRole('tabpanel').getByRole('heading', { name: 'Totals', exact: true })).toBeVisible();
 });
 
+test('new work order action overrides a restored workspace mode', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Shop Settings', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Shop Settings', exact: true })).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Shop Settings', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'New Job', exact: true }).first().click();
+
+  await expect(page.locator('.new-job-sidebar')).toHaveCount(0);
+  await expect(page.getByLabel('New work order')).toBeVisible();
+});
+
 test('new work order remains a full-width workspace on a narrow screen', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');

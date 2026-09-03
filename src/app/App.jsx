@@ -329,7 +329,7 @@ export default function App() {
     await refreshCustomers(loadedJobs);
     setPendingNewJobCustomer(null);
     setSelectedJobId(savedJob.id);
-    setMode('new');
+    navigateTo('new', { skipDirtyGuard: true });
     setNotice({
       type: 'success',
       message: `Saved job ${savedJob?.jobNumber || ''} successfully.`
@@ -349,7 +349,7 @@ export default function App() {
     setHasUnsavedPageChanges(false);
     setPendingNewJobCustomer(customer || null);
     setSelectedJobId(null);
-    setMode('new');
+    navigateTo('new', { skipDirtyGuard: true });
   }
 
   async function handleCustomerSaved() {
