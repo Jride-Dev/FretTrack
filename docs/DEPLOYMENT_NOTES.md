@@ -83,6 +83,10 @@ Review this file before every production deploy and update it after app, public-
 - Deployed Cloudflare Pages build `https://5326dfe9.frettrack.pages.dev` and public Worker version `cab62fef-f430-4b49-a326-67c680684aef`.
 - Verified `200 OK` for the branded app, public root, docs, Getting Started, Jobs, Release Notes, and the sanitized Bench Dark and Shop Light screenshot assets.
 - The deployed app now includes the grouped workspace navigation rail, operational Current Jobs summary, device-aware theme selection, and responsive mobile containment. The public landing page and primary customer guides show the same real application workspace in both themes using fictional shop and customer data.
+- Merged phase-two PR #266 at `2b228b9` after Ito reported the mobile wrapping fix and 11 additional scenarios passing with no PR-attributable failures; regression/build, local database/browser, and npm audit checks also passed.
+- Deployed Cloudflare Pages build `https://86aeabbd.frettrack.pages.dev` and public Worker version `066048d6-4fd7-4733-8809-7169fc5f7242`.
+- Verified `200 OK` for the deployment URL, branded app, public root, docs, Jobs, Release Notes, Terms, Privacy, Support, and both new work-order screenshot assets. The branded app served the guarded production bundle hashes `index-MdpuZeP5.js` and `index-DqqXK6bd.css`.
+- Phase two adds the full-width grouped New Work Order surface and restrained shared Job Detail / Parts & Billing workspace, with responsive long-value wrapping and matching fictional screenshots across the landing page and customer guides.
 - No database migration or Edge Function deployment was required for this presentation and documentation release.
 
 ## Standard app deployment
