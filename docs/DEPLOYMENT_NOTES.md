@@ -87,6 +87,10 @@ Review this file before every production deploy and update it after app, public-
 - Deployed Cloudflare Pages build `https://86aeabbd.frettrack.pages.dev` and public Worker version `066048d6-4fd7-4733-8809-7169fc5f7242`.
 - Verified `200 OK` for the deployment URL, branded app, public root, docs, Jobs, Release Notes, Terms, Privacy, Support, and both new work-order screenshot assets. The branded app served the guarded production bundle hashes `index-MdpuZeP5.js` and `index-DqqXK6bd.css`.
 - Phase two adds the full-width grouped New Work Order surface and restrained shared Job Detail / Parts & Billing workspace, with responsive long-value wrapping and matching fictional screenshots across the landing page and customer guides.
+- Merged Customers PR #268 at `796e560` after regression/build, local database/browser, and npm audit checks passed; no Ito finding or review thread was present.
+- Deployed Customers app Pages build `https://cb35c784.frettrack.pages.dev` and public Worker version `c8a51d02-4438-4ab0-9a8c-69dbe49f00b9`.
+- Verified `200 OK` for the deployment URL, branded app, public root, Customers guide, and sanitized `customers-bench-dark.png`; confirmed the new image and Customers workspace copy are live on the landing page and guide.
+- Customers is a presentation-only release: no database migration or Edge Function deployment was required.
 - No database migration or Edge Function deployment was required for this presentation and documentation release.
 
 ## Standard app deployment
