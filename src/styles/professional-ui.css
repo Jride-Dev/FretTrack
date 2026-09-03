@@ -676,6 +676,14 @@ main.app-shell {
   width: 100%;
 }
 
+.new-work-order-page {
+  min-width: 0;
+}
+
+.new-work-order-page > .new-work-order-form {
+  width: 100%;
+}
+
 .workspace-detail-shell > .workspace-page-header {
   border-bottom: 1px solid var(--border);
   padding: 20px;

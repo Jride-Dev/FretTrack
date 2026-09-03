@@ -3,6 +3,7 @@ import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import { canAccessOperatorDashboard } from '../modules/auth/permissionService.js';
 import SpecialistJobWorkspaceNav, { getSpecialistRepairMode } from './SpecialistJobWorkspaceNav.jsx';
+import JobForm from '../modules/jobs/JobForm.jsx';
 
 const AccountingReports = lazy(() => import('../modules/accounting/AccountingReports.jsx'));
 const AmplifierJobDetail = lazy(() => import('../modules/amplifiers/AmplifierJobDetail.jsx'));
@@ -54,13 +55,31 @@ function WorkspacePage({
     shopId,
     shopProfile,
     syncingDraftId,
-    teamAssignmentEnabled
+    teamAssignmentEnabled,
+    pendingNewJobCustomer
   } = data;
 
   if (mode === 'new') {
-    return actions.isNewJobSidebarCollapsed
-      ? <section className="panel empty-state">Select Show sections to reopen New Work Order.</section>
-      : null;
+    return (
+      <section className="new-work-order-page" aria-label="New work order">
+        <JobForm
+          jobs={jobs}
+          customers={customers}
+          canWrite={access.canEditJobs}
+          amplifierRepairEnabled={access.amplifierRepairEnabled}
+          keyboardRepairEnabled={access.keyboardRepairEnabled}
+          shopProfile={shopProfile}
+          assignableMembers={assignableMembers}
+          membership={membership}
+          entitlementSnapshot={billingAccess}
+          betaApproved={betaApproved}
+          initialCustomer={pendingNewJobCustomer}
+          onJobSaved={actions.onJobSaved}
+          onOfflineDraftSaved={actions.onOfflineDraftSaved}
+          onNotice={actions.onNotice}
+        />
+      </section>
+    );
   }
 
   if (mode === 'list') {

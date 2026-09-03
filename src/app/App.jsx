@@ -674,8 +674,8 @@ export default function App() {
         />
       )}
       <AppNotice message={notice?.message} type={notice?.type} onDismiss={() => setNotice(null)} />
-      <div className={`layout app-layout${mode === 'new' ? ' new-job-active' : ''}${['detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(mode) && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${['list', 'customers', 'inventory', 'scheduling', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) ? ' full-content' : ''}`}>
-        {!['list', 'customers', 'inventory', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) && (
+      <div className={`layout app-layout${mode === 'new' ? ' new-job-active' : ''}${['detail', 'guitar-detail', 'amplifier-detail', 'keyboard-detail'].includes(mode) && selectedJob ? ' detail-active' : ''}${isNewJobSidebarCollapsed ? ' sidebar-collapsed' : ''}${['new', 'list', 'customers', 'inventory', 'scheduling', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) ? ' full-content' : ''}`}>
+        {!['new', 'list', 'customers', 'inventory', 'scheduling', 'guitar-detail', 'amplifiers', 'amplifier-detail', 'keyboards', 'keyboard-detail'].includes(mode) && (
           <NewJobSidebar
             isCollapsed={isNewJobSidebarCollapsed}
             onToggle={toggleNewJobSidebar}
@@ -724,7 +724,8 @@ export default function App() {
               shopId: membership?.shopId || getSelectedShop().shopId,
               shopProfile,
               syncingDraftId,
-              teamAssignmentEnabled
+              teamAssignmentEnabled,
+              pendingNewJobCustomer
             }}
             access={{
               canDeletePhotos,
@@ -764,6 +765,8 @@ export default function App() {
               onCreateKeyboardJob: handleKeyboardJobCreate,
               onCreateJobForCustomer: showNewJob,
               onCustomerSaved: handleCustomerSaved,
+              onJobSaved: handleJobSaved,
+              onOfflineDraftSaved: handleOfflineDraftSaved,
               onDirtyChange: setHasUnsavedPageChanges,
               onDiscardOfflineDraft: handleDiscardOfflineDraft,
               onImageDelete: handleImageDelete,
