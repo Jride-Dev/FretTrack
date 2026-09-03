@@ -2,6 +2,8 @@ import { money } from '../../shared/utils/money';
 import { formatShopDate } from '../../shared/utils/dateFormat';
 import { getCustomerTypeLabel } from './customerTypes';
 import CustomerLoyaltyCard from '../loyalty/CustomerLoyaltyCard.jsx';
+import WorkspacePageHeader from '../../shared/components/WorkspacePageHeader.jsx';
+import WorkspaceSection from '../../shared/components/WorkspaceSection.jsx';
 
 export default function CustomerDetail({
   customer,
@@ -17,64 +19,74 @@ export default function CustomerDetail({
   if (!customer) {
     return (
       <section className="panel customer-detail">
-        <h2>Customer Profile</h2>
-        <p className="muted-text">Select a customer to review their profile, jobs, and balance.</p>
+        <WorkspaceSection
+          title="Customer profile"
+          description="Select a customer to review their contact details, account activity, jobs, and payments."
+        >
+          <p className="empty-state">Choose a customer from the directory to open their profile.</p>
+        </WorkspaceSection>
       </section>
     );
   }
 
   return (
     <section className="panel customer-detail">
-      <div className="panel-heading customer-detail-heading">
-        <div>
-          <h2>{customer.displayName}</h2>
-          <p className="muted-text">
-            {getCustomerTypeLabel(customer.customerType)}{customer.companyName ? ` - ${customer.companyName}` : ''}{!customer.isActive ? ' - Inactive' : ''}
-          </p>
-        </div>
-        <div className="mode-actions no-print customer-detail-actions">
-          {canWrite && onEditCustomer && <button type="button" onClick={() => onEditCustomer(customer)}>Edit Profile</button>}
-          {canWrite && onCreateJob && <button type="button" className="primary-action" onClick={() => onCreateJob(customer)}>Create Job</button>}
-        </div>
-      </div>
+      <WorkspacePageHeader
+        eyebrow="Customer profile"
+        title={customer.displayName}
+        description={`${getCustomerTypeLabel(customer.customerType)}${customer.companyName ? ` · ${customer.companyName}` : ''}${!customer.isActive ? ' · Inactive' : ''}`}
+        actions={(
+          <div className="mode-actions no-print customer-detail-actions">
+            {canWrite && onEditCustomer && <button type="button" onClick={() => onEditCustomer(customer)}>Edit Profile</button>}
+            {canWrite && onCreateJob && <button type="button" className="primary-action" onClick={() => onCreateJob(customer)}>Create Job</button>}
+          </div>
+        )}
+      />
 
-      <div className="customer-summary-grid">
-        <SummaryCard label="Total Billed" value={money(customer.totalBilled, moneyOptions)} />
-        <SummaryCard label="Total Paid" value={money(customer.totalPaid, moneyOptions)} />
-        <SummaryCard label="Balance Due" value={money(customer.totalBalanceDue, moneyOptions)} />
-        <SummaryCard label="Open Jobs" value={customer.openJobCount || 0} />
-        <SummaryCard label="Completed Jobs" value={customer.completedJobCount || 0} />
-        <SummaryCard label="Last Activity" value={customer.lastActivityAt ? formatShopDate(customer.lastActivityAt, dateOptions) : '-'} />
-      </div>
+      <WorkspaceSection title="Account overview" description="Work volume and billing position across this customer’s history.">
+        <div className="customer-summary-grid">
+          <SummaryCard label="Total Billed" value={money(customer.totalBilled, moneyOptions)} />
+          <SummaryCard label="Total Paid" value={money(customer.totalPaid, moneyOptions)} />
+          <SummaryCard label="Balance Due" value={money(customer.totalBalanceDue, moneyOptions)} />
+          <SummaryCard label="Open Jobs" value={customer.openJobCount || 0} />
+          <SummaryCard label="Completed Jobs" value={customer.completedJobCount || 0} />
+          <SummaryCard label="Last Activity" value={customer.lastActivityAt ? formatShopDate(customer.lastActivityAt, dateOptions) : '-'} />
+        </div>
+      </WorkspaceSection>
 
-      <div className="totals customer-contact-grid">
-        <span>First Name</span><strong>{customer.firstName || '-'}</strong>
-        <span>Last Name</span><strong>{customer.lastName || '-'}</strong>
-        <span>Display Name</span><strong>{customer.displayName || '-'}</strong>
-        <span>Company</span><strong>{customer.companyName || '-'}</strong>
-        <span>Email</span><strong>{customer.email || '-'}</strong>
-        {serviceRemindersEnabled && <><span>Service Reminders</span><strong>{customer.serviceReminderOptIn ? 'Opted in' : 'Not opted in'}</strong></>}
-        <span>Phone</span><strong>{customer.phone || '-'}</strong>
-        <span>Secondary Phone</span><strong>{customer.secondaryPhone || '-'}</strong>
-        <span>Address</span><strong>{formatAddress(customer)}</strong>
-        <span>Tax / VAT ID</span><strong>{customer.taxId || '-'}</strong>
-        <span>Status</span><strong>{customer.isActive ? 'Active' : 'Inactive'}</strong>
-        <span>Source</span><strong>{customer.source || '-'}</strong>
-        <span>External Ref</span><strong>{customer.externalRef || '-'}</strong>
-      </div>
+      <WorkspaceSection title="Contact & account" description="Identity, contact preferences, and imported account references.">
+        <div className="totals customer-contact-grid">
+          <span>First Name</span><strong>{customer.firstName || '-'}</strong>
+          <span>Last Name</span><strong>{customer.lastName || '-'}</strong>
+          <span>Display Name</span><strong>{customer.displayName || '-'}</strong>
+          <span>Company</span><strong>{customer.companyName || '-'}</strong>
+          <span>Email</span><strong>{customer.email || '-'}</strong>
+          {serviceRemindersEnabled && <><span>Service Reminders</span><strong>{customer.serviceReminderOptIn ? 'Opted in' : 'Not opted in'}</strong></>}
+          <span>Phone</span><strong>{customer.phone || '-'}</strong>
+          <span>Secondary Phone</span><strong>{customer.secondaryPhone || '-'}</strong>
+          <span>Address</span><strong>{formatAddress(customer)}</strong>
+          <span>Tax / VAT ID</span><strong>{customer.taxId || '-'}</strong>
+          <span>Status</span><strong>{customer.isActive ? 'Active' : 'Inactive'}</strong>
+          <span>Source</span><strong>{customer.source || '-'}</strong>
+          <span>External Ref</span><strong>{customer.externalRef || '-'}</strong>
+        </div>
+      </WorkspaceSection>
 
       {loyaltyProgramEnabled && (
         <CustomerLoyaltyCard customerId={customer.id} canWrite={canWrite} dateOptions={dateOptions} onNotice={onNotice} />
       )}
 
-      <SectionTitle title="Job History" />
-      {renderJobHistory(customer.jobHistory || customer.jobs, moneyOptions, dateOptions)}
+      <WorkspaceSection title="Job history" description="Every work order linked to this customer record.">
+        {renderJobHistory(customer.jobHistory || customer.jobs, moneyOptions, dateOptions)}
+      </WorkspaceSection>
 
-      <SectionTitle title="Payments" />
-      {renderPaymentHistory(customer.payments, moneyOptions, dateOptions)}
+      <WorkspaceSection title="Payments" description="The latest payment, refund, and void activity across linked work orders.">
+        {renderPaymentHistory(customer.payments, moneyOptions, dateOptions)}
+      </WorkspaceSection>
 
-      <SectionTitle title="Notes" />
-      <p className="customer-notes">{customer.notes || 'No notes yet.'}</p>
+      <WorkspaceSection title="Notes" description="Shop-only context retained with this customer profile.">
+        <p className="customer-notes">{customer.notes || 'No notes yet.'}</p>
+      </WorkspaceSection>
     </section>
   );
 }
@@ -86,10 +98,6 @@ function SummaryCard({ label, value }) {
       <strong>{value}</strong>
     </article>
   );
-}
-
-function SectionTitle({ title }) {
-  return <h3 className="customer-section-title">{title}</h3>;
 }
 
 function renderJobHistory(jobs = [], moneyOptions = {}, dateOptions = {}) {

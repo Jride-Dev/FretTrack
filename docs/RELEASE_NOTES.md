@@ -6,6 +6,8 @@ The authenticated workspace now uses a restrained, grouped navigation rail and a
 
 New Work Order and the shared Work Order, Parts & Payments surface now use the same professional page headings, grouped form sections, action bars, contained workspace panels, and restrained tabs. This is a presentation-only consolidation over the existing shop-scoped job, permission, billing, tax, payment, and save boundaries.
 
+Customers now follows that same professional hierarchy with a dedicated search-and-filter surface, a compact selectable directory, and clearly separated account overview, contact, job history, payment, and notes sections. The two-column workspace becomes a contained single column on smaller screens while customer writes, role gates, CSV preview, Loyalty, reminders, and shop isolation remain unchanged.
+
 The public Start Free Trial link now opens Create Account through the application's actual top-level authentication gate. If shop creation succeeds but the authoritative profile reload is temporarily unavailable, FretTrack clearly says the workspace was created and offers a safe profile reload instead of sending the user back through shop creation.
 
 The next customer-communication slice now has a provider-neutral storage boundary. Existing outbound Message History rows are grouped into durable shop/customer/channel threads, while the schema can safely represent received messages, read state, ambiguous work-order routing, and explicit customer-report selection. Shop isolation, immutable routing, provider replay identity, and the two narrow staff actions are database-enforced. This is backend groundwork only: inbound email, SMS delivery, Realtime updates, the conversation interface, and report rendering controls are not enabled yet.

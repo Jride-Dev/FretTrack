@@ -16,6 +16,10 @@ New Work Order and the shared Work Order, Parts & Payments view use the same pag
 
 The shared presentation primitives live in `src/shared/components/WorkspacePageHeader.jsx` and `src/shared/components/WorkspaceSection.jsx`. They carry layout and accessibility structure only. They do not load data, choose a shop, decide entitlements, or persist a record.
 
+## Customers
+
+Customers uses a full-width workspace with the shared page-heading and section hierarchy for directory search, filters, the selectable customer list, account metrics, contact details, job history, payments, and notes. The desktop directory-and-profile layout collapses into one contained column on tablets and phones, and long identity or contact values wrap inside their cards. Add Customer, Edit Profile, Create Job, CSV preview, Loyalty, and service-reminder behavior still use their existing permission, entitlement, dirty-state, and customer-service boundaries.
+
 ## Themes
 
 The selector supports Use Device Theme, Bench Dark, Shop Light, Amber Tube, Seafoam, Blackguard, Burgundy Burst, Blue Steel, and High Contrast. Device mode resolves to the appropriate light or dark base and follows operating-system changes. The selected preference is persisted locally. Print documents continue to use their isolated white customer-document canvas regardless of the interactive theme.
@@ -30,9 +34,10 @@ The maintained publication files are:
 - `cloudflare/frettrack-coming-soon/public/landing/current-jobs-shop-light.png`
 - `cloudflare/frettrack-coming-soon/public/landing/new-work-order-bench-dark.png`
 - `cloudflare/frettrack-coming-soon/public/landing/work-order-billing-bench-dark.png`
+- `cloudflare/frettrack-coming-soon/public/landing/customers-bench-dark.png`
 
-Run `npm run capture:professional-work-orders` against the disposable local test workspace to refresh the New Work Order and Parts & Billing captures. The capture script authenticates only to the seeded local owner and replaces fixture labels with fictional publication names before writing the images.
+Run `npm run capture:professional-work-orders` against the disposable local test workspace to refresh the New Work Order and Parts & Billing captures. Run `npm run capture:professional-customers` to refresh the Customers capture. The capture scripts authenticate only to the seeded local owner and replace fixture labels with fictional publication names before writing the images.
 
 ## Validation
 
-Run `npm run check:professional-workspace-ui` for the static UI contract and `npx playwright test tests/e2e/authenticated/professional-workspace-ui.spec.js --project=owner-chromium` for authenticated desktop, work-order hierarchy, theme-persistence, and mobile-containment coverage.
+Run `npm run check:professional-workspace-ui` and `npm run check:professional-customers-ui` for the static UI contracts. Run `npx playwright test tests/e2e/authenticated/professional-workspace-ui.spec.js --project=owner-chromium` for authenticated desktop, work-order and customer hierarchy, theme-persistence, and mobile-containment coverage.

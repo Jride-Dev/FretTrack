@@ -50,6 +50,7 @@ jobs:
           npm run check:customer-report-print-renderer
           npm run check:print-action-arbitration
           npm run check:job-detail-module-boundaries
+          npm run check:professional-customers-ui
           npm run check:guitar-repair-bench
           npm run check:billing-save-integrity
           npm run check:work-log-draft-safety

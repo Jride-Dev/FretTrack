@@ -1324,6 +1324,10 @@ function landingPage() {
             <img src="/landing/work-order-billing-bench-dark.png" alt="FretTrack Work Order Parts and Billing workspace showing job status, assignment, parts, services, and totals." loading="lazy">
             <figcaption>The same work order carries parts, services, payments, tax, and invoice controls through one permission-aware workspace.</figcaption>
           </figure>
+          <figure class="workspace-shot">
+            <img src="/landing/customers-bench-dark.png" alt="FretTrack Customers workspace showing directory search, customer records, account totals, and contact details." loading="lazy">
+            <figcaption>Customer records keep contact details, account activity, job history, payments, and shop notes in one responsive workspace.</figcaption>
+          </figure>
         </div>
         <p class="section-lede">Screenshots show a sample workspace with fictional customer and shop data.</p>
       </section>

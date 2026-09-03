@@ -6,6 +6,7 @@ This file tracks product, reliability, security, and operational changes by rele
 
 ## Unreleased
 
+- Extended the professional workspace hierarchy to a full-width Customers surface with a focused directory, restrained selection states, account and contact sections, contained history tables, and a responsive single-column mobile layout without changing customer saves, permissions, import preview, Loyalty, reminders, or shop isolation.
 - Extended the professional workspace system to New Work Order and the shared Work Order, Parts & Payments surface with reusable page-heading and section primitives, grouped intake fields, restrained tabs, and contained billing panels without changing save, permission, or commerce behavior.
 - Fixed the public free-trial URL so it opens account creation at the real top-level authentication gate, and added a dedicated retry screen when a newly created workspace is safe in the database but its profile reload fails.
 - Added a provider-neutral customer correspondence backend: durable shop/customer/channel threads, direct shop scoping, inbound/outbound direction, read state, explicit customer-report selection, idempotent inbound provider identities, ambiguous-message routing without guessing a work order, narrow guarded RPCs, and cross-shop pgTAP coverage. This does not yet enable inbound email, SMS, Realtime, or a conversation UI.
