@@ -5,6 +5,8 @@ import CustomerImportPreviewPanel from './CustomerImportPreviewPanel.jsx';
 import CustomerLookup from './CustomerLookup.jsx';
 import { buildCustomerDirectory } from './customerInsights';
 import { normalizePhone, normalizeText } from './customerNormalize';
+import WorkspacePageHeader from '../../shared/components/WorkspacePageHeader.jsx';
+import WorkspaceSection from '../../shared/components/WorkspaceSection.jsx';
 
 const initialFilters = {
   type: 'all',
@@ -150,20 +152,19 @@ export default function CustomerManager({
 
   return (
     <section className="customer-module">
-      <header className="customer-module-header">
-        <div className="customer-module-titleblock">
-          <h2>Customers</h2>
-          <p className="muted-text">
-            {visibleCustomerCount === totalCustomerCount
-              ? `${totalCustomerCount} customer record${totalCustomerCount === 1 ? '' : 's'}`
-              : `${visibleCustomerCount} of ${totalCustomerCount} customer records`}
-          </p>
-        </div>
-        <div className="customer-module-actions no-print">
-          {canPreviewCustomerImport && <button type="button" className="button-tertiary" onClick={openImportPreview}>CSV Import Preview</button>}
-          {canWrite && <button type="button" className="primary-action" onClick={openNewCustomerModal}>Add Customer</button>}
-        </div>
-      </header>
+      <WorkspacePageHeader
+        eyebrow="Customer relationships"
+        title="Customers"
+        description={visibleCustomerCount === totalCustomerCount
+          ? `${totalCustomerCount} customer record${totalCustomerCount === 1 ? '' : 's'} in this shop`
+          : `${visibleCustomerCount} of ${totalCustomerCount} customer records shown`}
+        actions={(
+          <div className="customer-module-actions no-print">
+            {canPreviewCustomerImport && <button type="button" className="button-tertiary" onClick={openImportPreview}>CSV Import Preview</button>}
+            {canWrite && <button type="button" className="primary-action" onClick={openNewCustomerModal}>Add Customer</button>}
+          </div>
+        )}
+      />
 
       {isImportPreviewOpen && (
         <CustomerImportPreviewPanel
@@ -174,42 +175,51 @@ export default function CustomerManager({
         />
       )}
 
-      <div className="customer-module-toolbar">
-        <input
-          className="customer-search"
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name, company, phone, email, tax ID, or notes..."
-        />
-        <div className="customer-filter-bar">
-          <label>
-            Type
-            <select value={filters.type} onChange={(event) => handleFilterChange('type', event.target.value)}>
-              <option value="all">All Types</option>
-              <option value="individual">Individual</option>
-              <option value="business">Business</option>
-              <option value="subcontractor">Subcontractor</option>
-            </select>
+      <WorkspaceSection
+        className="customer-directory-controls"
+        title="Find a customer"
+        description="Search the shop directory, then narrow the results by account type, balance, or status."
+      >
+        <div className="customer-module-toolbar">
+          <label className="customer-search-control">
+            Search
+            <input
+              className="customer-search"
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Name, company, phone, email, tax ID, or notes"
+            />
           </label>
-          <label>
-            Balance
-            <select value={filters.balance} onChange={(event) => handleFilterChange('balance', event.target.value)}>
-              <option value="all">All Balances</option>
-              <option value="owed">Balance Owed</option>
-              <option value="clear">Paid Up</option>
-            </select>
-          </label>
-          <label>
-            Status
-            <select value={filters.status} onChange={(event) => handleFilterChange('status', event.target.value)}>
-              <option value="all">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </label>
+          <div className="customer-filter-bar">
+            <label>
+              Type
+              <select value={filters.type} onChange={(event) => handleFilterChange('type', event.target.value)}>
+                <option value="all">All Types</option>
+                <option value="individual">Individual</option>
+                <option value="business">Business</option>
+                <option value="subcontractor">Subcontractor</option>
+              </select>
+            </label>
+            <label>
+              Balance
+              <select value={filters.balance} onChange={(event) => handleFilterChange('balance', event.target.value)}>
+                <option value="all">All Balances</option>
+                <option value="owed">Balance Owed</option>
+                <option value="clear">Paid Up</option>
+              </select>
+            </label>
+            <label>
+              Status
+              <select value={filters.status} onChange={(event) => handleFilterChange('status', event.target.value)}>
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </label>
+          </div>
         </div>
-      </div>
+      </WorkspaceSection>
 
       <div className="customer-module-layout">
         <CustomerLookup

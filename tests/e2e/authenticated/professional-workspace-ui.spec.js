@@ -76,3 +76,43 @@ test('new work order and shared job detail use the professional workspace hierar
   await expect(page.getByRole('tabpanel').getByRole('heading', { name: 'Parts', exact: true })).toBeVisible();
   await expect(page.getByRole('tabpanel').getByRole('heading', { name: 'Totals', exact: true })).toBeVisible();
 });
+
+test('customers use the professional directory and profile hierarchy', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Customers', exact: true }).click();
+
+  const customers = page.locator('.customer-module');
+  await expect(customers.getByRole('heading', { name: 'Customers', exact: true })).toBeVisible();
+  await expect(customers.getByRole('heading', { name: 'Find a customer', exact: true })).toBeVisible();
+  await expect(customers.getByRole('heading', { name: 'Customer directory', exact: true })).toBeVisible();
+  await expect(customers.getByPlaceholder('Name, company, phone, email, tax ID, or notes')).toBeVisible();
+
+  for (const heading of ['Account overview', 'Contact & account', 'Job history', 'Payments', 'Notes']) {
+    await expect(customers.getByRole('heading', { name: heading, exact: true })).toBeVisible();
+  }
+  await expect(customers.getByRole('button', { name: 'Edit Profile', exact: true })).toBeVisible();
+  await expect(customers.getByRole('button', { name: 'Create Job', exact: true })).toBeVisible();
+});
+
+test('customer directory remains contained on a narrow screen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Customers', exact: true }).click();
+  const customers = page.locator('.customer-module');
+  await expect(customers.getByRole('heading', { name: 'Customer directory', exact: true })).toBeVisible();
+
+  const viewport = await page.evaluate(() => ({
+    innerWidth: window.innerWidth,
+    scrollWidth: document.documentElement.scrollWidth
+  }));
+  expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.innerWidth);
+
+  const firstCustomer = customers.locator('.customer-list-panel .customer-card').first();
+  const customerCard = await firstCustomer.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+    columns: window.getComputedStyle(element).gridTemplateColumns
+  }));
+  expect(customerCard.scrollWidth).toBeLessThanOrEqual(customerCard.clientWidth);
+  expect(customerCard.columns.trim().split(/\s+/)).toHaveLength(1);
+});
