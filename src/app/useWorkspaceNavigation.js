@@ -56,14 +56,14 @@ export default function useWorkspaceNavigation({
     return window.confirm(UNSAVED_CHANGES_MESSAGE);
   }
 
-  function navigateTo(nextMode) {
+  function navigateTo(nextMode, { skipDirtyGuard = false } = {}) {
     if (!isAllowedWorkspaceMode(nextMode, access)) {
       onAccessDenied?.();
       setMode('new');
       return false;
     }
 
-    if (!confirmUnsavedNavigation()) {
+    if (!skipDirtyGuard && !confirmUnsavedNavigation()) {
       return false;
     }
 
