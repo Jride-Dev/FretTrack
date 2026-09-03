@@ -27,7 +27,7 @@ export default function PartsList({
 }) {
   const moneyOptions = getShopMoneyOptions();
   return (
-    <section>
+    <section className="work-order-section billing-workspace-section">
       <h3>Parts</h3>
       {canWrite && onAddInventoryPart && (
         <form className="row-form price-form inventory-picker-form" onSubmit={onSearchInventoryParts}>

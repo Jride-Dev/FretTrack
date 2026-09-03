@@ -24,6 +24,8 @@ import { stateOptionsWithCurrent } from '../../data/usStates';
 import { JOB_PRIORITY_OPTIONS, normalizeJobPriority } from './jobPriority';
 import { JOB_SOURCE_OPTIONS } from './jobSources';
 import { canUseTeamAssignment } from '../billing/entitlementService.js';
+import WorkspacePageHeader from '../../shared/components/WorkspacePageHeader.jsx';
+import WorkspaceSection from '../../shared/components/WorkspaceSection.jsx';
 import { getAvailableAssignmentChoices } from './teamAssignment.js';
 
 function todayValue() {
@@ -394,8 +396,12 @@ export default function JobForm({
   const modelOptions = getModelsForBrand(form.instrumentType, form.guitarBrand);
 
   return (
-    <form className="panel" onSubmit={handleSubmit}>
-      <h2>New Job</h2>
+    <form className="panel work-order-form new-work-order-form" onSubmit={handleSubmit}>
+      <WorkspacePageHeader
+        eyebrow="Work order intake"
+        title="New Work Order"
+        description="Start with the customer and instrument, then set the shop workflow details."
+      />
       {!canWrite && <p className="muted-text">Your shop role can view work orders but cannot create new ones.</p>}
       <datalist id="new-job-brand-options">
         {brandOptions.map((brand) => (
@@ -407,9 +413,12 @@ export default function JobForm({
           <option key={model} value={model} />
         ))}
       </datalist>
-      <div className="form-grid">
-        <section className="customer-lookup wide">
-          <h3>Customer Lookup</h3>
+      <div className="work-order-section-stack">
+        <WorkspaceSection
+          className="work-order-form-section customer-lookup"
+          title="Customer"
+          description="Find an existing customer or enter the contact details for this visit."
+        >
           <input
             type="search"
             placeholder="Search previous customers by name, phone, or email..."
@@ -454,8 +463,8 @@ export default function JobForm({
               ))}
             </div>
           )}
-        </section>
-        <label>
+          <div className="form-grid">
+          <label>
           First Name
           <input name="customerFirstName" value={form.customerFirstName} onChange={handleChange} disabled={!canWrite} required />
         </label>
@@ -513,24 +522,14 @@ export default function JobForm({
           />
           Email opt-in
         </label>
-        <label>
-          Job Source
-          <select name="intakeType" value={form.intakeType} onChange={handleChange} disabled={!canWrite}>
-            {JOB_SOURCE_OPTIONS.map((source) => (
-              <option key={source.value} value={source.value}>{source.label}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Sub-Contract Business
-          <input
-            name="subcontractorName"
-            value={form.subcontractorName}
-            onChange={handleChange}
-            placeholder="Sub-contractor business name"
-            disabled={!canWrite || form.intakeType !== 'Sub-Contract'}
-          />
-        </label>
+          </div>
+        </WorkspaceSection>
+        <WorkspaceSection
+          className="work-order-form-section"
+          title="Instrument"
+          description="Record the identity and configuration the technician will work from."
+        >
+        <div className="form-grid">
         <div className="instrument-selector" role="group" aria-label="Instrument Type">
           <span>Instrument Type</span>
           <div className="segmented-control instrument-type-control">
@@ -659,6 +658,32 @@ export default function JobForm({
             )}
           </div>
         </fieldset>
+        </div>
+        </WorkspaceSection>
+        <WorkspaceSection
+          className="work-order-form-section"
+          title="Shop workflow"
+          description="Set intake, ownership, dates, and priority for the queue."
+        >
+        <div className="form-grid">
+        <label>
+          Job Source
+          <select name="intakeType" value={form.intakeType} onChange={handleChange} disabled={!canWrite}>
+            {JOB_SOURCE_OPTIONS.map((source) => (
+              <option key={source.value} value={source.value}>{source.label}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Sub-Contract Business
+          <input
+            name="subcontractorName"
+            value={form.subcontractorName}
+            onChange={handleChange}
+            placeholder="Sub-contractor business name"
+            disabled={!canWrite || form.intakeType !== 'Sub-Contract'}
+          />
+        </label>
         <label>
           Date Received
           <input type="date" name="dateReceived" value={form.dateReceived} onChange={handleChange} disabled={!canWrite} />
@@ -699,12 +724,27 @@ export default function JobForm({
           Job Number
           <input name="jobNumber" value={form.jobNumber} readOnly />
         </label>
+        </div>
+        </WorkspaceSection>
+        <WorkspaceSection
+          className="work-order-form-section"
+          title="Customer request"
+          description="Capture what the customer expects the shop to inspect or repair."
+        >
+        <div className="form-grid">
         <label className="wide">
           Reason For Visit
           <textarea name="reasonForVisit" value={form.reasonForVisit} onChange={handleChange} rows="3" disabled={!canWrite} />
         </label>
+        </div>
+        </WorkspaceSection>
       </div>
-      <button type="submit" disabled={isSaving || !canWrite}>{isSaving ? 'Saving...' : 'Save Job'}</button>
+      <div className="work-order-form-actions">
+        <span>Review the intake details before adding the work order to the queue.</span>
+        <button type="submit" className="primary-action" aria-label="Save Job" disabled={isSaving || !canWrite}>
+          {isSaving ? 'Saving...' : 'Create Work Order'}
+        </button>
+      </div>
     </form>
   );
 }

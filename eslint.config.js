@@ -10,6 +10,7 @@ const sharedIgnores = [
   'node_modules/**',
   'playwright-report/**',
   'test-results/**',
+  '**/.wrangler/**',
   'supabase/**',
   'docs/**',
   'Screenshots/**',
