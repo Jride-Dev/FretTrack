@@ -10,6 +10,7 @@ export default function JobBillingSections({
   canIssuePaymentAdjustments,
   canFinalizeJobInvoices,
   changeEstimateState,
+  createEstimateLink,
   changeInvoiceFinalization,
   draftJob,
   estimateNote,
@@ -18,6 +19,7 @@ export default function JobBillingSections({
   inventorySearch,
   isInventoryLoading,
   isChangingEstimateState,
+  isCreatingPublicEstimateLink,
   isChangingInvoiceState,
   isRecordingPayment,
   onAddInventoryPart,
@@ -26,6 +28,7 @@ export default function JobBillingSections({
   onAddService,
   onEmailInvoice,
   onEmailEstimate,
+  publicEstimateLink,
   onRemovePart,
   onRemoveService,
   onSearchInventoryParts,
@@ -85,14 +88,17 @@ export default function JobBillingSections({
         canIssuePaymentAdjustments={canIssuePaymentAdjustments}
         canFinalizeJobInvoices={canFinalizeJobInvoices}
         changeEstimateState={changeEstimateState}
+        createEstimateLink={createEstimateLink}
         changeInvoiceFinalization={changeInvoiceFinalization}
         addPayment={onAddPayment}
         draftJob={draftJob}
         emailInvoice={onEmailInvoice}
         emailEstimate={onEmailEstimate}
+        publicEstimateLink={publicEstimateLink}
         estimateNote={estimateNote}
         finalizationReason={finalizationReason}
         isChangingEstimateState={isChangingEstimateState}
+        isCreatingPublicEstimateLink={isCreatingPublicEstimateLink}
         isChangingInvoiceState={isChangingInvoiceState}
         isRecordingPayment={isRecordingPayment}
         payment={payment}

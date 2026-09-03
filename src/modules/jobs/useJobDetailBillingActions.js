@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { toIsoDateInputValue } from '../../shared/utils/dateFormat.js';
-import { recordJobPayment, setJobEstimateState, setJobInvoiceFinalization } from './jobService.js';
+import { createPublicEstimateLink, recordJobPayment, setJobEstimateState, setJobInvoiceFinalization } from './jobService.js';
 import {
   buildAddPaymentJob,
   buildAddServicePatch,
@@ -38,6 +38,8 @@ export default function useJobDetailBillingActions({
   const [isChangingEstimateState, setIsChangingEstimateState] = useState(false);
   const [isChangingInvoiceState, setIsChangingInvoiceState] = useState(false);
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
+  const [isCreatingPublicEstimateLink, setIsCreatingPublicEstimateLink] = useState(false);
+  const [publicEstimateLink, setPublicEstimateLink] = useState('');
   const estimateOperationRef = useRef(new Map());
 
   function reportCommerceError(error, fallbackMessage) {
@@ -110,6 +112,7 @@ export default function useJobDetailBillingActions({
       const result = await setJobInvoiceFinalization(savedJob.id, finalized, reason);
       setDraftJob((current) => ({ ...current, ...result }));
       setIsDirty(false);
+      setPublicEstimateLink('');
       setFinalizationReason('');
       await onRefresh?.();
       onNotice?.({ type: 'success', message: finalized ? 'Invoice finalized and totals locked.' : 'Invoice reopened for charge changes.' });
@@ -117,6 +120,36 @@ export default function useJobDetailBillingActions({
       reportCommerceError(error, 'The invoice state could not be changed.');
     } finally {
       setIsChangingInvoiceState(false);
+    }
+  }
+
+  async function createEstimateLink() {
+    if (!canFinalizeJobInvoices || isCreatingPublicEstimateLink) {
+      return;
+    }
+    if (!['sent', 'approved'].includes(draftJob.estimateStatus || 'draft')) {
+      reportCommerceError(null, 'Mark the estimate sent before creating a customer link.');
+      return;
+    }
+    if (isDirty) {
+      reportCommerceError(null, 'Save the work order changes before creating a customer estimate link.');
+      return;
+    }
+
+    setIsCreatingPublicEstimateLink(true);
+    try {
+      const result = await createPublicEstimateLink(draftJob.id, draftJob.estimateRevision);
+      setPublicEstimateLink(result.url);
+      try {
+        await navigator.clipboard?.writeText(result.url);
+        onNotice?.({ type: 'success', message: 'Customer estimate link copied.' });
+      } catch {
+        onNotice?.({ type: 'success', message: 'Customer estimate link created. Copy it from the estimate controls.' });
+      }
+    } catch (error) {
+      reportCommerceError(error, 'The customer estimate link could not be created.');
+    } finally {
+      setIsCreatingPublicEstimateLink(false);
     }
   }
 
@@ -144,6 +177,7 @@ export default function useJobDetailBillingActions({
       setDraftJob((current) => ({ ...current, ...result }));
       setIsDirty(false);
       setEstimateNote('');
+      setPublicEstimateLink('');
       estimateOperationRef.current.delete(operationKey);
       onNotice?.({ type: 'success', message: getEstimateSuccessMessage(status) });
       try {
@@ -184,13 +218,16 @@ export default function useJobDetailBillingActions({
     addPayment,
     addService,
     changeEstimateState,
+    createEstimateLink,
     changeInvoiceFinalization,
     estimateNote,
     finalizationReason,
     isChangingInvoiceState,
     isChangingEstimateState,
     isRecordingPayment,
+    isCreatingPublicEstimateLink,
     payment,
+    publicEstimateLink,
     removeService,
     service,
     setFinalizationReason,

@@ -15,6 +15,9 @@ const jobDetailTabs = read('src/modules/jobs/components/JobDetailTabs.jsx');
 const pageHeader = read('src/shared/components/WorkspacePageHeader.jsx');
 const section = read('src/shared/components/WorkspaceSection.jsx');
 const router = read('src/app/WorkspaceRouter.jsx');
+const bootstrap = read('src/app/AppBootstrap.jsx');
+const publicEstimate = read('src/modules/jobs/PublicEstimatePage.jsx');
+const publicEstimateService = read('src/modules/jobs/publicEstimateService.js');
 
 assert.match(app, /<WorkspaceShellHeader/, 'The application must use the shared professional workspace shell.');
 assert.match(shell, /aria-label="FretTrack workspace"/, 'The workspace navigation must be explicitly labeled.');
@@ -43,6 +46,12 @@ assert.match(section, /workspace-section-body/, 'The shared section primitive mu
 assert.doesNotMatch(router, /Enter a new job on the left/, 'New Work Order must not retain the obsolete left-column instruction.');
 assert.match(router, /className="new-work-order-page"/, 'New Work Order must render as a full-width workspace page.');
 assert.match(app, /!\['new', 'estimates', 'list', 'customers',/, 'New Work Order and Estimates must not mount the legacy left-side sidebar.');
+assert.match(bootstrap, /isPublicEstimate/, 'Customer estimate links must bypass the authenticated workspace shell.');
+assert.match(bootstrap, /<PublicEstimatePage token=\{publicEstimateToken\} \/>/, 'Customer estimate links must render the public estimate page.');
+assert.match(publicEstimate, /Approve Estimate/, 'Customers must be able to approve a sent estimate from its public view.');
+assert.match(publicEstimate, /Print \/ Save PDF/, 'Customers must be able to print or save the estimate as a PDF.');
+assert.match(publicEstimateService, /respond_to_public_estimate/, 'Customer estimate responses must use the guarded database function.');
+assert.match(styles, /\.public-estimate-shell/, 'Public estimate view must have dedicated responsive styling.');
 assert.match(styles, /grid-template-columns: var\(--workspace-nav-width\) minmax\(0, 1fr\)/, 'Desktop workspace chrome must use the restrained navigation rail.');
 assert.match(styles, /\.work-order-form\.panel/, 'Professional New Work Order styling must remain in the final override layer.');
 assert.match(styles, /\.workspace-detail-shell \.job-tab-bar button\.active/, 'Professional Job Detail tabs must retain their restrained active state.');

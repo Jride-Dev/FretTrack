@@ -45,6 +45,10 @@ test('records an audited estimate decision and unlocks only through a new draft'
   await estimateNote.fill('Estimate emailed to the customer');
   await page.getByRole('button', { name: 'Mark Estimate Sent' }).click();
   await expect(page.getByText(/Estimate revision \d+: Sent/)).toBeVisible();
+  await page.getByRole('button', { name: 'Create Customer Link' }).click();
+  const customerEstimateLink = page.getByLabel('Customer estimate link');
+  await expect(customerEstimateLink).toHaveValue(/\?estimate=[0-9a-f]{64}$/);
+  await expect(page.getByRole('link', { name: 'Open customer view' })).toHaveAttribute('href', /\?estimate=[0-9a-f]{64}$/);
   await expect(page.getByRole('button', { name: 'Email Estimate' })).toBeVisible();
   await page.getByRole('button', { name: 'Email Estimate' }).click();
   await expect(page.getByRole('dialog', { name: 'Email Estimate' })).toBeVisible();

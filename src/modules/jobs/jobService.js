@@ -22,3 +22,4 @@ export {
   updateJob
 } from './jobServiceMutations.js';
 export { getSmsMode, sendCustomerMessage, smsEnabled } from './jobServiceMessaging.js';
+export { createPublicEstimateLink } from './publicEstimateService.js';

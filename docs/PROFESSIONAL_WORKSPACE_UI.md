@@ -12,7 +12,7 @@ The page begins with active-job, priority, and next-due summaries. Existing sear
 
 ## Estimates
 
-Estimates has a dedicated full-width queue for draft, sent, approved, and declined revisions. Each row shows the revision and locked total when available and opens the existing work-order billing surface for guarded edits, decisions, and Email Estimate delivery.
+Estimates has a dedicated full-width queue for draft, sent, approved, and declined revisions. Each row shows the revision and locked total when available and opens the existing work-order billing surface for guarded edits, decisions, Email Estimate delivery, or a revocable customer approval link. The public link view is read-only except for the guarded customer approval/decline action and can be printed or saved as a PDF.
 
 ## Work orders
 

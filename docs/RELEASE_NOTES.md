@@ -12,6 +12,8 @@ Service quantities now use whole-number controls and are rejected at the databas
 
 The authenticated workspace also now has an Estimates queue so staff can find draft, sent, approved, and declined revisions without searching through every current job.
 
+Shop owners and admins can now create a revocable, 30-day customer estimate link for the current locked revision. The public view shows the exact service and part lines, minor-unit-derived totals, shop contact details, and a Print / Save PDF action. Customers must confirm they reviewed the estimate before approving or declining; the response is written to the guarded lifecycle and Message History timeline, and links stop working when a revision is replaced or returned to draft.
+
 Customers now follows that same professional hierarchy with a dedicated search-and-filter surface, a compact selectable directory, and clearly separated account overview, contact, job history, payment, and notes sections. The two-column workspace becomes a contained single column on smaller screens while customer writes, role gates, CSV preview, Loyalty, reminders, and shop isolation remain unchanged.
 
 Inventory now uses the same full-width workspace treatment. Parts, Vendors, Purchase Orders, Purchase History, and Barcode Labels are grouped in a restrained tab rail, while dense tables stay contained beside the established editors. Inventory search, receiving, stock adjustments, purchasing, label printing, shop scope, and write permissions are unchanged.
