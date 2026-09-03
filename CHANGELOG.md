@@ -6,6 +6,7 @@ This file tracks product, reliability, security, and operational changes by rele
 
 ## Unreleased
 
+- Fixed New Work Order persistence by removing the legacy left-side sidebar from the new-job route and rendering the intake form as a full-width workspace on desktop and mobile.
 - Extended the professional workspace hierarchy to a full-width Customers surface with a focused directory, restrained selection states, account and contact sections, contained history tables, and a responsive single-column mobile layout without changing customer saves, permissions, import preview, Loyalty, reminders, or shop isolation.
 - Extended the professional workspace hierarchy to a full-width Inventory surface with restrained Parts, Vendors, Purchase Orders, Purchase History, and Barcode Labels tabs plus contained tables and editors without changing shop-scoped inventory services, receiving, stock adjustments, purchasing, or permissions.
 - Extended the professional workspace hierarchy to a full-width Scheduling surface with contained week columns, restrained filters, and a responsive event editor without changing scheduling services, status actions, dirty-state protection, or permissions.

@@ -41,7 +41,8 @@ assert.match(jobDetailTabs, /aria-controls=\{`job-tab-panel-\$\{tab\.key\}`\}/, 
 assert.match(pageHeader, /workspace-page-header/, 'The shared page-heading primitive must retain its styling contract.');
 assert.match(section, /workspace-section-body/, 'The shared section primitive must retain its content boundary.');
 assert.doesNotMatch(router, /Enter a new job on the left/, 'New Work Order must not retain the obsolete left-column instruction.');
-assert.match(router, /Select Show sections to reopen New Work Order\./, 'Collapsed intake must explain how to reopen the form.');
+assert.match(router, /className="new-work-order-page"/, 'New Work Order must render as a full-width workspace page.');
+assert.match(app, /!\['new', 'list', 'customers',/, 'New Work Order must not mount the legacy left-side sidebar.');
 assert.match(styles, /grid-template-columns: var\(--workspace-nav-width\) minmax\(0, 1fr\)/, 'Desktop workspace chrome must use the restrained navigation rail.');
 assert.match(styles, /\.work-order-form\.panel/, 'Professional New Work Order styling must remain in the final override layer.');
 assert.match(styles, /\.workspace-detail-shell \.job-tab-bar button\.active/, 'Professional Job Detail tabs must retain their restrained active state.');

@@ -12,7 +12,7 @@ The page begins with active-job, priority, and next-due summaries. Existing sear
 
 ## Work orders
 
-New Work Order and the shared Work Order, Parts & Payments view use the same page-heading, section, and action hierarchy. Intake is grouped into Customer, Instrument, Shop workflow, and Customer request sections without changing any field validation or save behavior. Saved jobs use a restrained tab bar and contained content panels; billing tables, permissions, finalization, payment, and tax handlers remain the established commerce paths.
+New Work Order and the shared Work Order, Parts & Payments view use the same page-heading, section, and action hierarchy. New Work Order now occupies the full-width content workspace without the legacy left-side job list, while intake remains grouped into Customer, Instrument, Shop workflow, and Customer request sections without changing any field validation or save behavior. Saved jobs use a restrained tab bar and contained content panels; billing tables, permissions, finalization, payment, and tax handlers remain the established commerce paths.
 
 The shared presentation primitives live in `src/shared/components/WorkspacePageHeader.jsx` and `src/shared/components/WorkspaceSection.jsx`. They carry layout and accessibility structure only. They do not load data, choose a shop, decide entitlements, or persist a record.
 

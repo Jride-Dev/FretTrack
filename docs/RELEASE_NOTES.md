@@ -6,6 +6,8 @@ The authenticated workspace now uses a restrained, grouped navigation rail and a
 
 New Work Order and the shared Work Order, Parts & Payments surface now use the same professional page headings, grouped form sections, action bars, contained workspace panels, and restrained tabs. This is a presentation-only consolidation over the existing shop-scoped job, permission, billing, tax, payment, and save boundaries.
 
+New Work Order now opens as a full-width content workspace instead of leaving the legacy New Work Order sidebar mounted on the left. The intake form, job creation handlers, permissions, and offline draft behavior remain unchanged.
+
 Customers now follows that same professional hierarchy with a dedicated search-and-filter surface, a compact selectable directory, and clearly separated account overview, contact, job history, payment, and notes sections. The two-column workspace becomes a contained single column on smaller screens while customer writes, role gates, CSV preview, Loyalty, reminders, and shop isolation remain unchanged.
 
 Inventory now uses the same full-width workspace treatment. Parts, Vendors, Purchase Orders, Purchase History, and Barcode Labels are grouped in a restrained tab rail, while dense tables stay contained beside the established editors. Inventory search, receiving, stock adjustments, purchasing, label printing, shop scope, and write permissions are unchanged.

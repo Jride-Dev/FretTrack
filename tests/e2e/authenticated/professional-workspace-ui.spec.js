@@ -61,13 +61,16 @@ test('new work order and shared job detail use the professional workspace hierar
   await page.goto('/');
   await page.getByRole('button', { name: 'New Job', exact: true }).first().click();
 
-  const intake = page.getByLabel('New job sections');
+  const intake = page.getByLabel('New work order');
+  await expect(page.locator('.new-job-sidebar')).toHaveCount(0);
+  await expect(page.locator('.app-layout.full-content')).toBeVisible();
   await expect(intake.getByRole('heading', { name: 'New Work Order' })).toBeVisible();
   for (const heading of ['Customer', 'Instrument', 'Shop workflow', 'Customer request']) {
     await expect(intake.getByRole('heading', { name: heading, exact: true })).toBeVisible();
   }
   await expect(intake.getByRole('button', { name: 'Save Job' })).toContainText('Create Work Order');
 
+  await page.getByRole('button', { name: 'Current Jobs', exact: true }).click();
   await openSeededJob(page, 1);
   await expect(page.getByText(/work order ·/i).first()).toBeVisible();
   const tabs = page.getByRole('tablist', { name: 'Job workspace tabs' });
@@ -75,6 +78,20 @@ test('new work order and shared job detail use the professional workspace hierar
   await tabs.getByRole('tab', { name: 'Parts & Billing' }).click();
   await expect(page.getByRole('tabpanel').getByRole('heading', { name: 'Parts', exact: true })).toBeVisible();
   await expect(page.getByRole('tabpanel').getByRole('heading', { name: 'Totals', exact: true })).toBeVisible();
+});
+
+test('new work order remains a full-width workspace on a narrow screen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'New Job', exact: true }).first().click();
+
+  await expect(page.locator('.new-job-sidebar')).toHaveCount(0);
+  await expect(page.locator('.new-work-order-page')).toBeVisible();
+  const viewport = await page.evaluate(() => ({
+    innerWidth: window.innerWidth,
+    scrollWidth: document.documentElement.scrollWidth
+  }));
+  expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.innerWidth);
 });
 
 test('customers use the professional directory and profile hierarchy', async ({ page }) => {
