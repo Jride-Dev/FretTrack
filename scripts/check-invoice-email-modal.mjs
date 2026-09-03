@@ -19,6 +19,10 @@ assertIncludes(dialog, 'sendInFlightRef.current', 'Document email send must prev
 assertIncludes(dialog, 'sendInFlightRef.current = false;', 'Document email send lock must clear after every settled attempt.');
 assertIncludes(dialog, "setSendState((current) => ({ ...current, sending: false }));", 'Document email send must clear busy state in finally.');
 assertIncludes(dialog, 'if (!result?.ok)', 'Document email failures must remain visible and retryable.');
+assertIncludes(dialog, 'sendOperationRef', 'Document email retries must retain a stable send operation identity.');
+assertIncludes(dialog, 'requestId\n      });', 'Document email sends must pass the retained request identity to the send path.');
+assertIncludes(communicationActions, 'requestId\n    });', 'Document email communication must forward the retained request identity.');
+assertIncludes(communicationActions, 'requestId', 'Document email communication must accept the retry identity.');
 assertIncludes(dialog, 'onClose?.();', 'Successful document email sends must close the modal.');
 assertIncludes(dialog, 'Send Job Sheet', 'Document email dialog must offer Job Sheet delivery.');
 assertIncludes(dialog, 'Send Customer Report', 'Document email dialog must offer Customer Report delivery.');

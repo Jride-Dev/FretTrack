@@ -14,6 +14,7 @@ export default function JobDocumentEmailDialog({
   const [includedDocuments, setIncludedDocuments] = useState({ jobSheet: false, customerReport: false });
   const [sendState, setSendState] = useState({ sending: false, error: '', success: '' });
   const sendInFlightRef = useRef(false);
+  const sendOperationRef = useRef({ fingerprint: '', requestId: '' });
 
   useEffect(() => {
     if (!isOpen) {
@@ -24,6 +25,7 @@ export default function JobDocumentEmailDialog({
     setBody(draft?.body || '');
     setIncludedDocuments({ jobSheet: false, customerReport: false });
     setSendState({ sending: false, error: '', success: '' });
+    sendOperationRef.current = { fingerprint: '', requestId: '' };
   }, [isOpen, draft?.recipient, draft?.subject, draft?.body, draft?.type, draft?.jobId, draft?.shopId]);
 
   useEffect(() => {
@@ -72,6 +74,19 @@ export default function JobDocumentEmailDialog({
     let shouldClose = false;
     sendInFlightRef.current = true;
     setSendState({ sending: true, error: '', success: '' });
+    const fingerprint = JSON.stringify([
+      draft.jobId,
+      draft.type,
+      trimmedRecipient,
+      subject.trim(),
+      body.trim(),
+      includedDocuments.jobSheet,
+      includedDocuments.customerReport
+    ]);
+    if (sendOperationRef.current.fingerprint !== fingerprint || !sendOperationRef.current.requestId) {
+      sendOperationRef.current = { fingerprint, requestId: crypto.randomUUID() };
+    }
+    const requestId = sendOperationRef.current.requestId;
     try {
       const result = await onSend({
         type: draft.type,
@@ -79,10 +94,14 @@ export default function JobDocumentEmailDialog({
         subject: subject.trim(),
         body: body.trim(),
         includeJobSheet: includedDocuments.jobSheet,
-        includeCustomerReport: includedDocuments.customerReport
+        includeCustomerReport: includedDocuments.customerReport,
+        requestId
       });
 
       if (!result?.ok) {
+        if (!result?.retrySameRequest) {
+          sendOperationRef.current = { fingerprint: '', requestId: '' };
+        }
         setSendState({
           sending: false,
           error: result?.error || 'Email send failed.',
@@ -92,6 +111,7 @@ export default function JobDocumentEmailDialog({
       }
 
       shouldClose = true;
+      sendOperationRef.current = { fingerprint: '', requestId: '' };
     } catch (error) {
       setSendState({
         sending: false,
