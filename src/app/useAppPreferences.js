@@ -3,7 +3,6 @@ import { defaultTheme, themes, THEME_STORAGE_KEY } from '../shared/theme/themes'
 import { isIosInstallCandidate, isStandaloneDisplayMode } from '../shared/pwa/pwaSupport';
 
 const PWA_INSTALL_HELP_DISMISSED_KEY = 'frettrack_pwa_install_help_dismissed';
-const NEW_JOB_SIDEBAR_COLLAPSED_KEY = 'frettrack:new-job-sidebar-collapsed';
 
 export default function useAppPreferences({ onNotice }) {
   const [theme, setTheme] = useState(() => {
@@ -14,9 +13,6 @@ export default function useAppPreferences({ onNotice }) {
   const [isStandalonePwa, setIsStandalonePwa] = useState(() => isStandaloneDisplayMode());
   const [showInstallHelp, setShowInstallHelp] = useState(
     () => localStorage.getItem(PWA_INSTALL_HELP_DISMISSED_KEY) !== 'true'
-  );
-  const [isNewJobSidebarCollapsed, setIsNewJobSidebarCollapsed] = useState(
-    () => localStorage.getItem(NEW_JOB_SIDEBAR_COLLAPSED_KEY) === 'true'
   );
 
   useEffect(() => {
@@ -87,23 +83,13 @@ export default function useAppPreferences({ onNotice }) {
     setShowInstallHelp(false);
   }
 
-  function toggleNewJobSidebar() {
-    setIsNewJobSidebarCollapsed((isCollapsed) => {
-      const nextValue = !isCollapsed;
-      localStorage.setItem(NEW_JOB_SIDEBAR_COLLAPSED_KEY, String(nextValue));
-      return nextValue;
-    });
-  }
-
   return {
     dismissInstallHelp,
     installApp,
-    isNewJobSidebarCollapsed,
     setTheme,
     shouldShowIosInstallHelp: !isStandalonePwa && showInstallHelp && isIosInstallCandidate(),
     shouldShowPwaInstallButton: Boolean(deferredInstallPrompt) && !isStandalonePwa,
     theme,
-    themes,
-    toggleNewJobSidebar
+    themes
   };
 }

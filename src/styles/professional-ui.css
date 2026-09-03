@@ -645,37 +645,6 @@ main.app-shell {
   flex: 0 0 auto;
 }
 
-.app-layout.new-job-active:not(.sidebar-collapsed) {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.new-job-active:not(.sidebar-collapsed) > .new-job-sidebar {
-  grid-column: 1;
-}
-
-.new-job-active:not(.sidebar-collapsed) > .empty-state {
-  display: none;
-}
-
-.new-job-active:not(.sidebar-collapsed) .new-job-sidebar-content {
-  align-items: start;
-  grid-template-columns: minmax(520px, 1.7fr) minmax(280px, 0.8fr);
-}
-
-.new-job-active:not(.sidebar-collapsed) .new-work-order-form {
-  grid-column: 1;
-  grid-row: 1 / span 4;
-}
-
-.new-job-sidebar .work-order-form-actions {
-  align-items: stretch;
-  flex-direction: column;
-}
-
-.new-job-sidebar .work-order-form-actions button {
-  width: 100%;
-}
-
 .new-work-order-page {
   min-width: 0;
 }
@@ -1319,9 +1288,6 @@ main.app-shell {
     border-top: 1px solid var(--border);
   }
 
-  .new-job-active:not(.sidebar-collapsed) .new-job-sidebar-content {
-    grid-template-columns: minmax(430px, 1.4fr) minmax(260px, 0.8fr);
-  }
 }
 
 @media (max-width: 760px) {
@@ -1406,15 +1372,6 @@ main.app-shell {
   .work-order-form-actions {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .new-job-active:not(.sidebar-collapsed) .new-job-sidebar-content {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .new-job-active:not(.sidebar-collapsed) .new-work-order-form {
-    grid-row: auto;
   }
 
   .customer-directory-controls .customer-module-toolbar,
