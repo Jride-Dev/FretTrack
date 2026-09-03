@@ -116,3 +116,32 @@ test('customer directory remains contained on a narrow screen', async ({ page })
   expect(customerCard.scrollWidth).toBeLessThanOrEqual(customerCard.clientWidth);
   expect(customerCard.columns.trim().split(/\s+/)).toHaveLength(1);
 });
+
+test('inventory uses the professional full-width tab workspace', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Inventory', exact: true }).click();
+
+  const inventory = page.locator('.inventory-page');
+  await expect(inventory.getByRole('heading', { name: 'Inventory', exact: true })).toBeVisible();
+  await expect(inventory.getByRole('tablist', { name: 'Inventory sections' })).toBeVisible();
+  for (const tab of ['Parts', 'Vendors', 'Purchase Orders', 'Purchase History', 'Barcode Labels']) {
+    await expect(inventory.getByRole('button', { name: tab, exact: true })).toBeVisible();
+  }
+  await expect(inventory.getByPlaceholder(/Search name, manufacturer UPC/)).toBeVisible();
+  await expect(inventory.getByRole('button', { name: 'Add Part', exact: true })).toBeVisible();
+});
+
+test('inventory remains contained on a narrow screen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Inventory', exact: true }).click();
+  const inventory = page.locator('.inventory-page');
+  await expect(inventory.getByRole('heading', { name: 'Inventory', exact: true })).toBeVisible();
+
+  const viewport = await page.evaluate(() => ({
+    innerWidth: window.innerWidth,
+    scrollWidth: document.documentElement.scrollWidth
+  }));
+  expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.innerWidth);
+  await expect(inventory.locator('.inventory-table-wrap').first()).toBeVisible();
+});

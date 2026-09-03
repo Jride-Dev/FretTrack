@@ -1328,6 +1328,10 @@ function landingPage() {
             <img src="/landing/customers-bench-dark.png" alt="FretTrack Customers workspace showing directory search, customer records, account totals, and contact details." loading="lazy">
             <figcaption>Customer records keep contact details, account activity, job history, payments, and shop notes in one responsive workspace.</figcaption>
           </figure>
+          <figure class="workspace-shot">
+            <img src="/landing/inventory-bench-dark.png" alt="FretTrack Inventory workspace showing parts search, stock table, and part editor." loading="lazy">
+            <figcaption>Inventory keeps parts, stock identity, label selection, and the editor in one contained workspace.</figcaption>
+          </figure>
         </div>
         <p class="section-lede">Screenshots show a sample workspace with fictional customer and shop data.</p>
       </section>
