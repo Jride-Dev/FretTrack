@@ -121,7 +121,7 @@ export default function TotalsSection({
         {(draftJob.documentType === 'estimate' || ['sent', 'approved'].includes(estimateStatus)) && (
           <>
             <button type="button" onClick={emailEstimate} disabled={!canWrite || !canSendEmail}>Email Estimate</button>
-            {canFinalizeJobInvoices && <button type="button" className="button-tertiary" onClick={createEstimateLink} disabled={isCreatingPublicEstimateLink}>{isCreatingPublicEstimateLink ? 'Creating link…' : 'Create Customer Link'}</button>}
+            {canFinalizeJobInvoices && ['sent', 'approved'].includes(estimateStatus) && <button type="button" className="button-tertiary" onClick={createEstimateLink} disabled={isCreatingPublicEstimateLink}>{isCreatingPublicEstimateLink ? 'Creating link…' : 'Create Customer Link'}</button>}
           </>
         )}
         <button type="button" onClick={emailInvoice} disabled={!canWrite || !canSendEmail}>Email Invoice</button>
