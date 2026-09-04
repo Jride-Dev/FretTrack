@@ -3,6 +3,7 @@ import CustomerDetail from './CustomerDetail.jsx';
 import CustomerForm from './CustomerForm.jsx';
 import CustomerImportPreviewPanel from './CustomerImportPreviewPanel.jsx';
 import CustomerLookup from './CustomerLookup.jsx';
+import UnassignedCorrespondenceQueue from '../messaging/UnassignedCorrespondenceQueue.jsx';
 import { buildCustomerDirectory } from './customerInsights';
 import { normalizePhone, normalizeText } from './customerNormalize';
 import WorkspacePageHeader from '../../shared/components/WorkspacePageHeader.jsx';
@@ -40,6 +41,7 @@ export default function CustomerManager({
     () => buildCustomerDirectory(customers, jobs, { shopProfile }),
     [customers, jobs, shopProfile]
   );
+  const activeShopId = shopProfile?.shopId || shopProfile?.shop_id || '';
 
   useEffect(() => {
     if (!directoryCustomers.length) {
@@ -221,6 +223,14 @@ export default function CustomerManager({
         </div>
       </WorkspaceSection>
 
+      <UnassignedCorrespondenceQueue
+        customers={directoryCustomers}
+        shopId={activeShopId}
+        canWrite={canWrite}
+        dateOptions={dateOptions}
+        onNotice={onNotice}
+      />
+
       <div className="customer-module-layout">
         <CustomerLookup
           customers={visibleCustomers}
@@ -236,7 +246,7 @@ export default function CustomerManager({
           serviceRemindersEnabled={serviceRemindersEnabled}
           dateOptions={dateOptions}
           moneyOptions={moneyOptions}
-          shopId={shopProfile?.shopId || shopProfile?.shop_id || ''}
+          shopId={activeShopId}
           onCreateJob={handleCreateJob}
           onEditCustomer={canWrite ? openEditCustomerModal : null}
           onNotice={onNotice}

@@ -1180,6 +1180,20 @@ main.app-shell {
   justify-content: flex-start;
 }
 
+.unassigned-correspondence-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.unassigned-correspondence-list {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
 .customer-detail .table-wrap {
   border: 1px solid var(--border);
   border-radius: 6px;
