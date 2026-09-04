@@ -4,6 +4,7 @@ import { retailTotal } from '../billing/accounting.js';
 import { normalizeAmplifierDetails } from '../amplifiers/amplifierRepair.js';
 import { normalizeKeyboardDetails } from '../keyboards/keyboardRepair.js';
 import { getPrintFooterText, getShopDateOptions, getShopMoneyOptions, getShopSettings } from '../shops/shopConfig.js';
+import { getSelectedCustomerReportCorrespondence } from '../messaging/customerCorrespondence.js';
 import PrintDamageMapFigure from './PrintDamageMapFigure.jsx';
 import './PrintStyles.css';
 
@@ -121,6 +122,7 @@ export default function PrintDamageReport({
   const moneyOptions = getShopMoneyOptions(techDetails.tax || shopSettings);
   const printableWorkOrderImages = workOrderImages.filter((image) => image.url);
   const workLog = Array.isArray(draftJob.workLog) ? draftJob.workLog : [];
+  const selectedCorrespondence = getSelectedCustomerReportCorrespondence(draftJob.messages || []);
   const hasDamageEvidence = DAMAGE_VIEW_ORDER.some((viewName) => {
     const view = damageMap.views?.[viewName] || {};
     return Boolean(view.imageUrl || view.storagePath || view.imageId || view.marks?.length);
@@ -183,6 +185,26 @@ export default function PrintDamageReport({
           </table>
         ) : <p>No completed work entries were recorded.</p>}
       </section>
+
+      {selectedCorrespondence.length > 0 && (
+        <section className="print-document-section">
+          <h2>Customer correspondence</h2>
+          <table className="print-document-table">
+            <thead><tr><th scope="col">Direction</th><th scope="col">Channel</th><th scope="col">Date</th><th scope="col">Subject</th><th scope="col">Message</th></tr></thead>
+            <tbody>
+              {selectedCorrespondence.map((message) => (
+                <tr key={message.id}>
+                  <td>{message.direction === 'inbound' ? 'Customer' : 'Shop'}</td>
+                  <td>{message.channel.toUpperCase()}</td>
+                  <td>{formatShopDateTime(message.receivedAt || message.sentAt || message.createdAt, dateOptions) || '-'}</td>
+                  <td>{display(message.subject)}</td>
+                  <td>{display(message.body)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       {parts.length > 0 && (
         <section className="print-document-section">

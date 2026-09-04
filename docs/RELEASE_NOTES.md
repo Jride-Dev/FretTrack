@@ -40,6 +40,8 @@ Customer profiles now include a focused Conversation view over that provider-neu
 
 The Customers workspace now also includes a read-only Unassigned Inbox for inbound correspondence that has no work-order assignment. It identifies the customer when available, preserves the inbound record and read state, and requires a future deliberate routing action instead of guessing the newest work order.
 
+Selected correspondence now carries through to Customer Service and Condition Report printouts and email sections. Only explicitly selected, nonblank, eligible messages assigned to the current work order are rendered; unselected, failed, pending, or unassigned records remain out of the customer document.
+
 Stripe Checkout now treats the connected Stripe customer as shop-owned billing identity and blocks a second Checkout whenever that customer already has any open subscription. This closes the duplicate-charge path for legacy or manually repaired subscriptions whose shop metadata is missing, while retaining pagination across the complete Stripe subscription list.
 
 Public onboarding now consistently directs a new user to create an account, confirm the email address, create one shop, and begin the non-converting 14-day Pro trial. The retired access-application modal is no longer rendered, and current README, support, FAQ, and account documentation no longer imply operator approval is required.

@@ -22,6 +22,9 @@ assert.match(report, /className="print-damage-report" data-print-document="custo
 assert.match(report, /instrumentType === 'Amplifier'[\s\S]*?<h3>Amplifier inspection<\/h3>/, 'Amplifier reports must use amplifier inspection language.');
 assert.match(report, /instrumentType === 'Keyboard'[\s\S]*?<h3>Keyboard inspection<\/h3>/, 'Keyboard reports must use keyboard inspection language.');
 assert.match(report, /isGuitarFamily[\s\S]*?<GuitarInspection/, 'Guitar neck measurements must remain limited to guitar-family reports.');
+assert.match(report, /getSelectedCustomerReportCorrespondence/, 'Customer reports must use the explicit eligible correspondence selection.');
+assert.match(report, /Customer correspondence/, 'Customer reports must render selected correspondence.');
+assert.match(read('src/modules/jobs/emailDocuments.js'), /getSelectedCustomerReportCorrespondence/, 'Customer report emails must use the explicit eligible correspondence selection.');
 assert.match(mapFigure, /style=\{\{ left: `\$\{clampPercent\(mark\.x\)\}%`, top: `\$\{clampPercent\(mark\.y\)\}%` \}\}/, 'Saved marker percentages must map directly onto the isolated image stage.');
 assert.match(mapFigure, /className="print-damage-marker-layer"/, 'Markers must render in a dedicated layer over the image.');
 assert.match(mapFigure, /imageState\.url === imageUrl[\s\S]*?imageState\.status/, 'Image readiness must be tied to the current damage image URL.');

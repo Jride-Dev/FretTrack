@@ -3,6 +3,7 @@ import { formatMeasurementChange, getLengthUnitLabel } from '../../shared/utils/
 import { fromMinorUnits, money } from '../../shared/utils/money.js';
 import { getJobSourceLabel } from './jobSources.js';
 import { retailTotal, rowQuantity } from '../billing/accounting.js';
+import { getSelectedCustomerReportCorrespondence } from '../messaging/customerCorrespondence.js';
 
 export const SHOP_EMAIL_CONTEXT_ERROR = 'Unable to load the shop details for this email. Please review Shop Settings and try again.';
 
@@ -357,6 +358,13 @@ function buildCustomerReportEmailSection(job = {}, context = {}) {
       cleanText(entry.text) || '-'
     ])
   ];
+  const correspondenceRows = getSelectedCustomerReportCorrespondence(job.messages || []).map((message) => [
+    message.direction === 'inbound' ? 'Customer' : 'Shop',
+    message.channel.toUpperCase(),
+    formatShopDateTime(message.receivedAt || message.sentAt || message.createdAt, dateOptions) || '-',
+    cleanText(message.subject) || '-',
+    cleanText(message.body) || '-'
+  ]);
   const partRows = parts.map((row) => [
     cleanText(row.sku ? `${row.sku} - ${row.name || 'Part'}` : row.name) || 'Part',
     String(row.quantity || 1),
@@ -381,6 +389,7 @@ function buildCustomerReportEmailSection(job = {}, context = {}) {
       { title: 'Documented Condition', headers: ['View', 'Area', 'Severity', 'Note', 'Recommended Repair'], rows: damageRows, emptyText: hasAnyDamageMapImage ? 'No damage markers were recorded.' : 'No damage map image was attached.' },
       { title: 'Neck Measurements', headers: ['Measurement', 'Recorded Change'], rows: neckRows },
       { title: 'Work Performed', headers: ['Entry', 'Details'], rows: workRows, emptyText: 'No work entries were recorded.' },
+      { title: 'Customer Correspondence', headers: ['Direction', 'Channel', 'Date', 'Subject', 'Message'], rows: correspondenceRows, emptyText: 'No correspondence was selected.' },
       { title: 'Parts', headers: ['Part', 'Qty', 'Unit Price', 'Line Total'], rows: partRows, emptyText: 'No parts were recorded.' }
     ],
     footerFields: [
