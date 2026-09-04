@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatShopDateTime } from '../../shared/utils/dateFormat';
 import WorkspaceSection from '../../shared/components/WorkspaceSection.jsx';
-import { listCustomerCorrespondence, markCustomerMessageRead } from './customerCorrespondenceRepository.js';
+import { assignCustomerMessageJob, listCustomerCorrespondence, markCustomerMessageRead } from './customerCorrespondenceRepository.js';
 
 export default function UnassignedCorrespondenceQueue({ customers = [], shopId = '', canWrite = false, dateOptions = {}, onNotice }) {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeMessageId, setActiveMessageId] = useState('');
+  const [selectedJobByMessage, setSelectedJobByMessage] = useState({});
 
   const customerNames = useMemo(
     () => new Map(customers.map((customer) => [customer.id, customer.displayName || customer.email || customer.phone || 'Customer'])),
@@ -46,6 +47,26 @@ export default function UnassignedCorrespondenceQueue({ customers = [], shopId =
     }
   }
 
+  async function handleAssign(message) {
+    const jobId = selectedJobByMessage[message.id];
+    if (!canWrite || !jobId) return;
+    setActiveMessageId(message.id);
+    try {
+      await assignCustomerMessageJob(message.id, jobId);
+      setMessages((current) => current.filter((item) => item.id !== message.id));
+      setSelectedJobByMessage((current) => {
+        const next = { ...current };
+        delete next[message.id];
+        return next;
+      });
+      onNotice?.({ type: 'success', message: 'Inbound correspondence routed to the selected work order.' });
+    } catch (actionError) {
+      onNotice?.({ type: 'error', message: actionError instanceof Error ? actionError.message : 'Customer correspondence could not be routed.' });
+    } finally {
+      setActiveMessageId('');
+    }
+  }
+
   const unreadCount = messages.filter((message) => message.status === 'received' && !message.readAt).length;
 
   return (
@@ -66,6 +87,11 @@ export default function UnassignedCorrespondenceQueue({ customers = [], shopId =
         <div className="customer-conversation-list unassigned-correspondence-list">
           {messages.map((message) => (
             <article key={message.id} className={`customer-conversation-message inbound${message.readAt ? '' : ' unread'}`}>
+              {(() => {
+                const customer = customers.find((item) => item.id === message.customerId);
+                const jobs = customer?.jobs || [];
+                return (
+                  <>
               <div className="customer-conversation-message-heading">
                 <strong>{customerNames.get(message.customerId) || 'Unknown customer'} · {message.channel.toUpperCase()}</strong>
                 <time>{formatShopDateTime(message.receivedAt || message.createdAt, dateOptions)}</time>
@@ -82,7 +108,24 @@ export default function UnassignedCorrespondenceQueue({ customers = [], shopId =
                     {message.readAt ? 'Read' : activeMessageId === message.id ? 'Marking...' : 'Mark read'}
                   </button>
                 )}
+                <label className="unassigned-correspondence-route">
+                  <span>Route to work order</span>
+                  <select
+                    value={selectedJobByMessage[message.id] || ''}
+                    onChange={(event) => setSelectedJobByMessage((current) => ({ ...current, [message.id]: event.target.value }))}
+                    disabled={!canWrite || activeMessageId === message.id || !jobs.length}
+                  >
+                    <option value="">{jobs.length ? 'Select work order...' : 'No customer work orders'}</option>
+                    {jobs.map((job) => <option key={job.id} value={job.id}>{job.jobNumber || job.id} · {job.instrumentType || job.guitarBrand || job.customerName || 'Work order'}</option>)}
+                  </select>
+                </label>
+                <button type="button" className="secondary" disabled={!canWrite || activeMessageId === message.id || !selectedJobByMessage[message.id]} onClick={() => handleAssign(message)}>
+                  {activeMessageId === message.id ? 'Routing...' : 'Route message'}
+                </button>
               </div>
+                  </>
+                );
+              })()}
             </article>
           ))}
         </div>
