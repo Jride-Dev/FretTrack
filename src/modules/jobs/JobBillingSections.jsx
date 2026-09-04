@@ -37,6 +37,7 @@ export default function JobBillingSections({
   part,
   parts,
   payment,
+  paymentTargets,
   payments,
   service,
   services,
@@ -95,6 +96,7 @@ export default function JobBillingSections({
         isChangingInvoiceState={isChangingInvoiceState}
         isRecordingPayment={isRecordingPayment}
         payment={payment}
+        paymentTargets={paymentTargets}
         payments={payments}
         setPayment={setPayment}
         setFinalizationReason={setFinalizationReason}

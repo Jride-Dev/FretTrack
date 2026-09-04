@@ -17,6 +17,7 @@ export default function TotalsSection({
   emailEstimate,
   publicEstimateLink = '',
   payment,
+  paymentTargets = [],
   payments,
   finalizationReason = '',
   isCreatingPublicEstimateLink = false,
@@ -90,6 +91,7 @@ export default function TotalsSection({
       <PaymentsSection
         addPayment={addPayment}
         payment={payment}
+        paymentTargets={paymentTargets}
         payments={payments}
         setPayment={setPayment}
         canRecord={canWrite && canRecordJobPayments}

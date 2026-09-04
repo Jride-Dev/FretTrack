@@ -435,7 +435,12 @@ export function normalizePayment(payment) {
       ? String(payment.type || payment.eventType).toLowerCase()
       : 'payment',
     method: payment.method || 'Cash',
-    note: payment.note || ''
+    note: payment.note || '',
+    appliesToPaymentId: payment.appliesToPaymentId || payment.applies_to_payment_id || '',
+    originalAmount: payment.originalAmount ?? payment.original_amount ?? null,
+    remainingAfter: payment.remainingAfter ?? payment.remaining_after ?? null,
+    recordedAt: payment.recordedAt || payment.recorded_at || '',
+    recordedBy: payment.recordedBy || payment.recorded_by || ''
   };
 }
 

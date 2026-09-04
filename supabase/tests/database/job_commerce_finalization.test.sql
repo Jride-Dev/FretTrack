@@ -2,15 +2,18 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(28);
+select plan(33);
 
 select has_column('public', 'jobs', 'invoice_finalized_at', 'jobs record invoice finalization time');
 select has_column('public', 'jobs', 'invoice_snapshot', 'jobs store the server-calculated invoice snapshot');
 select has_column('public', 'jobs', 'invoice_revision', 'jobs track invoice revisions');
 select has_function('public', 'record_job_payment', array['uuid', 'uuid', 'bigint', 'text', 'text', 'text', 'date', 'timestamp with time zone'], 'guarded payment RPC exists');
+select has_function('public', 'record_job_payment_adjustment', array['uuid', 'uuid', 'uuid', 'bigint', 'text', 'text', 'text', 'date', 'timestamp with time zone'], 'linked adjustment RPC exists');
 select has_function('public', 'set_job_invoice_finalization', array['uuid', 'boolean', 'text'], 'guarded finalization RPC exists');
 select ok(has_function_privilege('authenticated', 'public.record_job_payment(uuid, uuid, bigint, text, text, text, date, timestamptz)', 'execute'), 'authenticated users may call the payment RPC');
 select ok(not has_function_privilege('anon', 'public.record_job_payment(uuid, uuid, bigint, text, text, text, date, timestamptz)', 'execute'), 'anonymous users cannot call the payment RPC');
+select ok(has_function_privilege('authenticated', 'public.record_job_payment_adjustment(uuid, uuid, uuid, bigint, text, text, text, date, timestamptz)', 'execute'), 'authenticated users may call the adjustment RPC');
+select ok(not has_function_privilege('anon', 'public.record_job_payment_adjustment(uuid, uuid, uuid, bigint, text, text, text, date, timestamptz)', 'execute'), 'anonymous users cannot call the adjustment RPC');
 select ok(not has_function_privilege('anon', 'public.set_job_invoice_finalization(uuid, boolean, text)', 'execute'), 'anonymous users cannot finalize invoices');
 
 insert into auth.users (
@@ -95,8 +98,16 @@ set local "request.jwt.claim.sub" = '57000000-0000-4000-a000-000000000001';
 set local "request.jwt.claim.role" = 'authenticated';
 
 select lives_ok(
-  $$select public.record_job_payment('77000000-0000-4000-a000-000000000001', 'a7000000-0000-4000-a000-000000000003', 200, 'refund', 'Cash', 'Partial refund', current_date, null)$$,
-  'an owner can append a refund adjustment'
+  $$select public.record_job_payment_adjustment('77000000-0000-4000-a000-000000000001', 'a7000000-0000-4000-a000-000000000003', 'a7000000-0000-4000-a000-000000000001', 200, 'refund', 'Cash', 'Partial refund', current_date, null)$$,
+  'an owner can append a linked refund adjustment'
+);
+select lives_ok(
+  $$select public.record_job_payment_adjustment('77000000-0000-4000-a000-000000000001', 'a7000000-0000-4000-a000-000000000003', 'a7000000-0000-4000-a000-000000000001', 9999, 'refund', 'Cash', 'Changed retry payload', current_date, null)$$,
+  'replaying an adjustment request returns the original adjustment'
+);
+select throws_like(
+  $$select public.record_job_payment_adjustment('77000000-0000-4000-a000-000000000001', 'a7000000-0000-4000-a000-000000000006', 'a7000000-0000-4000-a000-000000000001', 8100, 'refund', 'Cash', 'Too much refund', current_date, null)$$,
+  '%exceeds the remaining refundable balance%', 'refunds cannot exceed the original payment balance'
 );
 select lives_ok(
   $$select public.set_job_invoice_finalization('77000000-0000-4000-a000-000000000001', true, 'Customer approved final invoice')$$,
@@ -123,8 +134,8 @@ select lives_ok(
   'payments can still be appended after invoice finalization'
 );
 select lives_ok(
-  $$select public.record_job_payment('77000000-0000-4000-a000-000000000001', 'a7000000-0000-4000-a000-000000000005', 300, 'refund', 'Card', 'Post-finalization refund', current_date, null)$$,
-  'owner refunds can be appended after invoice finalization'
+  $$select public.record_job_payment_adjustment('77000000-0000-4000-a000-000000000001', 'a7000000-0000-4000-a000-000000000005', 'a7000000-0000-4000-a000-000000000001', 300, 'refund', 'Card', 'Post-finalization refund', current_date, null)$$,
+  'linked owner refunds can be appended after invoice finalization'
 );
 select lives_ok(
   $$select public.set_job_invoice_finalization('77000000-0000-4000-a000-000000000001', false, 'Customer requested charge correction')$$,

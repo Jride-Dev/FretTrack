@@ -352,7 +352,7 @@ function JobDetailWorkspace({
     createEstimateLink, changeInvoiceFinalization,
     finalizationReason,
     isChangingInvoiceState,
-    isRecordingPayment, isCreatingPublicEstimateLink, payment, publicEstimateLink,
+    isRecordingPayment, isCreatingPublicEstimateLink, payment, paymentTargets, publicEstimateLink,
     removeService,
     service,
     setFinalizationReason,
@@ -610,6 +610,7 @@ function JobDetailWorkspace({
       part={part}
       parts={parts}
       payment={payment}
+      paymentTargets={paymentTargets}
       payments={payments}
       service={service}
       services={services}

@@ -277,7 +277,10 @@ function normalizePaymentEvent(payment, job) {
     method: payment.method || 'Other',
     amount,
     type,
-    note: payment.note || ''
+    note: payment.note || '',
+    appliesToPaymentId: payment.appliesToPaymentId || payment.applies_to_payment_id || '',
+    originalAmount: payment.originalAmount ?? payment.original_amount ?? null,
+    remainingAfter: payment.remainingAfter ?? payment.remaining_after ?? null
   };
 }
 

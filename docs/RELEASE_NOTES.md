@@ -18,6 +18,8 @@ Estimate document sends now retain one request identity from the first click thr
 
 Invoice numbering is now database-owned: the first successful invoice finalization assigns a shop-scoped invoice number, preserves it across corrected revisions, backfills existing finalized invoices, and shows it in invoice emails and printed Job Sheets. Transaction events now require a stable request identity so an ambiguous retry replays the original event and number instead of creating a duplicate.
 
+Payment support now makes refunds and payment voids traceable and bounded. Owners and admins select the original payment, enter a reason, and record the actual provider action; FretTrack caps the adjustment at the remaining payment balance, rejects ambiguous unlinked adjustments, and preserves the original and remaining amounts in the payment history. This remains an operational record and does not call a card processor.
+
 New Work Order navigation now wins over a previously restored workspace mode, including when workspace hydration completes after the click. This prevents the legacy Show sections / Hide sections sidebar from reappearing during new-job intake.
 
 Customers now follows that same professional hierarchy with a dedicated search-and-filter surface, a compact selectable directory, and clearly separated account overview, contact, job history, payment, and notes sections. The two-column workspace becomes a contained single column on smaller screens while customer writes, role gates, CSV preview, Loyalty, reminders, and shop isolation remain unchanged.
