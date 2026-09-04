@@ -11,6 +11,7 @@ import {
   normalizeCorrespondenceThread,
   sortCorrespondence
 } from '../src/modules/messaging/customerCorrespondence.js';
+import { buildSelectedDocumentEmailContent } from '../src/modules/jobs/emailDocuments.js';
 
 test('correspondence limits preserve zero long enough to enforce the minimum', () => {
   assert.equal(clampCorrespondenceLimit(0), 1);
@@ -115,6 +116,41 @@ test('conversation threads normalize provider-neutral storage fields', () => {
     createdAt: '2026-09-02T01:00:00.000Z',
     updatedAt: '2026-09-02T02:00:00.000Z'
   });
+});
+
+test('customer report email content includes only selected eligible correspondence', () => {
+  const content = buildSelectedDocumentEmailContent({
+    shopId: 'test-shop',
+    customerName: 'Report Customer',
+    jobNumber: 'JOB-1',
+    instrumentType: 'Electric Guitar',
+    messages: [
+      {
+        id: 'report-message-1',
+        channel: 'email',
+        direction: 'inbound',
+        subject: 'Approval note',
+        body: 'Please proceed.',
+        status: 'received',
+        includeInCustomerReport: true,
+        receivedAt: '2026-08-25T20:05:00.000Z'
+      },
+      {
+        id: 'report-message-2',
+        channel: 'email',
+        direction: 'outbound',
+        subject: 'Internal note',
+        body: 'Keep this out of the report.',
+        status: 'sent',
+        includeInCustomerReport: false,
+        sentAt: '2026-08-25T20:06:00.000Z'
+      }
+    ]
+  }, { shopSettings: { shopId: 'test-shop', shopName: 'Test Shop' } }, { includeCustomerReport: true });
+
+  assert.match(content.text, /Approval note/);
+  assert.match(content.text, /Please proceed\./);
+  assert.doesNotMatch(content.text, /Keep this out of the report/);
 });
 
 function message(id, status, includeInCustomerReport, createdAt, body = 'Customer-facing message') {

@@ -29,13 +29,12 @@ Customer reports may include only explicitly selected, nonblank sent/delivered o
 
 ## Not Yet Enabled
 
-The customer profile Conversation panel now lists the customer's email/SMS history, keeps unassigned records visible, shows inbound read state, and lets authorized staff explicitly include eligible correspondence in a future customer report. The Customers workspace also includes a read-only Unassigned Inbox for inbound records that have no work-order assignment; it never guesses a route. These views do not change current printing, receive inbound provider webhooks, subscribe the browser to Realtime, or enable SMS delivery. Resend and Twilio secrets remain server-only. Existing immediate email, Scheduled Email, Automated Service Reminders, and job-level Message History continue to behave as before.
+The customer profile Conversation panel now lists the customer's email/SMS history, keeps unassigned records visible, shows inbound read state, and lets authorized staff explicitly include eligible correspondence in a customer report. The Customers workspace also includes an Unassigned Inbox for inbound records that have no work-order assignment; staff can route a received message only to a matching same-shop, same-customer work order, and the system never guesses a route. The isolated Customer Service and Condition Report print/email renderers include only explicitly selected, eligible messages assigned to that work order. These views do not receive inbound provider webhooks, subscribe the browser to Realtime, or enable SMS delivery. Resend and Twilio secrets remain server-only. Existing immediate email, Scheduled Email, Automated Service Reminders, and job-level Message History continue to behave as before.
 
 ## Next Delivery Order
 
 1. Add deliberate staff controls for unassigned inbound routing while preserving the focused Conversation view and Unassigned Inbox.
-2. Extend the isolated Customer Service Report renderer to consume only eligible selected correspondence.
-3. Add one signed and replay-safe inbound provider adapter at a time.
-4. Add Realtime delivery only after authorization, reconnect, ordering, and duplicate-event behavior have executable tests.
+2. Add one signed and replay-safe inbound provider adapter at a time.
+3. Add Realtime delivery only after authorization, reconnect, ordering, and duplicate-event behavior have executable tests.
 
 Database coverage lives in `supabase/tests/database/customer_correspondence_backend.test.sql`; provider-neutral normalization coverage lives in `scripts/customer-correspondence.test.mjs`.
