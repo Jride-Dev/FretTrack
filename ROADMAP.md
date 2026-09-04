@@ -59,7 +59,7 @@ Each extraction must preserve the current facade, permissions, database behavior
 - stronger monetary-edit permissions and finalized-total audit behavior (implemented with role-separated payment/adjustment controls, append-only payment history, server-calculated invoice snapshots, and audited finalization/reopen locking);
 - invoice and transaction numbering review (implemented with database-assigned invoice numbers, durable revision identity, and retry-safe transaction request numbers);
 - deeper payment/refund support tooling;
-- tax-profile and sales-history improvements;
+- tax-profile and sales-history improvements (first reporting slice implemented; deeper reconciliation remains future work);
 - public estimate links with secure hashed tokens, expiry, revocation, revision binding, and customer decisions (implemented); public invoice or work-order links remain deferred;
 - billing reconciliation and operator support tools.
 

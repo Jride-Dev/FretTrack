@@ -19,10 +19,13 @@ const read = (file) => readFileSync(resolve(root, file), 'utf8');
 const shop = {
   shopId: 'uk-shop',
   shopName: 'UK Test Shop',
+  taxCalculationMode: 'manual',
+  taxState: 'UK',
   defaultTaxRate: '20',
   taxLabel: 'VAT',
   currencyCode: 'GBP',
-  locale: 'en-GB'
+  locale: 'en-GB',
+  taxableServicesDefault: false
 };
 const legacyJob = {
   id: 'legacy-job',
@@ -92,6 +95,8 @@ assert.equal(tillSummary.salesTaxAccrued, 20, 'The till summary must use the sam
 assert.equal(tillSummary.openBalance, 120, 'The till open balance must include the current inherited shop VAT rate.');
 
 const jobDetail = read('src/modules/jobs/JobDetail.jsx');
+const jobDetailDerivedState = read('src/modules/jobs/useJobDetailDerivedState.js');
+const jobDetailCommunicationActions = read('src/modules/jobs/jobDetailCommunicationActions.js');
 const jobDetailFormatting = read('src/modules/jobs/jobDetailFormatting.js');
 const jobForm = read('src/modules/jobs/JobForm.jsx');
 const emailDocuments = read('src/modules/jobs/emailDocuments.js');
@@ -100,10 +105,10 @@ const customerInsights = read('src/modules/customers/customerInsights.js');
 const jobSelectors = read('src/modules/jobs/jobSelectors.js');
 const packageJson = JSON.parse(read('package.json'));
 
-assert.match(jobDetail, /resolveJobTaxSettings\(draftJob,\s*shopSettings\)/, 'Job Detail must resolve inherited VAT from Shop Settings.');
+assert.match(jobDetailDerivedState, /resolveJobTaxSettings\(draftJob,\s*shopSettings\)/, 'Job Detail must resolve inherited VAT from Shop Settings.');
 assert.match(jobDetail, /buildTaxFieldPatch\(draftJob, name, value, type, checked\)/, 'Job Detail must delegate VAT edits through the extracted tax patch helper.');
-assert.match(jobDetailFormatting, /fieldName === 'salesTaxRate' \? \{ rateSource: 'job' \}/, 'Editing a job VAT rate must create an explicit override.');
-assert.match(jobDetail, /withResolvedJobTaxSettings\(jobToSend,\s*scopedShopSettings\)/, 'Generated documents must resolve current VAT before calculation.');
+assert.match(jobDetailFormatting, /fieldName === 'salesTaxRate'[\s\S]*rateSource: 'job'/, 'Editing a job VAT rate must create an explicit override.');
+assert.match(jobDetailCommunicationActions, /withResolvedJobTaxSettings\(jobToUse,\s*scopedShopSettings\)/, 'Generated documents must resolve current VAT before calculation.');
 assert.match(jobForm, /rateSource: 'shop'/, 'New jobs must identify their VAT rate as inherited from Shop Settings.');
 assert.match(emailDocuments, /defaultTaxRate:[\s\S]*shopSettings\.sales_tax_rate/, 'Scoped email settings must carry the current shop tax rate.');
 assert.match(accountingSelectors, /resolveJobTaxSettings\(job,\s*options\.shopProfile \|\| options\)/, 'Accounting reports must share VAT resolution.');

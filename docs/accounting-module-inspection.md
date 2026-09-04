@@ -9,6 +9,8 @@ The commerce backbone is append-only. `transaction_events`, `payment_events`, an
 
 For the stable 0.3.1 accounting module, reports derive from current shop-scoped job data and preserve the event-table direction for later integration. This avoids turning the app into a general ledger while still giving owners clean daily/monthly/yearly summaries, payments by method, tax collected, and open balances.
 
+The first commerce-hardening reporting slice adds an active tax-profile summary and Sales History. The summary identifies the current shop calculation mode, jurisdiction, default rate, registration reference, profile revision, and job-level overrides in the selected range. Sales History is one row per non-voided work order with accounting date, customer, status, total, paid amount, balance, and tax. A mixed-snapshot warning appears when the selected range contains more than one profile, revision, rate, jurisdiction, or label; staff should review the job-level snapshots before handing records to a tax professional. CSV exports include the same metadata and rows.
+
 Important constraints carried into implementation:
 
 - Every selector accepts a `shopId` and filters jobs to that shop.

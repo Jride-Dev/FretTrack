@@ -43,6 +43,13 @@ export function buildAccountingReport(jobs = [], options = {}) {
   const adjustmentEvents = scopedJobs.flatMap((snapshot) => snapshot.adjustmentEvents)
     .filter((event) => isDateInRange(event.date, range));
   const openBalances = scopedJobs.filter((snapshot) => snapshot.balanceDue > MONEY_EPSILON);
+  const salesHistory = buildSalesHistory(jobsInRange);
+  const taxProfile = buildTaxProfileSummary(options.shopProfile || options, jobsInRange, {
+    currencyCode,
+    locale,
+    dateFormat,
+    taxLabel
+  });
 
   return {
     range,
@@ -59,6 +66,8 @@ export function buildAccountingReport(jobs = [], options = {}) {
     yearlyTaxSummary: groupSnapshotsByPeriod(jobsInRange, paymentEvents, adjustmentEvents, 'year'),
     paymentsByMethod: groupPaymentsByMethod(paymentEvents),
     taxCollected: groupTaxCollected(jobsInRange),
+    taxProfile,
+    salesHistory,
     openBalances,
     jobs: jobsInRange,
     paymentEvents,
@@ -166,6 +175,10 @@ export function buildJobAccountingSnapshot(job = {}, options = {}) {
     paidTotal: totals.paidTotal,
     balanceDue: totals.balanceDue,
     taxSnapshot: {
+      calculation_mode: taxSettings.calculationMode || 'disabled',
+      profile_id: taxSettings.profileId || '',
+      profile_revision: Number(taxSettings.profileRevision) || 0,
+      rate_source: taxSettings.rateSource || 'shop',
       tax_rate_percent: taxRatePercent,
       tax_jurisdiction: taxJurisdiction,
       tax_label: taxLabel,
@@ -181,6 +194,59 @@ export function buildJobAccountingSnapshot(job = {}, options = {}) {
     lineItems,
     paymentEvents,
     adjustmentEvents
+  };
+}
+
+export function buildSalesHistory(jobs = []) {
+  return jobs
+    .map((job) => ({
+      id: job.jobId,
+      date: job.accountingDate,
+      jobId: job.jobId,
+      jobNumber: job.jobNumber,
+      customerName: job.customerName,
+      status: job.status,
+      currencyCode: job.currencyCode,
+      totalDue: job.totalDue,
+      paidTotal: job.paidTotal,
+      balanceDue: job.balanceDue,
+      taxAmount: job.taxAmount,
+      taxJurisdiction: job.taxSnapshot.tax_jurisdiction || 'Unspecified'
+    }))
+    .sort((a, b) => {
+      const dateOrder = String(b.date || '').localeCompare(String(a.date || ''));
+      return dateOrder || String(b.jobNumber || '').localeCompare(String(a.jobNumber || ''));
+    });
+}
+
+function buildTaxProfileSummary(shopProfile = {}, jobs = [], context = {}) {
+  const active = resolveJobTaxSettings({}, shopProfile);
+  const snapshots = jobs.map((job) => job.taxSnapshot);
+  const snapshotKeys = new Set(snapshots.map((snapshot) => [
+    snapshot.calculation_mode,
+    snapshot.profile_id,
+    snapshot.profile_revision,
+    snapshot.tax_rate_percent,
+    snapshot.tax_jurisdiction,
+    snapshot.tax_label
+  ].join('|')));
+  return {
+    calculationMode: active.calculationMode || 'disabled',
+    profileId: active.profileId || '',
+    profileRevision: Number(active.profileRevision) || 0,
+    rateSource: active.rateSource || 'shop',
+    taxLabel: active.taxLabel || context.taxLabel || 'Sales Tax',
+    jurisdiction: active.state || '',
+    registrationNumber: active.taxRegistrationNumber || '',
+    defaultRatePercent: Number(active.salesTaxRate) || 0,
+    taxableParts: active.taxableParts !== false,
+    taxableServices: Boolean(active.taxableServices),
+    snapshotCount: snapshots.length,
+    jobOverrideCount: snapshots.filter((snapshot) => snapshot.rate_source === 'job').length,
+    hasMixedSnapshots: snapshotKeys.size > 1,
+    currencyCode: context.currencyCode || 'USD',
+    locale: context.locale || 'en-US',
+    dateFormat: context.dateFormat || 'MM/DD/YYYY'
   };
 }
 

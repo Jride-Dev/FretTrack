@@ -1723,6 +1723,62 @@ th.internal-only {
   margin-bottom: 12px;
 }
 
+.accounting-tax-profile {
+  background: var(--surface-muted);
+  border: 1px solid var(--border-soft);
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.accounting-tax-profile h3,
+.accounting-table-heading h3 {
+  margin: 0 0 4px;
+}
+
+.accounting-tax-profile-grid {
+  display: grid;
+  gap: 10px 18px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 0;
+}
+
+.accounting-tax-profile-grid div {
+  min-width: 0;
+}
+
+.accounting-tax-profile-grid dt {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.accounting-tax-profile-grid dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.accounting-tax-profile-warning {
+  border-left: 3px solid var(--accent);
+  margin: 0;
+  padding-left: 10px;
+}
+
+.accounting-table-heading {
+  align-items: end;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.accounting-table-heading label {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
 .billing-page {
   display: grid;
   gap: 16px;
@@ -3322,6 +3378,7 @@ th.internal-only {
   .message-form,
   .billing-summary-grid,
   .accounting-summary-grid,
+  .accounting-tax-profile-grid,
   .report-card-grid,
   .priority-report-grid,
   .image-grid,
@@ -3488,6 +3545,7 @@ th.internal-only {
   .panel-heading,
   .billing-summary-grid,
   .accounting-summary-grid,
+  .accounting-tax-profile-grid,
   .report-card-grid,
   .priority-report-grid,
   .customer-filter-bar,
