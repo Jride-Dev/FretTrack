@@ -6,6 +6,7 @@ const root = process.cwd();
 const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
 const handler = read('supabase/functions/receive-email/index.ts');
 const verifier = read('supabase/functions/receive-email/resendInbound.ts');
+const sendEmail = read('supabase/functions/send-email/index.ts');
 const migration = read('supabase/migrations/20260904082220_resend_inbound_email_adapter.sql');
 const test = read('supabase/functions/receive-email/resendInbound.test.ts');
 
@@ -22,5 +23,8 @@ assert.match(migration, /customer_inbound_webhook_events/, 'the migration must a
 assert.match(migration, /revoke all on table public\.customer_inbound_webhook_events from public, anon, authenticated/, 'browser clients must not access webhook claims');
 assert.match(test, /valid Svix v1 signature/, 'signature verification must have a valid-path test');
 assert.match(test, /bad or stale signatures/, 'signature verification must have replay and forgery tests');
+assert.match(sendEmail, /resolveInboundReplyTo\(access\.shopId\)/, 'outbound email must resolve the shop inbound reply route');
+assert.match(sendEmail, /\.from\('customer_inbound_email_routes'\)/, 'outbound reply routing must use the service-managed route table');
+assert.match(sendEmail, /\{ reply_to: replyTo \}/, 'Resend sends must direct customer replies to the inbound route');
 
 console.log('Resend inbound adapter checks passed.');

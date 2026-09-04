@@ -191,6 +191,7 @@ Deno.serve(async (request) => {
       return finalAccess.error;
     }
 
+    const replyTo = await resolveInboundReplyTo(access.shopId);
     providerAttempted = true;
     let response: Response;
     try {
@@ -206,6 +207,7 @@ Deno.serve(async (request) => {
           to: toRecipients,
           ...(ccRecipients.length ? { cc: ccRecipients } : {}),
           ...(bccRecipients.length ? { bcc: bccRecipients } : {}),
+          ...(replyTo ? { reply_to: replyTo } : {}),
           subject,
           text: body,
           ...(html ? { html } : {}),
@@ -585,6 +587,24 @@ async function resolveEmailProviderAccess(
   }
 
   return access;
+}
+
+async function resolveInboundReplyTo(shopId: string) {
+  const { data, error } = await createServiceClient()
+    .from('customer_inbound_email_routes')
+    .select('email_address')
+    .eq('shop_id', shopId)
+    .eq('active', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('inbound email reply route lookup failed', error);
+    return '';
+  }
+
+  return String(data?.email_address || '').trim().toLowerCase();
 }
 
 async function resolveJobWriteAccess(request: Request, jobId: string) {
