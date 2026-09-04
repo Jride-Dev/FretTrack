@@ -110,10 +110,17 @@ async function finishWebhookEvent(supabase: AnyClient, eventId: string, status: 
 }
 
 async function findRoute(supabase: AnyClient, recipients: string[]) {
-  const { data, error } = await supabase.from('customer_inbound_email_routes').select('shop_id, email_address').eq('active', true);
+  const uniqueRecipients = [...new Set(recipients)];
+  if (!uniqueRecipients.length) return null;
+
+  const { data, error } = await supabase
+    .from('customer_inbound_email_routes')
+    .select('shop_id, email_address')
+    .eq('active', true)
+    .in('email_address', uniqueRecipients)
+    .limit(2);
   if (error) throw error;
-  const recipientSet = new Set(recipients);
-  return (data || []).find((route: any) => recipientSet.has(normalizeInboundEmail(route.email_address))) || null;
+  return data?.length === 1 ? data[0] : null;
 }
 
 async function findUniqueCustomer(supabase: AnyClient, shopId: string, sender: string) {

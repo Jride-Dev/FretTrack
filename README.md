@@ -43,7 +43,7 @@ FretTrack is a business-use software service operated by Jeffrey Russell d/b/a T
 ## Known boundaries
 
 - SMS is not enabled.
-- Customer Conversation, the Unassigned Inbox, deliberate work-order routing, and selected correspondence in customer reports are available. The signed Resend inbound-email schema is deployed, but the production `receive-email` function, receiving routes, and webhook secrets are not enabled; SMS and browser Realtime remain disabled.
+- Customer Conversation, the Unassigned Inbox, deliberate work-order routing, and selected correspondence in customer reports are available. Every shop receives a private, opaque Resend reply address automatically, and outbound customer email uses that shop-specific address for Reply-To. Signed replies enter only the matching shop's inbox. SMS and browser Realtime remain disabled.
 - Existing-job edits do not have full offline synchronization; offline continuity is limited to new-job drafts.
 - Public invoice and work-order links are not implemented; estimate links are available for sent and approved revisions.
 - Customer-owned instruments do not yet have an independent asset/profile table outside work orders.
