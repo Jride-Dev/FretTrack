@@ -6,6 +6,7 @@ export default function JobBillingSections({
   canSendEmail,
   canWrite,
   canManageJobCharges,
+  canManageShopTax,
   canRecordJobPayments,
   canIssuePaymentAdjustments,
   canFinalizeJobInvoices,
@@ -34,6 +35,7 @@ export default function JobBillingSections({
   onUpdateService,
   onUpdateTaxField,
   onUseShopTaxRate,
+  onOpenTaxSettings,
   part,
   parts,
   payment,
@@ -81,6 +83,7 @@ export default function JobBillingSections({
         canSendEmail={canSendEmail}
         canWrite={canWrite}
         canManageJobCharges={canManageJobCharges}
+        canManageShopTax={canManageShopTax}
         canRecordJobPayments={canRecordJobPayments}
         canIssuePaymentAdjustments={canIssuePaymentAdjustments}
         canFinalizeJobInvoices={canFinalizeJobInvoices}
@@ -107,6 +110,7 @@ export default function JobBillingSections({
         updateDiscountField={onUpdateDiscountField}
         updateTaxField={onUpdateTaxField}
         useShopTaxRate={onUseShopTaxRate}
+        onOpenTaxSettings={onOpenTaxSettings}
       />
     </>
   );

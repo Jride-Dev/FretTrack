@@ -10,6 +10,11 @@ const jobForm = read('src/modules/jobs/JobForm.jsx');
 const localSeed = read('scripts/seed-local-test-shops.mjs');
 const billingActions = read('src/modules/jobs/useJobDetailBillingActions.js');
 const jobNormalization = read('src/modules/jobs/jobServiceNormalization.js');
+const totalsSection = read('src/modules/jobs/TotalsSection.js');
+const jobBillingSections = read('src/modules/jobs/JobBillingSections.jsx');
+const jobDetail = read('src/modules/jobs/JobDetail.jsx');
+const workspaceRouter = read('src/app/WorkspaceRouter.jsx');
+const app = read('src/app/App.jsx');
 
 assert.match(migration, /tax_calculation_mode text not null default 'disabled'/, 'New shops must default to tax calculation disabled.');
 assert.match(migration, /set tax_calculation_mode = 'disabled'[\s\S]*?tax_state[\s\S]*?is null/, 'Migration retries must disable incomplete manual legacy profiles before synchronization.');
@@ -24,6 +29,13 @@ assert.match(migration, /'taxProfileId'[\s\S]*?'taxProfileRevision'[\s\S]*?'taxR
 assert.ok(settings.includes('Disabled — calculate no tax'), 'Shop Settings must make the disabled tax state explicit.');
 assert.ok(settings.includes('FretTrack does not determine registrations'), 'Shop Settings must preserve the tax responsibility disclaimer.');
 assert.ok(settings.includes("required={settings.taxCalculationMode === 'manual'}"), 'Disabled tax must not require a jurisdiction during shop onboarding.');
+assert.match(settings, /id="shop-tax-settings"[\s\S]*?<h4>Tax \/ VAT<\/h4>/, 'Shop Settings must expose one clearly named Tax / VAT section.');
+assert.match(totalsSection, /Open Tax \/ VAT Settings/, 'A disabled work-order tax profile must link owners and admins to its setup location.');
+assert.match(totalsSection, /Choose Percentage or Fixed amount to enter a discount/, 'The discount amount must explain how to enable it.');
+assert.ok(jobBillingSections.includes('onOpenTaxSettings={onOpenTaxSettings}'), 'Parts & Billing must forward the Tax / VAT setup action.');
+assert.ok(jobDetail.includes('onOpenTaxSettings={onOpenTaxSettings}'), 'Job Detail must forward the Tax / VAT setup action.');
+assert.ok(workspaceRouter.includes('onOpenTaxSettings={actions.onOpenTaxSettings}'), 'The workspace must connect billing to Tax / VAT settings.');
+assert.ok(app.includes('onOpenTaxSettings: openTaxSettings'), 'The app must expose the guarded Tax / VAT settings navigation action.');
 assert.ok(profileService.includes('tax_calculation_mode'), 'Shop profile persistence must store the calculation mode.');
 assert.ok(jobForm.includes("rateSource: 'shop'"), 'New jobs must record the shop tax profile source.');
 assert.match(localSeed, /tax_calculation_mode[\s\S]*?'manual'/, 'Tax-enabled local fixtures must explicitly opt into manual calculation.');

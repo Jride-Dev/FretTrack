@@ -338,6 +338,18 @@ export default function App() {
     navigateTo('list');
   }
 
+  function openTaxSettings() {
+    if (!navigateTo('settings')) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      const taxSettingsSection = document.getElementById('shop-tax-settings');
+      taxSettingsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      taxSettingsSection?.focus({ preventScroll: true });
+    }, 0);
+  }
+
   function showNewJob(customer = null, options = {}) {
     if (!options.skipDirtyGuard && !confirmUnsavedNavigation()) {
       return;
@@ -745,6 +757,7 @@ export default function App() {
               onOpenCurrentJobsForAssignee: openCurrentJobsForAssignee,
               onOpenNewJob: showNewJob,
               onOpenInventory: () => navigateTo('inventory'),
+              onOpenTaxSettings: openTaxSettings,
               onRefreshJobs: refreshJobs,
               onSelectJob: handleSelectJob,
               onSelectJobMode: selectWorkspaceJob,

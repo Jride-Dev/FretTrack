@@ -6,6 +6,7 @@ export default function TotalsSection({
   canSendEmail = true,
   canWrite = true,
   canManageJobCharges = canWrite,
+  canManageShopTax = false,
   canRecordJobPayments = canWrite,
   canIssuePaymentAdjustments = canWrite,
   canFinalizeJobInvoices = false,
@@ -31,7 +32,8 @@ export default function TotalsSection({
   totals,
   updateDiscountField,
   updateTaxField,
-  useShopTaxRate
+  useShopTaxRate,
+  onOpenTaxSettings
 }) {
   const taxLabel = taxSettings.taxLabel || 'Sales Tax';
   const moneyOptions = getShopMoneyOptions({
@@ -48,13 +50,13 @@ export default function TotalsSection({
         <label>
           Discount Type
           <select name="discountType" value={draftJob.discountType || 'none'} onChange={updateDiscountField} disabled={!canWrite || !canManageJobCharges}>
-            <option value="none">No Discount</option>
-            <option value="percent">Percent</option>
-            <option value="dollar">Dollar Amount</option>
+            <option value="none">No discount</option>
+            <option value="percent">Percentage (%)</option>
+            <option value="dollar">Fixed amount</option>
           </select>
         </label>
         <label>
-          Discount
+          Discount Amount
           <input
             type="number"
             min="0"
@@ -63,7 +65,14 @@ export default function TotalsSection({
             value={draftJob.discountValue || ''}
             onChange={updateDiscountField}
             disabled={!canWrite || !canManageJobCharges || (draftJob.discountType || 'none') === 'none'}
+            placeholder={(draftJob.discountType || 'none') === 'none' ? 'Choose a type first' : '0.00'}
+            aria-describedby="discount-amount-help"
           />
+          <small id="discount-amount-help">
+            {(draftJob.discountType || 'none') === 'none'
+              ? 'Choose Percentage or Fixed amount to enter a discount.'
+              : 'The total updates immediately; save the work order to keep it.'}
+          </small>
         </label>
         <label>
           State
@@ -75,7 +84,7 @@ export default function TotalsSection({
         </label>
         {shopTaxCalculationMode === 'manual' && shopTaxRate !== '' && (
           <button type="button" className="button-tertiary" onClick={useShopTaxRate} disabled={!canWrite || !canManageJobCharges}>
-            Apply Current Shop Tax Profile ({shopTaxRate}%)
+            Apply Shop {taxLabel} ({shopTaxRate}%)
           </button>
         )}
         <label className="checkline">
@@ -87,7 +96,21 @@ export default function TotalsSection({
           Tax Services
         </label>
       </div>
-      {!taxEnabled && <p className="muted-text">Tax calculation is disabled for this work order. Configure and enable manual tax in Shop Settings before applying tax.</p>}
+      {!taxEnabled && (
+        <div className="commerce-state-notice tax-setup-callout no-print" role="note">
+          <div>
+            <strong>{taxLabel} is off for this work order.</strong>
+            <p>
+              {canManageShopTax
+                ? 'Enable and configure it under Shop Settings → Tax / VAT, then apply the shop rate here.'
+                : 'A shop owner or admin must enable and configure it under Shop Settings → Tax / VAT.'}
+            </p>
+          </div>
+          {canManageShopTax && onOpenTaxSettings && (
+            <button type="button" className="button-tertiary" onClick={onOpenTaxSettings}>Open Tax / VAT Settings</button>
+          )}
+        </div>
+      )}
       <PaymentsSection
         addPayment={addPayment}
         payment={payment}
