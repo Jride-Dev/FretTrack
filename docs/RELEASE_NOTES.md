@@ -38,6 +38,8 @@ The customer-communication foundation established a provider-neutral storage bou
 
 Customer profiles now include a focused Conversation view over that provider-neutral history. Staff can filter email or SMS records, see unassigned correspondence instead of losing it in a job-only view, mark received inbound messages read, and explicitly select eligible messages for a future customer report. The panel reuses the existing repository and Message History records; it does not add inbound provider adapters, Realtime updates, SMS delivery, or customer approval gates.
 
+The Customers workspace now also includes a read-only Unassigned Inbox for inbound correspondence that has no work-order assignment. It identifies the customer when available, preserves the inbound record and read state, and requires a future deliberate routing action instead of guessing the newest work order.
+
 Stripe Checkout now treats the connected Stripe customer as shop-owned billing identity and blocks a second Checkout whenever that customer already has any open subscription. This closes the duplicate-charge path for legacy or manually repaired subscriptions whose shop metadata is missing, while retaining pagination across the complete Stripe subscription list.
 
 Public onboarding now consistently directs a new user to create an account, confirm the email address, create one shop, and begin the non-converting 14-day Pro trial. The retired access-application modal is no longer rendered, and current README, support, FAQ, and account documentation no longer imply operator approval is required.

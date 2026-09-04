@@ -26,7 +26,7 @@ Known product boundaries:
 - Existing-job edits do not have full offline synchronization.
 - Public invoice and work-order links are not implemented.
 - Customer instruments are stored with work orders rather than in an independent asset registry.
-- Customer correspondence now has a focused customer Conversation view with read-state and explicit report-selection controls. Inbound provider adapters, deliberate unassigned-message routing, Realtime updates, and report rendering remain future work.
+- Customer correspondence now has a focused customer Conversation view and an Unassigned Inbox with read-state and explicit report-selection controls. Deliberate work-order routing, inbound provider adapters, Realtime updates, and report rendering remain future work.
 - Supplier APIs, carrier labels/rates, vendor returns, forecasting, and automated customer shipping remain future work.
 - Paid usage overages and multi-shop subscription administration are not implemented.
 
@@ -66,7 +66,7 @@ Each extraction must preserve the current facade, permissions, database behavior
 ## v0.3.x: Correspondence and interface cohesion
 
 - keep the provider-neutral customer correspondence schema and repository stable under shop-isolation and replay tests;
-- add a focused conversation interface, unassigned inbound queue, read state, and explicit customer-report selection without duplicating Message History state (focused customer Conversation view implemented; routing queue and report renderer remain);
+- add a focused conversation interface, unassigned inbound queue, read state, and explicit customer-report selection without duplicating Message History state (Conversation view and read-only Unassigned Inbox implemented; deliberate routing and report renderer remain);
 - add inbound email or SMS adapters one provider at a time only after signature, consent, opt-out, routing, retry, and cost controls are complete;
 - establish shared visual tokens and reusable form, panel, table, empty-state, action, feedback, and responsive-layout primitives;
 - update major workspaces in measured slices so the product looks intentional and consistent without changing proven workflow behavior during the visual pass.
