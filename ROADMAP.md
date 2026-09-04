@@ -61,7 +61,7 @@ Each extraction must preserve the current facade, permissions, database behavior
 - deeper payment/refund support tooling;
 - tax-profile and sales-history improvements (first reporting slice implemented; deeper reconciliation remains future work);
 - public estimate links with secure hashed tokens, expiry, revocation, revision binding, and customer decisions (implemented); public invoice or work-order links remain deferred;
-- billing reconciliation and operator support tools.
+- billing reconciliation and operator support tools (read-only billing mismatch queue implemented; provider remediation remains support-controlled).
 
 ## v0.3.x: Correspondence and interface cohesion
 

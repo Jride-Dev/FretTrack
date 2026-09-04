@@ -2410,6 +2410,15 @@ th.internal-only {
   gap: 6px;
 }
 
+.operator-billing-reconciliation {
+  display: grid;
+  gap: 10px;
+}
+
+.operator-billing-attention {
+  background: color-mix(in srgb, var(--warning, var(--accent)) 9%, var(--surface));
+}
+
 .operator-row-actions button,
 .operator-row-actions select {
   font-size: 12px;
