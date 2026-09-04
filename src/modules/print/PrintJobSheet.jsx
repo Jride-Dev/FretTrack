@@ -93,6 +93,7 @@ function SpecialistFinalInspection({ techDetails, instrumentType }) {
 
 export default function PrintJobSheet({
   draftJob,
+  documentType = 'work_order',
   formatInstrumentLabel,
   lengthUnit = 'in',
   normalizeInstrumentType,
@@ -117,22 +118,24 @@ export default function PrintJobSheet({
     locale: shopSettings.locale || taxSettings.locale
   });
   const taxLabel = shopSettings.taxLabel || taxSettings.taxLabel || 'Sales Tax';
+  const isEstimate = documentType === 'estimate';
 
   return (
     <article className="print-job-sheet" data-print-document="job-sheet">
       <header className="print-document-header">
         <img src={shopSettings.logoUrl || '/frettrack-wordmark.jpg'} alt={shopSettings.shopName || 'FretTrack'} decoding="sync" />
         <div>
-          <p className="print-document-kicker">Shop copy</p>
-          <h1>Job Sheet</h1>
-          <p>{display(shopSettings.shopName, 'FretTrack')} | Work order {display(draftJob.jobNumber)}</p>
+          <p className="print-document-kicker">{isEstimate ? 'Customer copy' : 'Shop copy'}</p>
+          <h1>{isEstimate ? 'Estimate' : 'Job Sheet'}</h1>
+          <p>{display(shopSettings.shopName, 'FretTrack')} | {isEstimate ? 'Estimate' : 'Work order'} {display(draftJob.jobNumber)}</p>
+          {draftJob.invoiceFinalizedAt && draftJob.invoiceNumber && <p>Invoice #{draftJob.invoiceNumber} | Revision {draftJob.invoiceRevision || 1}</p>}
           {shopSettings.address && <p className="print-shop-address">{shopSettings.address}</p>}
           <p>{[shopSettings.phone, shopSettings.email].filter(Boolean).join(' | ')}</p>
         </div>
       </header>
 
       <section className="print-document-section">
-        <h2>Work order summary</h2>
+        <h2>{isEstimate ? 'Estimate summary' : 'Work order summary'}</h2>
         <FieldGrid rows={[
           ['Customer', draftJob.customerName],
           ['Phone', draftJob.phone],
@@ -179,7 +182,7 @@ export default function PrintJobSheet({
       </section>
 
       <section className="print-document-section print-job-sheet-financials">
-        <h2>Invoice summary</h2>
+        <h2>{isEstimate ? 'Estimate summary' : 'Invoice summary'}</h2>
         <dl className="print-job-sheet-totals">
           <div><dt>Services</dt><dd>{money(totals.servicesTotal, moneyOptions)}</dd></div>
           <div><dt>Billable parts</dt><dd>{money(totals.partsTotal, moneyOptions)}</dd></div>
@@ -187,9 +190,9 @@ export default function PrintJobSheet({
           <div><dt>Subtotal</dt><dd>{money(totals.subtotal, moneyOptions)}</dd></div>
           <div><dt>Discount</dt><dd>-{money(totals.discountAmount, moneyOptions)}</dd></div>
           <div><dt>{taxLabel}</dt><dd>{money(totals.salesTaxAmount, moneyOptions)}</dd></div>
-          <div className="is-total"><dt>Total due</dt><dd>{money(totals.totalDue, moneyOptions)}</dd></div>
-          <div><dt>Paid</dt><dd>{money(totals.paidTotal, moneyOptions)}</dd></div>
-          <div className="is-balance"><dt>Balance</dt><dd>{money(totals.balanceDue, moneyOptions)}</dd></div>
+          <div className="is-total"><dt>{isEstimate ? 'Estimated total' : 'Total due'}</dt><dd>{money(totals.totalDue, moneyOptions)}</dd></div>
+          {!isEstimate && <div><dt>Paid</dt><dd>{money(totals.paidTotal, moneyOptions)}</dd></div>}
+          {!isEstimate && <div className="is-balance"><dt>Balance</dt><dd>{money(totals.balanceDue, moneyOptions)}</dd></div>}
         </dl>
       </section>
 

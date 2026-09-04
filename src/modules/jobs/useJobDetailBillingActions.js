@@ -153,27 +153,24 @@ export default function useJobDetailBillingActions({
     }
   }
 
-  async function changeEstimateState(status) {
-    if (!canFinalizeJobInvoices || isChangingEstimateState) {
+  async function changeEstimateState(status, noteOverride = null) {
+    if (!canWrite || !canManageJobCharges || isChangingEstimateState) {
       return;
     }
-    const note = estimateNote.trim();
-    if (note.length < 8) {
-      reportCommerceError(null, 'Enter an estimate audit note of at least 8 characters.');
-      return;
-    }
+    const note = noteOverride === null ? estimateNote.trim() : String(noteOverride).trim();
+    const estimateNoteForSave = note || 'Estimate prepared for customer review.';
     if (isDirty && status !== 'sent') {
       reportCommerceError(null, 'Save the work order changes before changing estimate state.');
       return;
     }
 
     setIsChangingEstimateState(true);
-    const operationKey = JSON.stringify([draftJob.id, status, note]);
+    const operationKey = JSON.stringify([draftJob.id, status, estimateNoteForSave]);
     const requestId = estimateOperationRef.current.get(operationKey) || crypto.randomUUID();
     estimateOperationRef.current.set(operationKey, requestId);
     try {
       const savedJob = status === 'sent' ? await saveDraftNow(withTaxSnapshot(draftJob, taxSettings)) : draftJob;
-      const result = await setJobEstimateState(savedJob.id, status, note, requestId, savedJob.updatedAt);
+      const result = await setJobEstimateState(savedJob.id, status, estimateNoteForSave, requestId, savedJob.updatedAt);
       setDraftJob((current) => ({ ...current, ...result }));
       setIsDirty(false);
       setEstimateNote('');
@@ -186,6 +183,7 @@ export default function useJobDetailBillingActions({
         console.warn('Estimate state changed, but the work-order refresh failed.', refreshError);
         onNotice?.({ type: 'warning', message: `${getEstimateSuccessMessage(status)} Refresh the work order to reconcile its history.` });
       }
+      return result;
     } catch (error) {
       reportCommerceError(error, 'The estimate state could not be changed.');
     } finally {
@@ -249,7 +247,7 @@ function withTaxSnapshot(job, taxSettings = {}) {
 }
 
 function chargesAreLocked(job) {
-  return Boolean(job.invoiceFinalizedAt) || (job.estimateStatus || 'draft') !== 'draft';
+  return Boolean(job.invoiceFinalizedAt);
 }
 
 function getEstimateSuccessMessage(status) {

@@ -30,6 +30,7 @@ const job = {
   id: 'job-address-check',
   shopId: shopSettings.shopId,
   jobNumber: 'FT-ADDRESS-1',
+  invoiceNumber: 42,
   customerName: 'Test Customer',
   email: 'customer@example.test',
   guitarBrand: 'Fender',
@@ -47,6 +48,8 @@ const context = {
 
 const invoice = buildInvoiceEmailDraft(job, context);
 assert.match(invoice.body, /10 Workshop Lane\nSheffield S1 2AB/, 'Generated invoice email text must include the active shop address.');
+assert.match(invoice.subject, /invoice #42/i, 'Generated invoice email subject must include the durable invoice number.');
+assert.match(invoice.body, /Invoice: Invoice #42/, 'Generated invoice email body must include the durable invoice number.');
 assert.ok(
   invoice.summaryLines.some(([label, value]) => label === 'Shop' && value.includes(shopSettings.address)),
   'Generated invoice summary must include the active shop address.'

@@ -517,6 +517,11 @@ main.app-shell {
   width: 100%;
 }
 
+.job-header-controls {
+  display: grid;
+  gap: 8px;
+}
+
 .workspace-section {
   display: grid;
   gap: 14px;
@@ -630,8 +635,9 @@ main.app-shell {
 .work-order-form-actions {
   align-items: center;
   background: color-mix(in srgb, var(--surface-2) 72%, var(--surface));
-  display: flex;
+  display: grid;
   gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
   justify-content: space-between;
   padding: 14px 18px;
 }
@@ -639,10 +645,12 @@ main.app-shell {
 .work-order-form-actions > span {
   color: var(--text-muted);
   font-size: 12px;
+  min-width: 0;
 }
 
 .work-order-form-actions button {
   flex: 0 0 auto;
+  width: auto;
 }
 
 .new-work-order-page {
@@ -1368,10 +1376,14 @@ main.app-shell {
   }
 
   .workspace-page-header,
-  .workspace-section-heading,
-  .work-order-form-actions {
+  .workspace-section-heading {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .work-order-form-actions {
+    align-items: stretch;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .customer-directory-controls .customer-module-toolbar,

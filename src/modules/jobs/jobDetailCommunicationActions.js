@@ -181,24 +181,24 @@ export function createJobDetailCommunicationActions({
     }
   }
 
-  function openEstimateEmail() {
+  function openEstimateEmail(jobToUse = draftJob) {
     if (!canWrite || !canSendEmail) {
       return;
     }
-    if (!['sent', 'approved'].includes(draftJob.estimateStatus || 'draft')) {
-      onNotice?.({ type: 'error', message: 'Mark the estimate sent before emailing the estimate.' });
+    if (jobToUse.documentType !== 'estimate' && !['sent', 'approved'].includes(jobToUse.estimateStatus || 'draft')) {
+      onNotice?.({ type: 'error', message: 'Choose Estimate as the document type before emailing an estimate.' });
       return;
     }
     if (!guardPendingWorkLogDocumentAction()) {
       return;
     }
     try {
-      const documentContext = resolveDocumentEmailContext(draftJob);
+      const documentContext = resolveDocumentEmailContext(jobToUse);
       setDocumentEmailDraft({
         kind: 'estimate',
-        jobId: draftJob.id,
-        shopId: draftJob.shopId,
-        ...buildEstimateEmailDraft(draftJob, {
+        jobId: jobToUse.id,
+        shopId: jobToUse.shopId,
+        ...buildEstimateEmailDraft(jobToUse, {
           shopSettings: documentContext.scopedShopSettings,
           dateOptions: documentContext.dateOptions,
           moneyOptions: documentContext.moneyOptions,

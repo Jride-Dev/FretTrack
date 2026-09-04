@@ -27,6 +27,7 @@ export default function buildJobPrintSections({
       <PrintActions
         canSendEmail={canSendEmail}
         canWrite={canWrite}
+        documentType={draftJob.documentType}
         closeDetail={onCloseDetail}
         emailWorkOrder={onEmailWorkOrder}
         exportJobJson={onExportJobJson}

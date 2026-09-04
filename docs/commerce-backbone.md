@@ -8,6 +8,7 @@ FretTrack's commerce backbone is the foundation for future inventory, purchasing
 - Store money in minor units for commerce events, such as cents or pence, instead of floating point display values.
 - Keep commerce generic enough for guitars, amps, orchestral instruments, electronics, bikes, and other repair industries.
 - Generate transaction numbers in the database so two clients cannot create the same number.
+- Assign invoice numbers in the database when an invoice is first finalized, preserving that identity across revisions.
 - Keep payment methods, currencies, and tax profiles configurable data instead of hardcoded UI lists.
 - Add modules incrementally without rewriting the work-order system.
 
@@ -33,7 +34,9 @@ The core tables are designed as append-only records:
 
 Updates and deletes are blocked by database triggers. Corrections should be entered as compensating events, such as a reversal or adjustment, so the history remains auditable.
 
-`transaction_events.transaction_number` is assigned by the database through `create_transaction_event(...)`. Numbers are unique within a shop/location scope and are not generated in the frontend. The display layer can pad them as `000001`, `000002`, and later allow seven or eight digits naturally as the sequence grows.
+`transaction_events.transaction_number` is assigned by the database through `create_transaction_event(...)`. Numbers are unique within a shop/location scope and are not generated in the frontend. Every transaction request carries a stable `request_id`; a retry with that identity replays the original event and number instead of creating another event. Sequence gaps remain possible when a transaction fails after allocation, which is normal for database-backed numbering and does not indicate duplicate records.
+
+Finalized work orders receive a shop-scoped `jobs.invoice_number` from the database. The number is assigned only on the first successful finalization, is stored in the invoice snapshot, and remains unchanged when an owner reopens and creates a corrected invoice revision.
 
 ## Core Tables
 
@@ -41,6 +44,7 @@ Updates and deletes are blocked by database triggers. Corrections should be ente
 - `tax_profiles`: lightweight jurisdiction/rate configuration for future reporting. This is not a tax engine.
 - `payment_methods`: configurable tender methods such as cash, card, check, account, store credit, or later outside finance.
 - `transaction_number_sequences`: database-owned sequence state scoped by shop and location.
+- `invoice_number_sequences`: database-owned invoice sequence state scoped by shop.
 - `transaction_events`: immutable financial event records with source references and minor-unit totals.
 - `payment_events`: payment-specific detail linked to a transaction event.
 - `inventory_movements`: inventory event records using `IN`, `OUT`, `ADJUSTMENT`, `RETURN`, `DAMAGED`, `LOST`, and `FOUND`.
@@ -59,7 +63,9 @@ The first guarded work-order boundary now sits in front of payment recording and
 
 `set_job_invoice_finalization(...)` calculates a minor-unit charge and tax snapshot from the saved job, parts, and services on the server. A finalized invoice locks parts, services, discounts, and tax settings until an owner or admin reopens it with an audit reason. Later payments remain appendable because collecting a balance does not change the finalized charge snapshot.
 
-`set_job_estimate_state(...)` owns the estimate lifecycle. An owner or admin can send a saved draft, which creates a server-calculated minor-unit snapshot and locks its parts, services, discount, and tax settings. Approval or decline preserves that exact revision and adds an audited decision; changes require an explicit return to draft, and the next send creates a new revision. A sent or declined estimate cannot be finalized as an invoice until approval is recorded or the estimate is returned to draft.
+The same guarded action assigns the invoice number once, records it in the snapshot, and preserves it across reopen/re-finalize revisions. Direct edits to the number are rejected. Transaction creation requires a stable request identity for safe replay after an ambiguous response; the client service generates one when callers do not provide it and returns it for retry.
+
+Estimates are informational documents. The work-order Document Type dropdown creates either a Work Order or Estimate; the estimate can be printed or emailed with the current line items and totals, remains editable, and never requires customer approval before work or invoice finalization. The historical `set_job_estimate_state(...)` RPC and snapshot fields remain for compatibility with older records and audit history.
 
 The default shop tax profile is now an active guarded boundary rather than a dormant lookup row. A shop explicitly selects disabled or manual calculation; disabled is the safe default and calculates no tax for new work orders. Manual configuration requires a jurisdiction, versions every settings change, and copies the stable profile identity and revision into new jobs. Estimate and invoice snapshots preserve the calculation mode, rate source, jurisdiction, registration reference, taxable categories, and resulting minor-unit tax. FretTrack does not determine registration obligations, legally correct rates, exemptions, remittance, or filing.
 

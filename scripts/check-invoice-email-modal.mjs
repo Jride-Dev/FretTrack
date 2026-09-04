@@ -3,10 +3,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
-const dialog = readFileSync(join(root, 'src/modules/jobs/JobDocumentEmailDialog.jsx'), 'utf8');
-const communicationActions = readFileSync(join(root, 'src/modules/jobs/jobDetailCommunicationActions.js'), 'utf8');
+const readSource = (file) => readFileSync(join(root, file), 'utf8').replace(/\r\n/g, '\n');
+const dialog = readSource('src/modules/jobs/JobDocumentEmailDialog.jsx');
+const communicationActions = readSource('src/modules/jobs/jobDetailCommunicationActions.js');
 const styles = ['src/styles/foundations.css', 'src/styles/workspace.css', 'src/styles.css']
-  .map((file) => readFileSync(join(root, file), 'utf8'))
+  .map((file) => readSource(file))
   .join('\n');
 
 function assertIncludes(source, expected, message) {

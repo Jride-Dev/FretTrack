@@ -161,10 +161,6 @@ export default function MessagesPanel({
   }
 
   async function handleSend(channel) {
-    if (templateKey === 'estimate_ready' && !['sent', 'approved'].includes(job.estimateStatus || 'draft')) {
-      setSendState({ sending: '', error: 'Mark the estimate sent and use Email Estimate to send the actual priced estimate.', success: '' });
-      return;
-    }
     setSendState({ sending: channel, error: '', success: '' });
 
     if (!smsEnabled && (channel === 'sms' || channel === 'both')) {

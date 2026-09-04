@@ -23,11 +23,11 @@ export default function EstimatesPage({ jobs = [], moneyOptions = {}, dateOption
       <WorkspacePageHeader
         eyebrow="Billing workspace"
         title="Estimates"
-        description="Prepare, send, and track customer-reviewed estimate revisions without losing the locked totals that were sent."
+        description="Review estimate documents that were printed or emailed from a work order."
       />
       <WorkspaceSection
         title="Estimate queue"
-        description="Open a work order to edit a draft, send a revision, record approval or decline, or email the exact locked estimate."
+        description="Open an estimate to review its line items, print it, or email it to the customer."
         actions={(
           <label>
             Status

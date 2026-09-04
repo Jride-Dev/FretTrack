@@ -235,6 +235,7 @@ export async function setJobInvoiceFinalization(jobId, finalized, reason) {
   return {
     invoiceFinalizedAt: saved?.invoice_finalized_at || null,
     invoiceFinalizedBy: saved?.invoice_finalized_by || '',
+    invoiceNumber: Number(saved?.invoice_number || 0) || null,
     invoiceSnapshot: saved?.invoice_snapshot || null,
     invoiceRevision: Number(saved?.invoice_revision || 0),
     invoiceFinalizationReason: saved?.invoice_finalization_reason || '',
