@@ -73,6 +73,7 @@
     "check:loyalty-program": "node scripts/check-loyalty-program.mjs",
     "check:automated-service-reminders": "node scripts/check-automated-service-reminders.mjs",
     "check:customer-correspondence": "node --test scripts/customer-correspondence.test.mjs",
+    "check:customer-conversation": "node scripts/check-customer-conversation.mjs",
     "check:professional-workspace-ui": "node scripts/check-professional-workspace-ui.mjs",
     "check:professional-customers-ui": "node scripts/check-professional-customers-ui.mjs",
     "check:professional-inventory-ui": "node scripts/check-professional-inventory-ui.mjs",

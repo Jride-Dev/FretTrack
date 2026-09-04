@@ -4,6 +4,7 @@ import { getCustomerTypeLabel } from './customerTypes';
 import CustomerLoyaltyCard from '../loyalty/CustomerLoyaltyCard.jsx';
 import WorkspacePageHeader from '../../shared/components/WorkspacePageHeader.jsx';
 import WorkspaceSection from '../../shared/components/WorkspaceSection.jsx';
+import CustomerConversationPanel from '../messaging/CustomerConversationPanel.jsx';
 
 export default function CustomerDetail({
   customer,
@@ -14,6 +15,7 @@ export default function CustomerDetail({
   moneyOptions = {},
   onCreateJob,
   onEditCustomer,
+  shopId = '',
   onNotice
 }) {
   if (!customer) {
@@ -83,6 +85,14 @@ export default function CustomerDetail({
       <WorkspaceSection title="Payments" description="The latest payment, refund, and void activity across linked work orders.">
         {renderPaymentHistory(customer.payments, moneyOptions, dateOptions)}
       </WorkspaceSection>
+
+      <CustomerConversationPanel
+        customer={customer}
+        shopId={shopId}
+        canWrite={canWrite}
+        dateOptions={dateOptions}
+        onNotice={onNotice}
+      />
 
       <WorkspaceSection title="Notes" description="Shop-only context retained with this customer profile.">
         <p className="customer-notes">{customer.notes || 'No notes yet.'}</p>
