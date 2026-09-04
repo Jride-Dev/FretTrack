@@ -230,16 +230,7 @@ function JobDetailWorkspace({
     patchJob(buildJobFieldPatch(draftJob, name, value, jobs));
   }
   function updateDocumentType(documentType) {
-    if (!canWrite || !['work_order', 'estimate'].includes(documentType)) {
-      return;
-    }
-    patchJob({
-      documentType,
-      techDetails: {
-        ...(draftJob.techDetails || {}),
-        documentType
-      }
-    });
+    if (canWrite && ['work_order', 'estimate'].includes(documentType)) patchJob({ documentType, techDetails: { ...(draftJob.techDetails || {}), documentType } });
   }
   function unlinkCustomer() {
     if (!canWrite || !draftJob.customerId) {
@@ -395,27 +386,18 @@ function JobDetailWorkspace({
   }
 
   function updateDamageMap(damageMap) {
-    if (!canWrite) {
-      return;
-    }
-    setIsDirty(true);
-    setDraftJob((current) => buildDamageMapJob(current, damageMap));
+    if (!canWrite) return;
+    setIsDirty(true); setDraftJob((current) => buildDamageMapJob(current, damageMap));
   }
 
   function updateStringGauge(index, value) {
-    if (!canWrite) {
-      return;
-    }
-    setIsDirty(true);
-    setDraftJob((current) => buildStringGaugePatch(current, index, value));
+    if (!canWrite) return;
+    setIsDirty(true); setDraftJob((current) => buildStringGaugePatch(current, index, value));
   }
 
   function updateStringGauges(gauges) {
-    if (!canWrite) {
-      return;
-    }
-    setIsDirty(true);
-    setDraftJob((current) => buildStringGaugesPatch(current, gauges));
+    if (!canWrite) return;
+    setIsDirty(true); setDraftJob((current) => buildStringGaugesPatch(current, gauges));
   }
 
   function handleSaveRequest(event) {
