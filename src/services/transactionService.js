@@ -9,11 +9,16 @@ export async function createTransactionEvent(payload = {}) {
     return { data: null, error: new Error(COMMERCE_NOT_CONFIGURED) };
   }
 
+  const requestId = payload.request_id || payload.requestId || createTransactionRequestId();
   const { data, error } = await supabase.rpc('create_transaction_event', {
-    transaction_payload: normalizeTransactionPayload(payload)
+    transaction_payload: normalizeTransactionPayload({ ...payload, requestId })
   });
 
-  return { data, error };
+  return { data, error, requestId };
+}
+
+export function createTransactionRequestId() {
+  return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 export async function getTransactionHistory(filters = {}) {
@@ -86,6 +91,7 @@ function normalizeTransactionPayload(payload) {
     event_type: payload.event_type || payload.eventType || 'generic',
     source_type: payload.source_type || payload.sourceType || 'manual',
     source_id: payload.source_id || payload.sourceId || null,
+    request_id: payload.request_id || payload.requestId || null,
     customer_id: payload.customer_id || payload.customerId || null,
     employee_id: payload.employee_id || payload.employeeId || null,
     currency_code: payload.currency_code || payload.currencyCode || getShopCurrencyCode(),

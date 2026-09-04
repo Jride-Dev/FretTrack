@@ -16,18 +16,31 @@ export default function JobDetailHeader({
   entitlementSnapshot,
   betaApproved,
   onStatusChange,
+  onDocumentTypeChange,
   onAssignmentChanged,
   onNotice,
   canManageAccountingVoid = false,
   onAccountingVoidChange
 }) {
+  const isEstimate = draftJob.documentType === 'estimate';
   return (
     <>
       <WorkspacePageHeader
-        eyebrow={`${draftJob.instrumentType || draftJob.techDetails?.instrumentType || 'Instrument'} work order${draftJob.jobNumber ? ` · ${draftJob.jobNumber}` : ''}`}
+        eyebrow={`${draftJob.instrumentType || draftJob.techDetails?.instrumentType || 'Instrument'} ${isEstimate ? 'estimate' : 'work order'}${draftJob.jobNumber ? ` · ${draftJob.jobNumber}` : ''}`}
         title={draftJob.customerName || 'Unnamed Customer'}
         description={[draftJob.guitarBrand, draftJob.model].filter(Boolean).join(' ') || 'Instrument details not yet recorded'}
-        actions={<JobStatusSelect canWrite={canWrite} value={draftJob.status} onChange={onStatusChange} />}
+        actions={(
+          <div className="job-header-controls">
+            <label>
+              Document Type
+              <select value={draftJob.documentType || 'work_order'} onChange={(event) => onDocumentTypeChange?.(event.target.value)} disabled={!canWrite}>
+                <option value="work_order">Work Order</option>
+                <option value="estimate">Estimate</option>
+              </select>
+            </label>
+            <JobStatusSelect canWrite={canWrite} value={draftJob.status} onChange={onStatusChange} />
+          </div>
+        )}
       />
       <JobAssignmentControl
         job={draftJob}

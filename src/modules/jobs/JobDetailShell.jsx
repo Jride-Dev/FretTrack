@@ -25,6 +25,7 @@ export default function JobDetailShell({
   membership,
   messagesPanel,
   onAssignmentChanged,
+  onDocumentTypeChange,
   onAccountingVoidChange,
   onCancelSubcontractorPickup,
   onCloseDocumentEmail,
@@ -74,6 +75,7 @@ export default function JobDetailShell({
         betaApproved={betaApproved}
         onStatusChange={onStatusChange}
         onAssignmentChanged={onAssignmentChanged}
+        onDocumentTypeChange={onDocumentTypeChange}
         onNotice={onNotice}
         canManageAccountingVoid={canManageAccountingVoid}
         onAccountingVoidChange={onAccountingVoidChange}

@@ -8,13 +8,17 @@ New Work Order and the shared Work Order, Parts & Payments surface now use the s
 
 New Work Order now opens as a full-width content workspace instead of leaving the legacy New Work Order sidebar mounted on the left. The intake form, job creation handlers, permissions, and offline draft behavior remain unchanged.
 
-Service quantities now use whole-number controls and are rejected at the database boundary when they contain fractional values. The existing guarded estimate lifecycle now has a matching customer document: Email Estimate requires a sent or approved revision and includes the locked service/part lines, revision, tax, and total in the email and Message History. The generic Estimate ready template cannot be sent before a real revision exists.
+Service quantities now use whole-number controls and are rejected at the database boundary when they contain fractional values. Estimates are now simple documents selected from the New Work Order Document Type dropdown. They remain editable and can be printed or emailed with the current service/part lines, tax, and total; no customer approval or estimate lock is required.
 
 The authenticated workspace also now has an Estimates queue so staff can find draft, sent, approved, and declined revisions without searching through every current job.
 
-Shop owners and admins can now create a revocable, 30-day customer estimate link for the current locked revision. The public view shows the exact service and part lines, minor-unit-derived totals, shop contact details, and a Print / Save PDF action. Customers must confirm they reviewed the estimate before approving or declining; the response is written to the guarded lifecycle and Message History timeline, and links stop working when a revision is replaced or returned to draft.
+The existing customer estimate-link surface remains available for compatibility with older records. Customer approval is informational only and does not block work or invoice finalization.
 
 Estimate document sends now retain one request identity from the first click through an ambiguous-provider retry. The document dialog keeps that identity only for retryable confirmation failures and resets it after a terminal result or a changed document, so the existing Message History claim and provider idempotency key can safely reconcile a lost response without sending the estimate twice.
+
+Invoice numbering is now database-owned: the first successful invoice finalization assigns a shop-scoped invoice number, preserves it across corrected revisions, backfills existing finalized invoices, and shows it in invoice emails and printed Job Sheets. Transaction events now require a stable request identity so an ambiguous retry replays the original event and number instead of creating a duplicate.
+
+Payment support now makes refunds and payment voids traceable and bounded. Owners and admins select the original payment, enter a reason, and record the actual provider action; FretTrack caps the adjustment at the remaining payment balance, rejects ambiguous unlinked adjustments, and preserves the original and remaining amounts in the payment history. This remains an operational record and does not call a card processor.
 
 New Work Order navigation now wins over a previously restored workspace mode, including when workspace hydration completes after the click. This prevents the legacy Show sections / Hide sections sidebar from reappearing during new-job intake.
 

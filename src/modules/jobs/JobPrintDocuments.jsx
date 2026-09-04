@@ -18,6 +18,7 @@ export default function JobPrintDocuments({
     <>
       <PrintJobSheet
         draftJob={draftJob}
+        documentType={draftJob.documentType}
         formatInstrumentLabel={formatInstrumentLabel}
         lengthUnit={lengthUnit}
         normalizeInstrumentType={normalizeInstrumentType}

@@ -4,6 +4,8 @@ Current release: **FretTrack 0.3.1**. Migration summaries below describe what ea
 
 `20260829071930_access_application_side_effect_idempotency.sql` returns the stable access-request UUID from the public intake RPC, preserves the original request timestamp on retries, and avoids appending identical notes. The landing Worker uses that identity for provider and private-archive idempotency.
 
+`20260903123712_invoice_transaction_numbering_review.sql` adds shop-scoped invoice numbers assigned on first invoice finalization, preserves them across invoice revisions, rejects direct number edits, and requires transaction-event callers to replay a stable `request_id` after an ambiguous response without allocating another event number.
+
 Run this before creating, editing, or applying Supabase migrations:
 
 ```powershell
@@ -177,9 +179,9 @@ npm run migration:check:strict
 
 # Estimate lifecycle migration
 
-`20260831220418_job_estimate_approval_lifecycle.sql` adds draft, sent, approved, and declined estimate state to work orders. The guarded owner/admin RPC stores server-calculated sent snapshots, increments revisions, rejects stale transitions, records decision events, locks sent/decided charge rows, and requires an explicit audited return to draft before a revised estimate can be edited.
+`20260831220418_job_estimate_approval_lifecycle.sql` is retained for historical estimate fields and compatibility. Estimates are now informational documents selected from the work-order Document Type dropdown; the follow-up migration `20260904020500_estimates_are_informational_documents.sql` removes charge locking and invoice-approval gating while preserving existing history.
 
-`20260903071814_public_estimate_approval_links.sql` adds hashed, private bearer tokens bound to one estimate revision. Owner/admin creation revokes the prior active link and limits expiry to 90 days; anonymous reads expose only the locked estimate document and shop contact fields; customer approval/decline updates the existing lifecycle through a guarded source-aware path and records a timeline event without a fabricated staff identity. Returning an estimate to draft or sending a newer revision makes older links unusable.
+`20260903071814_public_estimate_approval_links.sql` adds hashed, private bearer tokens bound to one estimate revision. Owner/admin creation revokes the prior active link and limits expiry to 90 days; anonymous reads expose only the estimate document and shop contact fields. Existing approval-link RPCs remain for compatibility, but customer approval is not required for shop work or invoice finalization.
 
 Estimate email retry hardening is application-level and uses the existing `send-email` request identity; it does not require a new migration. The document dialog retains the same request ID for retryable provider-confirmation failures so the existing Message History claim and provider idempotency key can reconcile one delivery.
 

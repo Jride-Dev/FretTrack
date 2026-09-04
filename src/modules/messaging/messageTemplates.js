@@ -11,16 +11,6 @@ export const messageTemplates = {
     subject: 'Drop-off scheduled for {{appointment_datetime}} - Job #{{job_number}}',
     body: "Hi {{customer_name}},\n\nYour appointment is scheduled for {{appointment_datetime}}.\n\nPlease reply if you need to change the drop-off time.\n\nJob #: {{job_number}}\nInstrument: {{instrument}}\n\n{{shop_signature}}"
   },
-  estimate_ready: {
-    label: 'Estimate ready',
-    subject: 'Estimate ready for your {{instrument}} (Job #{{job_number}})',
-    body: "Hi {{customer_name}},\n\nYour estimate revision {{estimate_revision}} for {{instrument}} is ready. The estimated total is {{estimate_total}}.\n\nPlease review the line-by-line estimate using the Email Estimate action in the work order, then let me know if you'd like me to move forward.\n\nJob #: {{job_number}}\n\n{{shop_signature}}"
-  },
-  approval_needed: {
-    label: 'Approval needed',
-    subject: 'Approval needed - Job #{{job_number}}',
-    body: "Hi {{customer_name}},\n\nBefore I continue with your {{instrument}}, I need your approval on the work.\n\nReply here or call/text me to confirm.\n\nJob #: {{job_number}}\n\n{{shop_signature}}"
-  },
   work_started: {
     label: 'Work started',
     subject: 'Work started on your {{instrument}} (Job #{{job_number}})',

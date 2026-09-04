@@ -157,6 +157,7 @@ export function normalizeJob(job, jobs = []) {
 
   return {
     id: job.id || crypto.randomUUID(),
+    documentType: job.documentType || job.document_type || techDetails.documentType || 'work_order',
     customerId: job.customerId || job.customer_id || '',
     instrumentType,
     customerName,
@@ -434,7 +435,12 @@ export function normalizePayment(payment) {
       ? String(payment.type || payment.eventType).toLowerCase()
       : 'payment',
     method: payment.method || 'Cash',
-    note: payment.note || ''
+    note: payment.note || '',
+    appliesToPaymentId: payment.appliesToPaymentId || payment.applies_to_payment_id || '',
+    originalAmount: payment.originalAmount ?? payment.original_amount ?? null,
+    remainingAfter: payment.remainingAfter ?? payment.remaining_after ?? null,
+    recordedAt: payment.recordedAt || payment.recorded_at || '',
+    recordedBy: payment.recordedBy || payment.recorded_by || ''
   };
 }
 
@@ -645,6 +651,7 @@ export function toLegacyJobStatus(status) {
 export function fromDbJob(job) {
   return normalizeJob({
     id: job.id,
+    documentType: job.tech_details?.documentType || job.tech_details?.document_type || 'work_order',
     customerId: job.customer_id || '',
     customerName: job.customer_name || '',
     customerFirstName: job.customer_first_name || '',
@@ -688,6 +695,7 @@ export function fromDbJob(job) {
     estimateLastRequestId: job.estimate_last_request_id || '',
     invoiceFinalizedAt: job.invoice_finalized_at || null,
     invoiceFinalizedBy: job.invoice_finalized_by || '',
+    invoiceNumber: Number(job.invoice_number || 0) || null,
     invoiceSnapshot: job.invoice_snapshot || null,
     invoiceRevision: Number(job.invoice_revision || 0),
     invoiceFinalizationReason: job.invoice_finalization_reason || '',

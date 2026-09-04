@@ -89,7 +89,8 @@ function JobDetailWorkspace({
   const hydratedJobIdRef = useRef(job.id);
   const printRequestSequenceRef = useRef(0);
   activeJobIdRef.current = job.id;
-  const chargesLocked = Boolean(draftJob.invoiceFinalizedAt) || (draftJob.estimateStatus || 'draft') !== 'draft';
+  // Estimates are informational snapshots. Only a finalized invoice locks charges.
+  const chargesLocked = Boolean(draftJob.invoiceFinalizedAt);
 
   const setIsDirty = useCallback((value) => {
     setDirty(value);
@@ -228,6 +229,9 @@ function JobDetailWorkspace({
     const { name, value } = event.target;
     patchJob(buildJobFieldPatch(draftJob, name, value, jobs));
   }
+  function updateDocumentType(documentType) {
+    if (canWrite && ['work_order', 'estimate'].includes(documentType)) patchJob({ documentType, techDetails: { ...(draftJob.techDetails || {}), documentType } });
+  }
   function unlinkCustomer() {
     if (!canWrite || !draftJob.customerId) {
       return;
@@ -336,16 +340,13 @@ function JobDetailWorkspace({
   const {
     addPayment,
     addService,
-    changeEstimateState, createEstimateLink, changeInvoiceFinalization,
-    estimateNote,
+    createEstimateLink, changeInvoiceFinalization,
     finalizationReason,
-    isChangingEstimateState,
     isChangingInvoiceState,
-    isRecordingPayment, isCreatingPublicEstimateLink, payment, publicEstimateLink,
+    isRecordingPayment, isCreatingPublicEstimateLink, payment, paymentTargets, publicEstimateLink,
     removeService,
     service,
     setFinalizationReason,
-    setEstimateNote,
     setPayment,
     setService,
     updateService
@@ -385,27 +386,18 @@ function JobDetailWorkspace({
   }
 
   function updateDamageMap(damageMap) {
-    if (!canWrite) {
-      return;
-    }
-    setIsDirty(true);
-    setDraftJob((current) => buildDamageMapJob(current, damageMap));
+    if (!canWrite) return;
+    setIsDirty(true); setDraftJob((current) => buildDamageMapJob(current, damageMap));
   }
 
   function updateStringGauge(index, value) {
-    if (!canWrite) {
-      return;
-    }
-    setIsDirty(true);
-    setDraftJob((current) => buildStringGaugePatch(current, index, value));
+    if (!canWrite) return;
+    setIsDirty(true); setDraftJob((current) => buildStringGaugePatch(current, index, value));
   }
 
   function updateStringGauges(gauges) {
-    if (!canWrite) {
-      return;
-    }
-    setIsDirty(true);
-    setDraftJob((current) => buildStringGaugesPatch(current, gauges));
+    if (!canWrite) return;
+    setIsDirty(true); setDraftJob((current) => buildStringGaugesPatch(current, gauges));
   }
 
   function handleSaveRequest(event) {
@@ -495,7 +487,7 @@ function JobDetailWorkspace({
     lengthUnit: measurementOptions.lengthUnit,
     normalizeInstrumentType,
     onCloseDetail: closeDetail,
-    onEmailWorkOrder: openWorkOrderEmail,
+    onEmailWorkOrder: draftJob.documentType === 'estimate' ? openEstimateEmail : openWorkOrderEmail,
     onExportJobJson: exportJobJson,
     onFinishJob: finishJob,
     onPrintCustomerReport: printCustomerReport,
@@ -573,15 +565,14 @@ function JobDetailWorkspace({
       canRecordJobPayments={canRecordJobPayments}
       canIssuePaymentAdjustments={canIssuePaymentAdjustments}
       canFinalizeJobInvoices={canFinalizeJobInvoices}
-      changeEstimateState={changeEstimateState} createEstimateLink={createEstimateLink}
+      createEstimateLink={createEstimateLink}
       changeInvoiceFinalization={changeInvoiceFinalization}
       draftJob={draftJob}
-      estimateNote={estimateNote}
       finalizationReason={finalizationReason}
       inventoryParts={inventoryParts}
       inventorySearch={inventorySearch}
       isInventoryLoading={isInventoryLoading}
-      isChangingEstimateState={isChangingEstimateState} isCreatingPublicEstimateLink={isCreatingPublicEstimateLink}
+      isCreatingPublicEstimateLink={isCreatingPublicEstimateLink}
       isChangingInvoiceState={isChangingInvoiceState}
       isRecordingPayment={isRecordingPayment}
       onAddInventoryPart={addInventoryPart}
@@ -601,11 +592,11 @@ function JobDetailWorkspace({
       part={part}
       parts={parts}
       payment={payment}
+      paymentTargets={paymentTargets}
       payments={payments}
       service={service}
       services={services}
       setInventorySearch={setInventorySearch}
-      setEstimateNote={setEstimateNote}
       setFinalizationReason={setFinalizationReason}
       setPart={setPart}
       setPayment={setPayment}
@@ -676,6 +667,7 @@ function JobDetailWorkspace({
       membership={membership}
       messagesPanel={messagesPanel}
       onAssignmentChanged={handleAssignmentChanged}
+      onDocumentTypeChange={updateDocumentType}
       onCancelSubcontractorPickup={() => setSubcontractorPickupJob(null)}
       onCloseDocumentEmail={() => setDocumentEmailDraft(null)}
       onClosePhotoEditor={() => setPhotoEditorImage(null)}

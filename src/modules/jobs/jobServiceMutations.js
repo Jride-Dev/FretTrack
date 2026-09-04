@@ -189,6 +189,9 @@ export async function recordJobPayment(jobId, payment, expectedUpdatedAt = null)
   }
 
   const amountMinor = Math.round(Number(payment.amount || 0) * 100);
+  if (['refund', 'void'].includes(String(payment.type || '').toLowerCase())) {
+    return recordJobPaymentAdjustment(jobId, payment, expectedUpdatedAt);
+  }
   const { data, error } = await supabase.rpc('record_job_payment', {
     p_job_id: jobId,
     p_payment_id: payment.id,
@@ -205,6 +208,41 @@ export async function recordJobPayment(jobId, payment, expectedUpdatedAt = null)
       throw createJobSaveConflictError();
     }
     throw new Error(error.message || 'The payment could not be recorded.');
+  }
+
+  return {
+    payment: data?.payment || payment,
+    updatedAt: data?.updatedAt || expectedUpdatedAt,
+    replayed: Boolean(data?.replayed)
+  };
+}
+
+export async function recordJobPaymentAdjustment(jobId, payment, expectedUpdatedAt = null) {
+  if (!jobId || !payment?.id || !payment?.appliesToPaymentId) {
+    throw new Error('A work order, original payment, and adjustment request are required.');
+  }
+  if (!hasSupabaseConfig || !supabase) {
+    return null;
+  }
+
+  const amountMinor = Math.round(Number(payment.amount || 0) * 100);
+  const { data, error } = await supabase.rpc('record_job_payment_adjustment', {
+    p_job_id: jobId,
+    p_adjustment_id: payment.id,
+    p_original_payment_id: payment.appliesToPaymentId,
+    p_amount_minor: amountMinor,
+    p_adjustment_type: payment.type,
+    p_method: payment.method || 'Other',
+    p_note: payment.note || '',
+    p_payment_date: payment.date || null,
+    p_expected_updated_at: expectedUpdatedAt || null
+  });
+
+  if (error) {
+    if (error.code === '40001') {
+      throw createJobSaveConflictError();
+    }
+    throw new Error(error.message || 'The payment adjustment could not be recorded.');
   }
 
   return {
@@ -235,6 +273,7 @@ export async function setJobInvoiceFinalization(jobId, finalized, reason) {
   return {
     invoiceFinalizedAt: saved?.invoice_finalized_at || null,
     invoiceFinalizedBy: saved?.invoice_finalized_by || '',
+    invoiceNumber: Number(saved?.invoice_number || 0) || null,
     invoiceSnapshot: saved?.invoice_snapshot || null,
     invoiceRevision: Number(saved?.invoice_revision || 0),
     invoiceFinalizationReason: saved?.invoice_finalization_reason || '',
@@ -637,7 +676,10 @@ function logJobUpdated(job, previousJob) {
           amount: payment.amount,
           type: paymentType,
           method: payment.method,
-          date: payment.date
+          date: payment.date,
+          appliesToPaymentId: payment.appliesToPaymentId || null,
+          originalAmount: payment.originalAmount ?? null,
+          remainingAfter: payment.remainingAfter ?? null
         }
       });
     });

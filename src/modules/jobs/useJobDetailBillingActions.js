@@ -51,9 +51,30 @@ export default function useJobDetailBillingActions({
     if (!canRecordJobPayments || isRecordingPayment || !Number(payment.amount)) {
       return;
     }
-    if (payment.type !== 'payment' && !canIssuePaymentAdjustments) {
+    const paymentType = String(payment.type || 'payment').toLowerCase();
+    if (paymentType !== 'payment' && !canIssuePaymentAdjustments) {
       reportCommerceError(null, 'Only a shop owner or admin can record refunds or payment voids.');
       return;
+    }
+    if (paymentType !== 'payment') {
+      const target = getPaymentTarget(draftJob.techDetails?.payments || [], payment.appliesToPaymentId);
+      if (!target) {
+        reportCommerceError(null, 'Select the original payment before recording an adjustment.');
+        return;
+      }
+      const amountMinor = Math.round(Number(payment.amount || 0) * 100);
+      if (amountMinor > target.remainingMinor) {
+        reportCommerceError(null, `The adjustment cannot exceed the remaining refundable balance of ${(target.remainingMinor / 100).toFixed(2)}.`);
+        return;
+      }
+      if (paymentType === 'void' && amountMinor !== target.remainingMinor) {
+        reportCommerceError(null, 'A payment void must close the full remaining payment balance.');
+        return;
+      }
+      if (String(payment.note || '').trim().length < 3) {
+        reportCommerceError(null, 'Enter a reason for the refund or payment void.');
+        return;
+      }
     }
     if (isDirty) {
       reportCommerceError(null, 'Save the work order changes before recording a payment or adjustment.');
@@ -82,7 +103,7 @@ export default function useJobDetailBillingActions({
         setIsDirty(false);
       }
       setPayment(createEmptyPayment());
-      onNotice?.({ type: 'success', message: paymentToRecord.type === 'payment' ? 'Payment recorded.' : 'Payment adjustment recorded.' });
+      onNotice?.({ type: 'success', message: paymentToRecord.type === 'payment' ? 'Payment recorded.' : `${paymentToRecord.type === 'void' ? 'Payment void' : 'Refund'} recorded.` });
       try {
         await onRefresh?.();
       } catch (refreshError) {
@@ -153,27 +174,24 @@ export default function useJobDetailBillingActions({
     }
   }
 
-  async function changeEstimateState(status) {
-    if (!canFinalizeJobInvoices || isChangingEstimateState) {
+  async function changeEstimateState(status, noteOverride = null) {
+    if (!canWrite || !canManageJobCharges || isChangingEstimateState) {
       return;
     }
-    const note = estimateNote.trim();
-    if (note.length < 8) {
-      reportCommerceError(null, 'Enter an estimate audit note of at least 8 characters.');
-      return;
-    }
+    const note = noteOverride === null ? estimateNote.trim() : String(noteOverride).trim();
+    const estimateNoteForSave = note || 'Estimate prepared for customer review.';
     if (isDirty && status !== 'sent') {
       reportCommerceError(null, 'Save the work order changes before changing estimate state.');
       return;
     }
 
     setIsChangingEstimateState(true);
-    const operationKey = JSON.stringify([draftJob.id, status, note]);
+    const operationKey = JSON.stringify([draftJob.id, status, estimateNoteForSave]);
     const requestId = estimateOperationRef.current.get(operationKey) || crypto.randomUUID();
     estimateOperationRef.current.set(operationKey, requestId);
     try {
       const savedJob = status === 'sent' ? await saveDraftNow(withTaxSnapshot(draftJob, taxSettings)) : draftJob;
-      const result = await setJobEstimateState(savedJob.id, status, note, requestId, savedJob.updatedAt);
+      const result = await setJobEstimateState(savedJob.id, status, estimateNoteForSave, requestId, savedJob.updatedAt);
       setDraftJob((current) => ({ ...current, ...result }));
       setIsDirty(false);
       setEstimateNote('');
@@ -186,6 +204,7 @@ export default function useJobDetailBillingActions({
         console.warn('Estimate state changed, but the work-order refresh failed.', refreshError);
         onNotice?.({ type: 'warning', message: `${getEstimateSuccessMessage(status)} Refresh the work order to reconcile its history.` });
       }
+      return result;
     } catch (error) {
       reportCommerceError(error, 'The estimate state could not be changed.');
     } finally {
@@ -227,6 +246,7 @@ export default function useJobDetailBillingActions({
     isRecordingPayment,
     isCreatingPublicEstimateLink,
     payment,
+    paymentTargets: buildPaymentTargets(draftJob.techDetails?.payments || []),
     publicEstimateLink,
     removeService,
     service,
@@ -249,7 +269,29 @@ function withTaxSnapshot(job, taxSettings = {}) {
 }
 
 function chargesAreLocked(job) {
-  return Boolean(job.invoiceFinalizedAt) || (job.estimateStatus || 'draft') !== 'draft';
+  return Boolean(job.invoiceFinalizedAt);
+}
+
+function buildPaymentTargets(payments = []) {
+  return payments
+    .filter((row) => String(row.type || 'payment').toLowerCase() === 'payment')
+    .map((row) => {
+      const originalMinor = Math.round(Number(row.amount || 0) * 100);
+      const appliedMinor = payments
+        .filter((adjustment) => adjustment.appliesToPaymentId === row.id && ['refund', 'void'].includes(String(adjustment.type || '').toLowerCase()))
+        .reduce((total, adjustment) => total + Math.round(Number(adjustment.amount || 0) * 100), 0);
+      return {
+        ...row,
+        originalMinor,
+        appliedMinor,
+        remainingMinor: Math.max(originalMinor - appliedMinor, 0)
+      };
+    })
+    .filter((row) => row.remainingMinor > 0);
+}
+
+function getPaymentTarget(payments, paymentId) {
+  return buildPaymentTargets(payments).find((row) => row.id === paymentId) || null;
 }
 
 function getEstimateSuccessMessage(status) {

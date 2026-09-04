@@ -9,16 +9,13 @@ export default function JobBillingSections({
   canRecordJobPayments,
   canIssuePaymentAdjustments,
   canFinalizeJobInvoices,
-  changeEstimateState,
   createEstimateLink,
   changeInvoiceFinalization,
   draftJob,
-  estimateNote,
   finalizationReason,
   inventoryParts,
   inventorySearch,
   isInventoryLoading,
-  isChangingEstimateState,
   isCreatingPublicEstimateLink,
   isChangingInvoiceState,
   isRecordingPayment,
@@ -40,11 +37,11 @@ export default function JobBillingSections({
   part,
   parts,
   payment,
+  paymentTargets,
   payments,
   service,
   services,
   setInventorySearch,
-  setEstimateNote,
   setFinalizationReason,
   setPart,
   setPayment,
@@ -87,7 +84,6 @@ export default function JobBillingSections({
         canRecordJobPayments={canRecordJobPayments}
         canIssuePaymentAdjustments={canIssuePaymentAdjustments}
         canFinalizeJobInvoices={canFinalizeJobInvoices}
-        changeEstimateState={changeEstimateState}
         createEstimateLink={createEstimateLink}
         changeInvoiceFinalization={changeInvoiceFinalization}
         addPayment={onAddPayment}
@@ -95,16 +91,14 @@ export default function JobBillingSections({
         emailInvoice={onEmailInvoice}
         emailEstimate={onEmailEstimate}
         publicEstimateLink={publicEstimateLink}
-        estimateNote={estimateNote}
         finalizationReason={finalizationReason}
-        isChangingEstimateState={isChangingEstimateState}
         isCreatingPublicEstimateLink={isCreatingPublicEstimateLink}
         isChangingInvoiceState={isChangingInvoiceState}
         isRecordingPayment={isRecordingPayment}
         payment={payment}
+        paymentTargets={paymentTargets}
         payments={payments}
         setPayment={setPayment}
-        setEstimateNote={setEstimateNote}
         setFinalizationReason={setFinalizationReason}
         taxSettings={taxSettings}
         shopTaxCalculationMode={shopTaxCalculationMode}

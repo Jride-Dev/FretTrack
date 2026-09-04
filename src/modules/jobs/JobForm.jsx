@@ -39,6 +39,7 @@ function cleanPostalCode(value) {
 function getInitialFormState(jobs = []) {
   const dateReceived = todayValue();
   return {
+    documentType: 'work_order',
     customerFirstName: '',
     customerLastName: '',
     customerId: '',
@@ -295,6 +296,7 @@ export default function JobForm({
       discountValue: '',
       techDetails: {
         instrumentType: form.instrumentType,
+        documentType: form.documentType,
         instrumentYear: form.instrumentYear,
         finish: form.finish,
         orientation: form.orientation || 'Unknown',
@@ -398,9 +400,11 @@ export default function JobForm({
   return (
     <form className="panel work-order-form new-work-order-form" onSubmit={handleSubmit}>
       <WorkspacePageHeader
-        eyebrow="Work order intake"
-        title="New Work Order"
-        description="Start with the customer and instrument, then set the shop workflow details."
+        eyebrow={form.documentType === 'estimate' ? 'Estimate intake' : 'Work order intake'}
+        title={form.documentType === 'estimate' ? 'New Estimate' : 'New Work Order'}
+        description={form.documentType === 'estimate'
+          ? 'Start with the customer and instrument, then print or email the estimated work and cost.'
+          : 'Start with the customer and instrument, then set the shop workflow details.'}
       />
       {!canWrite && <p className="muted-text">Your shop role can view work orders but cannot create new ones.</p>}
       <datalist id="new-job-brand-options">
@@ -666,6 +670,13 @@ export default function JobForm({
           description="Set intake, ownership, dates, and priority for the queue."
         >
         <div className="form-grid">
+        <label>
+          Document Type
+          <select name="documentType" value={form.documentType || 'work_order'} onChange={handleChange} disabled={!canWrite}>
+            <option value="work_order">Work Order</option>
+            <option value="estimate">Estimate</option>
+          </select>
+        </label>
         <label>
           Job Source
           <select name="intakeType" value={form.intakeType} onChange={handleChange} disabled={!canWrite}>
