@@ -20,6 +20,9 @@ export function resolveJobTaxSettings(job = {}, shopSettings = {}) {
     || (rateSource === 'shop' ? shopSettings.taxCalculationMode : '')
     || (Number(storedTaxSettings.salesTaxRate) > 0 ? 'manual' : 'disabled');
   const storedTaxRate = hasValue(storedTaxSettings.salesTaxRate) ? String(storedTaxSettings.salesTaxRate) : '';
+  const legacyShopRate = rateSource === 'shop'
+    && !hasValue(storedTaxSettings.calculationMode)
+    && Number(storedTaxSettings.salesTaxRate) === 0;
 
   return {
     ...storedTaxSettings,
@@ -30,7 +33,7 @@ export function resolveJobTaxSettings(job = {}, shopSettings = {}) {
     state: storedTaxSettings.state || shopSettings.taxState || '',
     salesTaxRate: calculationMode === 'disabled'
       ? '0'
-      : storedTaxRate || shopTaxRate,
+      : legacyShopRate ? shopTaxRate : storedTaxRate || shopTaxRate,
     taxRegistrationNumber: storedTaxSettings.taxRegistrationNumber || shopSettings.taxRegistrationNumber || '',
     taxableParts: calculationMode === 'disabled'
       ? false

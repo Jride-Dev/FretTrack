@@ -8,6 +8,7 @@ const defaultRange = getDefaultAccountingDateRange();
 
 export default function AccountingReports({ jobs = [], shopId = '', shopProfile = null }) {
   const [dateRange, setDateRange] = useState(defaultRange);
+  const [salesFilter, setSalesFilter] = useState('all');
   const report = useMemo(() => buildAccountingReport(jobs, {
     shopId,
     shopProfile,
@@ -16,6 +17,11 @@ export default function AccountingReports({ jobs = [], shopId = '', shopProfile 
   }), [jobs, shopId, shopProfile, dateRange.start, dateRange.end]);
   const moneyOptions = { currency: report.currencyCode, locale: report.locale };
   const dateOptions = { dateFormat: report.dateFormat, locale: report.locale };
+  const visibleSalesHistory = report.salesHistory.filter((row) => {
+    if (salesFilter === 'open') return row.balanceDue > 0.005;
+    if (salesFilter === 'paid') return row.balanceDue <= 0.005;
+    return true;
+  });
 
   function updateRange(event) {
     const { name, value } = event.target;
@@ -56,6 +62,28 @@ export default function AccountingReports({ jobs = [], shopId = '', shopProfile 
         <p>{formatShopDate(dateRange.start, dateOptions)} to {formatShopDate(dateRange.end, dateOptions)}</p>
       </div>
 
+      <section className="accounting-tax-profile">
+        <div>
+          <h3>Active Tax Profile</h3>
+          <p className="muted-text">
+            Shop default used for new calculations. Existing jobs retain their stored profile snapshot or explicit override.
+          </p>
+        </div>
+        <dl className="accounting-tax-profile-grid">
+          <div><dt>Mode</dt><dd>{report.taxProfile.calculationMode === 'manual' ? 'Manual' : 'Disabled'}</dd></div>
+          <div><dt>Jurisdiction</dt><dd>{report.taxProfile.jurisdiction || 'Not configured'}</dd></div>
+          <div><dt>Default rate</dt><dd>{report.taxProfile.defaultRatePercent}%</dd></div>
+          <div><dt>Registration</dt><dd>{report.taxProfile.registrationNumber || 'Not configured'}</dd></div>
+          <div><dt>Profile revision</dt><dd>{report.taxProfile.profileRevision || '—'}</dd></div>
+          <div><dt>Job overrides in range</dt><dd>{report.taxProfile.jobOverrideCount}</dd></div>
+        </dl>
+        {report.taxProfile.hasMixedSnapshots && (
+          <p className="accounting-tax-profile-warning">
+            This range contains more than one tax profile or rate. Review the job-level tax snapshots before filing.
+          </p>
+        )}
+      </section>
+
       <div className="accounting-summary-grid">
         <SummaryCard label="Job Totals" value={money(report.summary.jobTotals, moneyOptions)} />
         <SummaryCard label="Paid In" value={money(report.summary.paidTotal, moneyOptions)} />
@@ -80,6 +108,48 @@ export default function AccountingReports({ jobs = [], shopId = '', shopProfile 
           </tr>
         )}
       />
+
+      <section className="accounting-table-section sales-history-section">
+        <div className="accounting-table-heading">
+          <div>
+            <h3>Sales History</h3>
+            <p className="muted-text">One row per non-voided work order in the selected range.</p>
+          </div>
+          <label className="no-print">
+            Show
+            <select value={salesFilter} onChange={(event) => setSalesFilter(event.target.value)}>
+              <option value="all">All sales</option>
+              <option value="open">Open balances</option>
+              <option value="paid">Paid in full</option>
+            </select>
+          </label>
+        </div>
+        {visibleSalesHistory.length ? (
+          <table>
+            <thead>
+              <tr>
+                {['Date', 'Job #', 'Customer', 'Status', 'Total', 'Paid', 'Balance', report.taxLabel].map((header) => <th key={header}>{header}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {visibleSalesHistory.map((row) => (
+                <tr key={row.id}>
+                  <td>{formatShopDate(row.date, dateOptions)}</td>
+                  <td>{row.jobNumber || '—'}</td>
+                  <td>{row.customerName || '—'}</td>
+                  <td>{row.status || '—'}</td>
+                  <td>{money(row.totalDue, moneyOptions)}</td>
+                  <td>{money(row.paidTotal, moneyOptions)}</td>
+                  <td>{money(row.balanceDue, moneyOptions)}</td>
+                  <td>{money(row.taxAmount, moneyOptions)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="empty-state">No sales match this filter.</p>
+        )}
+      </section>
 
       <ReportTable
         title={`${report.taxLabel} Collected`}
