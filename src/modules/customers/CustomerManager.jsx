@@ -236,6 +236,7 @@ export default function CustomerManager({
           serviceRemindersEnabled={serviceRemindersEnabled}
           dateOptions={dateOptions}
           moneyOptions={moneyOptions}
+          shopId={shopProfile?.shopId || shopProfile?.shop_id || ''}
           onCreateJob={handleCreateJob}
           onEditCustomer={canWrite ? openEditCustomerModal : null}
           onNotice={onNotice}

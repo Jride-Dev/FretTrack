@@ -1,6 +1,6 @@
 # Customer Correspondence Foundation
 
-FretTrack now has a provider-neutral database and repository foundation for keeping customer correspondence attached to the correct shop and customer. The foundation is intentionally headless: it prepares safe storage and application boundaries without presenting an unfinished conversation interface or enabling inbound email or SMS.
+FretTrack now has a provider-neutral database, repository, and focused customer Conversation view for keeping correspondence attached to the correct shop and customer. The interface consumes the existing repository and does not enable inbound email or SMS adapters.
 
 ## Implemented Boundary
 
@@ -29,14 +29,13 @@ Customer reports may include only explicitly selected, nonblank sent/delivered o
 
 ## Not Yet Enabled
 
-This foundation does not add a conversation panel, change current printing, receive inbound provider webhooks, subscribe the browser to Realtime, or enable SMS delivery. Resend and Twilio secrets remain server-only. Existing immediate email, Scheduled Email, Automated Service Reminders, and Message History continue to behave as before.
+The customer profile Conversation panel now lists the customer's email/SMS history, keeps unassigned records visible, shows inbound read state, and lets authorized staff explicitly include eligible correspondence in a future customer report. It does not change current printing, receive inbound provider webhooks, subscribe the browser to Realtime, or enable SMS delivery. Resend and Twilio secrets remain server-only. Existing immediate email, Scheduled Email, Automated Service Reminders, and job-level Message History continue to behave as before.
 
 ## Next Delivery Order
 
-1. Add a focused correspondence UI that consumes the repository without duplicating message state.
-2. Add deliberate staff controls for unassigned inbound routing, read state, and customer-report selection.
-3. Extend the isolated Customer Service Report renderer to consume only eligible selected correspondence.
-4. Add one signed and replay-safe inbound provider adapter at a time.
-5. Add Realtime delivery only after authorization, reconnect, ordering, and duplicate-event behavior have executable tests.
+1. Add deliberate staff controls for unassigned inbound routing while preserving the focused Conversation view.
+2. Extend the isolated Customer Service Report renderer to consume only eligible selected correspondence.
+3. Add one signed and replay-safe inbound provider adapter at a time.
+4. Add Realtime delivery only after authorization, reconnect, ordering, and duplicate-event behavior have executable tests.
 
 Database coverage lives in `supabase/tests/database/customer_correspondence_backend.test.sql`; provider-neutral normalization coverage lives in `scripts/customer-correspondence.test.mjs`.
