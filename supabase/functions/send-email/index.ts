@@ -207,7 +207,7 @@ Deno.serve(async (request) => {
           to: toRecipients,
           ...(ccRecipients.length ? { cc: ccRecipients } : {}),
           ...(bccRecipients.length ? { bcc: bccRecipients } : {}),
-          ...(replyTo ? { reply_to: replyTo } : {}),
+          reply_to: replyTo,
           subject,
           text: body,
           ...(html ? { html } : {}),
@@ -595,16 +595,18 @@ async function resolveInboundReplyTo(shopId: string) {
     .select('email_address')
     .eq('shop_id', shopId)
     .eq('active', true)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .single();
 
   if (error) {
-    console.error('inbound email reply route lookup failed', error);
-    return '';
+    throw new Error(`Inbound email reply route lookup failed: ${error.message}`);
   }
 
-  return String(data?.email_address || '').trim().toLowerCase();
+  const replyTo = String(data?.email_address || '').trim().toLowerCase();
+  if (!replyTo) {
+    throw new Error('This shop does not have an inbound email reply route.');
+  }
+
+  return replyTo;
 }
 
 async function resolveJobWriteAccess(request: Request, jobId: string) {

@@ -8,6 +8,7 @@ const handler = read('supabase/functions/receive-email/index.ts');
 const verifier = read('supabase/functions/receive-email/resendInbound.ts');
 const sendEmail = read('supabase/functions/send-email/index.ts');
 const migration = read('supabase/migrations/20260904082220_resend_inbound_email_adapter.sql');
+const automaticRoutesMigration = read('supabase/migrations/20260904233235_automatic_inbound_email_routes.sql');
 const test = read('supabase/functions/receive-email/resendInbound.test.ts');
 
 assert.match(handler, /verifyResendWebhook/, 'the inbound handler must verify the provider signature');
@@ -25,6 +26,12 @@ assert.match(test, /valid Svix v1 signature/, 'signature verification must have 
 assert.match(test, /bad or stale signatures/, 'signature verification must have replay and forgery tests');
 assert.match(sendEmail, /resolveInboundReplyTo\(access\.shopId\)/, 'outbound email must resolve the shop inbound reply route');
 assert.match(sendEmail, /\.from\('customer_inbound_email_routes'\)/, 'outbound reply routing must use the service-managed route table');
-assert.match(sendEmail, /\{ reply_to: replyTo \}/, 'Resend sends must direct customer replies to the inbound route');
+assert.match(sendEmail, /reply_to: replyTo/, 'Resend sends must direct customer replies to the inbound route');
+assert.match(sendEmail, /This shop does not have an inbound email reply route/, 'outbound email must fail closed instead of losing replies when a route is missing');
+assert.match(automaticRoutesMigration, /customer_inbound_email_routes_active_shop_uidx/, 'the database must enforce one active route per shop');
+assert.match(automaticRoutesMigration, /shop_profiles_provision_inbound_email_route/, 'new shops must provision a route automatically');
+assert.match(automaticRoutesMigration, /reply\+.*rexaaechae\.resend\.app/, 'automatic routes must use the configured Resend receiving domain');
+assert.match(handler, /\.in\('email_address', uniqueRecipients\)/, 'inbound routing must query only the message recipients');
+assert.match(handler, /data\?\.length === 1/, 'inbound routing must fail closed when recipients match multiple shops');
 
 console.log('Resend inbound adapter checks passed.');
