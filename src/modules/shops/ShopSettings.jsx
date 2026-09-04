@@ -247,44 +247,50 @@ export default function ShopSettings({
               <option value="mm">mm</option>
             </select>
           </label>
-          <label>
-            Tax calculation
-            <select name="taxCalculationMode" value={settings.taxCalculationMode || 'disabled'} onChange={updateField} disabled={!canManageShop || isSaving}>
-              <option value="disabled">Disabled — calculate no tax</option>
-              <option value="manual">Manual shop-configured tax</option>
-            </select>
-            <small>FretTrack does not determine registrations, rates, exemptions, or filing obligations.</small>
-          </label>
-          <label>
-            Tax/VAT Label
-            <input name="taxLabel" list="shop-tax-label-options" value={settings.taxLabel || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} placeholder="Sales Tax, VAT, GST, or custom" />
-            <datalist id="shop-tax-label-options">
-              <option value="Sales Tax" />
-              <option value="VAT" />
-              <option value="GST" />
-            </datalist>
-          </label>
-          <label>
-            Tax/VAT Registration #
-            <input name="taxRegistrationNumber" value={settings.taxRegistrationNumber || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
-          </label>
-          <label>
-            Tax Jurisdiction
-            <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} required={settings.taxCalculationMode === 'manual'} maxLength="80" />
-          </label>
-          <label>
-            Default {settings.taxLabel || 'Tax'} %
-            <input type="number" min="0" max="100" step="0.001" name="defaultTaxRate" value={settings.defaultTaxRate ?? settings.salesTaxRate ?? ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
-            <small>This is a shop default for new jobs, not tax or legal advice. Existing job tax snapshots are unchanged.</small>
-          </label>
-          <label className="checkline">
-            <input type="checkbox" name="taxablePartsDefault" checked={settings.taxablePartsDefault !== false} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
-            Parts taxable by default
-          </label>
-          <label className="checkline">
-            <input type="checkbox" name="taxableServicesDefault" checked={Boolean(settings.taxableServicesDefault)} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
-            Services taxable by default
-          </label>
+          <div id="shop-tax-settings" className="wide shop-settings-subsection tax-settings-subsection" tabIndex="-1">
+            <h4>Tax / VAT</h4>
+            <p className="muted-text">Enable the shop tax profile used by Parts &amp; Billing, estimates, invoices, and new work orders.</p>
+            <div className="form-grid">
+              <label>
+                Tax calculation
+                <select name="taxCalculationMode" value={settings.taxCalculationMode || 'disabled'} onChange={updateField} disabled={!canManageShop || isSaving}>
+                  <option value="disabled">Disabled — calculate no tax</option>
+                  <option value="manual">Enabled — use the shop rate below</option>
+                </select>
+                <small>FretTrack does not determine registrations, rates, exemptions, or filing obligations.</small>
+              </label>
+              <label>
+                Tax/VAT Label
+                <input name="taxLabel" list="shop-tax-label-options" value={settings.taxLabel || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} placeholder="Sales Tax, VAT, GST, or custom" />
+                <datalist id="shop-tax-label-options">
+                  <option value="Sales Tax" />
+                  <option value="VAT" />
+                  <option value="GST" />
+                </datalist>
+              </label>
+              <label>
+                Tax/VAT Registration #
+                <input name="taxRegistrationNumber" value={settings.taxRegistrationNumber || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
+              </label>
+              <label>
+                Tax Jurisdiction
+                <input name="taxState" value={settings.taxState || ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} required={settings.taxCalculationMode === 'manual'} maxLength="80" placeholder="United Kingdom, California, Ontario…" />
+              </label>
+              <label>
+                Default {settings.taxLabel || 'Tax'} %
+                <input type="number" min="0" max="100" step="0.001" name="defaultTaxRate" value={settings.defaultTaxRate ?? settings.salesTaxRate ?? ''} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
+                <small>This is the default for new jobs. Existing saved work-order tax snapshots are changed only when staff apply the shop profile.</small>
+              </label>
+              <label className="checkline">
+                <input type="checkbox" name="taxablePartsDefault" checked={settings.taxablePartsDefault !== false} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
+                Parts taxable by default
+              </label>
+              <label className="checkline">
+                <input type="checkbox" name="taxableServicesDefault" checked={Boolean(settings.taxableServicesDefault)} onChange={updateField} disabled={!canManageShop || isSaving || settings.taxCalculationMode !== 'manual'} />
+                Services taxable by default
+              </label>
+            </div>
+          </div>
           <label className="wide">
             Print Footer Text
             <textarea name="printFooterText" value={settings.printFooterText} onChange={updateField} rows="3" disabled={!canManageShop || isSaving} />

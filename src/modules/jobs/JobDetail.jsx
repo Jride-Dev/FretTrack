@@ -66,6 +66,7 @@ function JobDetailWorkspace({
   canScheduleEmail = false,
   canSendSms = true,
   canManageJobCharges = canWrite,
+  canManageShopSettings = false,
   canRecordJobPayments = canWrite,
   canIssuePaymentAdjustments = canWrite,
   canFinalizeJobInvoices = canWrite,
@@ -79,6 +80,7 @@ function JobDetailWorkspace({
   assignableMembersError = '',
   onAssignmentChanged,
   onDirtyChange,
+  onOpenTaxSettings,
   canManageAccountingVoid = false,
   onAccountingVoidChange
 }) {
@@ -538,6 +540,7 @@ function JobDetailWorkspace({
     <JobWorkSections
       canWrite={canWrite}
       canManageJobCharges={canManageJobCharges && !chargesLocked}
+      canManageShopTax={canManageShopSettings}
       draftJob={draftJob}
       hasPendingWorkLog={hasPendingWorkLog}
       isSavingWorkLog={isSavingWorkLog}
@@ -589,6 +592,7 @@ function JobDetailWorkspace({
       onUpdateService={updateService}
       onUpdateTaxField={updateTaxField}
       onUseShopTaxRate={useShopTaxRate}
+      onOpenTaxSettings={onOpenTaxSettings}
       part={part}
       parts={parts}
       payment={payment}

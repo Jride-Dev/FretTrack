@@ -12,6 +12,8 @@ The first inbound correspondence adapter is implemented as a Resend email ingres
 
 New Work Order and the shared Work Order, Parts & Payments surface now use the same professional page headings, grouped form sections, action bars, contained workspace panels, and restrained tabs. This is a presentation-only consolidation over the existing shop-scoped job, permission, billing, tax, payment, and save boundaries.
 
+Parts & Billing now makes disabled tax unmistakable and gives writable owners/admins a direct Open Tax / VAT Settings action. Shop Settings groups calculation mode, jurisdiction, label, registration reference, rate, and taxable categories under one Tax / VAT heading. Discount controls now state that Percentage or Fixed amount must be selected before entering the amount and confirm that the calculated total updates before save. This restores the discoverable workflow without weakening finalized-invoice locks or changing tax calculations.
+
 New Work Order now opens as a full-width content workspace instead of leaving the legacy New Work Order sidebar mounted on the left. The intake form, job creation handlers, permissions, and offline draft behavior remain unchanged.
 
 Service quantities now use whole-number controls and are rejected at the database boundary when they contain fractional values. Estimates are now simple documents selected from the New Work Order Document Type dropdown. They remain editable and can be printed or emailed with the current service/part lines, tax, and total; no customer approval or estimate lock is required.

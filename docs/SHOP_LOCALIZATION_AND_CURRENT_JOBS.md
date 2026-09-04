@@ -26,6 +26,8 @@ New jobs snapshot the shop defaults used for their tax, currency, date, and meas
 
 FretTrack does not provide exchange-rate conversion and does not decide the legally correct tax rate, registration status, exemptions, or VAT treatment. Shops remain responsible for their tax, accounting, legal, and customer obligations.
 
+To enable tax or VAT, an owner/admin opens **Shop Settings → Tax / VAT**, changes **Tax calculation** to **Enabled — use the shop rate below**, enters the jurisdiction and rate, selects the taxable categories, and saves. If an existing work order still carries a disabled snapshot, open **Parts & Billing** and choose **Apply Shop Tax/VAT**. For a discount, choose **Percentage (%)** or **Fixed amount** before entering the amount; the total updates immediately and is retained when the work order is saved.
+
 ## Current Jobs
 
 The compact sidebar remains a quick active-jobs summary and links to **View all current jobs**. The full Current Jobs page uses the main content width and supports:

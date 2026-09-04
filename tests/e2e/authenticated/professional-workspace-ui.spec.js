@@ -78,14 +78,20 @@ test('new work order and shared job detail use the professional workspace hierar
   const tabs = page.getByRole('tablist', { name: 'Job workspace tabs' });
   await expect(tabs).toBeVisible();
   await tabs.getByRole('tab', { name: 'Parts & Billing' }).click();
-  await expect(page.getByRole('tabpanel').getByRole('heading', { name: 'Parts', exact: true })).toBeVisible();
-  await expect(page.getByRole('tabpanel').getByRole('heading', { name: 'Totals', exact: true })).toBeVisible();
+  const billingPanel = page.getByRole('tabpanel');
+  await expect(billingPanel.getByRole('heading', { name: 'Parts', exact: true })).toBeVisible();
+  await expect(billingPanel.getByRole('heading', { name: 'Totals', exact: true })).toBeVisible();
+  await billingPanel.getByLabel('Discount Type').selectOption('percent');
+  await expect(billingPanel.getByLabel('Discount Amount')).toBeEnabled();
+  await billingPanel.getByLabel('Discount Amount').fill('10');
+  await expect(billingPanel.getByText('The total updates immediately; save the work order to keep it.')).toBeVisible();
 });
 
 test('new work order action overrides a restored workspace mode', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Shop Settings', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Shop Settings', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tax / VAT', exact: true })).toBeVisible();
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Shop Settings', exact: true })).toBeVisible();

@@ -287,6 +287,19 @@
   margin: 0;
 }
 
+.tax-settings-subsection {
+  scroll-margin-top: 18px;
+}
+
+.tax-settings-subsection:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.tax-settings-subsection > .form-grid {
+  margin-top: 2px;
+}
+
 .loyalty-program-settings,
 .customer-loyalty-card {
   display: grid;
@@ -1606,6 +1619,22 @@ th.internal-only {
 
 .commerce-state-notice.is-approved {
   border-color: color-mix(in srgb, var(--border) 65%, var(--success) 35%);
+}
+
+.tax-setup-callout {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.tax-setup-callout p {
+  margin: 4px 0 0;
+}
+
+.tax-setup-callout button {
+  flex: 0 0 auto;
 }
 
 .neck-inspection-grid {

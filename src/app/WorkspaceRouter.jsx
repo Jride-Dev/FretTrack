@@ -292,6 +292,7 @@ function WorkspacePage({
             onNotice={actions.onNotice}
             canWrite={access.canEditJobs}
             canManageJobCharges={access.canManageJobCharges}
+            canManageShopSettings={access.canEditShopSettings}
             canRecordJobPayments={access.canRecordJobPayments}
             canIssuePaymentAdjustments={access.canIssuePaymentAdjustments}
             canFinalizeJobInvoices={access.canFinalizeJobInvoices}
@@ -333,6 +334,7 @@ function WorkspacePage({
             canManageAccountingVoid={access.canEditShopSettings}
             onAccountingVoidChange={actions.onAccountingVoidChange}
             onNotice={actions.onNotice}
+            onOpenTaxSettings={actions.onOpenTaxSettings}
           />
           <GuitarJobDetail
             job={selectedJob}
