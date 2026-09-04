@@ -185,6 +185,10 @@ npm run migration:check:strict
 
 Estimate email retry hardening is application-level and uses the existing `send-email` request identity; it does not require a new migration. The document dialog retains the same request ID for retryable provider-confirmation failures so the existing Message History claim and provider idempotency key can reconcile one delivery.
 
+# Resend inbound email adapter migration
+
+`20260904082220_resend_inbound_email_adapter.sql` adds a service-managed, shop-scoped receiving-address table and a service-only webhook claim ledger. The `receive-email` Edge Function verifies Resend/Svix signatures against the raw request body and a five-minute timestamp window, claims at-least-once deliveries by provider event ID, and writes inbound correspondence only for an explicitly configured route. Browser roles cannot read or mutate either table. Apply this migration only with the matching function and server-only `RESEND_WEBHOOK_SECRET`/`RESEND_API_KEY` configuration; no route is active until an operator provisions one.
+
 # Shop tax profile boundary migration
 
 `20260901025709_shop_tax_profile_boundary.sql` adds an explicit disabled/manual tax-calculation mode and stable versioned default profile to each shop. It synchronizes shop defaults into the shop-scoped `tax_profiles` record, preserves existing configured rates as manual only when the legacy profile also has a jurisdiction, and leaves incomplete legacy defaults disabled for owner review. It upgrades server-calculated estimate/invoice snapshots with tax profile identity, revision, rate source, jurisdiction, registration reference, taxable categories, and proportional invoice-discount allocation. Disabled mode is the safe default and calculates no tax for new work orders.

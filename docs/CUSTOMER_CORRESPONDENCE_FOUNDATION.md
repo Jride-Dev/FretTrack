@@ -1,6 +1,6 @@
 # Customer Correspondence Foundation
 
-FretTrack now has a provider-neutral database, repository, and focused customer Conversation view for keeping correspondence attached to the correct shop and customer. The interface consumes the existing repository and does not enable inbound email or SMS adapters.
+FretTrack now has a provider-neutral database, repository, and focused customer Conversation view for keeping correspondence attached to the correct shop and customer. The first inbound adapter is a signed, replay-safe Resend email ingress; SMS and browser Realtime delivery remain disabled.
 
 ## Implemented Boundary
 
@@ -14,7 +14,7 @@ Every job-linked message derives and validates its shop and customer from the wo
 
 Incoming provider messages may be stored without a work-order assignment. Provider adapters must not attach an inbound message to the newest work order by assumption. When routing is ambiguous, the message belongs in the shop's future unassigned correspondence queue until a staff member deliberately assigns it.
 
-Inbound provider IDs have a partial unique index so a provider retry cannot create duplicate inbound history. The future adapter must still verify the provider signature before inserting any row.
+Inbound provider IDs have a partial unique index so a provider retry cannot create duplicate inbound history. The Resend adapter also claims each signed provider event in a service-only replay ledger, verifies the raw Svix signature and timestamp window before parsing, and looks up the full received email when the webhook payload is only a notification. It stores only messages addressed to an explicitly provisioned shop route; unmatched messages are acknowledged and ignored. A customer is attached only when the shop has exactly one matching normalized email, and every inbound message starts without a work-order assignment.
 
 ## Access and Report Selection
 
@@ -29,12 +29,11 @@ Customer reports may include only explicitly selected, nonblank sent/delivered o
 
 ## Not Yet Enabled
 
-The customer profile Conversation panel now lists the customer's email/SMS history, keeps unassigned records visible, shows inbound read state, and lets authorized staff explicitly include eligible correspondence in a customer report. The Customers workspace also includes an Unassigned Inbox for inbound records that have no work-order assignment; staff can route a received message only to a matching same-shop, same-customer work order, and the system never guesses a route. The isolated Customer Service and Condition Report print/email renderers include only explicitly selected, eligible messages assigned to that work order. These views do not receive inbound provider webhooks, subscribe the browser to Realtime, or enable SMS delivery. Resend and Twilio secrets remain server-only. Existing immediate email, Scheduled Email, Automated Service Reminders, and job-level Message History continue to behave as before.
+The customer profile Conversation panel now lists the customer's email/SMS history, keeps unassigned records visible, shows inbound read state, and lets authorized staff explicitly include eligible correspondence in a customer report. The Customers workspace also includes an Unassigned Inbox for inbound records that have no work-order assignment; staff can route a received message only to a matching same-shop, same-customer work order, and the system never guesses a route. The isolated Customer Service and Condition Report print/email renderers include only explicitly selected, eligible messages assigned to that work order. The Resend webhook is service-only and does not subscribe the browser to Realtime or enable SMS delivery. Resend and Twilio secrets remain server-only. Existing immediate email, Scheduled Email, Automated Service Reminders, and job-level Message History continue to behave as before.
 
 ## Next Delivery Order
 
-1. Add deliberate staff controls for unassigned inbound routing while preserving the focused Conversation view and Unassigned Inbox.
-2. Add one signed and replay-safe inbound provider adapter at a time.
-3. Add Realtime delivery only after authorization, reconnect, ordering, and duplicate-event behavior have executable tests.
+1. Add the next signed and replay-safe inbound adapter (SMS) only after consent, opt-out, routing, retry, and cost controls are specified.
+2. Add Realtime delivery only after authorization, reconnect, ordering, and duplicate-event behavior have executable tests.
 
 Database coverage lives in `supabase/tests/database/customer_correspondence_backend.test.sql`; provider-neutral normalization coverage lives in `scripts/customer-correspondence.test.mjs`.
