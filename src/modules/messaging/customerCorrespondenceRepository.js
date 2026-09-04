@@ -91,6 +91,22 @@ export async function markCustomerMessageRead(messageId, readAt = new Date().toI
   return normalizeCorrespondenceMessage(data);
 }
 
+export async function assignCustomerMessageJob(messageId, jobId) {
+  requireRemoteCorrespondence();
+  const { data, error } = await supabase
+    .rpc('assign_customer_message_job', {
+      p_message_id: messageId,
+      p_job_id: jobId
+    })
+    .single();
+
+  if (error) {
+    throw new Error(`Customer correspondence could not be routed: ${error.message}`);
+  }
+
+  return normalizeCorrespondenceMessage(data);
+}
+
 function requireRemoteCorrespondence() {
   if (!hasSupabaseConfig || !supabase) {
     throw new Error('Customer correspondence requires a configured Supabase workspace.');

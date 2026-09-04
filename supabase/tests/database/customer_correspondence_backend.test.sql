@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(40);
+select plan(47);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -98,10 +98,13 @@ select ok(not has_table_privilege('authenticated', 'public.customer_conversation
 select ok(has_table_privilege('service_role', 'public.customer_conversation_threads', 'delete'), 'service role retains maintenance access to conversation threads');
 select has_function('public', 'set_customer_message_report_inclusion', array['uuid', 'boolean'], 'report selection uses a narrow RPC');
 select has_function('public', 'mark_customer_message_read', array['uuid', 'timestamp with time zone'], 'read state uses a narrow RPC');
+select has_function('public', 'assign_customer_message_job', array['uuid', 'uuid'], 'routing uses a narrow RPC');
 select ok(not has_function_privilege('anon', 'public.set_customer_message_report_inclusion(uuid, boolean)', 'execute'), 'anonymous callers cannot select report correspondence');
 select ok(not has_function_privilege('anon', 'public.mark_customer_message_read(uuid, timestamptz)', 'execute'), 'anonymous callers cannot mark correspondence read');
+select ok(not has_function_privilege('anon', 'public.assign_customer_message_job(uuid, uuid)', 'execute'), 'anonymous callers cannot route correspondence');
 select ok(has_function_privilege('authenticated', 'public.set_customer_message_report_inclusion(uuid, boolean)', 'execute'), 'authenticated callers can use the guarded report-selection RPC');
 select ok(has_function_privilege('authenticated', 'public.mark_customer_message_read(uuid, timestamptz)', 'execute'), 'authenticated callers can use the guarded read-state RPC');
+select ok(has_function_privilege('authenticated', 'public.assign_customer_message_job(uuid, uuid)', 'execute'), 'authenticated callers can use the guarded routing RPC');
 select is((select count(*)::integer from public.customer_conversation_threads where shop_id = 'correspondence-pgtap-one'), 1, 'existing outbound messages share one shop/customer/channel thread');
 select is((select shop_id from public.customer_messages where id = '77000000-0000-4000-a000-000000000001'), 'correspondence-pgtap-one', 'job-linked outbound messages derive direct shop scope');
 select ok((select thread_id is not null from public.customer_messages where id = '77000000-0000-4000-a000-000000000001'), 'job-linked outbound messages attach to the customer thread');
@@ -155,6 +158,18 @@ select ok(
   'the guarded RPC marks received inbound correspondence read'
 );
 select ok((select read_at is not null from public.customer_messages where id = '77000000-0000-4000-a000-000000000003'), 'inbound read state persists');
+select throws_like(
+  $$select public.assign_customer_message_job('77000000-0000-4000-a000-000000000003', '76000000-0000-4000-a000-000000000001')$$,
+  '%same shop and customer%',
+  'routing rejects a work order from another shop'
+);
+select is((select job_id from public.assign_customer_message_job('77000000-0000-4000-a000-000000000003', '75000000-0000-4000-a000-000000000001')), '75000000-0000-4000-a000-000000000001', 'staff can deliberately route an inbound message to a matching work order');
+select is((select job_id from public.customer_messages where id = '77000000-0000-4000-a000-000000000003'), '75000000-0000-4000-a000-000000000001', 'routed correspondence persists its work-order assignment');
+select throws_like(
+  $$select public.assign_customer_message_job('77000000-0000-4000-a000-000000000003', '76000000-0000-4000-a000-000000000002')$$,
+  '%Only unassigned received inbound correspondence can be routed%',
+  'a routed message cannot be assigned a second time'
+);
 select throws_like(
   $$
     update public.customer_conversation_threads
