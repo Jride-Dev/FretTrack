@@ -32,9 +32,18 @@ export async function getBetaOperatorDashboard() {
     throw accessResult.error;
   }
 
+  let billingReconciliation = [];
+  const reconciliationResult = await supabase.rpc('get_billing_reconciliation_queue');
+  if (reconciliationResult.error) {
+    console.warn('Billing reconciliation queue is unavailable.', reconciliationResult.error);
+  } else {
+    billingReconciliation = reconciliationResult.data || [];
+  }
+
   return normalizeDashboard({
     ...dashboardResult.data,
-    betaAccessRequests: accessResult.data || []
+    betaAccessRequests: accessResult.data || [],
+    billingReconciliation
   });
 }
 
@@ -170,13 +179,37 @@ function normalizeDashboard(dashboard = {}) {
         dashboard.summary?.pendingBetaAccessRequests
           ?? (dashboard.betaAccessRequests || []).filter((request) => request.status === 'pending').length
           ?? 0
+      ),
+      billingAttentionCount: Number(
+        dashboard.summary?.billingAttentionCount
+          ?? (dashboard.billingReconciliation || []).filter((row) => row.issue_code !== 'ok' && row.issueCode !== 'ok').length
+          ?? 0
       )
     },
     shops: (dashboard.shops || []).map(normalizeShopRow),
     members: (dashboard.members || []).map(normalizeMemberRow),
     usage: (dashboard.usage || []).map(normalizeShopRow),
     activity: (dashboard.activity || []).map(normalizeActivityRow),
-    betaAccessRequests: (dashboard.betaAccessRequests || []).map(normalizeBetaAccessRequest)
+    betaAccessRequests: (dashboard.betaAccessRequests || []).map(normalizeBetaAccessRequest),
+    billingReconciliation: (dashboard.billingReconciliation || []).map(normalizeBillingReconciliationRow)
+  };
+}
+
+function normalizeBillingReconciliationRow(row = {}) {
+  return {
+    shopId: row.shop_id || row.shopId || '',
+    shopName: row.shop_name || row.shopName || '',
+    billingEmail: row.billing_email || row.billingEmail || '',
+    planId: row.plan_id || row.planId || 'free',
+    subscriptionStatus: row.subscription_status || row.subscriptionStatus || 'active',
+    providerStatus: row.provider_status || row.providerStatus || '',
+    billingInterval: row.billing_interval || row.billingInterval || '',
+    currentPeriodEndsAt: row.current_period_ends_at || row.currentPeriodEndsAt || '',
+    updatedAt: row.updated_at || row.updatedAt || '',
+    stripeCustomerId: row.stripe_customer_id || row.stripeCustomerId || '',
+    stripeSubscriptionId: row.stripe_subscription_id || row.stripeSubscriptionId || '',
+    stripePriceId: row.stripe_price_id || row.stripePriceId || '',
+    issueCode: row.issue_code || row.issueCode || 'ok'
   };
 }
 

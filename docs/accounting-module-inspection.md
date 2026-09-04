@@ -11,6 +11,8 @@ For the stable 0.3.1 accounting module, reports derive from current shop-scoped 
 
 The first commerce-hardening reporting slice adds an active tax-profile summary and Sales History. The summary identifies the current shop calculation mode, jurisdiction, default rate, registration reference, profile revision, and job-level overrides in the selected range. Sales History is one row per non-voided work order with accounting date, customer, status, total, paid amount, balance, and tax. A mixed-snapshot warning appears when the selected range contains more than one profile, revision, rate, jurisdiction, or label; staff should review the job-level snapshots before handing records to a tax professional. CSV exports include the same metadata and rows.
 
+Billing reconciliation is intentionally a separate operator-support read path. It reports subscription/provider mismatches and missing billing identifiers for investigation; it does not edit subscriptions, call Stripe, recalculate shop access, or replace webhook processing.
+
 Important constraints carried into implementation:
 
 - Every selector accepts a `shopId` and filters jobs to that shop.

@@ -94,6 +94,7 @@
     "check:commerce-hardening": "node scripts/check-commerce-hardening.mjs && node --test scripts/job-commerce-totals.test.mjs",
     "check:tax-profile-boundary": "node scripts/check-tax-profile-boundary.mjs",
     "check:tax-profile-sales-history": "node scripts/check-tax-profile-sales-history.mjs",
+    "check:billing-reconciliation": "node scripts/check-billing-reconciliation.mjs",
     "check:workflow-race-hardening": "node scripts/check-workflow-race-hardening.mjs",
     "check:role-permissions": "node scripts/check-role-permission-audit.mjs",
     "check:tiers": "node scripts/check-tier-split.mjs",

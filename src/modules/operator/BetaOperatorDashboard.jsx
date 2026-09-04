@@ -214,7 +214,7 @@ export default function BetaOperatorDashboard({ onNotice }) {
           ))}
         </select>
         <div className="segmented-control" role="tablist" aria-label="Operator views">
-          {['shops', 'members', 'betaAccess', 'usage', 'activity'].map((view) => (
+          {['shops', 'members', 'betaAccess', 'usage', 'activity', 'billing'].map((view) => (
             <button
               key={view}
               type="button"
@@ -254,6 +254,8 @@ export default function BetaOperatorDashboard({ onNotice }) {
 
       {activeView === 'activity' && <ActivityFeed activity={dashboard.activity} />}
 
+      {activeView === 'billing' && <BillingReconciliationTable rows={dashboard.billingReconciliation} />}
+
       {selectedShop && activeView === 'shops' && (
         <ShopDetails shop={selectedShop} members={dashboard.members.filter((member) => member.shopId === selectedShop.shopId)} />
       )}
@@ -271,6 +273,7 @@ function SummaryCards({ summary }) {
     ['Storage', formatStorage(summary.totalStorageBytes)],
     ['Jobs', summary.totalJobs],
     ['Pending approvals', summary.pendingBetaAccessRequests],
+    ['Billing attention', summary.billingAttentionCount],
     ['Recent activity', summary.recentActivityCount]
   ];
 
@@ -283,6 +286,53 @@ function SummaryCards({ summary }) {
         </div>
       ))}
     </div>
+  );
+}
+
+function BillingReconciliationTable({ rows }) {
+  return (
+    <section className="operator-billing-reconciliation">
+      <p className="muted-text">
+        Read-only diagnostic data for support. Resolve provider mismatches through the Stripe/webhook workflow; this view never changes billing.
+      </p>
+      <div className="operator-table-wrap">
+        <table className="operator-table">
+          <thead>
+            <tr>
+              <th>Shop</th>
+              <th>Status</th>
+              <th>Plan</th>
+              <th>Issue</th>
+              <th>Provider</th>
+              <th>Billing Email</th>
+              <th>Customer ID</th>
+              <th>Subscription ID</th>
+              <th>Period End</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.shopId} className={row.issueCode === 'ok' ? '' : 'operator-billing-attention'}>
+                <td><strong>{row.shopName || row.shopId}</strong><small>{row.shopId}</small></td>
+                <td>{row.subscriptionStatus}</td>
+                <td>{row.planId}{row.billingInterval ? ` · ${row.billingInterval}` : ''}</td>
+                <td>{formatBillingIssue(row.issueCode)}</td>
+                <td>{row.providerStatus || 'Not reported'}</td>
+                <td>{row.billingEmail || 'Not set'}</td>
+                <td>{maskProviderId(row.stripeCustomerId)}</td>
+                <td>{maskProviderId(row.stripeSubscriptionId)}</td>
+                <td>{formatDate(row.currentPeriodEndsAt)}</td>
+                <td>{formatDateTime(row.updatedAt)}</td>
+              </tr>
+            ))}
+            {!rows.length && (
+              <tr><td colSpan="10">No billing reconciliation rows found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
@@ -596,6 +646,26 @@ function getStorageSafetyLabel(shop) {
     return 'Near trial quota';
   }
   return 'OK';
+}
+
+function formatBillingIssue(issueCode) {
+  const labels = {
+    ok: 'OK',
+    missing_subscription: 'Missing subscription row',
+    missing_customer_id: 'Missing Stripe customer',
+    missing_subscription_id: 'Missing Stripe subscription',
+    missing_provider_status: 'Missing provider status',
+    missing_period_end: 'Missing period end',
+    provider_status_mismatch: 'Provider status mismatch'
+  };
+  return labels[issueCode] || issueCode || 'Unknown';
+}
+
+function maskProviderId(value) {
+  const text = String(value || '');
+  if (!text) return 'Not set';
+  if (text.length <= 10) return text;
+  return `${text.slice(0, 6)}…${text.slice(-4)}`;
 }
 
 function isNearQuota(shop) {
