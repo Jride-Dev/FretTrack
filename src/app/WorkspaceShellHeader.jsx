@@ -84,6 +84,7 @@ export default function WorkspaceShellHeader({
 
         <NavGroup label="Operations">
           <button type="button" className={navClass('customers')} onClick={() => navigateTo('customers')}>Customers</button>
+          <button type="button" className={navClass('messages')} onClick={() => navigateTo('messages')}>Messages</button>
           <button type="button" className={navClass('inventory')} onClick={() => navigateTo('inventory')}>Inventory</button>
           <button type="button" className={navClass('shipping')} onClick={() => navigateTo('shipping')}>Shipping</button>
         </NavGroup>

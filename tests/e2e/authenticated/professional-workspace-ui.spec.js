@@ -130,6 +130,17 @@ test('customers use the professional directory and profile hierarchy', async ({ 
   }
   await expect(customers.getByRole('button', { name: 'Edit Profile', exact: true })).toBeVisible();
   await expect(customers.getByRole('button', { name: 'Create Job', exact: true })).toBeVisible();
+  await expect(customers.getByRole('heading', { name: 'Unassigned Inbox', exact: true })).toHaveCount(0);
+});
+
+test('incoming replies use a dedicated messages workspace', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Messages', exact: true }).click();
+
+  const messages = page.locator('.messages-inbox-page');
+  await expect(messages.getByRole('heading', { name: 'Messages', exact: true })).toBeVisible();
+  await expect(messages.getByRole('heading', { name: 'Unassigned Inbox', exact: true })).toBeVisible();
+  await expect(messages.getByRole('button', { name: 'Refresh', exact: true })).toBeVisible();
 });
 
 test('customer directory remains contained on a narrow screen', async ({ page }) => {

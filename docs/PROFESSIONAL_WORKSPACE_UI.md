@@ -24,6 +24,10 @@ The shared presentation primitives live in `src/shared/components/WorkspacePageH
 
 Customers uses a full-width workspace with the shared page-heading and section hierarchy for directory search, filters, the selectable customer list, account metrics, contact details, job history, payments, and notes. The desktop directory-and-profile layout collapses into one contained column on tablets and phones, and long identity or contact values wrap inside their cards. Add Customer, Edit Profile, Create Job, CSV preview, Loyalty, and service-reminder behavior still use their existing permission, entitlement, dirty-state, and customer-service boundaries.
 
+## Messages
+
+Messages is a separate shop-wide workspace for inbound customer replies that have not yet been assigned to a work order. Staff refresh the inbox, review the matched customer, select one of that customer's work orders, and route the message deliberately. Customer profiles retain only their own Conversation history; the shop-wide inbox is not rendered above every selected customer.
+
 ## Inventory
 
 Inventory now uses a full-width workspace with a restrained Parts, Vendors, Purchase Orders, Purchase History, and Barcode Labels tab rail. Parts search and label selection stay above a contained, horizontally scrollable table beside the existing editor; vendor and purchase-order detail retain the same pattern. Add Part, receiving, stock adjustments, vendor saves, purchase-order status changes, label printing, and all shop-scoped inventory services remain unchanged.

@@ -12,6 +12,7 @@ const KeyboardJobDetail = lazy(() => import('../modules/keyboards/KeyboardJobDet
 const KeyboardRepairPage = lazy(() => import('../modules/keyboards/KeyboardRepairPage.jsx'));
 const BillingPage = lazy(() => import('../modules/billing/BillingPage.jsx'));
 const CustomerManager = lazy(() => import('../modules/customers/CustomerManager.jsx'));
+const MessagesInboxPage = lazy(() => import('../modules/messaging/MessagesInboxPage.jsx'));
 const InventoryPage = lazy(() => import('../modules/inventory/InventoryPage.jsx'));
 const CurrentJobsPage = lazy(() => import('../modules/jobs/CurrentJobsPage.jsx'));
 const EstimatesPage = lazy(() => import('../modules/jobs/EstimatesPage.jsx'));
@@ -171,6 +172,20 @@ function WorkspacePage({
         onCreateJobForCustomer={actions.onCreateJobForCustomer}
         onNotice={actions.onNotice}
         onDirtyChange={actions.onDirtyChange}
+      />
+    );
+  }
+
+  if (mode === 'messages') {
+    return (
+      <MessagesInboxPage
+        customers={customers}
+        jobs={jobs}
+        shopId={shopId}
+        shopProfile={shopProfile}
+        canWrite={access.canEditCustomers}
+        dateOptions={dateOptions}
+        onNotice={actions.onNotice}
       />
     );
   }

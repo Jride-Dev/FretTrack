@@ -44,7 +44,7 @@ The customer-communication foundation established a provider-neutral storage bou
 
 Customer profiles now include a focused Conversation view over that provider-neutral history. Staff can filter email or SMS records, see unassigned correspondence instead of losing it in a job-only view, mark received inbound messages read, and explicitly select eligible messages for a future customer report. The panel reuses the existing repository and Message History records; it does not add inbound provider adapters, Realtime updates, SMS delivery, or customer approval gates.
 
-The Customers workspace now also includes a read-only Unassigned Inbox for inbound correspondence that has no work-order assignment. It identifies the customer when available, preserves the inbound record and read state, and requires a future deliberate routing action instead of guessing the newest work order.
+The left navigation now includes a dedicated Messages workspace for the shop-wide Unassigned Inbox. Incoming replies no longer sit above the customer directory where they could appear to belong to every selected customer. The inbox identifies the customer when available, preserves the inbound record and read state, and lets authorized staff deliberately route the reply to one matching customer work order instead of guessing the newest work order.
 
 Selected correspondence now carries through to Customer Service and Condition Report printouts and email sections. Only explicitly selected, nonblank, eligible messages assigned to the current work order are rendered; unselected, failed, pending, or unassigned records remain out of the customer document.
 

@@ -3,7 +3,6 @@ import CustomerDetail from './CustomerDetail.jsx';
 import CustomerForm from './CustomerForm.jsx';
 import CustomerImportPreviewPanel from './CustomerImportPreviewPanel.jsx';
 import CustomerLookup from './CustomerLookup.jsx';
-import UnassignedCorrespondenceQueue from '../messaging/UnassignedCorrespondenceQueue.jsx';
 import { buildCustomerDirectory } from './customerInsights';
 import { normalizePhone, normalizeText } from './customerNormalize';
 import WorkspacePageHeader from '../../shared/components/WorkspacePageHeader.jsx';
@@ -222,14 +221,6 @@ export default function CustomerManager({
           </div>
         </div>
       </WorkspaceSection>
-
-      <UnassignedCorrespondenceQueue
-        customers={directoryCustomers}
-        shopId={activeShopId}
-        canWrite={canWrite}
-        dateOptions={dateOptions}
-        onNotice={onNotice}
-      />
 
       <div className="customer-module-layout">
         <CustomerLookup
