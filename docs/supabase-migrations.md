@@ -187,7 +187,9 @@ Estimate email retry hardening is application-level and uses the existing `send-
 
 # Resend inbound email adapter migration
 
-`20260904082220_resend_inbound_email_adapter.sql` adds a service-managed, shop-scoped receiving-address table and a service-only webhook claim ledger. The `receive-email` Edge Function verifies Resend/Svix signatures against the raw request body and a five-minute timestamp window, claims at-least-once deliveries by provider event ID, and writes inbound correspondence only for an explicitly configured route. Browser roles cannot read or mutate either table. Apply this migration only with the matching function and server-only `RESEND_WEBHOOK_SECRET`/`RESEND_API_KEY` configuration; no route is active until an operator provisions one.
+`20260904082220_resend_inbound_email_adapter.sql` adds a service-managed, shop-scoped receiving-address table and a service-only webhook claim ledger. The `receive-email` Edge Function verifies Resend/Svix signatures against the raw request body and a five-minute timestamp window, claims at-least-once deliveries by provider event ID, and writes inbound correspondence only for a valid shop route. Provider event/message IDs stay in their text identity fields; inbound messages leave the outbound UUID `request_id` empty. Browser roles cannot read or mutate either table. The function requires server-only `RESEND_WEBHOOK_SECRET` and a dedicated Full access `RESEND_RECEIVING_API_KEY`; the outbound `RESEND_API_KEY` should remain restricted to Sending access.
+
+`20260904233235_automatic_inbound_email_routes.sql` gives every existing shop one opaque Resend receiving address, rotates pre-release manual routes, enforces one active route per shop and one shop per active address, and provisions a new route whenever a shop profile is created.
 
 # Shop tax profile boundary migration
 

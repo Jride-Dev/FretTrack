@@ -1166,7 +1166,7 @@ main.app-shell {
 .customer-conversation-message-meta span {
   background: var(--surface);
   border: 1px solid var(--border-soft);
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 3px 8px;
 }
 

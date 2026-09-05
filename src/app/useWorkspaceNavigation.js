@@ -169,6 +169,7 @@ export function isAllowedWorkspaceMode(mode, {
     'keyboard-detail',
     'settings',
     'customers',
+    'messages',
     'inventory',
     'shipping',
     'scheduling',

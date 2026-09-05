@@ -5,6 +5,7 @@ const read = (path) => readFileSync(path, 'utf8');
 const manager = read('src/modules/customers/CustomerManager.jsx');
 const lookup = read('src/modules/customers/CustomerLookup.jsx');
 const detail = read('src/modules/customers/CustomerDetail.jsx');
+const messages = read('src/modules/messaging/MessagesInboxPage.jsx');
 const app = read('src/app/App.jsx');
 const router = read('src/app/WorkspaceRouter.jsx');
 const styles = read('src/styles/professional-ui.css');
@@ -13,6 +14,9 @@ const publicDocs = read('cloudflare/frettrack-coming-soon/public/docs/customers.
 
 assert.match(manager, /<WorkspacePageHeader/, 'Customers must use the shared professional page heading.');
 assert.match(manager, /title="Find a customer"/, 'Customers must keep search and filters in a named section.');
+assert.doesNotMatch(manager, /UnassignedCorrespondenceQueue/, 'The shop-wide inbox must not appear inside every customer view.');
+assert.match(messages, /title="Messages"/, 'Incoming replies must have a dedicated Messages workspace.');
+assert.match(messages, /<UnassignedCorrespondenceQueue/, 'The Messages workspace must retain the shop-wide unassigned inbox.');
 assert.match(manager, /canPreviewCustomerImport &&/, 'CSV preview must retain its permission gate.');
 assert.match(manager, /canWrite && <button[^>]*>Add Customer/, 'Customer creation must retain its write gate.');
 assert.match(lookup, /title="Customer directory"/, 'Customer results must expose a named directory section.');

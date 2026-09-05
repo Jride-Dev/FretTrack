@@ -45,6 +45,18 @@ Domain: `frettrack-app.com`
   - `noreply@frettrack-app.com` forwards to the verified Cloudflare destination `jaycurtis@techie.com`
   - `jeff@frettrack-app.com` forwards to the verified Cloudflare destination `jaycurtis@techie.com`
 
+## FretTrack Customer Reply Receiving
+
+Customer replies use Resend Receiving and the Supabase `receive-email` Edge Function. Keep the sending and receiving credentials separate:
+
+- `RESEND_API_KEY`: a Resend **Sending access** key used only for outbound mail.
+- `RESEND_RECEIVING_API_KEY`: a separate Resend **Full access** key required to retrieve a received email's body after the webhook notification.
+- `RESEND_WEBHOOK_SECRET`: the endpoint signing secret used to verify that the webhook came from Resend.
+
+Resend webhook notifications contain metadata but not the message body, so the receiving function must call the Retrieve Received Email API. A Sending access key cannot perform that read. Store all three values only in Supabase Edge Function secrets; never place them in the browser, repository, or Cloudflare Pages variables.
+
+After setting or rotating `RESEND_RECEIVING_API_KEY`, replay the failed `email.received` event from the Resend webhook dashboard. The event ledger safely reclaims failed deliveries with the same event ID, so replay does not create a duplicate message.
+
 ## Inbound Sender Denylist
 
 The dedicated Cloudflare Email Worker in `cloudflare/frettrack-inbound-email-filter` rejects known unwanted senders before forwarding mail to a verified Cloudflare destination. It currently rejects:

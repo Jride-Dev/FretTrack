@@ -66,7 +66,7 @@ assert.match(
   'Workspace persistence must wait until the saved page has been restored for the current shop.'
 );
 
-for (const restoredMode of ['inventory', 'scheduling', 'customers', 'reports']) {
+for (const restoredMode of ['inventory', 'scheduling', 'customers', 'messages', 'reports']) {
   assert.deepEqual(
     resolveStoredWorkspaceState({ workspaceState: { mode: restoredMode }, isAllowedMode: () => true }),
     { mode: restoredMode, selectedJobId: null },
@@ -143,6 +143,7 @@ const expectedModes = [
   'list',
   'settings',
   'customers',
+  'messages',
   'accounting',
   'reports',
   'inventory',
@@ -169,6 +170,7 @@ const expectedPages = [
   'CurrentJobsPage',
   'ShopSettings',
   'CustomerManager',
+  'MessagesInboxPage',
   'AccountingReports',
   'AdvancedReportsPage',
   'InventoryPage',
@@ -193,6 +195,7 @@ for (const page of [
   'AccountingReports',
   'BillingPage',
   'CustomerManager',
+  'MessagesInboxPage',
   'InventoryPage',
   'CurrentJobsPage',
   'GuitarJobDetail',
@@ -220,6 +223,7 @@ const extractedPageImports = [
   'AccountingReports',
   'BillingPage',
   'CustomerManager',
+  'MessagesInboxPage',
   'InventoryPage',
   'JobDetail',
   'CurrentJobsPage',
