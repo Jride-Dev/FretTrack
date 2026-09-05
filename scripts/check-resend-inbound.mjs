@@ -33,5 +33,8 @@ assert.match(automaticRoutesMigration, /shop_profiles_provision_inbound_email_ro
 assert.match(automaticRoutesMigration, /reply\+.*rexaaechae\.resend\.app/, 'automatic routes must use the configured Resend receiving domain');
 assert.match(handler, /\.in\('email_address', uniqueRecipients\)/, 'inbound routing must query only the message recipients');
 assert.match(handler, /data\?\.length === 1/, 'inbound routing must fail closed when recipients match multiple shops');
+assert.match(handler, /Deno\.env\.get\('RESEND_RECEIVING_API_KEY'\)/, 'received email content must use a dedicated read-capable API key');
+assert.doesNotMatch(handler, /Deno\.env\.get\('RESEND_API_KEY'\)/, 'the send-only API key must not be reused to read received email content');
+assert.match(handler, /Resend receiving API access is not configured/, 'a missing receiving key must produce a specific operator error');
 
 console.log('Resend inbound adapter checks passed.');

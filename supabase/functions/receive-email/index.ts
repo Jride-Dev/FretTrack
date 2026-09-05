@@ -142,8 +142,9 @@ async function insertInboundMessage(supabase: AnyClient, row: Record<string, unk
 async function resolveReceivedEmail(data: Record<string, any>) {
   if (data.text || data.html || data.body) return data;
   const emailId = String(data.email_id || data.id || '').trim();
-  const apiKey = Deno.env.get('RESEND_API_KEY') || '';
-  if (!emailId || !apiKey) throw new Error('Received email content is unavailable.');
+  const apiKey = Deno.env.get('RESEND_RECEIVING_API_KEY') || '';
+  if (!emailId) throw new Error('Received email content is unavailable.');
+  if (!apiKey) throw new Error('Resend receiving API access is not configured.');
   const response = await fetch(`https://api.resend.com/emails/receiving/${encodeURIComponent(emailId)}`, { headers: { Authorization: `Bearer ${apiKey}` } });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(result.message || result.error || 'Resend receiving lookup failed.');
