@@ -86,7 +86,11 @@ export async function playNoticeChime(noticeType = 'warning') {
     gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.42);
     gain.connect(context.destination);
 
-    const frequencies = noticeType === 'recovery' ? [523.25, 659.25] : [440, 349.23];
+    const frequencies = noticeType === 'recovery'
+      ? [523.25, 659.25]
+      : noticeType === 'message'
+        ? [659.25, 783.99]
+        : [440, 349.23];
     frequencies.forEach((frequency, index) => {
       const oscillator = context.createOscillator();
       oscillator.type = 'sine';

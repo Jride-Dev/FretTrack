@@ -19,6 +19,7 @@ import AuthGate from '../modules/auth/AuthGate.jsx';
 import BetaOperatorDashboard from '../modules/operator/BetaOperatorDashboard.jsx';
 import ShopSettings from '../modules/shops/ShopSettings.jsx';
 import SystemAnnouncements from '../modules/system/SystemAnnouncements.jsx';
+import CustomerMessageNotifications from '../modules/messaging/CustomerMessageNotifications.jsx';
 import { hasSupabaseConfig } from '../shared/lib/supabaseClient';
 import {
   canAccessOperatorDashboard,
@@ -665,6 +666,7 @@ export default function App() {
         </section>
       )}
       {session && <SystemAnnouncements />}
+      {session && membership && <CustomerMessageNotifications shopId={membership.shopId} />}
       {hasSupabaseConfig && membership && (
         <InternalCurrentAccessPanel
           betaAccess={betaAccess}

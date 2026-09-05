@@ -1,5 +1,9 @@
 # Release Notes
 
+## Customer reply sound notifications
+
+The existing authenticated **Sound** preference now also covers inbound customer replies. FretTrack checks the shop's unassigned inbox every minute and when the page becomes visible, then plays one message chime when a new unread received reply appears. The initial inbox load is silent, and browser autoplay restrictions remain non-fatal; the Messages workspace and its manual Refresh button remain the source of truth.
+
 ## Post-0.3.1 commerce hardening
 
 The operator dashboard now has a read-only Billing Reconciliation view. It flags missing subscription rows, missing Stripe customer/subscription identifiers, missing provider status or billing period data, and provider-status mismatches so support can investigate account access without editing customer billing from the app. Provider IDs are masked in the table, and the underlying operator-only RPC preserves the full identifiers for authorized support review. No plan, charge, refund, or Stripe state is changed by this view.

@@ -34,6 +34,11 @@ export default function UnassignedCorrespondenceQueue({ customers = [], shopId =
 
   useEffect(() => { loadQueue(); }, [loadQueue]);
 
+  useEffect(() => {
+    const intervalId = window.setInterval(loadQueue, 60000);
+    return () => window.clearInterval(intervalId);
+  }, [loadQueue]);
+
   async function handleMarkRead(message) {
     if (!canWrite || message.readAt || message.status !== 'received') return;
     setActiveMessageId(message.id);
