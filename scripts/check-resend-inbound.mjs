@@ -16,6 +16,7 @@ assert.match(handler, /email\.received/, 'the inbound handler must only process 
 assert.match(handler, /customer_inbound_webhook_events/, 'the inbound handler must claim webhook deliveries');
 assert.match(handler, /customer_inbound_email_routes/, 'the inbound handler must resolve a configured shop route');
 assert.match(handler, /provider_message_id/, 'the inbound handler must preserve provider identity for replay safety');
+assert.doesNotMatch(handler, /request_id:\s*eventId/, 'provider event IDs must not be written to the outbound UUID request identity');
 assert.match(handler, /job_id: null/, 'inbound messages must start unassigned');
 assert.match(verifier, /svix-id|headers\.id/, 'verification must bind the event ID');
 assert.match(verifier, /allowed replay window/, 'verification must reject stale webhook timestamps');

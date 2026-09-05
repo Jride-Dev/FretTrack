@@ -64,8 +64,7 @@ Deno.serve(async (request) => {
       provider_message_id: String(email.id || event.data?.email_id || '').trim(),
       provider_last_event: 'email.received',
       provider_event_at: event.created_at || receivedAt,
-      received_at: receivedAt,
-      request_id: eventId
+      received_at: receivedAt
     });
     await finishWebhookEvent(supabase, eventId, 'received', message.id, '');
     return json({ received: true, message_id: message.id }, 200);
